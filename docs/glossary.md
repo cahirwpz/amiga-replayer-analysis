@@ -36,17 +36,28 @@ One line per term. Every acronym used in this repo must appear here.
 
 ## Tracker terms
 
-| Term           | Meaning                                                |
-| -------------- | ------------------------------------------------------ |
-| **tick**       | One run of the replayer, usually once per frame.       |
-| **row**        | One line of a pattern. It lasts `speed` ticks.         |
-| **speed**      | Ticks per row.                                         |
-| **track**      | One column of note data, often one per voice.          |
-| **pattern**    | A block of rows, played by one or more tracks.         |
-| **transpose**  | Offset added to every note of a track or instrument.   |
-| **arpeggio**   | Fast cycle of note offsets, making a chord-like sound. |
-| **portamento** | Slide of the pitch, often towards a target note.       |
-| **vibrato**    | Periodic pitch change.                                 |
+| Term                     | Meaning                                                |
+| ------------------------ | ------------------------------------------------------ |
+| **tick**                 | One run of the replayer, usually once per frame.       |
+| **voice**                | One part of the music. Usually one voice per channel.  |
+| **channel**              | One of Paula's four hardware sound outputs.            |
+| **sample**               | Recorded sound data, played from memory.               |
+| **waveform**             | A short sample loop, often built or changed by code.   |
+| **instrument**           | What a note plays: sample or waveform, plus settings.  |
+| **note**                 | A pitch, often with an instrument, that starts sound.  |
+| **period**               | Paula's pitch value. Higher period, lower pitch.       |
+| **row**                  | One line of a pattern. It lasts `speed` ticks.         |
+| **speed**                | Ticks per row.                                         |
+| **track**                | One column of note data, often one per voice.          |
+| **pattern**              | A block of rows, played by one or more tracks.         |
+| **position**             | One entry of the song's play order: patterns to play.  |
+| **subsong**              | A separate tune inside one module.                     |
+| **sound effect**         | A sound the game starts, outside the music.            |
+| **transpose**            | Offset added to every note of a track or instrument.   |
+| **instrument transpose** | Offset added to every instrument number of a track.    |
+| **arpeggio**             | Fast cycle of note offsets, making a chord-like sound. |
+| **portamento**           | Slide of the pitch, often towards a target note.       |
+| **vibrato**              | Periodic pitch change.                                 |
 
 ## Card terms
 

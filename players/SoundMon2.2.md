@@ -30,14 +30,14 @@ A synth voice runs four table walkers over one pool of 64-byte tables.
 
 ## Streams
 
-| Stream  | Scope | Carries                             | Control    | Rate          |
-| ------- | ----- | ----------------------------------- | ---------- | ------------- |
-| Steps   | song  | pattern, transpose, sound transpose | loop, jump | pattern end   |
-| Pattern | voice | note, instrument, option            | none       | row           |
-| ADSR    | voice | volume scale; table                 | mode       | every N ticks |
-| LFO     | voice | period offset; table                | mode       | every N ticks |
-| EG      | voice | negated sample count; table         | mode       | every N ticks |
-| MOD     | voice | one wave sample; table              | mode       | every N ticks |
+| Stream    | Scope | Carries                                  | Control    | Rate          |
+| --------- | ----- | ---------------------------------------- | ---------- | ------------- |
+| Positions | song  | pattern, transpose, instrument transpose | loop, jump | pattern end   |
+| Pattern   | voice | note, instrument, option                 | none       | row           |
+| ADSR      | voice | volume scale; table                      | mode       | every N ticks |
+| LFO       | voice | period offset; table                     | mode       | every N ticks |
+| EG        | voice | negated sample count; table              | mode       | every N ticks |
+| MOD       | voice | one wave sample; table                   | mode       | every N ticks |
 
 ## Generators and interactions
 
@@ -52,7 +52,7 @@ A synth voice runs four table walkers over one pool of 64-byte tables.
 | ---------- | ---------------------------------------------------------------- |
 | Voice      | period, note, volume, walker positions, delays, modes, effect    |
 | Instrument | synth flag, wave, per walker: table, length, speed, mode; volume |
-| Global     | step, row, speed, arpeggio phase, vibrato phase                  |
+| Global     | position, row, speed, arpeggio phase, vibrato phase              |
 
 ## Open questions
 

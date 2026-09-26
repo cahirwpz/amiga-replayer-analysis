@@ -20,16 +20,16 @@ Each instrument runs two command lists: volume, and pitch with waveform.
 - A pitch step with bit 7 set is a fixed note, not an offset. `:726`
 - The module carries up to 80 waveforms. `:203`
 - `E9` picks one sample out of a sample pack. `:606`
-- Sound transpose shifts the instrument number. `:519`
+- Positions can transpose instrument numbers. `:519`
 
 ## Streams
 
-| Stream      | Scope | Carries                                    | Control               | Rate          |
-| ----------- | ----- | ------------------------------------------ | --------------------- | ------------- |
-| Sequence    | song  | pattern, transpose, sound transpose; speed | loop                  | pattern end   |
-| Pattern     | voice | note, instrument, portamento               | end                   | row           |
-| Pitch list  | voice | note offset, waveform, bend; own table     | loop, jump, wait, end | tick          |
-| Volume list | voice | volume, bend; instrument                   | loop, wait, end       | every N ticks |
+| Stream      | Scope | Carries                                         | Control               | Rate          |
+| ----------- | ----- | ----------------------------------------------- | --------------------- | ------------- |
+| Positions   | song  | pattern, transpose, instrument transpose; speed | loop                  | pattern end   |
+| Pattern     | voice | note, instrument, portamento                    | end                   | row           |
+| Pitch list  | voice | note offset, waveform, bend; own table          | loop, jump, wait, end | tick          |
+| Volume list | voice | volume, bend; instrument                        | loop, wait, end       | every N ticks |
 
 ## Generators and interactions
 

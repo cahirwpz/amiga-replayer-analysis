@@ -34,8 +34,6 @@ Selection rules:
       Atari ST sound chip emulated on Paula
 - [ ] [`SoundPlayer`](data/inventory.csv?plain=1#L143 "SoundPlayer"): attach
       modes, confirmed in code
-- [ ] [`DigitalSonixChrome`](data/inventory.csv?plain=1#L34 "DigitalSonixChrome"):
-      audio interrupts count loop repeats
 
 ### Rejected
 
@@ -82,11 +80,6 @@ Findings so far, for the cards above. Paths are relative to
 
 - Sets and clears attach bits for channels 0–2. `:1359-1392`
 - Rest not read.
-
-### `DigitalSonixChrome`: `wanted_team/DigitalSonixChrome/src/Digital Sonix & Chrome_v1.asm`
-
-- One audio interrupt handler per channel. `:497`
-- The handler counts loop repeats, then loads the next buffer. `:1305-1343`
 
 ### `AbyssHighestExperience`: `ext/ahx2play/replayer.c`
 

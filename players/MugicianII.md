@@ -13,8 +13,7 @@ links: [https://proofofconcept.nl/portfolio/mugician/]
 
 # Mugician II
 
-One data type, the 128-byte waveform, serves as sound, volume envelope and
-vibrato table.
+The 128-byte waveform serves as played wave, volume envelope and vibrato table.
 
 ## Key ideas
 
