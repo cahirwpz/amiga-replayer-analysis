@@ -1,0 +1,98 @@
+# Annotations for the Sonic Arranger 2.18 replayer. Render: tools/annot.py
+source: ext/uade/amigasrc/players/wanted_team/Sonic_Arranger/Sonic Arranger_v1.asm
+sha1: ba6d4e70ce00d5e5dd78217a109528da8654bf4c
+
+labels:
+  # module layout
+  lbL000400: Positions
+  lbL000404: Patterns
+  lbL000408: Instruments
+  lbL00040C: WavePool
+  lbL000410: AmfPool
+  lbL000414: AdsrPool
+  lbL000418: SamplePtrs
+  # rows
+  lbC000998: PlayRow
+  lbC000C60: ReadVoiceRow
+  lbW000B40: CommandTable
+  lbC000B60: RowCommand
+  lbC000DAE: SetInstrument
+  lbC000D1C: StartSample
+  lbC000D6C: StartSynthWave
+  lbC000E3C: VoiceOff
+  # every tick
+  lbC000E62: TickVoices
+  lbC000EB0: VoiceTick
+  lbC000EDC: Arpeggio
+  lbC000F5E: Portamento
+  lbC000FAA: Vibrato
+  lbC000FF2: AmfWalker
+  lbC001042: SetPitch
+  lbC00106C: AdsrWalker
+  2211: AdsrSustain
+  lbC0010FE: AdsrStep
+  # wave effects
+  lbC00117A: WaveEffect
+  lbW001156: EffectTable
+  lbC0011AC: Effect1
+  lbC0011BC: Effect2
+  lbC001280: Effect3
+  lbC0012CE: Effect4
+  lbC0012F0: Effect5
+  lbC00135A: Effect6
+  lbC00138E: Effect7
+  lbC0013F6: Effect8
+  lbC001452: Effect9
+  lbC001552: Effect10
+  lbC00156E: Effect11
+  lbC00160C: Effect12
+  lbC00164C: Effect13
+  lbC00169E: Effect14
+  lbC001422: Effect15
+  lbC001620: Effect16
+  lbC001524: Effect17
+  lbC001700: EffectStep
+  lbC001714: NoEffect
+  # data
+  lbW001716: Periods
+  lbL0017F2: VibratoTable
+
+comments:
+  1785: "$80: no new note, hold"
+  1787: "$7f: note off"
+  1797: flag bit 2 skips the note transpose
+  1804: flag bit 3 skips the instrument transpose
+  1906: Paula plays the voice's own copy of the wave
+  2039: one of three arpeggio tables, chosen by the pattern entry
+  2124: vibrato depth divides the table value
+  2214: rows marked $80 hold the ADSR at its sustain point
+  2217: sustain point
+  2242: ADSR ended on 0 and does not repeat; the voice falls silent
+  2749: the low byte of the video beam position serves as noise
+  2761: noise again, from the beam position
+
+banners:
+  1432: |
+    Play: runs once per tick. Every `speed` ticks it reads a row.
+  1772: |
+    ReadVoiceRow: pattern entry, 4 bytes: note, instrument, flags and command, argument.
+    Flags: two bits pick an arpeggio table, two bits skip transposes.
+  1929: |
+    SetInstrument: instrument record, 152 bytes. Offsets used here:
+      $00 synth flag       $02 wave or sample     $04 length
+      $10 volume           $12 fine tune          $14 portamento speed
+      $16 vibrato delay    $18 vibrato speed      $1a vibrato depth
+      $1c AMF table        $1e AMF delay          $20 AMF length   $22 repeat
+      $24 ADSR table       $26 ADSR delay         $28 ADSR length  $2a repeat
+      $2c sustain point    $2e sustain delay
+      $40 effect argument  $42 effect number      $44 start        $46 end
+      $48 effect delay     $4a three arpeggio tables, 16 bytes each
+    Waves, AMF and ADSR tables are 128 bytes each, in three pools.
+  2012: |
+    VoiceTick: arpeggio, portamento, vibrato, AMF, then the wave effect,
+    then ADSR.
+  2289: |
+    Wave effects 1-17 rewrite the voice's copy of the wave, every
+    `effect delay` ticks. Most work on bytes `start` to `end`.
+    `EffectStep` moves the effect position from `start` to `end`, then
+    back to `start`.

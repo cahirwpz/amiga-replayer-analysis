@@ -15,7 +15,6 @@ Selection rules:
 
 ### Cards: synthesis
 
-- [ ] `SonicArranger`: synth instruments
 - [ ] `SonixMusicDriver`: note score, synth with filter bank
 - [ ] `SynthDream`: synth format, not yet read
 
@@ -59,7 +58,7 @@ Findings so far, for the cards above. Paths are relative to
 
 - Its readme says it uses Hippel's Atari ST sound chip emulator. Code not read.
 
-### `SonicArranger`, `SynthDream`
+### `SynthDream`
 
 - Not read yet.
 

@@ -158,6 +158,10 @@ SoundMon2.2:
     cite: data/annot/SoundMon2.2.yaml:Effect1
   head: true
 
+SonicArranger:
+  provenance: disassembly
+  author: Carsten Schlote, Branko Mikiç and Carsten Herbst
+
 SoundPlayer:
   provenance: disassembly
   author: Scott Johnston
