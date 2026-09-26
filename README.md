@@ -16,7 +16,7 @@ every acronym.
 ## Style
 
 Texts are short on purpose, for C1 non-native readers. A pre-commit hook
-enforces size limits; `CLAUDE.md` lists them.
+enforces size limits; `tools/cogload.py` defines them.
 
 ## Layout
 

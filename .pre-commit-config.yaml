@@ -45,11 +45,11 @@ repos:
 
   - repo: local
     hooks:
-      - id: cogload                  # Cognitive load limits, see CLAUDE.md
+      - id: cogload                  # Cognitive load limits, see tools/cogload.py
         name: cogload
         entry: python3 tools/cogload.py
         language: system
         types: [markdown]
         # Glossary changes can break any file, so always check all of them.
         pass_filenames: false
-        args: [ README.md, CLAUDE.md, docs/, players/, ideas/, details/ ]
+        args: [ README.md, AGENTS.md, docs/, players/, ideas/, details/ ]

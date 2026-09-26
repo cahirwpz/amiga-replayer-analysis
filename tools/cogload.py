@@ -45,7 +45,7 @@ PROFILES = [
 ]
 
 # Files exempt from the acronym check.
-ACRONYM_EXEMPT = {"CLAUDE.md", "docs/glossary.md"}
+ACRONYM_EXEMPT = {"AGENTS.md", "docs/glossary.md"}
 
 # FK grade is noisy on tiny samples.
 FK_MIN_WORDS = 50
