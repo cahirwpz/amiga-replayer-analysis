@@ -56,13 +56,13 @@ Readers are C1 non-native speakers with limited attention.
 
 ## Evidence
 
-- In player cards, cite as `file:line` relative to the player's source from
-  `tools/inventory.py`. Elsewhere, cite as `ext/uade/<path>:<line>`.
+- Cite code by label, never by line. Cards cite `file:Label` under the player's
+  source. Elsewhere: `ext/<path>:<Label>`.
 - Mark guesses as guesses. Mark what you hear as "(inference)".
 - Keyword scans only pick candidates. A claim needs code that was read.
 - Use only players whose `replay` is `uade`, `port` or `disasm`.
-- Cite listings by label: `data/disasm/<player>.cnf:<Label>` or
-  `data/annot/<player>.yaml:<Label>`.
+- Our labels: `data/annot/<player>.yaml:<Label>` or
+  `data/disasm/<player>.cnf:<Label>`. Add missing ones.
 - Record provenance per player in `data/players.yaml`.
 
 ## Listings

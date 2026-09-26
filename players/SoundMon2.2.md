@@ -18,9 +18,13 @@ A synth voice runs four table walkers over one pool of 64-byte tables.
 
 ## Key ideas
 
-- Waves and control tables share the pool. `Soundmon2.2.s:564` `:649`
-- The EG walker negates the wave's first N samples. `:719`
-- The MOD walker writes one table value into the wave. `:881`
+- Waves and control tables share the pool.
+  `data/annot/SoundMon2.2.yaml:StartSynthNote`
+  `data/annot/SoundMon2.2.yaml:AdsrWalker`
+- The EG walker negates the wave's first N samples.
+  `data/annot/SoundMon2.2.yaml:EgWalker`
+- The MOD walker writes one table value into the wave.
+  `data/annot/SoundMon2.2.yaml:ModWalker`
 - Six effects rewrite the wave in place.
   [Details](../details/SoundMon2.2-effects.md).
 
@@ -37,10 +41,14 @@ A synth voice runs four table walkers over one pool of 64-byte tables.
 
 ## Generators and interactions
 
-- Arpeggio cycles four ticks: two offsets, base note twice. `:214`
-- Vibrato uses one 8-step table and position for all voices. `:185`
-- The next note restores the original wave. `:261`
-- Options 13–15 change the note without restarting walkers. `:347`
+- Arpeggio cycles four ticks: two offsets, base note twice.
+  `data/annot/SoundMon2.2.yaml:Arpeggio`
+- Vibrato uses one 8-step table and position for all voices.
+  `data/annot/SoundMon2.2.yaml:VibratoTable`
+- The next note restores the original wave.
+  `data/annot/SoundMon2.2.yaml:RestoreWaveLoop`
+- Options 13–15 change the note without restarting walkers.
+  `data/annot/SoundMon2.2.yaml:SetNotePeriod`
 
 ## State
 

@@ -3,6 +3,13 @@
 The hand-off between sessions. What belongs here: see
 [`AGENTS.md`](AGENTS.md#sessions).
 
+## Labels instead of line numbers
+
+- [ ] Replace line citations with labels. Left: four cards, three pages in
+      `details/`, `cite` in `data/players.yaml`, reading notes below.
+- [ ] `tools/links.py`: check `file:Label` against the source; reject
+      `file:line`.
+
 ## Pilot
 
 Twelve cards test the card template before the full survey.
