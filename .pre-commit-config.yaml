@@ -53,3 +53,11 @@ repos:
         # Glossary changes can break any file, so always check all of them.
         pass_filenames: false
         args: [ README.md, AGENTS.md, docs/, players/, ideas/, details/ ]
+
+      - id: links                    # Links and source citations resolve
+        name: links
+        entry: python3 tools/links.py
+        language: system
+        types: [markdown]
+        pass_filenames: false
+        args: [ README.md, AGENTS.md, docs/, players/, ideas/, details/ ]

@@ -11,7 +11,7 @@ control: tables | commands | program
 themes: [synthesis, mixing, tricks]
 ideas: [<idea slug>]
 related: [<player>]
-streams: { song: <n>, track: <n>, voice: <n>, instrument: <n> }
+streams: { song: <n>, voice: <n>, instrument: <n> }
 evidence: code | port | docs
 ---
 
@@ -25,9 +25,9 @@ evidence: code | port | docs
 
 ## Streams
 
-| Stream | Scope   | Carries                    | Control      | Rate          |
-| ------ | ------- | -------------------------- | ------------ | ------------- |
-| <name> | <scope> | <what it sets; data owner> | <vocabulary> | <tick, speed> |
+| Stream | Scope   | Carries                    | Control      | Rate   |
+| ------ | ------- | -------------------------- | ------------ | ------ |
+| <name> | <scope> | <what it sets; data owner> | <vocabulary> | <rate> |
 
 ## Generators and interactions
 
@@ -47,24 +47,16 @@ evidence: code | port | docs
 - <What reading did not settle.>
 ```
 
-## Fields
+## Terms
 
-- **code**: where the replay logic lives. `module` means it ships inside the
-  music file.
-- **control**: `tables` are walked in order. `commands` add opcodes. `program`
-  adds conditions or calls.
-- **evidence**: `code` is original or disassembled source. `port` is a port of
-  the original.
-
-## Streams
-
-- A **stream** is an independent position in some data, stepped by the player.
-- **Scope** is where the position lives: song, track, voice or instrument.
-- **Control** uses a fixed vocabulary: `loop`, `jump`, `call`, `wait`, `cond`,
-  `end`, `mode`.
-- **Rate** is how often the stream steps.
+[The glossary](glossary.md) defines all field values and table words.
 
 ## Rules
 
+- Terms not defined in `docs/glossary.md` must be plain English.
+- Add `track: <n>` to `streams` only when tracks are not bound to voices.
+- Name each operation in plain words, e.g. "shift the wave by one sample".
+- Mark what you hear, if stated, as "(inference)".
+- Anything that needs more than about 10 words goes to `details/`, linked.
 - Skip "Generators and interactions" when there is nothing to say.
 - Cite as `file:line`, relative to the card's `source`.

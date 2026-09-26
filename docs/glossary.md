@@ -22,3 +22,57 @@ One line per term. Every acronym used in this repo must appear here.
 | **PWM**     | Pulse-width modulation. Paula uses it to apply volume.                  |
 | **UADE**    | Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.    |
 | **VBL**     | Vertical blank interrupt, once per frame. The usual replayer tick.      |
+
+## Tracker terms
+
+| Term           | Meaning                                                |
+| -------------- | ------------------------------------------------------ |
+| **tick**       | One run of the replayer, usually once per frame.       |
+| **row**        | One line of a pattern. It lasts `speed` ticks.         |
+| **speed**      | Ticks per row.                                         |
+| **track**      | One column of note data, often one per voice.          |
+| **pattern**    | A block of rows, played by one or more tracks.         |
+| **transpose**  | Offset added to every note of a track or instrument.   |
+| **arpeggio**   | Fast cycle of note offsets, making a chord-like sound. |
+| **portamento** | Slide of the pitch, often towards a target note.       |
+| **vibrato**    | Periodic pitch change.                                 |
+
+## Card terms
+
+| Term            | Meaning                                                              |
+| --------------- | -------------------------------------------------------------------- |
+| **stream**      | A position in some data that the player steps through.               |
+| **scope**       | Where a stream's position lives: song, track, voice or instrument.   |
+| **generator**   | Stateful process that is not a stream, e.g. a vibrato state machine. |
+| **interaction** | One stream acting on another, e.g. a jump or a trigger.              |
+| **tables**      | Control level: data walked in order, no opcodes.                     |
+| **commands**    | Control level: data with opcodes, but no conditions.                 |
+| **program**     | Control level: opcodes with conditions or calls.                     |
+| **code**        | Evidence: original or disassembled replayer source.                  |
+| **port**        | Evidence: a port of the original replayer.                           |
+| **docs**        | Evidence: documentation only.                                        |
+| **module**      | Replay code ships inside the music file.                             |
+
+## Control vocabulary
+
+Words used in the Control column of player cards.
+
+| Word     | Meaning                                   |
+| -------- | ----------------------------------------- |
+| **loop** | Go back to a loop point.                  |
+| **jump** | Go to another position or another stream. |
+| **call** | Jump, then return.                        |
+| **wait** | Pause for N ticks.                        |
+| **cond** | Branch on a condition.                    |
+| **end**  | Stop the stream.                          |
+| **mode** | Off, play once, or loop.                  |
+| **none** | No flow control.                          |
+
+## Rate vocabulary
+
+| Word              | Meaning                    |
+| ----------------- | -------------------------- |
+| **tick**          | Steps every tick.          |
+| **every N ticks** | N is set per instrument.   |
+| **row**           | Steps every row.           |
+| **pattern end**   | Steps when a pattern ends. |

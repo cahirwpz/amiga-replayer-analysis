@@ -1,8 +1,10 @@
 ---
 player: MugicianII
 source: wanted_team/MugicianII
+code: uade
+control: tables
 themes: [synthesis, mixing]
-ideas: [waveform-as-envelope, in-place-waveform-effects, shuffle-speed]
+ideas: [waveform-as-table, in-place-waveform-effects, swing]
 related: [Mugician]
 streams: { song: 1, voice: 4, instrument: 1 }
 evidence: code
@@ -17,29 +19,36 @@ vibrato table.
 
 - Envelopes and vibrato read other waveforms as tables.
   `src/Mugician II_v8.asm:2360`
-- Per-instrument effects rewrite the waveform in place: morph, filter, rotate,
-  moving sign flip. `:2506`
-- Row speed alternates between two values, giving a shuffle. `:1849`
-- Voices 4–7 are mixed into channel 0 by lookup tables. `:4146`
+- Effects rewrite the waveform in place, e.g. crossfade two waves, smooth, shift
+  by one sample. `:2506` [All 15 effects](../details/MugicianII-effects.md).
+- Row length alternates between two speeds (swing). `:1849`
+- Voices 4–7 are mixed into channel 0. `:4146`
 
 ## Streams
 
-| Stream      | Scope      | Carries                       | Control           | Rate    |
-| ----------- | ---------- | ----------------------------- | ----------------- | ------- |
-| Positions   | song       | track and transpose per voice | loop              | row end |
-| Track       | voice      | note, instrument, command     | none              | speed   |
-| Volume      | voice      | volume from a waveform        | loop or stop      | N ticks |
-| Arpeggio    | voice      | note offset                   | loop of 32        | tick    |
-| Vibrato     | voice      | period offset from a waveform | delay, loop point | tick    |
-| Wave effect | instrument | new waveform                  | cyclic            | N ticks |
+| Stream      | Scope      | Carries                             | Control    | Rate          |
+| ----------- | ---------- | ----------------------------------- | ---------- | ------------- |
+| Positions   | song       | track and transpose per voice       | loop       | pattern end   |
+| Track       | voice      | note, instrument, command           | none       | row           |
+| Volume      | voice      | volume, read from a waveform        | mode       | every N ticks |
+| Arpeggio    | voice      | note offset, instrument table       | loop       | tick          |
+| Vibrato     | voice      | period offset, read from a waveform | wait, loop | tick          |
+| Wave effect | instrument | new waveform                        | loop       | every N ticks |
+
+## Generators and interactions
+
+- Voices on one instrument share its effect. It still steps once per tick.
+  `:2264`
+- Note-on copies a source waveform over the working one. `:2128`
+- Command 9 toggles the audio filter every tick. `:2243`
 
 ## State
 
-| Scope      | Fields                                                                              |
-| ---------- | ----------------------------------------------------------------------------------- |
-| Voice      | stream positions, delay, period, slide target, volume                               |
-| Instrument | wave, length, three table indices, effect type, two source waves, speeds, loop flag |
-| Global     | speed pair, row, position, pattern length                                           |
+| Scope      | Fields                                                                               |
+| ---------- | ------------------------------------------------------------------------------------ |
+| Voice      | stream positions, delays, period, slide target, volume                               |
+| Instrument | wave, length, table indices, effect number, its waves, speeds; effect step (runtime) |
+| Global     | speed pair, row, position, pattern length                                            |
 
 ## Open questions
 
