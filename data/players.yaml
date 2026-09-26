@@ -187,6 +187,13 @@ MaxTrax:
   year: 1991
   note: Music-X playback driver; LGPL source, no UADE binary
 
+MIDI-Loriciel:
+  provenance: disassembly
+  author: Loriciel
+  year: 1993
+  game: Entity (intro music)
+  note: Wanted Team's V2.0 Amplifier source; V1.0 has the same replay control
+
 TimFollin:
   provenance: disassembly
   author: Tim Follin / Mike D.

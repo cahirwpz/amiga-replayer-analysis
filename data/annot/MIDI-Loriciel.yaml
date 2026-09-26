@@ -1,0 +1,60 @@
+# Wanted Team's V2.0 Amplifier wrapper; replay core also occurs in V1.0.
+source: ext/uade/amigasrc/players/wanted_team/MIDI-Loriciel/MIDI - Loriciel.AMP.asm
+sha1: 4d2b67b10a62329b798d44519f0ff84798f3a6d0
+
+labels:
+  lbC00001C: InitTracks
+  lbC000090: InitTrack
+  lbC0000DC: ReadEvent
+  lbC000100: ChannelEvent
+  lbC000128: SkipTwoBytes
+  lbC00012C: SkipSysex
+  lbC000154: ReadMeta
+  lbC000174: SkipMeta
+  lbC00019C: EndTrack
+  lbC0001A8: TempoEvent
+  lbC0001BC: ChannelPrefix
+  lbC0001C8: NoteOnEvent
+  lbC0001EA: NoteOffEvent
+  lbC000206: ProgramEvent
+  lbC00024C: SetTempo
+  lbC00026C: StartSound
+  lbC0002F4: SetTimer
+  lbC00037E: TrackTick
+  lbC0003A0: ReadDelta
+  lbC0003C8: DispatchDueEvent
+  lbC0003D8: SaveWait
+  lbC00041C: RestartSong
+  lbW00051C: SystemHandlers
+  lbW00052A: ChannelHandlers
+  lbW00053E: MetaHandlers
+  lbL0005B2: TrackStates
+  lbC00077C: StartNote
+  lbC0007AE: StopNote
+  lbC0007DA: SelectProgram
+  lbC000844: SelectSample
+  lbC000854: FindSampleZone
+  lbW0008C6: PeriodTable
+  lbC000904: SetVelocity
+  lbW000930: VelocityTable
+  lbC000986: SilentTail
+  lbC000A4A: ResetMidiChannels
+  lbL000A64: MidiChannels
+  lbC000AE4: ResetVoices
+  lbC000B30: AllocateVoice
+  lbC000B66: MatchNoteOff
+  lbL000B9A: VoiceStates
+
+comments:
+  443: PPQ times 10000, not tempo; tempo arrives in meta event $51
+  519: all unrecognised events skip two bytes, regardless of their real length
+  727: one tick advances every active track by four pulses
+  752: keep negative timing residue, but a positive delta always ends this visit
+  923: sixteen track records of twenty bytes; no count bounds check
+  1060: first zone whose upper note bound includes the note
+  1065: zone byte 4 is the note offset used for the period lookup
+  1224: allocated voices get a silent reload, even if their sample has already ended
+  1300: every MIDI channel starts with bank program zero
+  1345: with no free voice, the last matching MIDI channel wins; fallback voice zero
+  1357: only the latest allocated voice remains reachable by this MIDI channel
+  1372: no search for older overlapping notes

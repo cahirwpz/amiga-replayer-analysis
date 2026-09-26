@@ -90,11 +90,6 @@ All twelve pilot cards exist.
       the missing envelope stream, jump timing, both arpeggios and release
       versus hard stop.
 
-### New cards: MIDI model
-
-- [ ] `MIDI-Loriciel` card. Reading notes below. The MIDI events it handles, CCs
-      included, go to a `details/` page.
-
 ### Then
 
 - [ ] Review the cards with the user.
@@ -112,6 +107,8 @@ All twelve pilot cards exist.
   MaxTrax?
 - Docs or credits: Sonic Arranger's `AMF` name. Other games with Digital Sonix &
   Chrome. Other Synth Dream composers.
+- [MIDI-Loriciel](players/MIDI-Loriciel.md): which scores avoid overlapping
+  notes on one MIDI channel?
 - The sound chip's datasheet: compare the Hippel ST volume table with the chip.
 
 ## Later
@@ -122,37 +119,20 @@ All twelve pilot cards exist.
 - [ ] Pick the first binary-only player to disassemble. Filter by scope first.
 - [ ] Before disassembling a player, look for a port of it outside UADE. Use it
       as a map, not as evidence.
-- [ ] Module players: decide where sample modules come from.
-
-## Reading notes: MIDI model
-
-`MIDI-Loriciel` source: `MIDI - Loriciel_v1.asm`. Labels are Wanted Team's.
-
-- `lbC00001C`: reads an SMF; one state per `MTrk`. Tempo from the header.
-- `Play`: per track, subtract 4 pulses per tick; read events when due.
-- `lbW00052A`: note-on, note-off, program change. Note-on with velocity 0 is a
-  note-off (`lbC0001C8`).
-- `lbW00053E`: meta events. Tempo `$51` sets the timer (`lbC00024C`); end of
-  track `$2F`; `$20` sets the MIDI channel. Other events are skipped.
-- `lbC000B30`: voice allocation. It takes a free voice first. Else it steals a
-  voice of the same MIDI channel, else voice 0.
-- `lbC000B66`: note-off frees the voice only if the MIDI channel's last note
-  matches.
-- `lbC000844`: program change picks a multisample; note ranges choose the
-  sample. `lbC000904`: velocity curve to volume.
+- [ ] Module inputs: decide provenance and storage; add IRA raw-binary support.
 
 ## Disassembly queue
 
 A port is not evidence (see [`AGENTS.md`](AGENTS.md#evidence)). These players
 need 68k code first.
 
-| Player                   | Why                                          | Map                              |
-| ------------------------ | -------------------------------------------- | -------------------------------- |
-| `AbyssHighestExperience` | Card rests on a port; re-check it            | `ext/ahx2play`                   |
-| `RobHubbard`             | Replay code is in the module; needs a module | `ext/c-flod/neoart/flod/hubbard` |
-| `BenDaglish-SID`         | Replay code is in the module; needs a module | —                                |
-| `JankoMrsicFlogel`       | Replay code is in the module; needs a module | —                                |
-| `Special-FX`             | Replay code is in the module; needs a module | —                                |
+| Player                   | Why                                                     | Map                              |
+| ------------------------ | ------------------------------------------------------- | -------------------------------- |
+| `AbyssHighestExperience` | Card rests on a port; re-check it                       | `ext/ahx2play`                   |
+| `RobHubbard`             | `PGA_Tour_Golf.lha` available; needs raw-binary support | `ext/c-flod/neoart/flod/hubbard` |
+| `BenDaglish-SID`         | Replay code is in the module; needs a module            | —                                |
+| `JankoMrsicFlogel`       | Replay code is in the module; needs a module            | —                                |
+| `Special-FX`             | Replay code is in the module; needs a module            | —                                |
 
 ## Disassembly notes
 
