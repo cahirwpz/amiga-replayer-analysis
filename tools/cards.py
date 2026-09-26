@@ -4,7 +4,7 @@
 Usage: cards.py FILE.md|DIR...
 
 A card is a Markdown file whose front matter has a `player` key. Checks:
-  - front matter keys and their allowed values
+  - front matter keys and their allowed values; `links` is optional
   - file name matches `player`, and `player` is in data/inventory.csv
   - sections present and in order
   - Streams table: header, scope, and Control/Rate words from the glossary
@@ -32,7 +32,9 @@ KEYS = [
     "related",
     "streams",
     "evidence",
+    "links",
 ]
+OPTIONAL = {"links"}
 ALLOWED = {
     "code": {"uade", "module", "disasm"},
     "control": {"tables", "commands", "program"},
@@ -133,7 +135,7 @@ def check(path, known, control_words, rate_words):
         errors.append(f"{rel}:{n}: {rule}: {detail}")
 
     for key in KEYS:
-        if key not in meta:
+        if key not in meta and key not in OPTIONAL:
             err(1, "front-matter", f"missing `{key}`")
     for key in meta:
         if key not in KEYS:
@@ -151,7 +153,7 @@ def check(path, known, control_words, rate_words):
     themes = parse_list(meta.get("themes", "[]"))
     if themes is None or not set(themes) <= THEMES:
         err(1, "front-matter", f"`themes` must be a list from {sorted(THEMES)}")
-    for key in ("ideas", "related"):
+    for key in ("ideas", "related", "links"):
         if parse_list(meta.get(key, "[]")) is None:
             err(1, "front-matter", f"`{key}` must be a list")
     streams = parse_map(meta.get("streams", "{}"))

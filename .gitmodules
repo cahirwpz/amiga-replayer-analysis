@@ -4,3 +4,6 @@
 [submodule "ext/ahx2play"]
 	path = ext/ahx2play
 	url = https://github.com/8bitbubsy/ahx2play.git
+[submodule "ext/c-flod"]
+	path = ext/c-flod
+	url = https://github.com/rofl0r/c-flod

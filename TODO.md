@@ -124,8 +124,12 @@ Findings so far, for the cards above. Paths are relative to
 
 ## Open questions
 
-- [ ] Mugician II: cross-check effect numbers with an independent replayer.
-- [ ] Mugician II: can mixed voices play synth waves?
+- [ ] Mugician II: cross-check effect numbers with
+      `ext/c-flod/neoart/flod/digitalmugician/DMPlayer.c`.
+- [ ] Mugician II: can mixed voices play synth waves? `DMPlayer.c:136` takes
+      mixed voices from a sample pointer (not verified).
+- [ ] Mugician II: card says mixing uses channel 0, `DMPlayer.c:612` uses
+      channel 3. Resolve.
 - [ ] Inventory: read the five players marked `check`.
 
 ## Later
@@ -133,6 +137,7 @@ Findings so far, for the cards above. Paths are relative to
 - [ ] Full survey of the remaining players with readable source.
 - [ ] Tag `ProTracker`-like players in the inventory.
 - [ ] Pick the first binary-only player to disassemble. Filter by scope first.
+- [ ] Before disassembling a player, look for a port of it outside UADE.
 - [ ] Module players: decide where sample modules come from.
 
 ## Disassembly notes

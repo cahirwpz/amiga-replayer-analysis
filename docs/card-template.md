@@ -14,6 +14,7 @@ ideas: [<idea slug>]
 related: [<player>]
 streams: { song: <n>, voice: <n>, instrument: <n> }
 evidence: code | port | docs | disasm
+links: [<url>]
 ---
 
 # <Player name>
@@ -54,9 +55,10 @@ evidence: code | port | docs | disasm
 
 ## Rules
 
-- Terms not defined in `docs/glossary.md` must be plain English.
+- Use plain English for terms not in `docs/glossary.md`. Name operations
+  plainly, e.g. "shift the wave by one sample".
 - Add `track: <n>` to `streams` only when tracks are not bound to voices.
-- Name each operation in plain words, e.g. "shift the wave by one sample".
+- `links` is optional: first-hand pages, e.g. by the author. Omit if none.
 - Mark what you hear, if stated, as "(inference)".
 - Anything that needs more than about 10 words goes to `details/`, linked.
 - Skip "Generators and interactions" when there is nothing to say.

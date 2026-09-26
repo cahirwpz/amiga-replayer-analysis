@@ -62,11 +62,19 @@ OVERRIDES = {
     "ArtOfNoise-4V": "uade/artofnoise",
     "ArtOfNoise-8V": "uade/artofnoise",
     "FutureComposer1.4": "defect/fc14",
+    "DavidWhittaker": "ext/c-flod/neoart/flod/whittaker",
+    "DeltaMusic1.3": "ext/c-flod/neoart/flod/deltamusic",
+    "DeltaMusic2.0": "ext/c-flod/neoart/flod/deltamusic",
+    "SIDMon2.0": "ext/c-flod/neoart/flod/sidmon",
 }
 
 # Free-text remarks, e.g. a sibling player with source for the same format.
 NOTES = {
     "AbyssHighestExperience": "C port of the AHX 2.3d-sp3 replayer (evidence: port)",
+    "DavidWhittaker": "C port of Flod 4.1 DWPlayer (evidence: port)",
+    "DeltaMusic1.3": "C port of Flod 4.1 D1Player (evidence: port)",
+    "DeltaMusic2.0": "C port of Flod 4.1 D2Player (evidence: port)",
+    "SIDMon2.0": "C port of Flod 4.1 S2Player (evidence: port)",
     "TFMX-TFHD": "same format as TFMX (has source)",
     "TFMX-7V-TFHD": "same format as TFMX-7V (has source)",
     "TFMX-Pro-TFHD": "same format as TFMX-Pro (has source)",
