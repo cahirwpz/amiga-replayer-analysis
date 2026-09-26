@@ -5,7 +5,7 @@ Copy into `players/<name>.md`. Angle brackets mark placeholders.
 ```markdown
 ---
 player: <binary name in ext/uade/players>
-control: tables | commands | program
+control: { sequencer: <level>, instrument: <level> }
 themes: [synthesis, mixing, tricks, emulation]
 ideas: [<idea slug>]
 streams: { song: <n>, voice: <n>, instrument: <n> }
@@ -17,18 +17,31 @@ streams: { song: <n>, voice: <n>, instrument: <n> }
 
 ## Key ideas
 
-- <Idea, and what it costs.> `<file>:<line>`
+- <Idea, and what it costs.> `<file>:<Label>`
 
 ## Streams
 
-| Stream | Scope   | Carries                    | Control      | Rate   |
-| ------ | ------- | -------------------------- | ------------ | ------ |
-| <name> | <scope> | <what it sets; data owner> | <vocabulary> | <rate> |
+| Stream | Scope   | Role   | Carries                    | Control      | Rate   |
+| ------ | ------- | ------ | -------------------------- | ------------ | ------ |
+| <name> | <scope> | <role> | <what it sets; data owner> | <vocabulary> | <rate> |
 
-## Generators and interactions
+## Generators
 
-- <Generator: stateful process that is not a stream.>
-- <Interaction: one stream acting on another.>
+| Generator | Scope   | States   | Writes   | Rate   | Set by    | Note-on  |
+| --------- | ------- | -------- | -------- | ------ | --------- | -------- |
+| <name>    | <scope> | <states> | <output> | <rate> | <streams> | <effect> |
+
+## Channel outputs
+
+| Output   | Writers, in tick order |
+| -------- | ---------------------- |
+| <output> | <Name (mode)>, …       |
+
+## Interactions
+
+| From   | To     | Event                     |
+| ------ | ------ | ------------------------- |
+| <name> | <name> | <what crosses> `:<Label>` |
 
 ## State
 
@@ -47,6 +60,25 @@ streams: { song: <n>, voice: <n>, instrument: <n> }
 
 [The glossary](glossary.md) defines all field values and table words.
 
+## Roles
+
+- A **sequencer** stream decides which note plays and when.
+- An **instrument program** shapes one note. Test: a note-on starts or restarts
+  it. A stream that an instrument program starts is `instrument` too.
+- `control` gives one level per role: `tables`, `commands`, `program` or `none`.
+
+## Tables
+
+- Generators: a stateful process that is not a stream, e.g. an envelope.
+  - Rate: how often its state changes.
+  - Set by: the streams that set its parameters, or `instrument` for fixed
+    instrument data. The parameters change at each setter's rate.
+  - Note-on: what a note-on does to its state.
+- Channel outputs: one row per output that applies. List the writers in the
+  order one tick runs them. The mode says how each one writes.
+- Interactions: events that cross between streams, generators, voices or the
+  game. Quirks that are not events go in bullets below the table.
+
 ## Rules
 
 - Use plain English for terms not in [the glossary](glossary.md). Name
@@ -56,5 +88,5 @@ streams: { song: <n>, voice: <n>, instrument: <n> }
   links. A card needs a provenance there.
 - Mark what you hear, if stated, as "(inference)".
 - Anything that needs more than about 10 words goes to `details/`, linked.
-- Skip "Generators and interactions" when there is nothing to say.
+- Skip Generators and Interactions when there is nothing to say.
 - Cite by label, as [`AGENTS.md`](../AGENTS.md#evidence) says.

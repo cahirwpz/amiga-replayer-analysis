@@ -117,7 +117,9 @@ class Cards(unittest.TestCase):
     def test_reports_each_rule(self):
         code, rules, out = run("cards.py", FIXTURES / "cards_bad.md")
         self.assertEqual(code, 1)
-        self.assertEqual({"front-matter", "player", "section", "streams"}, rules, out)
+        expected = {"front-matter", "player", "section", "streams"}
+        expected |= {"generators", "outputs", "interactions"}
+        self.assertEqual(expected, rules, out)
         for text in (
             "`control: bytecode`",
             "`themes` must be",
@@ -129,6 +131,16 @@ class Cards(unittest.TestCase):
             "file name should be",
             "name `Sequence` not in the glossary",
             "unknown `evidence`",
+            "role `conductor`",
+            "scope `galaxy`",
+            "rate `often`",
+            "set by `Ghost`",
+            "note-on `maybe`",
+            "output `Colour`",
+            "writer `Track` must be",
+            "writer `Nobody` is not on the card",
+            "mode `twist`",
+            "`nowhere` is not on the card",
         ):
             self.assertIn(text, out)
 

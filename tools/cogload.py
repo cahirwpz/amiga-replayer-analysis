@@ -36,7 +36,7 @@ PROFILES = [
     ("AGENTS.md", {"file_words": 500}),
     # Working notes; sections go away as tasks are done.
     ("TODO.md", {"file_words": 1000}),
-    ("players/", {"file_words": 200}),
+    ("players/", {"file_words": 400}),
     ("ideas/", {"file_words": 300}),
     (
         "details/",

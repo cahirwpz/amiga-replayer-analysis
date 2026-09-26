@@ -14,10 +14,28 @@ evidence: code
 
 ## Streams
 
-| Stream | Scope | Carries | Control | Rate |
-| --- | --- | --- | --- | --- |
-| Track | voice | notes | teleport | sometimes |
-| Sequence | song | patterns | loop | row |
+| Stream | Scope | Role | Carries | Control | Rate |
+| --- | --- | --- | --- | --- | --- |
+| Track | voice | conductor | notes | teleport | sometimes |
+| Sequence | song | sequencer | patterns | loop | row |
+
+## Generators
+
+| Generator | Scope | States | Writes | Rate | Set by | Note-on |
+| --- | --- | --- | --- | --- | --- | --- |
+| Wobble | galaxy | a, b | period | often | Track, Ghost | maybe |
+
+## Channel outputs
+
+| Output | Writers, in tick order |
+| --- | --- |
+| Colour | Wobble (set), Track, Nobody (add), Track (twist) |
+
+## Interactions
+
+| From | To | Event |
+| --- | --- | --- |
+| Track | nowhere | note-on |
 
 ## Key ideas
 

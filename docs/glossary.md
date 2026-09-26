@@ -126,17 +126,21 @@ Code patterns we cite from replayer source.
 
 ## Card terms
 
-| Term             | Meaning                                                              |
-| ---------------- | -------------------------------------------------------------------- |
-| **stream**       | A position in some data that the player steps through.               |
-| **scope**        | Where a stream's position lives: song, track, voice or instrument.   |
-| **generator**    | Stateful process that is not a stream, e.g. a vibrato state machine. |
-| **interaction**  | One stream acting on another, e.g. a jump or a trigger.              |
-| **table walker** | A stream that steps through a table: off, once or looping.           |
-| **tables**       | Control level: data walked in order, no opcodes.                     |
-| **commands**     | Control level: data with opcodes, but no conditions.                 |
-| **program**      | Control level: opcodes with conditions or calls.                     |
-| **module**       | Replay code ships inside the music file.                             |
+| Term                   | Meaning                                                              |
+| ---------------------- | -------------------------------------------------------------------- |
+| **stream**             | A position in some data that the player steps through.               |
+| **scope**              | Where a stream's position lives: song, track, voice or instrument.   |
+| **generator**          | Stateful process that is not a stream, e.g. a vibrato state machine. |
+| **interaction**        | One stream acting on another, e.g. a jump or a trigger.              |
+| **sequencer**          | The streams that decide which note plays and when.                   |
+| **instrument program** | A stream that a note-on starts or restarts. It shapes that note.     |
+| **write mode**         | How a writer changes a channel output, e.g. set or add.              |
+| **table walker**       | A stream that steps through a table: off, once or looping.           |
+| **tables**             | Control level: data walked in order, no opcodes.                     |
+| **commands**           | Control level: data with opcodes, but no conditions.                 |
+| **program**            | Control level: opcodes with conditions or calls.                     |
+| **none**               | Control level: no stream in this role.                               |
+| **module**             | Replay code ships inside the music file.                             |
 
 ## Provenance
 
@@ -203,23 +207,81 @@ can still appear as `code`.
 
 Words used in the Control column of player cards.
 
-| Word     | Meaning                                   |
-| -------- | ----------------------------------------- |
-| **loop** | Go back to a loop point.                  |
-| **jump** | Go to another position or another stream. |
-| **call** | Jump, then return.                        |
-| **wait** | Pause for N ticks.                        |
-| **cond** | Branch on a condition.                    |
-| **end**  | Stop the stream.                          |
-| **mode** | Off, play once, or loop.                  |
-| **none** | No flow control.                          |
+| Word     | Meaning                                                |
+| -------- | ------------------------------------------------------ |
+| **loop** | Go back to a loop point.                               |
+| **jump** | Go to another position or another stream.              |
+| **call** | Jump, then return.                                     |
+| **wait** | Pause for N ticks, or until an event such as note-off. |
+| **cond** | Branch on a condition.                                 |
+| **end**  | Stop the stream.                                       |
+| **mode** | Off, play once, or loop.                               |
+| **none** | No flow control.                                       |
 
 ## Rate vocabulary
 
-| Word              | Meaning                                        |
-| ----------------- | ---------------------------------------------- |
-| **tick**          | Steps every tick.                              |
-| **every N ticks** | N is set per instrument.                       |
-| **row**           | Steps every row.                               |
-| **pattern end**   | Steps when a pattern ends.                     |
-| **note end**      | Steps when the current note's length runs out. |
+| Word              | Meaning                                              |
+| ----------------- | ---------------------------------------------------- |
+| **tick**          | Steps every tick.                                    |
+| **every N ticks** | N is a parameter.                                    |
+| **row**           | Steps every row.                                     |
+| **pattern end**   | Steps when a pattern ends.                           |
+| **note end**      | Steps when the current note's length runs out.       |
+| **note-on**       | Acts once per note, at or just after its start.      |
+| **sample wrap**   | Steps each time Paula finishes a pass of the sample. |
+
+## Role vocabulary
+
+Words used in the Role column of a card's Streams table.
+
+| Word           | Meaning                                           |
+| -------------- | ------------------------------------------------- |
+| **sequencer**  | Decides which note plays and when.                |
+| **instrument** | Shapes one note. A note-on starts or restarts it. |
+
+## Channel outputs
+
+What a card's Channel outputs table lists, one row each.
+
+| Output        | Meaning                          |
+| ------------- | -------------------------------- |
+| **Volume**    | The channel volume.              |
+| **Period**    | The channel period.              |
+| **Sample**    | Sample start and length.         |
+| **Wave data** | Sample bytes that code rewrites. |
+| **DMA**       | The channel's DMA on or off.     |
+
+## Write modes
+
+How a writer in the Channel outputs table changes its output.
+
+| Mode      | Meaning                                               |
+| --------- | ----------------------------------------------------- |
+| **set**   | Replaces the value.                                   |
+| **add**   | Adds to the value; may be negative.                   |
+| **scale** | Multiplies the value.                                 |
+| **note**  | Sets the note index. The period comes from the table. |
+| **edit**  | Rewrites wave data in place.                          |
+| **on**    | Turns DMA on.                                         |
+| **off**   | Turns DMA off.                                        |
+
+## Note-on vocabulary
+
+What a note-on does to a generator. Used in the Generators table.
+
+| Word        | Meaning                                     |
+| ----------- | ------------------------------------------- |
+| **restart** | The state starts again.                     |
+| **keep**    | The state carries on.                       |
+| **flag**    | A parameter chooses restart or keep.        |
+| **program** | The instrument program clears or starts it. |
+
+## Interaction ends
+
+From and To words in the Interactions table, beside the card's own names.
+
+| Word            | Meaning                               |
+| --------------- | ------------------------------------- |
+| **game**        | The game code that runs the player.   |
+| **other voice** | A voice other than the one that acts. |
+| **other track** | A track other than the one that acts. |

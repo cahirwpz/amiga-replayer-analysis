@@ -28,6 +28,9 @@ All twelve pilot cards exist.
 ## After the pilot
 
 - [ ] Review the cards with the user.
+- [ ] Migrate 11 cards to the new template in the review. Done: `TimFollin`,
+      `TFMX-Pro`. Then drop the legacy forms in `tools/cards.py`; require
+      Channel outputs.
 - [ ] Tune limits in `tools/cogload.py` and the card template.
 - [ ] Fix the classification axes: control, themes, streams. They live in the
       glossary and the card template.
