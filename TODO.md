@@ -13,11 +13,7 @@ Selection rules:
 - Themes: cheap but expressive synthesis, unusual tricks, soft voice mixing.
 - `replay` must be `uade` or `port` in the output of `tools/inventory.py`.
 
-### Cards: synthesis
-
-### Cards: port, emulation, tricks
-
-- [ ] `Jochen_Hippel_ST`: Atari ST sound chip emulated on Paula
+All twelve pilot cards exist.
 
 ### Rejected
 
@@ -29,15 +25,6 @@ Selection rules:
 | `Mugician`                                                       | Covered by `MugicianII`             |
 | `JochenHippel-7V`                                                | Mixing is covered by `MugicianII`   |
 | `PTK-Prowiz`                                                     | `ProTracker`-like                   |
-
-## Reading notes
-
-Findings so far, for the cards above. Paths are relative to
-`ext/uade/amigasrc/players`. Delete a section when its card exists.
-
-### `Jochen_Hippel_ST`
-
-- Its readme says it uses Hippel's Atari ST sound chip emulator. Code not read.
 
 ## After the pilot
 

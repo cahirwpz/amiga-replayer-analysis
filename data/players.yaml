@@ -98,6 +98,8 @@ JochenHippel-7V:
   distinct: seven voices, some mixed
 
 Jochen_Hippel_ST:
+  provenance: disassembly
+  author: Jochen Hippel
   family: Jochen Hippel
   distinct: Atari ST sound chip emulated on Paula
 

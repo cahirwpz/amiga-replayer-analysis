@@ -1,0 +1,45 @@
+# Annotations for Jochen Hippel's ST player with its sound chip emulator.
+# Render: tools/annot.py
+source: ext/uade/amigasrc/players/wanted_team/Jochen_Hippel_ST/src/Jochen Hippel ST_v4.asm
+sha1: fff1b2533bc0aeeab3474010ed6077677ccd19d7
+
+labels:
+  # emulator
+  lbC0004DC: EmuChannel
+  lbC0005DA: EmuTone
+  lbC00054A: EmuNoise
+  lbB0004CA: VolumeTable
+  lbW00059A: NoisePeriods
+  lbL000E26: RegisterShadow
+  SID00037C: SidPulse
+  lbL001478: SquareWave
+  lbL001070: NoiseSample
+  # ST player
+  lbC0008FE: InitSong
+  lbC000784: ReadPattern
+  lbC0009F6: PitchList
+  lbW000A2A: PitchCommands
+  lbC000A46: StartDigi
+  lbC000B70: VolumeList
+
+comments:
+  568: "4-sample square: -78, -78, 77, 77"
+  1288: "mixer register 7; a 0 bit enables tone or noise"
+  1306: chip channel B plays on Paula channel 3
+  1333: Paula channel 1 plays digital samples and the SID pulse
+  1377: the SID pulse takes channel A's volume
+  1411: "16: the chip's envelope mode, not emulated; fixed 32"
+  1414: 16 log volume steps to Paula's linear 0-64
+  1418: "chip period x 7 + 1: 4 samples per cycle"
+  1423: tone wins when tone and noise are both on
+  1648: SID period, scaled like a tone period
+  2046: start a digital sample on Paula channel 1
+
+banners:
+  1286: |
+    Play_Emu: once per tick, after the ST player has run.
+    Read the chip register shadow and set Paula channels 0, 3, 2 for
+    chip channels A, B, C. Per channel: tone, noise or silence.
+  2531: |
+    RegisterShadow: one long per chip register, value in byte 2.
+    The ST player writes here instead of to the YM2149.
