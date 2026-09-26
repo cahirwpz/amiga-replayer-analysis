@@ -90,6 +90,7 @@ Findings so far, for the cards above. Paths are relative to
 ## After the pilot
 
 - [ ] Review the cards with the user.
+- [ ] Review the label names in `data/annot/` with the user.
 - [ ] Tune limits in `tools/cogload.py` and the card template.
 - [ ] Fix the classification axes: control, themes, streams. They live in the
       glossary and the card template.

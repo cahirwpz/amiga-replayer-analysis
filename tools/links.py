@@ -5,7 +5,7 @@ Usage: links.py FILE.md|DIR...
 
 Checks:
   - relative Markdown links point to existing files
-  - `#L<n>` links name an existing line
+  - no link names a line, e.g. `x.asm#L60` or a GitHub URL with `#L60`
   - `file:Label` citations name a label in that file, as
     annot.cited_labels() finds it
     Paths starting with ext/ or data/ are relative to the repo root. In
@@ -94,25 +94,9 @@ def sources():
     return {player: row["source"] for player, row in inventory.table().items()}
 
 
-def line_count(path, cache={}):
-    if path not in cache:
-        cache[path] = len(path.read_bytes().splitlines())
-    return cache[path]
-
-
-def check_row(dest, num, report):
-    """A `#L<n>` link must hit an existing line."""
-    count = line_count(dest)
-    if not 1 <= num <= count:
-        report(f"{dest.name}#L{num} beyond {count} lines")
-
-
-def row_anchor(href):
-    """(file part, row) of a link like `x.asm?plain=1#L60`."""
-    target, _, anchor = href.partition("#")
-    target = target.split("?")[0]
-    row = int(anchor[1:]) if anchor[:1] == "L" and anchor[1:].isdigit() else None
-    return target, row
+def names_line(href):
+    """True for a link to a line, e.g. `x.asm?plain=1#L60` or `#L60-L64`."""
+    return re.fullmatch(r"L\d+(-L?\d+)?", urlsplit(href).fragment) is not None
 
 
 def links(doc):
@@ -139,14 +123,13 @@ def check(path, known_sources):
         src = None  # an IRA config, cited by label
 
     for n, href in links(doc):
+        if names_line(href):
+            err(n, "link", f"{href} names a line; cite a label")
         if urlsplit(href).scheme or href.startswith("#"):
             continue  # URL or in-page anchor
-        target, row = row_anchor(href)
-        dest = path.parent / target
-        if not dest.exists():
+        target = urlsplit(href).path
+        if not (path.parent / target).exists():
             err(n, "link", f"{target} does not exist")
-        elif row is not None:
-            check_row(dest, row, lambda d: err(n, "link", d))
 
     last_file = None
     for n, child in spans(doc):
