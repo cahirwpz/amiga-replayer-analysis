@@ -1,6 +1,6 @@
 ---
 player: SonixMusicDriver
-control: commands
+control: { sequencer: commands, instrument: none }
 themes: [synthesis]
 ideas:
   [
@@ -31,14 +31,49 @@ LFO.
 
 ## Streams
 
-| Stream | Scope | Carries                                         | Control   | Rate |
-| ------ | ----- | ----------------------------------------------- | --------- | ---- |
-| Track  | voice | note, velocity, instrument, volume, tempo, bend | wait, end | tick |
+| Stream | Scope | Role      | Carries                                         | Control   | Rate  |
+| ------ | ----- | --------- | ----------------------------------------------- | --------- | ----- |
+| Track  | voice | sequencer | note, velocity, instrument, volume, tempo, bend | wait, end | delta |
 
-## Generators and interactions
+## Sequencer
 
-- Envelope: attack, decay, sustain, release; a level and rate each. `:Envelope`
-- LFO: a 256-byte table; drives pitch, volume and filter. `:Lfo`
+| Aspect   | Value    | Label                     |
+| -------- | -------- | ------------------------- |
+| Time     | deltas   | `:WaitEvent`              |
+| Unit     | tick     | `:ReadTracks`             |
+| Note end | note-off | `:NoteEvent`              |
+| Routing  | fixed    | `:ReadTracks`             |
+| Reuse    | none     | `:RestartScore`           |
+| Tempo    | timer    | `:TempoEvent` `:SetTempo` |
+
+## Generators
+
+| Generator  | Scope | States                          | Writes                 | Rate | Set by            | Note-on |
+| ---------- | ----- | ------------------------------- | ---------------------- | ---- | ----------------- | ------- |
+| Envelope   | voice | attack, decay, sustain, release | volume, filter         | tick | instrument, Track | restart |
+| LFO        | voice | delay, run                      | period, volume, filter | tick | instrument        | restart |
+| Portamento | voice | glide, done                     | period                 | tick | instrument        | restart |
+| Wave mode  | voice | blend, stretch                  | wave data              | tick | instrument        | keep    |
+
+## Channel outputs
+
+| Output    | Writers, in tick order                                     |
+| --------- | ---------------------------------------------------------- |
+| Period    | Track (note), Portamento (add), LFO (scale), Track (scale) |
+| Volume    | LFO (add), Envelope (scale), Track (scale)                 |
+| Wave data | Envelope (edit), LFO (edit), Wave mode (edit)              |
+| Sample    | Track (set)                                                |
+| DMA       | Track (on)                                                 |
+
+## Interactions
+
+| From  | To       | Event                                             |
+| ----- | -------- | ------------------------------------------------- |
+| Track | Envelope | Velocity 0 starts the release `:NoteEvent`        |
+| Track | Envelope | A note on a held voice keeps it running `:Legato` |
+
+- Envelope and LFO write a filter index. It picks the copy that the tick writes
+  into the voice's buffer. `:SelectFilter`
 - High notes skip samples to keep the period in range. `:OctaveShift`
 - `TINY` and `SMUS` notes carry a length; they release after 3/4 of it.
   `:PlayTINY`

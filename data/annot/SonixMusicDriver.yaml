@@ -20,6 +20,8 @@ labels:
   lbC01EC0E: SynthTick
   lbC01EBE8: SynthWrite
   # synth
+  lbC01EC5E: Legato
+  lbC01ECAA: Portamento
   lbC01ED26: Lfo
   lbC01ED76: Envelope
   lbC01EDF4: OctaveShift

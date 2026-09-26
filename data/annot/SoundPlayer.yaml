@@ -11,6 +11,7 @@ labels:
   lbC063D8A: VoiceWait
   lbC063DD8: NoteRestart
   lbC063E38: VolumeSlide
+  lbC063E82: HoldOrRelease
   lbC063ECE: NoteStop
   lbC063F1E: RowCommands
   lbC063F4C: RunCommand

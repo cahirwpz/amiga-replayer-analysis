@@ -1,9 +1,9 @@
 ---
 player: DigitalSonixChrome
-control: tables
+control: { sequencer: tables, instrument: none }
 themes: [tricks]
 ideas: [counted-loops, fixed-pitch-instruments, effects-steal-voices]
-streams: { song: 1, voice: 1 }
+streams: { song: 2 }
 ---
 
 # Digital Sonix & Chrome
@@ -18,20 +18,49 @@ nothing.
 - Each instrument loops a set number of times, then falls silent.
   `:SetLoopCount` `:CountLoopPass`
 - Game sound effects take a voice from the music until they end.
-  `:SfxClaimVoice` `:CheckSfxVoice`
+  `:SfxClaimVoice` `:ReadRow`
 - A position repeats its pattern N times. `:CountRepeats`
 
 ## Streams
 
-| Stream    | Scope | Carries                               | Control   | Rate        |
-| --------- | ----- | ------------------------------------- | --------- | ----------- |
-| Positions | song  | pattern, repeat count, pattern length | loop, end | pattern end |
-| Pattern   | voice | instrument number, or nothing         | none      | row         |
+| Stream    | Scope | Role      | Carries                               | Control | Rate        |
+| --------- | ----- | --------- | ------------------------------------- | ------- | ----------- |
+| Positions | song  | sequencer | pattern, repeat count, pattern length | loop    | pattern end |
+| Pattern   | song  | sequencer | instrument number per voice, or none  | none    | row         |
 
-## Generators and interactions
+## Sequencer
 
-- Loop counter: the interrupt at each loop pass counts down. At zero it plays
-  silence and frees the voice. `:CountLoopPass` `:LoopsDone`
+| Aspect   | Value                 | Label                        |
+| -------- | --------------------- | ---------------------------- |
+| Time     | rows                  | `:Play`                      |
+| Unit     | row                   | `:Play`                      |
+| Note end | next note, loop count | `:SetLoopCount` `:LoopsDone` |
+| Routing  | fixed                 | `:ReadRow`                   |
+| Reuse    | patterns, loops       | `:CountRepeats`              |
+| Tempo    | none                  | `:Play`                      |
+
+## Generators
+
+| Generator    | Scope | States         | Writes | Rate        | Set by     | Note-on |
+| ------------ | ----- | -------------- | ------ | ----------- | ---------- | ------- |
+| Loop counter | voice | counting, done | sample | sample wrap | instrument | restart |
+
+## Channel outputs
+
+| Output | Writers, in tick order            |
+| ------ | --------------------------------- |
+| Volume | Pattern (set)                     |
+| Period | Pattern (set)                     |
+| Sample | Pattern (set), Loop counter (set) |
+| DMA    | Pattern (on)                      |
+
+## Interactions
+
+| From         | To      | Event                                                       |
+| ------------ | ------- | ----------------------------------------------------------- |
+| game         | Pattern | A sound effect takes a voice until it ends `:SfxClaimVoice` |
+| Loop counter | Pattern | At zero it gives the voice back `:LoopsDone`                |
+
 - Effect numbers are priorities: a request plays if its number is at most the
   playing one. A free voice holds `$FF`. `:SfxClaimVoice` `:LoopsDone`
 - A new note busy-waits for the channel's audio interrupt. `:WaitAudioIrq`

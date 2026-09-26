@@ -29,9 +29,6 @@ All twelve pilot cards exist.
 
 ### Fix the current cards
 
-- [ ] Migrate 11 cards to the new template, with Sequencer. Done: `TimFollin`,
-      `TFMX-Pro`. Then drop the legacy forms in `tools/cards.py`; require
-      Channel outputs.
 - [ ] Re-check the `AbyssHighestExperience` card against a disassembly. See the
       disassembly queue.
 - [ ] Tune limits in `tools/cogload.py` and the card template.

@@ -21,8 +21,22 @@ labels:
   lbW000A2A: PitchCommands
   lbC000A46: StartDigi
   lbC000B70: VolumeList
+  lbC0007D6: NextPosition
+  lbC00082E: SetNoteLength
+  lbC000854: ReadNote
+  lbC000AD2: RestartVolumeList
+  lbC000B68: PitchNote
+  lbC000BE8: PitchToPeriod
+  lbC000C46: NoisePeriod
+  lbC000C6E: Vibrato
+  lbC000CBA: Slide
+  lbC000CDE: VolumeOffset
 
 comments:
+  1740: "position entry, per voice: pattern, transpose, instrument transpose, flags"
+  1746: "$Fx: volume offset for this voice"
+  1753: "$Ex: speed for all voices"
+  1796: "note bit 7: keep the instrument's lists running"
   568: "4-sample square: -78, -78, 77, 77"
   1288: "mixer register 7; a 0 bit enables tone or noise"
   1306: chip channel B plays on Paula channel 3

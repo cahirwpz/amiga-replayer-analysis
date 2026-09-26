@@ -7,7 +7,7 @@ A card is a Markdown file whose front matter has a `player` key. Checks:
   - front matter keys and their allowed values
   - file name matches `player`; `player` is a UADE binary, or has
     `replay: source`, and has a provenance in data/players.yaml
-  - sections present and in order
+  - sections present and in order; Sequencer and Channel outputs are required
   - Streams table: header, scope, role, name's first word, and Control/Rate
     words from data/glossary.yaml
   - Sequencer table: the aspects in order; each value word from the
@@ -18,10 +18,6 @@ A card is a Markdown file whose front matter has a `player` key. Checks:
   - Interactions table: From and To name the card's streams or generators,
     or an `ends` word from the glossary
   - State table: header and scope names
-
-Legacy forms stay accepted until all cards are migrated (see TODO.md): a
-single `control` level, the Streams table without Role, and the section
-"Generators and interactions".
 
 Prints `file:line: rule: detail` for each problem; exits 1 if any.
 """
@@ -48,16 +44,14 @@ STATE_SCOPES = {"Voice", "Instrument", "Global"}
 SECTIONS = [
     ("Key ideas", True),
     ("Streams", True),
-    ("Sequencer", False),
+    ("Sequencer", True),
     ("Generators", False),
-    ("Generators and interactions", False),  # legacy
-    ("Channel outputs", False),
+    ("Channel outputs", True),
     ("Interactions", False),
     ("State", True),
     ("Open questions", True),
 ]
 STREAMS_HEADER = ["Stream", "Scope", "Role", "Carries", "Control", "Rate"]
-LEGACY_STREAMS_HEADER = ["Stream", "Scope", "Carries", "Control", "Rate"]
 GENERATORS_HEADER = [
     "Generator",
     "Scope",
@@ -112,11 +106,12 @@ def check(path, known, vocab, facts):
         if key not in KEYS:
             err(1, "front-matter", f"unknown `{key}`")
     control = meta.get("control")
-    if isinstance(control, dict):
-        if set(control) != set(ROLES) or not set(control.values()) <= LEVELS:
-            err(1, "front-matter", f"`control` must map {ROLES} to {sorted(LEVELS)}")
-    elif control is not None and control not in LEVELS - {"none"}:
-        err(1, "front-matter", f"`control: {control}` not in {sorted(LEVELS)}")
+    if control is not None and (
+        not isinstance(control, dict)
+        or set(control) != set(ROLES)
+        or not set(control.values()) <= LEVELS
+    ):
+        err(1, "front-matter", f"`control` must map {ROLES} to {sorted(LEVELS)}")
 
     player = str(meta["player"])
     if path.stem != player:
@@ -161,23 +156,18 @@ def check(path, known, vocab, facts):
     names = set()  # streams and generators on this card
     if "Streams" in body:
         rows = table(body["Streams"])
-        header = rows[0][1] if rows else None
-        if header not in (STREAMS_HEADER, LEGACY_STREAMS_HEADER):
-            err(
-                rows[0][0] if rows else 1, "streams", f"header must be {STREAMS_HEADER}"
-            )
+        if not rows or rows[0][1] != STREAMS_HEADER:
+            n = rows[0][0] if rows else 1
+            err(n, "streams", f"header must be {STREAMS_HEADER}")
         else:
             counts = dict.fromkeys(SCOPES, 0)
             for n, cells in rows[1:]:
-                if len(cells) != len(header):
+                if len(cells) != len(STREAMS_HEADER):
                     err(n, "streams", "wrong number of columns")
                     continue
-                if header == STREAMS_HEADER:
-                    name, scope, role, _, control, rate = cells
-                    if role not in vocab["roles"]:
-                        err(n, "streams", f"role `{role}` not in the glossary")
-                else:
-                    name, scope, _, control, rate = cells
+                name, scope, role, _, control, rate = cells
+                if role not in vocab["roles"]:
+                    err(n, "streams", f"role `{role}` not in the glossary")
                 names.add(name)
                 head = name.split()[0] if name.split() else ""
                 if head not in vocab["stream_names"]:

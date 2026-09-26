@@ -20,6 +20,11 @@ labels:
   lbC000D1C: StartSample
   lbC000D6C: StartSynthWave
   lbC000E3C: VoiceOff
+  lbC000B8A: CmdSlide
+  lbC000B96: CmdVibrato
+  lbC000BF0: CmdVolumeSlide
+  lbC000BF6: CmdPositionJump
+  lbC000C4A: CmdSpeed
   # every tick
   lbC000E62: TickVoices
   lbC000EB0: VoiceTick

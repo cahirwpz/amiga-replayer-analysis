@@ -284,6 +284,7 @@ sections:
       length: The length that the note carries.
       note-off: A separate note-off event.
       program: The instrument program.
+      loop count: The sample plays its loop N times, then stops.
 
   - key: seq_routing
     title: 'Sequencer: routing'

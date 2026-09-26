@@ -18,6 +18,9 @@ labels:
   1672: SynthRelease
   plr_skipseq: NextPlaySeq
   1028: NextSection
+  f_16: CmdLoop
+  isfxff: CmdNoteOff
+  plr_chkhold: ExtendHold
 
 comments:
   562: "-2: hybrid, a sample played through the synth lists"

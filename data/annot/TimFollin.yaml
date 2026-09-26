@@ -7,6 +7,7 @@ labels:
   _play2: ChainTick
   L_D40: ChainSample
   L_D8E: StartSample
+  L_DE2: SetVolume
   L_E1E: VoiceTick
   348: PulseSweep
   L_E86: Envelope
@@ -43,6 +44,8 @@ labels:
 
 comments:
   286: bits 0-5 of the flags pick the second sample
+  330: "cap the volume at a fade level; nothing in this player sets L_12ED"
+  336: "subsong 13 reads voice fields that nothing here writes"
   305: the sample data starts at +$32; the word at +0 is its length
   363: widen the pulse by one sample, up to index $1E
   370: narrow the pulse by one sample, down to index 4

@@ -30,6 +30,11 @@ labels:
   lbC010816: Effect15
   lbC010982: MixVoices
   lbC010896: StartSample
+  lbC00FF9A: ReadRow
+  lbC010432: Portamento
+  lbC01048A: VibratoFromWave
+  lbC0103C6: ArpeggioStep
+  lbC010246: CmdSpeed
 
 comments:
   1407: this adaptation mixes into channel 0

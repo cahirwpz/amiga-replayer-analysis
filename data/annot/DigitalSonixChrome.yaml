@@ -4,7 +4,7 @@ sha1: 2158ccfdbbb442e4465b5a829f5fd4234976a2c1
 
 labels:
   lbC0052DC: SfxClaimVoice
-  lbC005400: CheckSfxVoice
+  lbC005400: ReadRow
   lbC0054FE: NextPosition
   856: CountRepeats
   1256: SetLoopCount

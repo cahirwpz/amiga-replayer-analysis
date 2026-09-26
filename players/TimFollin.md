@@ -93,3 +93,5 @@ seven small generators.
 
 - `ResetPulse` writes at offset 2; playback starts at `$32`. Why? `:ResetPulse`
 - Which game is this from? It has 15 fixed subsongs.
+- A volume cap and a subsong 13 case read data that nothing here sets. Game
+  leftovers? (guess) `:SetVolume`

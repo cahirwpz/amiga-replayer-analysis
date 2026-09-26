@@ -93,5 +93,8 @@ A pattern entry is 4 bytes: note, macro, volume and voice, detune. `:TrackNote`
 | `$fc`       | Lock a voice for N ticks: it ignores other notes   | `:NoteToVoice`     |
 | `$fd`       | Set a flag that the game reads                     | `:PatternOpcode`   |
 
+`$f9` restores the saved step of track 0, whatever track runs it. So returns
+work only on track 0 (guess: a bug). `:PatternReturn`
+
 Special positions stop the song, loop N times, set speed and tempo, or fade.
 `:PositionSpecials`

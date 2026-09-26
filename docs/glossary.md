@@ -292,12 +292,13 @@ Words for the Unit row. The unit of lengths, deltas or times.
 
 Words for the Note end row. What ends a note.
 
-| Word          | Meaning                           |
-| ------------- | --------------------------------- |
-| **next note** | The next note on the same voice.  |
-| **length**    | The length that the note carries. |
-| **note-off**  | A separate note-off event.        |
-| **program**   | The instrument program.           |
+| Word           | Meaning                                        |
+| -------------- | ---------------------------------------------- |
+| **next note**  | The next note on the same voice.               |
+| **length**     | The length that the note carries.              |
+| **note-off**   | A separate note-off event.                     |
+| **program**    | The instrument program.                        |
+| **loop count** | The sample plays its loop N times, then stops. |
 
 ## Sequencer: routing
 

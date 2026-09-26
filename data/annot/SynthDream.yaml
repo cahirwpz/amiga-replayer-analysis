@@ -5,6 +5,7 @@ sha1: 7d72e2a74b50d29ae5158209ce76797e000827a1
 labels:
   # per voice, every tick
   lbC000060: VoiceTick
+  lbC00006A: RepeatPattern
   lbC00007C: NextPosition
   lbC0000B2: ReadPosition
   lbC0000D6: ReadEvent

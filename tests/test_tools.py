@@ -121,7 +121,7 @@ class Cards(unittest.TestCase):
         expected |= {"generators", "outputs", "interactions", "sequencer"}
         self.assertEqual(expected, rules, out)
         for text in (
-            "`control: bytecode`",
+            "`control` must map",
             "`themes` must be",
             "omit `track`",
             "missing `## State`",

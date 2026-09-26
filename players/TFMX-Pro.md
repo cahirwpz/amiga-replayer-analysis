@@ -66,7 +66,7 @@ An instrument is a macro: a program that shapes one note.
 | Wave data | IMS (edit)                                                                        |
 | Period    | Macro (note), Macro (set), Vibrato (scale), Portamento (scale), Pitch riff (note) |
 | Volume    | Macro (set), Envelope (add), Fade (scale)                                         |
-| DMA       | Macro (on), Macro (off)                                                           |
+| DMA       | Macro (on), Macro (off), Positions (off)                                          |
 
 ## Interactions
 
@@ -75,13 +75,13 @@ An instrument is a macro: a program that shapes one note.
 | Pattern    | Macro       | Note-on restarts it; note-off clears its key flag `:NoteToVoice` |
 | Pattern    | other track | Starts a pattern `:StartOtherTrack`                              |
 | Macro      | other voice | Note-on or note-off `:PlayOtherVoice`                            |
-| Macro      | game        | Sets flags that the game reads `:msendflag`                      |
+| Macro      | game        | Sets flags for the game `:msendflag`                             |
 | game       | Macro       | Sound effects lock voices by priority `:NoteToVoice`             |
 | Portamento | Vibrato     | While gliding, vibrato writes no period `:Vibrato`               |
 | Pitch riff | other voice | Echo at 5/8 volume `:RiffEcho`                                   |
 | IMS        | other voice | Negated copy into its buffer `:ImsRender`                        |
 
-- Any track's pattern end moves all tracks on. `:PatternEnd`
+- Any pattern end moves all tracks on. `:PatternEnd`
 - Macros clear or pause generators. `:mclear` `:mdmaon`
 - Failed byte checks corrupt memory (guess: anti-cracking). `:CheckByteTrap`
 

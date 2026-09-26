@@ -13,6 +13,7 @@ labels:
   play3: PatternOpcode
   pend: PatternEnd
   pgosub: PatternCall
+  preturn: PatternReturn
   ppseq: StartOtherTrack
   newtrack: NewPosition
   jumptable3: PositionSpecials
@@ -64,6 +65,7 @@ comments:
   2155: "$80-$8f keep the pattern running into the new position"
   2184: "$80-$bf: note, then wait; $c0-$ef: portamento note"
   2233: any track's end moves the whole song on
+  2309: "reads and writes track 0 (a5), not the running track (a0)"
   2349: this pattern goes to another track
   2393: "negative: keep the old pattern, only take the transpose"
   2841: "absolute address in the first 512 KB"

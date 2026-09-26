@@ -1,6 +1,6 @@
 ---
 player: SoundPlayer
-control: commands
+control: { sequencer: commands, instrument: none }
 themes: [tricks]
 ideas: [attach-modes, per-voice-positions, game-sync-flags]
 streams: { voice: 1 }
@@ -23,15 +23,46 @@ Pattern commands switch Paula's attach modes, so one channel modulates the next.
 
 ## Streams
 
-| Stream | Scope | Carries                   | Control          | Rate |
-| ------ | ----- | ------------------------- | ---------------- | ---- |
-| Track  | voice | note, instrument, command | loop, wait, jump | row  |
+| Stream | Scope | Role      | Carries                   | Control          | Rate |
+| ------ | ----- | --------- | ------------------------- | ---------------- | ---- |
+| Track  | voice | sequencer | note, instrument, command | loop, wait, jump | row  |
 
-## Generators and interactions
+## Sequencer
+
+| Aspect   | Value               | Label                             |
+| -------- | ------------------- | --------------------------------- |
+| Time     | rows, deltas        | `:RowTimer` `:CmdWait`            |
+| Unit     | row                 | `:RowTimer`                       |
+| Note end | next note, note-off | `:NoteStop` `:CmdStop`            |
+| Routing  | fixed               | `:ReadRow`                        |
+| Reuse    | loops               | `:CmdRepeatStart` `:CmdRepeatEnd` |
+| Tempo    | none                | `:RowTimer`                       |
+
+## Generators
+
+| Generator    | Scope | States         | Writes | Rate          | Set by | Note-on |
+| ------------ | ----- | -------------- | ------ | ------------- | ------ | ------- |
+| Volume slide | voice | up, down, done | volume | every N ticks | Track  | keep    |
+| Hold         | voice | hold, release  | sample | tick          | Track  | keep    |
+
+## Channel outputs
+
+| Output | Writers, in tick order          |
+| ------ | ------------------------------- |
+| Volume | Volume slide (add), Track (set) |
+| Period | Track (note)                    |
+| Sample | Hold (set), Track (set)         |
+| DMA    | Track (on), Track (off)         |
+
+## Interactions
+
+| From  | To          | Event                                                     |
+| ----- | ----------- | --------------------------------------------------------- |
+| Track | other voice | Attach bits: modulate its volume or period `:CmdPerModOn` |
+| Track | game        | Sets flags for the game `:CmdSetFlag`                     |
 
 - Waits and repeats count per voice, so the columns drift apart. `:VoiceWait`
-- Volume slides by 1 every N ticks, until 0 or 63. `:VolumeSlide`
-- A row comes every 6 ticks; the speed is fixed. `:RowTimer`
+- A row comes every 6 ticks. `:RowTimer`
 - A note stops its channel on the row tick and restarts it one tick later.
   `:NoteStop` `:NoteRestart`
 

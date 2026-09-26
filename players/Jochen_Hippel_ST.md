@@ -1,9 +1,9 @@
 ---
 player: Jochen_Hippel_ST
-control: commands
+control: { sequencer: commands, instrument: commands }
 themes: [emulation]
 ideas: [chip-emulation, register-shadow, log-volume-table]
-streams: { song: 1, voice: 3 }
+streams: { voice: 4 }
 ---
 
 # Jochen Hippel ST
@@ -23,15 +23,52 @@ Paula settings.
 
 ## Streams
 
-| Stream      | Scope | Carries                          | Control               | Rate          |
-| ----------- | ----- | -------------------------------- | --------------------- | ------------- |
-| Positions   | song  | pattern and transposes per voice | loop                  | pattern end   |
-| Pattern     | voice | note, instrument, flags          | none                  | row           |
-| Pitch list  | voice | note offset, chip mode, sample   | loop, jump, wait, end | tick          |
-| Volume list | voice | volume                           | loop, wait, end       | every N ticks |
+| Stream      | Scope | Role       | Carries                                   | Control               | Rate          |
+| ----------- | ----- | ---------- | ----------------------------------------- | --------------------- | ------------- |
+| Positions   | voice | sequencer  | pattern, transposes, speed, volume offset | loop                  | pattern end   |
+| Pattern     | voice | sequencer  | note, instrument, slide, length           | end                   | note end      |
+| Pitch list  | voice | instrument | note offset, chip mode, sample, vibrato   | loop, jump, wait, end | tick          |
+| Volume list | voice | instrument | volume                                    | loop, wait, end       | every N ticks |
 
-## Generators and interactions
+## Sequencer
 
+| Aspect   | Value     | Label            |
+| -------- | --------- | ---------------- |
+| Time     | lengths   | `:SetNoteLength` |
+| Unit     | row       | `:Play`          |
+| Note end | next note | `:ReadNote`      |
+| Routing  | fixed     | `:InitSong`      |
+| Reuse    | patterns  | `:NextPosition`  |
+| Tempo    | speed     | `:NextPosition`  |
+
+## Generators
+
+| Generator | Scope | States          | Writes | Rate | Set by                 | Note-on |
+| --------- | ----- | --------------- | ------ | ---- | ---------------------- | ------- |
+| Vibrato   | voice | delay, up, down | period | tick | instrument, Pitch list | restart |
+| Slide     | voice | on, off         | period | tick | Pattern, Pitch list    | restart |
+
+## Channel outputs
+
+These are chip settings. The layer copies them to Paula once per tick.
+
+| Output | Writers, in tick order                        |
+| ------ | --------------------------------------------- |
+| Volume | Volume list (set), Positions (add)            |
+| Period | Pitch list (note), Vibrato (add), Slide (add) |
+| Sample | Pitch list (set)                              |
+| DMA    | Pitch list (on), Pitch list (off)             |
+
+## Interactions
+
+| From       | To          | Event                                                      |
+| ---------- | ----------- | ---------------------------------------------------------- |
+| Pattern    | Pitch list  | A note with bit 7 set keeps both lists running `:ReadNote` |
+| Pitch list | Volume list | `E2` restarts it `:RestartVolumeList`                      |
+| Pitch list | other voice | The chip has one noise period for all `:NoisePeriod`       |
+| Positions  | other voice | Voice 0 counts the song length for all `:NextPosition`     |
+
+- Each voice steps its own position at its own pattern end. `:NextPosition`
 - Tone wins over noise. `:EmuChannel`
 - Tones play up to 23 cents sharp.
   [Accuracy](../details/Jochen_Hippel_ST-accuracy.md).
@@ -40,11 +77,11 @@ Paula settings.
 
 ## State
 
-| Scope      | Fields                                              |
-| ---------- | --------------------------------------------------- |
-| Voice      | position, pattern, list positions, speed, chip mode |
-| Instrument | volume list and speed, vibrato, pitch list          |
-| Global     | chip register shadow, noise rate, speed             |
+| Scope      | Fields                                               |
+| ---------- | ---------------------------------------------------- |
+| Voice      | position, pattern, note length, list positions, mode |
+| Instrument | volume list and speed, vibrato, pitch list           |
+| Global     | chip register shadow, speed                          |
 
 ## Open questions
 

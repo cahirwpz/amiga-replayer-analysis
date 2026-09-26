@@ -1,6 +1,6 @@
 ---
 player: SoundMon2.2
-control: tables
+control: { sequencer: commands, instrument: tables }
 themes: [synthesis]
 ideas:
   [
@@ -27,22 +27,55 @@ A synth voice runs four table walkers over one pool of 64-byte tables.
 
 ## Streams
 
-| Stream    | Scope | Carries                                  | Control    | Rate          |
-| --------- | ----- | ---------------------------------------- | ---------- | ------------- |
-| Positions | song  | pattern, transpose, instrument transpose | loop, jump | pattern end   |
-| Pattern   | voice | note, instrument, option                 | none       | row           |
-| ADSR      | voice | volume scale; table                      | mode       | every N ticks |
-| LFO       | voice | period offset; table                     | mode       | every N ticks |
-| EG        | voice | negated sample count; table              | mode       | every N ticks |
-| MOD       | voice | one wave sample; table                   | mode       | every N ticks |
+| Stream    | Scope | Role       | Carries                                  | Control | Rate          |
+| --------- | ----- | ---------- | ---------------------------------------- | ------- | ------------- |
+| Positions | song  | sequencer  | pattern, transpose, instrument transpose | loop    | pattern end   |
+| Pattern   | voice | sequencer  | note, instrument, option                 | jump    | row           |
+| ADSR      | voice | instrument | volume scale; table                      | mode    | every N ticks |
+| LFO       | voice | instrument | period offset; table                     | mode    | every N ticks |
+| EG        | voice | instrument | negated sample count; table              | mode    | every N ticks |
+| MOD       | voice | instrument | one wave sample; table                   | mode    | every N ticks |
 
-## Generators and interactions
+## Sequencer
 
-- Arpeggio cycles four ticks: two offsets, base note twice. `:Arpeggio`
-- Vibrato uses one 8-step table and position for all voices. `:VibratoTable`
+| Aspect   | Value     | Label               |
+| -------- | --------- | ------------------- |
+| Time     | rows      | `:PlayTick`         |
+| Unit     | row       | `:PlayRow`          |
+| Note end | next note | `:StartNoteLoop`    |
+| Routing  | fixed     | `:ReadRowVoiceLoop` |
+| Reuse    | patterns  | `:ReadRowVoiceLoop` |
+| Tempo    | speed     | `:OptSpeed`         |
+
+## Generators
+
+| Generator | Scope | States  | Writes    | Rate          | Set by              | Note-on |
+| --------- | ----- | ------- | --------- | ------------- | ------------------- | ------- |
+| Slide     | voice | on, off | period    | tick          | Pattern             | restart |
+| Vibrato   | song  | 8 steps | period    | tick          | Pattern             | keep    |
+| Arpeggio  | song  | 4 steps | period    | tick          | Pattern             | keep    |
+| Effect    | voice | on, off | wave data | every N ticks | instrument, Pattern | restart |
+
+## Channel outputs
+
+| Output    | Writers, in tick order                                                 |
+| --------- | ---------------------------------------------------------------------- |
+| Period    | Slide (add), Vibrato (add), Arpeggio (note), LFO (add), Pattern (note) |
+| Volume    | ADSR (scale), Pattern (set)                                            |
+| Wave data | EG (edit), Effect (edit), MOD (edit), Pattern (edit)                   |
+| Sample    | Pattern (set)                                                          |
+| DMA       | Pattern (off), Pattern (on)                                            |
+
+## Interactions
+
+| From    | To          | Event                                                            |
+| ------- | ----------- | ---------------------------------------------------------------- |
+| Pattern | ADSR        | Options 13–15 change the note without a restart `:SetNotePeriod` |
+| EG      | other voice | Voices on one wave change it together `:EgWalker`                |
+
+- One arpeggio step and one vibrato position serve all voices. `:Arpeggio`
+  `:VibratoTable`
 - The next note restores the original wave. `:RestoreWaveLoop`
-- Voices on one wave change it together. `:EgWalker`
-- Options 13–15 change the note without restarting walkers. `:SetNotePeriod`
 
 ## State
 

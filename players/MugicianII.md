@@ -1,6 +1,6 @@
 ---
 player: MugicianII
-control: tables
+control: { sequencer: commands, instrument: tables }
 themes: [synthesis, mixing]
 ideas: [waveform-as-table, in-place-waveform-effects, swing]
 streams: { song: 1, voice: 4, instrument: 1 }
@@ -23,20 +23,50 @@ The 128-byte waveform serves as played wave, volume envelope and vibrato table.
 
 ## Streams
 
-| Stream      | Scope      | Carries                             | Control    | Rate          |
-| ----------- | ---------- | ----------------------------------- | ---------- | ------------- |
-| Positions   | song       | track and transpose per voice       | loop       | pattern end   |
-| Track       | voice      | note, instrument, command           | none       | row           |
-| Volume      | voice      | volume, read from a waveform        | mode       | every N ticks |
-| Arpeggio    | voice      | note offset, instrument table       | loop       | tick          |
-| Vibrato     | voice      | period offset, read from a waveform | wait, loop | tick          |
-| Wave effect | instrument | new waveform                        | loop       | every N ticks |
+| Stream      | Scope      | Role       | Carries                             | Control    | Rate          |
+| ----------- | ---------- | ---------- | ----------------------------------- | ---------- | ------------- |
+| Positions   | song       | sequencer  | track and transpose per voice       | loop       | pattern end   |
+| Track       | voice      | sequencer  | note, instrument, command           | none       | row           |
+| Volume      | voice      | instrument | volume, read from a waveform        | mode       | every N ticks |
+| Arpeggio    | voice      | instrument | note offset, instrument table       | loop       | tick          |
+| Vibrato     | voice      | instrument | period offset, read from a waveform | wait, loop | tick          |
+| Wave effect | instrument | instrument | new waveform                        | loop       | every N ticks |
 
-## Generators and interactions
+## Sequencer
 
-- Voices on one instrument share its effect. It still steps once per tick.
-  `:EffectOncePerTick`
-- Note-on copies a source waveform over the played one. `:CopyWaveA`
+| Aspect   | Value     | Label          |
+| -------- | --------- | -------------- |
+| Time     | rows      | `:SwingSpeeds` |
+| Unit     | row       | `:SwingSpeeds` |
+| Note end | next note | `:ReadRow`     |
+| Routing  | fixed     | `:Play`        |
+| Reuse    | patterns  | `:ReadRow`     |
+| Tempo    | speed     | `:CmdSpeed`    |
+
+## Generators
+
+| Generator  | Scope | States      | Writes    | Rate | Set by | Note-on |
+| ---------- | ----- | ----------- | --------- | ---- | ------ | ------- |
+| Portamento | voice | glide, done | period    | tick | Track  | restart |
+| Mixer      | song  | mix         | wave data | tick | Track  | keep    |
+
+## Channel outputs
+
+| Output    | Writers, in tick order                                         |
+| --------- | -------------------------------------------------------------- |
+| Volume    | Volume (set)                                                   |
+| Period    | Track (note), Arpeggio (note), Portamento (add), Vibrato (add) |
+| Sample    | Track (set)                                                    |
+| Wave data | Track (edit), Wave effect (edit), Mixer (edit)                 |
+| DMA       | Track (on)                                                     |
+
+## Interactions
+
+| From        | To          | Event                                                                          |
+| ----------- | ----------- | ------------------------------------------------------------------------------ |
+| Track       | Wave effect | Note-on copies a source wave over the played one `:CopyWaveA`                  |
+| Wave effect | other voice | Voices on one instrument share it; it steps once per tick `:EffectOncePerTick` |
+
 - Command 9 toggles the audio filter every tick. `:VoiceTick`
 
 ## State
