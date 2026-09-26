@@ -54,6 +54,7 @@ class Links(unittest.TestCase):
         self.assertEqual({"link", "cite", "related"}, rules, out)
         self.assertIn("99999 beyond", out)
         self.assertIn("src/nope.asm not found", out)
+        self.assertIn('#L3 does not start with "MugicianII"', out)
 
 
 class Cards(unittest.TestCase):

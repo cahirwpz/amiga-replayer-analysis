@@ -10,7 +10,8 @@ every detail. See `README.md` for layout and status.
 - Themes: cheap but expressive synthesis, unusual tricks, soft voice mixing.
 - Describe control: streams, their state, and what instruments carry. Paula
   features matter less.
-- Current work: [the pilot](docs/pilot.md).
+- Current work: [the pilot](docs/pilot.md). Track progress only in
+  [`TODO.md`](TODO.md), never in `README.md`.
 
 ## Depth
 
@@ -47,7 +48,9 @@ there, in `DEFAULT` and `PROFILES`. Run it before committing.
 ## Repo hygiene
 
 - Never edit `ext/`. Update submodule pins only on request.
-- After a pin update, run `tools/inventory.py --write`.
+- After a pin update, run `tools/inventory.py --write`. Then run
+  `tools/links.py --fix-rows .` to repoint links to inventory rows.
+- Link player names to their inventory row, with the name as link title.
 - Run `source ./activate` once per shell. Python tools go in `requirements.txt`.
 - Before each commit, stage and run `pre-commit run --all-files`. Formatters
   change files, so stage again and rerun until it passes.

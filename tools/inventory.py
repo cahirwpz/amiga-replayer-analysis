@@ -175,7 +175,6 @@ def rows():
     out = [
         [
             "player",
-            "prefixes",
             "version",
             "source",
             "match",
@@ -183,6 +182,7 @@ def rows():
             "files",
             "lines",
             "note",
+            "prefixes",  # last: very long for some players
         ]
     ]
     for b in sorted(PLAYERS.iterdir(), key=lambda p: p.name.lower()):
@@ -195,7 +195,6 @@ def rows():
         out.append(
             [
                 b.name,
-                pref.get(b.name, ""),
                 version(b),
                 src,
                 how,
@@ -203,6 +202,7 @@ def rows():
                 files,
                 lines,
                 note,
+                pref.get(b.name, ""),
             ]
         )
     return out
@@ -216,12 +216,13 @@ def to_csv(table):
 
 def counts(table):
     """Markdown block with the numbers quoted in docs/inventory.md."""
+    col = {name: i for i, name in enumerate(table[0])}
     body = table[1:]
-    with_src = [r for r in body if int(r[6]) > 0]
-    units = {r[3] for r in with_src}
+    with_src = [r for r in body if int(r[col["files"]]) > 0]
+    units = {r[col["source"]] for r in with_src}
 
-    def tally(col, values):
-        return [(v, sum(1 for r in body if r[col] == v)) for v in values]
+    def tally(name, values):
+        return [(v, sum(1 for r in body if r[col[name]] == v)) for v in values]
 
     lines = [
         BEGIN,
@@ -237,10 +238,13 @@ def counts(table):
         "| How source was found | Players |",
         "| --- | --- |",
     ]
-    lines += [f"| {v} | {n} |" for v, n in tally(4, ["hash", "name", "manual", "none"])]
+    lines += [
+        f"| {v} | {n} |" for v, n in tally("match", ["hash", "name", "manual", "none"])
+    ]
     lines += ["", "| Where replay logic is | Players |", "| --- | --- |"]
     lines += [
-        f"| {v} | {n} |" for v, n in tally(5, ["uade", "module", "check", "port"])
+        f"| {v} | {n} |"
+        for v, n in tally("replay", ["uade", "module", "check", "port"])
     ]
     lines += ["", END]
     return "\n".join(lines)

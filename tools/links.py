@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """Check that Markdown links and source citations resolve.
 
-Usage: links.py FILE.md|DIR...
+Usage: links.py [--fix-rows] FILE.md|DIR...
+
+  --fix-rows  rewrite `#L<n>` of titled links to the row that starts with the
+              title; run after data/inventory.csv changes
 
 Checks:
   - relative Markdown links point to existing files
+  - `#L<n>` links name an existing line; a link title must start that line,
+    e.g. [Future Composer](data/inventory.csv?plain=1#L60 "FutureComposer1.3")
   - player cards (front matter has `player`): `source` exists; `related` players are in the inventory
   - player cards: `file:line` citations name an existing line in `source`;
     a bare `:line` refers to the file of the previous citation
@@ -21,7 +26,8 @@ ROOT = Path(__file__).resolve().parent.parent
 SOURCES = ROOT / "ext" / "uade" / "amigasrc" / "players"
 INVENTORY = ROOT / "data" / "inventory.csv"
 
-LINK_RE = re.compile(r"(?<!!)\[[^\]]*\]\(([^)\s]+)\)")
+# [text](target "title"); the title is optional.
+LINK_RE = re.compile(r'(?<!!)\[[^\]]*\]\(([^)\s]+)(?:\s+"([^"]*)")?\)')
 CITE_RE = re.compile(r"`([^`]*?):(\d+)(?:-(\d+))?`")
 FENCE_RE = re.compile(r"^\s*(```|~~~)")
 
@@ -55,6 +61,22 @@ def line_count(path, cache={}):
     return cache[path]
 
 
+def starts(row, title):
+    """Row begins with title as a whole field: TFMX must not match TFMX-Pro."""
+    rest = row[len(title) :]
+    return row.startswith(title) and (not rest or rest[0] in ",\t |")
+
+
+def check_row(dest, num, title, report):
+    """A `#L<n>` link must hit an existing line; with a title, that line
+    must start with it. Titles keep row links right when files change."""
+    rows = dest.read_text(encoding="utf-8", errors="replace").splitlines()
+    if not 1 <= num <= len(rows):
+        report(f"{dest.name}#L{num} beyond {len(rows)} lines")
+    elif title and not starts(rows[num - 1], title):
+        report(f'{dest.name}#L{num} does not start with "{title}"')
+
+
 def check(path, known_players):
     rel = path.resolve().relative_to(ROOT).as_posix()
     lines = path.read_text(encoding="utf-8").splitlines()
@@ -82,12 +104,18 @@ def check(path, known_players):
             continue
         if in_code:
             continue
-        for target in LINK_RE.findall(line):
+        for target, title in LINK_RE.findall(line):
             if re.match(r"[a-z]+:", target) or target.startswith("#"):
                 continue  # URL or in-page anchor
-            target = target.split("#")[0]
-            if not (path.parent / target).exists():
+            target, _, anchor = target.partition("#")
+            target = target.split("?")[0]
+            dest = path.parent / target
+            if not dest.exists():
                 err(n, "link", f"{target} does not exist")
+                continue
+            row = re.fullmatch(r"L(\d+)", anchor)
+            if row:
+                check_row(dest, int(row.group(1)), title, lambda d: err(n, "link", d))
         if not src:
             continue
         for name, first, last in CITE_RE.findall(line):
@@ -107,11 +135,37 @@ def check(path, known_players):
     return errors
 
 
+ROW_LINK_RE = re.compile(r'(\]\(([^)\s#?]+)(?:\?[^)\s#]*)?#L)(\d+)(\s+"([^"]+)"\))')
+
+
+def fix_rows(path):
+    """Point each titled `#L<n>` link at the row that starts with its title."""
+    text = path.read_text(encoding="utf-8")
+
+    def repl(m):
+        dest = path.parent / m.group(2)
+        if not dest.is_file():
+            return m.group(0)
+        rows = dest.read_text(encoding="utf-8", errors="replace").splitlines()
+        for i, row in enumerate(rows, start=1):
+            if starts(row, m.group(5)):
+                return f"{m.group(1)}{i}{m.group(4)}"
+        return m.group(0)
+
+    new = ROW_LINK_RE.sub(repl, text)
+    if new != text:
+        path.write_text(new, encoding="utf-8")
+
+
 def main(argv):
+    fix = argv[:1] == ["--fix-rows"]
+    argv = argv[1:] if fix else argv
     known = players()
     errors = []
     for arg in map(Path, argv):
         for path in sorted(arg.rglob("*.md")) if arg.is_dir() else [arg]:
+            if fix:
+                fix_rows(path)
             errors += check(path, known)
     for e in errors:
         print(e)

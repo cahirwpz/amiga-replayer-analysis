@@ -8,3 +8,4 @@ related: [Mugician, NoSuchPlayer]
 
 A [missing link](no/such/file.md). `src/Mugician II_v8.asm:99999` and
 `src/nope.asm:1`.
+A [stale row](../../data/inventory.csv?plain=1#L3 "MugicianII").
