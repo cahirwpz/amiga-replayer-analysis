@@ -9,6 +9,9 @@ sections:
     columns: [Term, Meaning]
     entries:
       ADKCON: Paula control register. Selects attach modes, among other things.
+      attach mode: One channel's samples set the next channel's volume or period; the first stays silent.
+      audio filter: Amiga's low-pass filter on all channels. Software can switch it on or off.
+      audio interrupt: Paula's signal to the CPU that a channel started a new pass over its sample.
       AUDxLC: Channel x sample start address. Reloaded into the pointer at each wrap.
       AUDxLEN: Channel x sample length, in words.
       AUDxPER: 'Channel x period: clock divider that sets pitch.'
@@ -18,7 +21,7 @@ sections:
       CPU: The Motorola 68000 family processor.
       DMA: Direct memory access. Paula fetches samples without the CPU.
       PAL: European TV standard. Sets the Amiga clock and 50 Hz frame rate.
-      PWM: Pulse-width modulation. Paula uses it to apply volume.
+      PWM: Pulse-width modulation. Paula uses it to apply volume. Not the same as pulse width.
       VBL: Vertical blank interrupt, once per frame. The usual replayer tick.
       HRM: Commodore's Amiga Hardware Reference Manual.
       channel: One of Paula's four hardware sound outputs. Usually plays one voice; mixing can add more.
@@ -41,6 +44,12 @@ sections:
       ADSR: 'Attack, decay, sustain, release: the four phases of a volume envelope.'
       LFO: 'Low-frequency oscillator: slow periodic change, e.g. vibrato.'
       MIDI: Standard protocol for sending notes to synthesizers.
+      note-on: The event that starts a note. A MIDI term.
+      note-off: The event that ends a note, e.g. to start its release. A MIDI term.
+      synth: Sound made by code from short waveforms, not from recordings.
+      envelope: A curve that changes volume, or another value, during a note.
+      modulation: One signal changing a setting of another, e.g. volume or pitch.
+      pulse width: The share of a square-like wave's cycle spent high.
 
   - key: music
     title: Music theory
@@ -52,6 +61,18 @@ sections:
       portamento: Slide of the pitch, often towards a target note.
       vibrato: Periodic pitch change.
       voice: One independent part of the music.
+
+  - key: changes
+    title: Sound changes
+    intro: What an operation does to a sound. The "(inference)" notes use these words.
+    columns: [Term, Meaning]
+    entries:
+      timbre: The colour of a sound, apart from pitch and volume.
+      clipping: Cutting values that exceed the allowed range.
+      detune: A slight shift away from the intended pitch.
+      phasing: A sweeping, hollow tone from mixing a sound with a shifted copy.
+      crossfade: A gradual blend from one sound into another.
+      morph: A gradual change from one waveform into another.
 
   - key: tracker
     title: Tracker terms
@@ -67,6 +88,15 @@ sections:
       instrument: 'What a note plays: sample or waveform, plus settings.'
       instrument transpose: Offset added to every instrument number of a track.
       sound effect: A sound the game starts, outside the music.
+
+  - key: programming
+    title: Programming
+    intro: Code patterns we cite from replayer source.
+    columns: [Term, Meaning]
+    entries:
+      busy-wait: Waiting in a loop that checks a condition, doing nothing else.
+      jump table: A table of code addresses. A number picks which code runs.
+      handler: The code that runs for one command or event.
 
   - key: programs
     title: Programs and formats
@@ -98,6 +128,7 @@ sections:
       scope: 'Where a stream''s position lives: song, track, voice or instrument.'
       generator: Stateful process that is not a stream, e.g. a vibrato state machine.
       interaction: One stream acting on another, e.g. a jump or a trigger.
+      table walker: 'A stream that steps through a table: off, once or looping.'
       tables: 'Control level: data walked in order, no opcodes.'
       commands: 'Control level: data with opcodes, but no conditions.'
       program: 'Control level: opcodes with conditions or calls.'

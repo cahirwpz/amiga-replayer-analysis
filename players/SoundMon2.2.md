@@ -38,7 +38,7 @@ A synth voice runs four table walkers over one pool of 64-byte tables.
 ## Generators and interactions
 
 - Arpeggio cycles four ticks: two offsets, base note twice. `:214`
-- Vibrato uses one 8-step table and phase for all voices. `:185`
+- Vibrato uses one 8-step table and position for all voices. `:185`
 - The next note restores the original wave. `:261`
 - Options 13–15 change the note without restarting walkers. `:347`
 
@@ -48,7 +48,7 @@ A synth voice runs four table walkers over one pool of 64-byte tables.
 | ---------- | ---------------------------------------------------------------- |
 | Voice      | period, note, volume, walker positions, delays, modes, effect    |
 | Instrument | synth flag, wave, per walker: table, length, speed, mode; volume |
-| Global     | position, row, speed, arpeggio phase, vibrato phase              |
+| Global     | position, row, speed, arpeggio step, vibrato position            |
 
 ## Open questions
 

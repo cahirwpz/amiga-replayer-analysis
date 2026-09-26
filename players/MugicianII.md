@@ -34,7 +34,7 @@ The 128-byte waveform serves as played wave, volume envelope and vibrato table.
 
 - Voices on one instrument share its effect. It still steps once per tick.
   `:2264`
-- Note-on copies a source waveform over the working one. `:2128`
+- Note-on copies a source waveform over the played one. `:2128`
 - Command 9 toggles the audio filter every tick. `:2243`
 
 ## State

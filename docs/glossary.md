@@ -7,23 +7,26 @@ One line per term. Every acronym used in this repo must appear here.
 
 ## Amiga hardware
 
-| Term        | Meaning                                                                                   |
-| ----------- | ----------------------------------------------------------------------------------------- |
-| **ADKCON**  | Paula control register. Selects attach modes, among other things.                         |
-| **AUDxLC**  | Channel x sample start address. Reloaded into the pointer at each wrap.                   |
-| **AUDxLEN** | Channel x sample length, in words.                                                        |
-| **AUDxPER** | Channel x period: clock divider that sets pitch.                                          |
-| **AUDxVOL** | Channel x volume, 0 to 64.                                                                |
-| **CCK**     | Colour clock, 3.546895 MHz on PAL. Paula's time unit.                                     |
-| **CIA**     | Timer chip. Replayers use it for tempo independent of the display.                        |
-| **CPU**     | The Motorola 68000 family processor.                                                      |
-| **DMA**     | Direct memory access. Paula fetches samples without the CPU.                              |
-| **PAL**     | European TV standard. Sets the Amiga clock and 50 Hz frame rate.                          |
-| **PWM**     | Pulse-width modulation. Paula uses it to apply volume.                                    |
-| **VBL**     | Vertical blank interrupt, once per frame. The usual replayer tick.                        |
-| **HRM**     | Commodore's Amiga Hardware Reference Manual.                                              |
-| **channel** | One of Paula's four hardware sound outputs. Usually plays one voice; mixing can add more. |
-| **period**  | Paula's pitch value. Higher period, lower pitch.                                          |
+| Term                | Meaning                                                                                   |
+| ------------------- | ----------------------------------------------------------------------------------------- |
+| **ADKCON**          | Paula control register. Selects attach modes, among other things.                         |
+| **attach mode**     | One channel's samples set the next channel's volume or period; the first stays silent.    |
+| **audio filter**    | Amiga's low-pass filter on all channels. Software can switch it on or off.                |
+| **audio interrupt** | Paula's signal to the CPU that a channel started a new pass over its sample.              |
+| **AUDxLC**          | Channel x sample start address. Reloaded into the pointer at each wrap.                   |
+| **AUDxLEN**         | Channel x sample length, in words.                                                        |
+| **AUDxPER**         | Channel x period: clock divider that sets pitch.                                          |
+| **AUDxVOL**         | Channel x volume, 0 to 64.                                                                |
+| **CCK**             | Colour clock, 3.546895 MHz on PAL. Paula's time unit.                                     |
+| **CIA**             | Timer chip. Replayers use it for tempo independent of the display.                        |
+| **CPU**             | The Motorola 68000 family processor.                                                      |
+| **DMA**             | Direct memory access. Paula fetches samples without the CPU.                              |
+| **PAL**             | European TV standard. Sets the Amiga clock and 50 Hz frame rate.                          |
+| **PWM**             | Pulse-width modulation. Paula uses it to apply volume. Not the same as pulse width.       |
+| **VBL**             | Vertical blank interrupt, once per frame. The usual replayer tick.                        |
+| **HRM**             | Commodore's Amiga Hardware Reference Manual.                                              |
+| **channel**         | One of Paula's four hardware sound outputs. Usually plays one voice; mixing can add more. |
+| **period**          | Paula's pitch value. Higher period, lower pitch.                                          |
 
 ## Other computers
 
@@ -34,14 +37,20 @@ One line per term. Every acronym used in this repo must appear here.
 
 ## Sound and synthesis
 
-| Term         | Meaning                                                                |
-| ------------ | ---------------------------------------------------------------------- |
-| **sample**   | Recorded sound data, played from memory.                               |
-| **waveform** | A short sample loop, often built or changed by code.                   |
-| **PCM**      | Sampled sound: a stream of stored amplitude values.                    |
-| **ADSR**     | Attack, decay, sustain, release: the four phases of a volume envelope. |
-| **LFO**      | Low-frequency oscillator: slow periodic change, e.g. vibrato.          |
-| **MIDI**     | Standard protocol for sending notes to synthesizers.                   |
+| Term            | Meaning                                                                |
+| --------------- | ---------------------------------------------------------------------- |
+| **sample**      | Recorded sound data, played from memory.                               |
+| **waveform**    | A short sample loop, often built or changed by code.                   |
+| **PCM**         | Sampled sound: a stream of stored amplitude values.                    |
+| **ADSR**        | Attack, decay, sustain, release: the four phases of a volume envelope. |
+| **LFO**         | Low-frequency oscillator: slow periodic change, e.g. vibrato.          |
+| **MIDI**        | Standard protocol for sending notes to synthesizers.                   |
+| **note-on**     | The event that starts a note. A MIDI term.                             |
+| **note-off**    | The event that ends a note, e.g. to start its release. A MIDI term.    |
+| **synth**       | Sound made by code from short waveforms, not from recordings.          |
+| **envelope**    | A curve that changes volume, or another value, during a note.          |
+| **modulation**  | One signal changing a setting of another, e.g. volume or pitch.        |
+| **pulse width** | The share of a square-like wave's cycle spent high.                    |
 
 ## Music theory
 
@@ -53,6 +62,19 @@ One line per term. Every acronym used in this repo must appear here.
 | **portamento** | Slide of the pitch, often towards a target note.       |
 | **vibrato**    | Periodic pitch change.                                 |
 | **voice**      | One independent part of the music.                     |
+
+## Sound changes
+
+What an operation does to a sound. The "(inference)" notes use these words.
+
+| Term          | Meaning                                                          |
+| ------------- | ---------------------------------------------------------------- |
+| **timbre**    | The colour of a sound, apart from pitch and volume.              |
+| **clipping**  | Cutting values that exceed the allowed range.                    |
+| **detune**    | A slight shift away from the intended pitch.                     |
+| **phasing**   | A sweeping, hollow tone from mixing a sound with a shifted copy. |
+| **crossfade** | A gradual blend from one sound into another.                     |
+| **morph**     | A gradual change from one waveform into another.                 |
 
 ## Tracker terms
 
@@ -68,6 +90,16 @@ One line per term. Every acronym used in this repo must appear here.
 | **instrument**           | What a note plays: sample or waveform, plus settings. |
 | **instrument transpose** | Offset added to every instrument number of a track.   |
 | **sound effect**         | A sound the game starts, outside the music.           |
+
+## Programming
+
+Code patterns we cite from replayer source.
+
+| Term           | Meaning                                                        |
+| -------------- | -------------------------------------------------------------- |
+| **busy-wait**  | Waiting in a loop that checks a condition, doing nothing else. |
+| **jump table** | A table of code addresses. A number picks which code runs.     |
+| **handler**    | The code that runs for one command or event.                   |
 
 ## Programs and formats
 
@@ -93,16 +125,17 @@ One line per term. Every acronym used in this repo must appear here.
 
 ## Card terms
 
-| Term            | Meaning                                                              |
-| --------------- | -------------------------------------------------------------------- |
-| **stream**      | A position in some data that the player steps through.               |
-| **scope**       | Where a stream's position lives: song, track, voice or instrument.   |
-| **generator**   | Stateful process that is not a stream, e.g. a vibrato state machine. |
-| **interaction** | One stream acting on another, e.g. a jump or a trigger.              |
-| **tables**      | Control level: data walked in order, no opcodes.                     |
-| **commands**    | Control level: data with opcodes, but no conditions.                 |
-| **program**     | Control level: opcodes with conditions or calls.                     |
-| **module**      | Replay code ships inside the music file.                             |
+| Term             | Meaning                                                              |
+| ---------------- | -------------------------------------------------------------------- |
+| **stream**       | A position in some data that the player steps through.               |
+| **scope**        | Where a stream's position lives: song, track, voice or instrument.   |
+| **generator**    | Stateful process that is not a stream, e.g. a vibrato state machine. |
+| **interaction**  | One stream acting on another, e.g. a jump or a trigger.              |
+| **table walker** | A stream that steps through a table: off, once or looping.           |
+| **tables**       | Control level: data walked in order, no opcodes.                     |
+| **commands**     | Control level: data with opcodes, but no conditions.                 |
+| **program**      | Control level: opcodes with conditions or calls.                     |
+| **module**       | Replay code ships inside the music file.                             |
 
 ## Provenance
 

@@ -31,7 +31,7 @@ nothing.
 
 - Loop counter: the interrupt at each loop pass counts down. At zero it plays
   silence and frees the voice. `:1320` `:1353`
-- A new note busy-waits for the channel's interrupt flag. `:1288`
+- A new note busy-waits for the channel's audio interrupt. `:1288`
 - A position with zero repeats ends the subsong. `:876`
 
 ## State
