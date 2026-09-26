@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """List UADE replayers and locate their assembler source.
 
-Usage: inventory.py [--write | --check]
+Usage: inventory.py
 
-  (no option)  print the CSV to stdout
-  --write      write data/inventory.csv
-  --check      exit 1 if data/inventory.csv is out of date
+Prints one CSV row per player. Nothing is stored: other tools call table().
+To review a UADE pin update, diff this output from before and after it.
 
 One row per binary in ext/uade/players. The source is found by, in order:
   hash     - a byte-identical binary exists inside a source directory
@@ -32,6 +31,7 @@ import hashlib
 import io
 import re
 import sys
+from functools import cache
 from pathlib import Path
 
 import players
@@ -48,7 +48,6 @@ EXT_SOURCE_EXT = SOURCE_EXT | {".c", ".h"}
 HUNK_HEADER = bytes.fromhex("000003f3")  # AmigaOS executable
 
 DISASM = ROOT / "data" / "disasm"
-CSV = ROOT / "data" / "inventory.csv"
 
 # Wrappers find code inside the module and patch it.
 PATCH_RE = re.compile(r"PatchTable|FindIt\d|^Patch\d", re.M)
@@ -208,22 +207,18 @@ def to_csv(table):
     return buf.getvalue()
 
 
+@cache
+def table():
+    """{player: {column: value}}, as the CSV would show it."""
+    header, *body = rows()
+    return {r[0]: dict(zip(header, map(str, r))) for r in body}
+
+
 def main(argv):
-    text = to_csv(rows())
-    if not argv:
-        sys.stdout.write(text)
-        return 0
-    if argv == ["--write"]:
-        CSV.write_text(text, encoding="utf-8")
-        return 0
-    if argv == ["--check"]:
-        if CSV.read_text(encoding="utf-8") != text:
-            print(
-                f"{CSV.relative_to(ROOT)}: out of date; run tools/inventory.py --write"
-            )
-            return 1
-        return 0
-    sys.exit(__doc__)
+    if argv:
+        sys.exit(__doc__)
+    sys.stdout.write(to_csv(rows()))
+    return 0
 
 
 if __name__ == "__main__":

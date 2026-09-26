@@ -1,8 +1,7 @@
 # Sources
 
 The replayer code we read. Each folder here is a pinned git submodule.
-`tools/inventory.py` maps every UADE player binary to its source in
-[`data/inventory.csv`](../data/inventory.csv).
+`tools/inventory.py` maps every UADE player binary to its source.
 
 ## `uade`
 

@@ -88,13 +88,6 @@ repos:
         pass_filenames: false
         always_run: true
 
-      - id: inventory                # data/inventory.csv is fresh
-        name: inventory
-        entry: .venv/bin/python3 tools/inventory.py --check
-        language: system
-        pass_filenames: false
-        always_run: true
-
       - id: tool-tests               # Self-tests for the checkers above
         name: tool-tests
         entry: .venv/bin/python3 -m unittest discover -s tests

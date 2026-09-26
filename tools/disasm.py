@@ -16,8 +16,8 @@ pointer tag also becomes a LABEL named after the tag, e.g. DTP_Interrupt.
 
 The config is the committed artefact. Add CODE ranges IRA missed and rename
 labels by hand; cards cite them as `data/disasm/PLAYER.cnf:Label`. Listings
-are generated, never committed. After adding a config, run
-`tools/inventory.py --write`; the player becomes `replay: disasm`. If the
+are generated, never committed. With a config, `tools/inventory.py` lists
+the player as `replay: disasm`. If the
 replay code turns out to be in the module, delete the config and set the
 player to `replay: module` in data/players.yaml.
 

@@ -1,18 +1,14 @@
 #!/usr/bin/env python3
 """Check that Markdown links and source citations resolve.
 
-Usage: links.py [--fix-rows] FILE.md|DIR...
-
-  --fix-rows  rewrite `#L<n>` of titled links to the row that starts with the
-              title; run after data/inventory.csv changes
+Usage: links.py FILE.md|DIR...
 
 Checks:
   - relative Markdown links point to existing files
-  - `#L<n>` links name an existing line; a link title must start that line,
-    e.g. [Future Composer](data/inventory.csv?plain=1#L60 "FutureComposer1.3")
+  - `#L<n>` links name an existing line
   - player cards (front matter has `player`): `file:line` citations name an
-    existing line under the player's source in data/inventory.csv; a bare
-    `:line` refers to the file of the previous citation
+    existing line under the player's source, as tools/inventory.py finds it;
+    a bare `:line` refers to the file of the previous citation
   - `path.cnf:Label` citations name a LABEL or SYMBOL in an IRA config;
     the path is relative to the repo root, e.g. data/disasm/X.cnf:Play
   - code spans that start with a repo folder, e.g. `docs/x.md` or
@@ -23,17 +19,16 @@ Markdown is parsed by tools/mdtools.py. Prints `file:line: rule: detail`
 for each problem; exits 1 if any.
 """
 
-import csv
 import re
 import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 
+import inventory
 from mdtools import children, read
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCES = ROOT / "ext" / "uade" / "amigasrc" / "players"
-INVENTORY = ROOT / "data" / "inventory.csv"
 
 
 def citation(code):
@@ -88,9 +83,8 @@ def cnf_labels(path, cache={}):
 
 
 def sources():
-    """{player: source path} from data/inventory.csv."""
-    with INVENTORY.open(encoding="utf-8") as f:
-        return {row["player"]: row["source"] for row in csv.DictReader(f)}
+    """{player: source path}, as tools/inventory.py finds it."""
+    return {player: row["source"] for player, row in inventory.table().items()}
 
 
 def line_count(path, cache={}):
@@ -99,24 +93,15 @@ def line_count(path, cache={}):
     return cache[path]
 
 
-def starts(row, title):
-    """Row begins with title as a whole field: TFMX must not match TFMX-Pro."""
-    rest = row[len(title) :]
-    return row.startswith(title) and (not rest or rest[0] in ",\t |")
-
-
-def check_row(dest, num, title, report):
-    """A `#L<n>` link must hit an existing line; with a title, that line
-    must start with it. Titles keep row links right when files change."""
-    rows = dest.read_text(encoding="utf-8", errors="replace").splitlines()
-    if not 1 <= num <= len(rows):
-        report(f"{dest.name}#L{num} beyond {len(rows)} lines")
-    elif title and not starts(rows[num - 1], title):
-        report(f'{dest.name}#L{num} does not start with "{title}"')
+def check_row(dest, num, report):
+    """A `#L<n>` link must hit an existing line."""
+    count = line_count(dest)
+    if not 1 <= num <= count:
+        report(f"{dest.name}#L{num} beyond {count} lines")
 
 
 def row_anchor(href):
-    """(file part, row) of a link like `data/inventory.csv?plain=1#L60`."""
+    """(file part, row) of a link like `x.asm?plain=1#L60`."""
     target, _, anchor = href.partition("#")
     target = target.split("?")[0]
     row = int(anchor[1:]) if anchor[:1] == "L" and anchor[1:].isdigit() else None
@@ -124,10 +109,10 @@ def row_anchor(href):
 
 
 def links(doc):
-    """Yield (line, href, title) for each link in the document."""
+    """Yield (line, href) for each link in the document."""
     for n, child in spans(doc):
         if child.type == "link_open":
-            yield n, child.attrs.get("href", ""), child.attrs.get("title")
+            yield n, child.attrs.get("href", "")
 
 
 def check(path, known_sources):
@@ -142,11 +127,11 @@ def check(path, known_sources):
     source = known_sources.get(str(meta.get("player", ""))) or ""
     src = source_dir(source) if source else None
     if "player" in meta and not source:
-        err(1, "source", f"{meta['player']} has no source in data/inventory.csv")
+        err(1, "source", f"{meta['player']} has no source in tools/inventory.py")
     if src and not src.is_dir():
         src = None  # an IRA config, cited by label
 
-    for n, href, title in links(doc):
+    for n, href in links(doc):
         if urlsplit(href).scheme or href.startswith("#"):
             continue  # URL or in-page anchor
         target, row = row_anchor(href)
@@ -154,7 +139,7 @@ def check(path, known_sources):
         if not dest.exists():
             err(n, "link", f"{target} does not exist")
         elif row is not None:
-            check_row(dest, row, title, lambda d: err(n, "link", d))
+            check_row(dest, row, lambda d: err(n, "link", d))
 
     last_file = None
     for n, child in spans(doc):
@@ -191,34 +176,11 @@ def check(path, known_sources):
     return errors
 
 
-def fix_rows(path):
-    """Point each titled `#L<n>` link at the row that starts with its title."""
-    text = path.read_text(encoding="utf-8")
-    new = text
-    for _, href, title in links(read(path)):
-        target, row = row_anchor(href)
-        dest = path.parent / target
-        if row is None or not title or not dest.is_file():
-            continue
-        rows = dest.read_text(encoding="utf-8", errors="replace").splitlines()
-        for i, line in enumerate(rows, start=1):
-            if starts(line, title):
-                fixed = href[: href.rindex("#L")] + f"#L{i}"
-                new = new.replace(f'({href} "{title}")', f'({fixed} "{title}")')
-                break
-    if new != text:
-        path.write_text(new, encoding="utf-8")
-
-
 def main(argv):
-    fix = argv[:1] == ["--fix-rows"]
-    argv = argv[1:] if fix else argv
     known = sources()
     errors = []
     for arg in map(Path, argv):
         for path in sorted(arg.rglob("*.md")) if arg.is_dir() else [arg]:
-            if fix:
-                fix_rows(path)
             errors += check(path, known)
     for e in errors:
         print(e)

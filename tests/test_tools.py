@@ -3,10 +3,8 @@
 Run: python3 -m unittest discover -s tests
 """
 
-import shutil
 import subprocess
 import sys
-import tempfile
 import unittest
 from pathlib import Path
 
@@ -59,22 +57,9 @@ class Links(unittest.TestCase):
         self.assertIn("docs/nope.md does not exist", out)
         self.assertIn("99999 beyond", out)
         self.assertIn("src/nope.asm not found", out)
-        self.assertIn('#L3 does not start with "MugicianII"', out)
+        self.assertIn("README.md#L99999 beyond", out)
         self.assertIn("sample.cnf has no label NoSuchLabel", out)
         self.assertIn("none.cnf does not exist", out)
-
-    def test_fix_rows_repoints_stale_row(self):
-        # Same directory as the fixtures, so relative links still resolve.
-        with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
-            copy = Path(tmp) / "stale.md"
-            shutil.copy(FIXTURES / "links_bad.md", copy)
-            text = copy.read_text().replace("../../data", "../../../data")
-            copy.write_text(text)
-            run("links.py", "--fix-rows", copy)
-            fixed = copy.read_text()
-        rows = (ROOT / "data" / "inventory.csv").read_text().splitlines()
-        row = 1 + next(i for i, r in enumerate(rows) if r.startswith("MugicianII,"))
-        self.assertIn(f'inventory.csv?plain=1#L{row} "MugicianII"', fixed)
 
     def test_accepts_label_citations(self):
         code, _, out = run("links.py", FIXTURES / "good" / "labels.md")
@@ -133,6 +118,33 @@ class Players(unittest.TestCase):
             "unknown field `colour`",
         ):
             self.assertIn(text, out)
+
+
+class Inventory(unittest.TestCase):
+    """Known results, so a change to the matching does not go unnoticed."""
+
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import inventory
+
+        self.table = inventory.table()
+
+    def test_known_players(self):
+        expected = {
+            "SonicArranger": ("wanted_team/Sonic_Arranger", "hash", "uade"),
+            "RobHubbard": ("wanted_team/RobHubbard", "hash", "module"),
+            "SoundMon2.2": ("uade/soundmon", "name", "uade"),
+            "FutureComposer1.4": ("defect/fc14", "manual", "uade"),
+            "SIDMon2.0": ("ext/c-flod/neoart/flod/sidmon", "manual", "port"),
+            "TFMX-Pro": ("wanted_team/TFMX-Pro", "hash", "uade"),
+        }
+        for player, (source, match, replay) in expected.items():
+            with self.subTest(player=player):
+                row = self.table[player]
+                self.assertEqual(
+                    (row["source"], row["match"], row["replay"]),
+                    (source, match, replay),
+                )
 
 
 class Disasm(unittest.TestCase):

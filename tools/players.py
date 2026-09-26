@@ -7,6 +7,7 @@ Usage: players.py --check
 
 Other tools import this module:
   load()        {player: facts}, as written in data/players.yaml
+  binaries()    names of the player binaries in ext/uade/players
   validate()    problems in the file, as text; takes other data for tests
 """
 
@@ -47,9 +48,13 @@ def load():
     return yaml.safe_load(SOURCE.read_text(encoding="utf-8")) or {}
 
 
+def binaries():
+    return {p.name for p in BINARIES.iterdir() if p.is_file()}
+
+
 def validate(data=None):
     data = load() if data is None else data
-    binaries = {p.name for p in BINARIES.iterdir() if p.is_file()}
+    binaries_ = binaries()
     provenance = glossary.words("provenance")
     evidence = glossary.words("lineage_evidence")
     errors = []
@@ -58,7 +63,7 @@ def validate(data=None):
         errors.append(f"{SOURCE.relative_to(ROOT)}: {player}: {detail}")
 
     for player, facts in data.items():
-        if player not in binaries:
+        if player not in binaries_:
             err(player, "not a binary in ext/uade/players")
         if not isinstance(facts, dict):
             err(player, "facts must be a mapping")
@@ -78,13 +83,13 @@ def validate(data=None):
                 continue
             if link.get("evidence", "name") not in evidence:
                 err(player, f"evidence `{link['evidence']}` not in {sorted(evidence)}")
-            if "player" in link and link["player"] not in binaries:
+            if "player" in link and link["player"] not in binaries_:
                 err(player, f"`{link['player']}` is not a binary")
         for port in facts.get("ports") or []:
             if not str(port).startswith("ext/") or not (ROOT / str(port)).exists():
                 err(player, f"port `{port}` is not a path under ext/")
         for name in facts.get("related") or []:
-            if name not in binaries:
+            if name not in binaries_:
                 err(player, f"related `{name}` is not a binary")
         after = facts.get("after") or {}
         if after and "family" not in facts:

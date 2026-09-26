@@ -5,7 +5,7 @@ Usage: cards.py FILE.md|DIR...
 
 A card is a Markdown file whose front matter has a `player` key. Checks:
   - front matter keys and their allowed values
-  - file name matches `player`; `player` is in data/inventory.csv and has a
+  - file name matches `player`; `player` is a UADE binary and has a
     provenance in data/players.yaml
   - sections present and in order
   - Streams table: header, scope, name's first word, and Control/Rate words
@@ -15,7 +15,6 @@ A card is a Markdown file whose front matter has a `player` key. Checks:
 Prints `file:line: rule: detail` for each problem; exits 1 if any.
 """
 
-import csv
 import sys
 from pathlib import Path
 
@@ -24,7 +23,6 @@ import players
 from mdtools import heading_lines, read, sections, table
 
 ROOT = Path(__file__).resolve().parent.parent
-INVENTORY = ROOT / "data" / "inventory.csv"
 
 # Analysis only. Facts about the player live in data/players.yaml.
 KEYS = ["player", "control", "themes", "ideas", "streams"]
@@ -43,11 +41,6 @@ SECTIONS = [
 ]
 STREAMS_HEADER = ["Stream", "Scope", "Carries", "Control", "Rate"]
 STATE_HEADER = ["Scope", "Fields"]
-
-
-def inventory_players():
-    with INVENTORY.open(encoding="utf-8") as f:
-        return {row["player"] for row in csv.DictReader(f)}
 
 
 def is_text_list(value):
@@ -86,7 +79,7 @@ def check(path, known, vocab, facts):
     if path.stem != player:
         err(1, "player", f"file name should be {player}.md")
     if player not in known:
-        err(1, "player", f"{player} not in data/inventory.csv")
+        err(1, "player", f"{player} is not a binary in ext/uade/players")
     if "provenance" not in facts.get(player, {}):
         err(1, "player", f"{player} has no provenance in data/players.yaml")
 
@@ -166,7 +159,7 @@ def check(path, known, vocab, facts):
 
 
 def main(argv):
-    known = inventory_players()
+    known = players.binaries()
     vocab = {key: glossary.words(key) for key in ("control", "rate", "stream_names")}
     facts = players.load()
     errors = []

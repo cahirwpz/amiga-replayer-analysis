@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
-          # links, cards and inventory read ext/uade and ext/ahx2play.
+          # links and cards read the sources in ext/.
           submodules: true
       - name: Cache hook environments
         uses: actions/cache@v6

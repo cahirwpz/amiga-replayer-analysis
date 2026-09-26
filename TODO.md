@@ -11,27 +11,20 @@ Selection rules:
 
 - Formats that did not prevail on the demoscene. No `ProTracker`-like players.
 - Themes: cheap but expressive synthesis, unusual tricks, soft voice mixing.
-- `replay` must be `uade` or `port` in [the inventory](data/inventory.csv).
+- `replay` must be `uade` or `port` in the output of `tools/inventory.py`.
 
 ### Cards: synthesis
 
-- [ ] [`TFMX-Pro`](data/inventory.csv?plain=1#L161 "TFMX-Pro"): macro language
-      with conditions and calls
-- [ ] [`MED`](data/inventory.csv?plain=1#L84 "MED"): synth volume and waveform
-      command lists
-- [ ] [`SonicArranger`](data/inventory.csv?plain=1#L134 "SonicArranger"): synth
-      instruments
-- [ ] [`SonixMusicDriver`](data/inventory.csv?plain=1#L135 "SonixMusicDriver"):
-      note score, synth with filter bank
-- [ ] [`SynthDream`](data/inventory.csv?plain=1#L154 "SynthDream"): synth
-      format, not yet read
+- [ ] `TFMX-Pro`: macro language with conditions and calls
+- [ ] `MED`: synth volume and waveform command lists
+- [ ] `SonicArranger`: synth instruments
+- [ ] `SonixMusicDriver`: note score, synth with filter bank
+- [ ] `SynthDream`: synth format, not yet read
 
 ### Cards: port, emulation, tricks
 
-- [ ] [`AbyssHighestExperience`](data/inventory.csv?plain=1#L2 "AbyssHighestExperience"):
-      synthesis, read from `ext/ahx2play`
-- [ ] [`Jochen_Hippel_ST`](data/inventory.csv?plain=1#L65 "Jochen_Hippel_ST"):
-      Atari ST sound chip emulated on Paula
+- [ ] `AbyssHighestExperience`: synthesis, read from `ext/ahx2play`
+- [ ] `Jochen_Hippel_ST`: Atari ST sound chip emulated on Paula
 
 ### Rejected
 
@@ -116,7 +109,7 @@ Findings so far, for the cards above. Paths are relative to
 
 - [ ] Full survey of the remaining players with readable source.
 - [ ] Compare code for the `name` lineage links in `data/players.yaml`.
-- [ ] Tag `ProTracker`-like players in the inventory.
+- [ ] Note `ProTracker`-like players in `data/players.yaml`.
 - [ ] Pick the first binary-only player to disassemble. Filter by scope first.
 - [ ] Before disassembling a player, look for a port of it outside UADE.
 - [ ] Module players: decide where sample modules come from.

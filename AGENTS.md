@@ -26,7 +26,7 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
 ## Scope
 
 - Focus on formats that did not prevail on the Amiga demoscene.
-- Skip `ProTracker`-like players; at most tag them in the inventory.
+- Skip `ProTracker`-like players; at most note them in `data/players.yaml`.
 - Themes: cheap but expressive synthesis, unusual tricks, soft voice mixing.
 - Describe control: streams, their state, and what instruments carry. Paula
   features matter less.
@@ -56,12 +56,11 @@ Readers are C1 non-native speakers with limited attention.
 
 ## Evidence
 
-- In player cards, cite as `file:line` relative to the player's inventory
-  `source`. Elsewhere, cite as `ext/uade/<path>:<line>`.
+- In player cards, cite as `file:line` relative to the player's source from
+  `tools/inventory.py`. Elsewhere, cite as `ext/uade/<path>:<line>`.
 - Mark guesses as guesses. Mark what you hear as "(inference)".
 - Keyword scans only pick candidates. A claim needs code that was read.
-- Use only players whose `replay` is `uade`, `port` or `disasm` in the
-  inventory.
+- Use only players whose `replay` is `uade`, `port` or `disasm`.
 - Cite our disassembly by label: `data/disasm/<player>.cnf:<Label>`. Listing
   line numbers are not stable.
 - Record provenance per player in `data/players.yaml`.
@@ -74,9 +73,8 @@ Readers are C1 non-native speakers with limited attention.
 ## Repo hygiene
 
 - Never edit submodules in `ext/` or update their pins unasked.
-- After a pin update, run `tools/inventory.py --write`, then
-  `tools/links.py --fix-rows *.md docs players ext/README.md`.
-- Link player names to their inventory row, titled with the name.
+- For a pin update, diff the output of `tools/inventory.py` before and after.
+- Link player names to their card, if one exists.
 - Run `source ./activate` once per shell.
 - Before each commit, stage and run `pre-commit run --all-files`. Stage again
   and rerun until it passes.

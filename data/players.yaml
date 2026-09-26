@@ -7,7 +7,7 @@
 #                     relative to the repo root, the rest to
 #                     ext/uade/amigasrc/players.
 #   replay            replay location when the heuristic in inventory.py is wrong.
-#   note              remark for data/inventory.csv.
+#   note              remark in the output of tools/inventory.py.
 #   provenance        where the code we read comes from; values in the glossary.
 #   provenance_guess  true when provenance is a guess.
 #   author, year, game
