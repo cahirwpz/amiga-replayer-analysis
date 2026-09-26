@@ -1,0 +1,3 @@
+[submodule "uade"]
+	path = uade
+	url = https://gitlab.com/uade-music-player/uade.git

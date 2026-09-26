@@ -1,0 +1,5 @@
+# Line length is handled by prettier (--prose-wrap always).
+MD013: false
+# Allow repeated headings in different sections (e.g. per-player cards).
+MD024:
+  siblings_only: true

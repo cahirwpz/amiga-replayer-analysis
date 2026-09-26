@@ -1,0 +1,55 @@
+# See https://pre-commit.com for more information
+
+exclude: ^uade/
+
+repos:
+  # --- COMMON/GENERAL HOOKS ---
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace      # Remove unnecessary whitespaces
+      - id: end-of-file-fixer        # Ensure files end with a newline
+      - id: check-yaml               # Validate YAML syntax
+      - id: check-added-large-files  # Prevent bumping the repo size with huge files
+      - id: check-merge-conflict     # Check for unresolved merge conflicts
+
+  # --- BASH (Shell Scripts) ---
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck               # Static analysis for shell scripts
+        files: ^activate$
+        types: [file]                # activate is sourced, not executable
+
+  # --- PYTHON (Ruff) ---
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.9
+    hooks:
+      - id: ruff                     # Fast Python linter & import sorter
+        args: [ --fix ]
+      - id: ruff-format              # Fast Python formatter (Black-compatible)
+
+  # --- MARKDOWN & DOCS ---
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier                 # Format Markdown
+        types: [markdown]
+        args: [ --prose-wrap, always, --print-width, "80" ]
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.48.0
+    hooks:
+      - id: markdownlint             # Linter for Markdown style and consistency
+        args: [ --fix ]
+
+  - repo: local
+    hooks:
+      - id: cogload                  # Cognitive load limits, see CLAUDE.md
+        name: cogload
+        entry: python3 tools/cogload.py
+        language: system
+        types: [markdown]
+        # Glossary changes can break any file, so always check all of them.
+        pass_filenames: false
+        args: [ README.md, CLAUDE.md, docs/, players/, ideas/, details/ ]

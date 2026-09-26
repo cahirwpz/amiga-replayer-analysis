@@ -1,0 +1,28 @@
+#!/bin/bash
+# This file must be used with "source ./activate" in the repository root.
+
+function uade_analysis_activate {
+  git submodule update --init || return 1
+  python3 -m venv .venv || return 1
+  # shellcheck source=/dev/null
+  source .venv/bin/activate || return 1
+  python3 -m pip -q install -U -r requirements.txt || return 1
+  pre-commit install || return 1
+}
+
+# The venv and requirements.txt resolve against $(pwd).
+# zsh names the sourced file in $0 at top level; bash in BASH_SOURCE.
+if ! [ "${BASH_SOURCE[0]:-$0}" -ef ./activate ]; then
+  UADE_ANALYSIS_TOP=$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)
+  echo "activate: must be sourced from ${UADE_ANALYSIS_TOP}, not $(pwd)"
+  echo "  cd ${UADE_ANALYSIS_TOP} && source ./activate"
+  unset UADE_ANALYSIS_TOP
+  return 1
+fi
+
+if ! uade_analysis_activate; then
+  echo "uade-analysis environment setup failed!"
+  return 1
+fi
+
+echo "uade-analysis environment in $(pwd) configured!"
