@@ -1,0 +1,25 @@
+# Annotations for the MaxTrax driver's shared.asm: voices, pitch, envelopes,
+# controllers. Render: tools/annot.py
+source: ext/uade/amigasrc/players/other/max_trax/shared.asm
+sha1: b3c75aa24a9e966cfb8ae7bd75311608c2d34fe8
+
+labels:
+  413: OctaveShift
+  612: EnvelopeRamp
+  919: PanSide
+  971: DamperPedal
+  1001: PortaOffBug
+  1032: RpnSelect
+
+comments:
+  413: too low for this sample? take the next one, an octave lower
+  612: volume ramps linearly to the segment's target
+  919: "pan is a side, not a level: it steers voice allocation"
+  1001: "bug: a2, not a0; from MusicServer, a2 points into the score"
+
+banners:
+  87: |
+    Voices 0 and 3 are left, 1 and 2 right. Picking: the channel's side
+    first, the other side if its voices are freer. Between two voices,
+    the lower envelope state wins; a round-robin breaks ties. A voice
+    with a higher priority or a blocking sound is skipped.

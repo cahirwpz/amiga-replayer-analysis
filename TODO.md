@@ -45,9 +45,6 @@ All twelve pilot cards exist.
 
 - [ ] `MIDI-Loriciel` card. Reading notes below. The MIDI events it handles, CCs
       included, go to a `details/` page.
-- [ ] MaxTrax card (`replay: source`). Read `NoteOn` for voice allocation and
-      `MusicServer` for timing and CCs, in
-      `ext/uade/amigasrc/players/other/max_trax/max.asm`. CCs go to `details/`.
 
 ### Then
 
@@ -62,7 +59,8 @@ All twelve pilot cards exist.
 
 - Modules: which songs use a feature? MED list jumps, TFMX Pro riffs and byte
   checks, SoundPlayer `DD` and modulation in Lemmings. TFMX 7V notes to voice 3.
-- Releases: did a game or demo ship Oktalyzer's replay 1?
+- Releases: did a game or demo ship Oktalyzer's replay 1? Which games used
+  MaxTrax?
 - Docs or credits: Sonic Arranger's `AMF` name. Other games with Digital Sonix &
   Chrome. Other Synth Dream composers.
 - The sound chip's datasheet: compare the Hippel ST volume table with the chip.
@@ -93,10 +91,6 @@ All twelve pilot cards exist.
   matches.
 - `lbC000844`: program change picks a multisample; note ranges choose the
   sample. `lbC000904`: velocity curve to volume.
-
-MaxTrax source: `ext/uade/amigasrc/players/other/max_trax/`. Its `driver.i`
-declares 16 MIDI channels and 4 voices with priority. It also has attack and
-release envelopes, damper pedal, pitch bend range and tempo slides.
 
 ## Disassembly queue
 

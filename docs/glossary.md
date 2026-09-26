@@ -114,9 +114,15 @@ Standard MIDI terms. Note-on and note-off are under Sound and synthesis.
 | **CC 10**            | Pan.                                                                                              |
 | **CC 64**            | Damper pedal: while it is down, note-offs are held back.                                          |
 | **CC 65**            | Portamento on or off.                                                                             |
+| **CC 80–83**         | General-purpose switches. A player gives them its own meaning.                                    |
 | **CC 100, 101**      | Pick an RPN.                                                                                      |
+| **CC 120**           | All sound off, at once, without release.                                                          |
 | **CC 121**           | Reset all controllers.                                                                            |
 | **CC 123**           | All notes off.                                                                                    |
+| **CC 126**           | Mono mode on.                                                                                     |
+| **CC 127**           | Poly mode on.                                                                                     |
+| **mono mode**        | One note at a time per MIDI channel; a new note replaces it.                                      |
+| **poly mode**        | Several notes at a time per MIDI channel.                                                         |
 | **RPN**              | Registered parameter number: a MIDI channel parameter set through CCs, e.g. the pitch bend range. |
 | **meta event**       | An SMF event for the player, not for instruments, e.g. tempo.                                     |
 | **sysex**            | System exclusive: a MIDI message for one maker's device.                                          |
@@ -141,19 +147,20 @@ Code patterns we cite from replayer source.
 
 ## Programs and formats
 
-| Term     | Meaning                                                                                     |
-| -------- | ------------------------------------------------------------------------------------------- |
-| **AHX**  | Abyss Highest eXperience: Amiga chiptune tracker, 1990s.                                    |
-| **MED**  | Music editor by Teijo Kinnunen, later OctaMED. Tracker with synth sounds.                   |
-| **TFMX** | The Final Musicsystem eXtended, by Chris Hülsbeck. Instruments are macro programs.          |
-| **IMS**  | TFMX's interference modulation synthesis: a wave rebuilt each tick from a resampled source. |
-| **SMUS** | Simple Music Score: note score format from Electronic Arts.                                 |
-| **YAML** | Plain-text data format. Our hand-written data files use it.                                 |
-| **UADE** | Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.                        |
-| **IFF**  | Interchange File Format by Electronic Arts. 8SVX is its sample type.                        |
-| **IRA**  | Portable 68000 reassembler. Turns a player binary into assembler source.                    |
-| **EG**   | SoundMon's envelope generator. It sweeps a wave shape, not the volume.                      |
-| **MOD**  | SoundMon's modulation walker: writes one table value into the wave.                         |
+| Term             | Meaning                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| **AHX**          | Abyss Highest eXperience: Amiga chiptune tracker, 1990s.                                    |
+| **MED**          | Music editor by Teijo Kinnunen, later OctaMED. Tracker with synth sounds.                   |
+| **TFMX**         | The Final Musicsystem eXtended, by Chris Hülsbeck. Instruments are macro programs.          |
+| **IMS**          | TFMX's interference modulation synthesis: a wave rebuilt each tick from a resampled source. |
+| **SMUS**         | Simple Music Score: note score format from Electronic Arts.                                 |
+| **YAML**         | Plain-text data format. Our hand-written data files use it.                                 |
+| **UADE**         | Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.                        |
+| **audio.device** | AmigaOS's Paula driver. Programs queue sample requests to it.                               |
+| **IFF**          | Interchange File Format by Electronic Arts. 8SVX is its sample type.                        |
+| **IRA**          | Portable 68000 reassembler. Turns a player binary into assembler source.                    |
+| **EG**           | SoundMon's envelope generator. It sweeps a wave shape, not the volume.                      |
+| **MOD**          | SoundMon's modulation walker: writes one table value into the wave.                         |
 
 ## This project
 
@@ -223,6 +230,7 @@ using it, e.g. "Pitch" for "Pitch list".
 | **EG**          | SoundMon's wave shape sweep.                                 |
 | **MOD**         | SoundMon's wave sample writes.                               |
 | **Macro**       | A program of opcodes that plays a sound.                     |
+| **Score**       | One event list for the whole song, in time order.            |
 | **Performance** | AHX's instrument list: wave, note and two commands per step. |
 
 ## Avoided terms

@@ -1,0 +1,40 @@
+# Annotations for the MaxTrax driver's max.asm: score, notes, timing.
+# shared.asm: data/annot/MaxTrax-shared.yaml. Render: tools/annot.py
+source: ext/uade/amigasrc/players/other/max_trax/max.asm
+sha1: a586fc37de2575f06f087ca51876e75bc308b94d
+
+labels:
+  # notes
+  661: MonoLegato
+  713: StealVoice
+  757: QueueAttack
+  797: QueueSustain
+  # the score, once per VBlank
+  1267: ScoreClock
+  1293: StopCountdown
+  1339: BeamBudget
+  1385: SetStopEvent
+  1412: TempoSlide
+  1427: ScoreEnd
+  1497: SyncEvent
+  1511: BeginRepeat
+  1532: EndRepeat
+
+comments:
+  654: velocity 0 is ignored here; stop events end notes
+  661: "mono: with portamento, a new note glides the held voice; else it restarts it"
+  713: the picked voice is cut off, even mid-note
+  757: "request 1: the attack part, played once"
+  797: "request 2: the sustain part, looped by audio.device"
+  1267: "score clock += TickUnit; tempo sets TickUnit"
+  1293: each voice counts down its note's length
+  1339: past line 128, leave the rest of the events to the next VBlank
+  1385: the note's length becomes a stop event for its voice
+  1412: tempo moves linearly over the event's length
+  1497: signal the game with a value
+  1511: nested repeats, up to 4
+
+banners:
+  1334: |
+    Score events, 6 bytes: command, data, start time (a delta), stop time.
+    A note's stop time is its length. Other commands keep data there.
