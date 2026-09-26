@@ -1,0 +1,72 @@
+# Annotations for the Tim Follin replayer. Render: tools/annot.py
+source: ext/uade/amigasrc/players/other/timfollin/DP_TimFollin.asm
+sha1: 06cb61fd3ef86b6e51749fbb744afa7708b6e82c
+
+labels:
+  _play1: Tick
+  _play2: ChainTick
+  L_D40: ChainSample
+  L_D8E: StartSample
+  L_E1E: VoiceTick
+  348: PulseSweep
+  L_E86: Envelope
+  L_F1C: Vibrato
+  L_F5E: Trill
+  L_F98: Portamento
+  L_FEC: NoteTimer
+  L_1006: GateOff
+  L_101A: ReadTrack
+  bratab: CommandTable
+  L_103E: PlayNote
+  L_1226: ResetPulse
+  L_12a2: CallStacks
+  # command handlers
+  L_10e2: CmdNop
+  L_10e6: CmdLoopStart
+  L_10f2: CmdLoop
+  L_1102: CmdFixedLength
+  L_110a: CmdEnd
+  L_1120: CmdCall
+  L_113e: CmdJump
+  L_1150: CmdReturn
+  L_115e: CmdTranspose
+  L_1166: CmdEnvelope
+  L_1196: CmdEnvelopeRestart
+  L_119e: CmdTrill
+  L_11ae: CmdPortamento
+  L_11b6: CmdVibrato
+  L_11ca: CmdNoTranspose
+  L_11e2: CmdFlags
+  L_11ea: CmdEnvelopeStep
+  L_11f2: CmdInstrument
+  L_1218: CmdPulseSpeed
+
+comments:
+  286: bits 0-5 of the flags pick the second sample
+  305: the sample data starts at +$32; the word at +0 is its length
+  363: widen the pulse by one sample, up to index $1E
+  370: narrow the pulse by one sample, down to index 4
+  382: attack is over at volume $3F; start the decay
+  393: hold when the decay reaches the sustain level
+  466: ticks left for this note
+  473: "flag bit 7: stop the channel one tick before the note ends"
+  489: "byte 0 does nothing; $80+n runs command n. Upper-case labels: the Cmd handlers"
+  517: plus the transpose, unless CmdNoTranspose came before
+  526: note index to period
+  529: with fixed length, notes carry no length byte
+  674: writes +2 to +$21; playback and PulseSweep use +$32 onwards
+
+banners:
+  346: |
+    VoiceTick: once per tick for each voice. Pulse sweep (instruments
+    0-3 only), envelope, vibrato or trill, portamento, then the track.
+  443: |
+    Portamento: the note index moves towards the target by N per tick.
+    The period follows the note table, so the glide steps by semitones.
+  477: |
+    ReadTrack: one byte stream per voice. A byte above 0 is a note,
+    then a length byte. 0 and $80+n are commands.
+  264: |
+    ChainTick: runs before Tick. One tick after a note starts, a
+    flagged voice points Paula at a second sample. Paula finishes the
+    first sample, then loops the second.

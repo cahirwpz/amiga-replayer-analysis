@@ -32,8 +32,6 @@ All twelve pilot cards exist.
 - [ ] Fix the classification axes: control, themes, streams. They live in the
       glossary and the card template.
 - [ ] Write the first technique pages in `ideas/`.
-- [ ] Write a `TimFollin` card. Source is a `disassembly`. Replay:
-      `ext/uade/amigasrc/players/other/timfollin/DP_TimFollin.asm:_play1`.
 - [ ] Add a check that `ideas:` slugs in cards exist.
 - [ ] Generate a technique index from the slugs, for the front page.
 
@@ -56,41 +54,6 @@ All twelve pilot cards exist.
 - [ ] Before disassembling a player, look for a port of it outside UADE. Use it
       as a map, not as evidence.
 - [ ] Module players: decide where sample modules come from.
-
-## Reading notes: `TimFollin`
-
-Source: `ext/uade/amigasrc/players/other/timfollin/DP_TimFollin.asm`. Read in
-full; no card yet.
-
-- Streams: one byte track per voice, no positions or patterns. Byte `> 0` is a
-  note, then a duration byte (`L_103E`). Byte `<= 0` is an opcode via `bratab`.
-- Control: `program` level. Call, return, goto, counted loop (`L_1120`,
-  `L_1150`, `L_113E`, `L_10E6`, `L_10F2`).
-- Instruments carry only a sample: length word and data at `+$32` (`L_D8E`). The
-  track sets all expression.
-
-| Opcode | Label    | Effect                                                       |
-| ------ | -------- | ------------------------------------------------------------ |
-| 1      | `L_11F2` | Select instrument                                            |
-| 6      | `L_1166` | Envelope: start, attack and decay speed, sustain level       |
-| 7      | `L_11AE` | Portamento speed; next note becomes the target (`L_F98`)     |
-| 8      | `L_119E` | Trill: note +n / −n, separate up and down times (`L_F5E`)    |
-| 9      | `L_11B6` | Delayed vibrato or sweep in period units (`L_F1C`)           |
-| 10     | `L_115E` | Transpose                                                    |
-| 11     | `L_1102` | Fixed duration; notes then carry no duration byte            |
-| 13     | `L_11E2` | Flags: next wave index (bits 0–5), chain (6), early gate (7) |
-| 14     | `L_1218` | Pulse-width sweep speed; resets the pulse (`L_1226`)         |
-| 17     | `L_11CA` | Next note ignores transpose                                  |
-
-- Pulse-width modulation: `L_E1E` moves the edge of a 32-byte pulse between
-  indexes 4 and `$1E`. Only instruments 0–3.
-- Sample chaining (flag bit 6): one frame after the note starts, `L_D40` sets a
-  second sample. The first sample plays once.
-- Open: `L_1226` resets bytes at `+2`, but the pulse edits and playback use
-  `+$32`. Adapter bug or format detail? Not yet known.
-- Song hacks: subsong 13 volume (`L_DFA`), subsong 14 start volume (`L_B78`).
-- Guess: "Mike D." is Mike Follin. Guess: the 15 fixed subsongs tie it to one
-  game.
 
 ## Disassembly queue
 

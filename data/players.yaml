@@ -179,6 +179,11 @@ SoundPlayer:
   year: 1991
   game: Lemmings
 
+TimFollin:
+  provenance: disassembly
+  author: Tim Follin / Mike D.
+  note: Follin Player II, adapted by Andy Silva
+
 TFMX:
   replay: uade
   family: TFMX
