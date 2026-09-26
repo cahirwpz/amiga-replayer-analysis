@@ -34,6 +34,7 @@ All twelve pilot cards exist.
 - [ ] Tune limits in `tools/cogload.py` and the card template.
 - [ ] Fix the classification axes: control, themes, streams. They live in the
       glossary and the card template.
+- [ ] Decide whether player-prefixed detail filenames need a rule and checker.
 
 ### Card template questions
 
@@ -58,6 +59,9 @@ All twelve pilot cards exist.
 
 ### Tim Follin card
 
+- [ ] Revise output composition using
+      [the control review](details/TimFollin-control.md). Track note-on resets
+      envelope state after its output write.
 - [ ] Explain track-configured state machines, lookups, fixed timing and both
       note-length encodings. `data/annot/TimFollin.yaml:VoiceTick`,
       `:NoteTimer`, `:CmdFixedLength`.
@@ -79,8 +83,9 @@ All twelve pilot cards exist.
       `:CountLoopIrq`, `:msampleloop`.
 - [ ] Explain inherited state, stopped macros and shared mutable code.
       `:NoteToVoice`, `:mstop`, `:CopyToMacro`.
-- [ ] Explain pitch precedence and riff progression during portamento.
-      `:Vibrato`, `:Portamento`, `:RiffPlay`.
+- [ ] Revise pitch and volume composition using
+      [the control review](details/TFMX-Pro-control.md). Cover riff progression
+      during portamento. `:Vibrato`, `:Portamento`, `:RiffPlay`.
 - [ ] Correct the fade rate: its shared counter advances once per voice visit.
       `:VoicesTick`, `:Fade`.
 
