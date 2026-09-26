@@ -4,7 +4,7 @@ sha1: 002e86d8538e9a688a782ae98d5b9cb41208b08a
 
 labels:
   203: InitWaveforms
-  508: PortaSpeed
+  508: SlideSpeed
   519: AddInstrTranspose
   585: RestartVolList
-  789: DoPortamento
+  789: DoSlide

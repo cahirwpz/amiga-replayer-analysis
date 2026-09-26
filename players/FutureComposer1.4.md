@@ -31,9 +31,9 @@ Each instrument runs two command lists: volume, and pitch with waveform.
 ## Generators and interactions
 
 - Vibrato starts after a delay. Depth grows per octave. `:vibrator`
-- Portamento, pitch slides and volume slides step every second tick.
-  `:DoPortamento` `:do_VOLbend`
-- Portamento speed comes from the next row's second byte. `:PortaSpeed`
+- Portamento, pitch slides and volume slides step every second tick. `:DoSlide`
+  `:do_VOLbend`
+- Portamento speed comes from the next row's second byte. `:SlideSpeed`
 - `E2` and `E9` restart the volume list; `E4` does not. `:RestartVolList`
 
 ## State
