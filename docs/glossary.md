@@ -7,23 +7,23 @@ One line per term. Every acronym used in this repo must appear here.
 
 ## Amiga hardware
 
-| Term        | Meaning                                                                 |
-| ----------- | ----------------------------------------------------------------------- |
-| **ADKCON**  | Paula control register. Selects attach modes, among other things.       |
-| **AUDxLC**  | Channel x sample start address. Reloaded into the pointer at each wrap. |
-| **AUDxLEN** | Channel x sample length, in words.                                      |
-| **AUDxPER** | Channel x period: clock divider that sets pitch.                        |
-| **AUDxVOL** | Channel x volume, 0 to 64.                                              |
-| **CCK**     | Colour clock, 3.546895 MHz on PAL. Paula's time unit.                   |
-| **CIA**     | Timer chip. Replayers use it for tempo independent of the display.      |
-| **CPU**     | The Motorola 68000 family processor.                                    |
-| **DMA**     | Direct memory access. Paula fetches samples without the CPU.            |
-| **PAL**     | European TV standard. Sets the Amiga clock and 50 Hz frame rate.        |
-| **PWM**     | Pulse-width modulation. Paula uses it to apply volume.                  |
-| **VBL**     | Vertical blank interrupt, once per frame. The usual replayer tick.      |
-| **HRM**     | Commodore's Amiga Hardware Reference Manual.                            |
-| **channel** | One of Paula's four hardware sound outputs.                             |
-| **period**  | Paula's pitch value. Higher period, lower pitch.                        |
+| Term        | Meaning                                                                                   |
+| ----------- | ----------------------------------------------------------------------------------------- |
+| **ADKCON**  | Paula control register. Selects attach modes, among other things.                         |
+| **AUDxLC**  | Channel x sample start address. Reloaded into the pointer at each wrap.                   |
+| **AUDxLEN** | Channel x sample length, in words.                                                        |
+| **AUDxPER** | Channel x period: clock divider that sets pitch.                                          |
+| **AUDxVOL** | Channel x volume, 0 to 64.                                                                |
+| **CCK**     | Colour clock, 3.546895 MHz on PAL. Paula's time unit.                                     |
+| **CIA**     | Timer chip. Replayers use it for tempo independent of the display.                        |
+| **CPU**     | The Motorola 68000 family processor.                                                      |
+| **DMA**     | Direct memory access. Paula fetches samples without the CPU.                              |
+| **PAL**     | European TV standard. Sets the Amiga clock and 50 Hz frame rate.                          |
+| **PWM**     | Pulse-width modulation. Paula uses it to apply volume.                                    |
+| **VBL**     | Vertical blank interrupt, once per frame. The usual replayer tick.                        |
+| **HRM**     | Commodore's Amiga Hardware Reference Manual.                                              |
+| **channel** | One of Paula's four hardware sound outputs. Usually plays one voice; mixing can add more. |
+| **period**  | Paula's pitch value. Higher period, lower pitch.                                          |
 
 ## Other computers
 
@@ -47,11 +47,12 @@ One line per term. Every acronym used in this repo must appear here.
 
 | Term           | Meaning                                                |
 | -------------- | ------------------------------------------------------ |
-| **note**       | A pitch, often with an instrument, that starts sound.  |
-| **transpose**  | Offset added to every note of a track or instrument.   |
+| **note**       | A pitch with a duration.                               |
+| **transpose**  | Shift all pitches by the same interval.                |
 | **arpeggio**   | Fast cycle of note offsets, making a chord-like sound. |
 | **portamento** | Slide of the pitch, often towards a target note.       |
 | **vibrato**    | Periodic pitch change.                                 |
+| **voice**      | One independent part of the music.                     |
 
 ## Tracker terms
 
@@ -64,7 +65,6 @@ One line per term. Every acronym used in this repo must appear here.
 | **pattern**              | A block of rows, played by one or more tracks.        |
 | **position**             | One entry of the song's play order: patterns to play. |
 | **subsong**              | A separate tune inside one module.                    |
-| **voice**                | One part of the music. Usually one voice per channel. |
 | **instrument**           | What a note plays: sample or waveform, plus settings. |
 | **instrument transpose** | Offset added to every instrument number of a track.   |
 | **sound effect**         | A sound the game starts, outside the music.           |
