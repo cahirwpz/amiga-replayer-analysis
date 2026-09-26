@@ -4,7 +4,7 @@ source: defect/fc14
 code: uade
 control: commands
 themes: [synthesis]
-ideas: [pitch-list, volume-list, sample-pack, sound-transpose]
+ideas: [pitch-list, volume-list, sample-pack, instrument-transpose]
 related: [FutureComposer1.3]
 streams: { song: 1, voice: 3 }
 evidence: code

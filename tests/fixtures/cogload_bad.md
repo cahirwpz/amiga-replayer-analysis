@@ -4,6 +4,8 @@ This sentence is deliberately far too long because it keeps adding words and wor
 
 XYZ is an unknown acronym.
 
+The sequence names the patterns. A `sequence` in code is fine.
+
 - one
 - two
 - three

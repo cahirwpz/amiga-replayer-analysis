@@ -3,8 +3,10 @@
 Run: python3 -m unittest discover -s tests
 """
 
+import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -43,8 +45,10 @@ class Cogload(unittest.TestCase):
             "list-depth",
             "cell-words",
             "acronym",
+            "avoid",
         }
         self.assertTrue(expected <= rules, out)
+        self.assertEqual(out.count("`sequence`: use"), 1, out)
 
 
 class Links(unittest.TestCase):
@@ -57,6 +61,19 @@ class Links(unittest.TestCase):
         self.assertIn('#L3 does not start with "MugicianII"', out)
         self.assertIn("sample.cnf has no label NoSuchLabel", out)
         self.assertIn("none.cnf does not exist", out)
+
+    def test_fix_rows_repoints_stale_row(self):
+        # Same directory as the fixtures, so relative links still resolve.
+        with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
+            copy = Path(tmp) / "stale.md"
+            shutil.copy(FIXTURES / "links_bad.md", copy)
+            text = copy.read_text().replace("../../data", "../../../data")
+            copy.write_text(text)
+            run("links.py", "--fix-rows", copy)
+            fixed = copy.read_text()
+        rows = (ROOT / "data" / "inventory.csv").read_text().splitlines()
+        row = 1 + next(i for i, r in enumerate(rows) if r.startswith("MugicianII,"))
+        self.assertIn(f'inventory.csv?plain=1#L{row} "MugicianII"', fixed)
 
     def test_accepts_label_citations(self):
         code, _, out = run("links.py", FIXTURES / "good" / "labels.md")
@@ -77,6 +94,7 @@ class Cards(unittest.TestCase):
             "control `teleport`",
             "rate `sometimes`",
             "file name should be",
+            "name `Sequence` not in the glossary",
         ):
             self.assertIn(text, out)
 

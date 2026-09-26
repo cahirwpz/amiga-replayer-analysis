@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""Glossary: data/glossary.yaml is the source, docs/glossary.md is generated.
+
+Usage: glossary.py [--write | --check]
+
+  (no option)  print docs/glossary.md to stdout
+  --write      write docs/glossary.md
+  --check      exit 1 if docs/glossary.md is out of date
+
+Other tools import this module and read sections by key:
+  terms()      every defined term, for the acronym check
+  words(key)   the terms of one section, e.g. "control" or "stream_names"
+  avoided()    {avoided term: preferred term}
+"""
+
+import sys
+from functools import cache
+from pathlib import Path
+
+import yaml
+from mdtools import format_table, wrap
+
+ROOT = Path(__file__).resolve().parent.parent
+SOURCE = ROOT / "data" / "glossary.yaml"
+DOC = ROOT / "docs" / "glossary.md"
+
+# Sections that list replacements, not definitions.
+NOT_TERMS = {"avoid"}
+
+
+@cache
+def load():
+    data = yaml.safe_load(SOURCE.read_text(encoding="utf-8"))
+    for section in data["sections"]:
+        for term in section["entries"]:
+            if not isinstance(term, str):
+                sys.exit(f"{SOURCE}: {section['key']}: term {term!r} is not text")
+    return data
+
+
+def section(key):
+    for s in load()["sections"]:
+        if s["key"] == key:
+            return s
+    sys.exit(f"{SOURCE}: no section with key {key!r}")
+
+
+def words(key):
+    return set(section(key)["entries"])
+
+
+def terms():
+    return {
+        term
+        for s in load()["sections"]
+        if s["key"] not in NOT_TERMS
+        for term in s["entries"]
+    }
+
+
+def avoided():
+    return dict(section("avoid")["entries"])
+
+
+def render():
+    data = load()
+    out = [
+        "<!-- Generated from data/glossary.yaml by tools/glossary.py. -->",
+        "",
+        f"# {data['title']}",
+        "",
+        wrap(data["intro"]),
+    ]
+    for s in data["sections"]:
+        if "title" in s:
+            out += ["", f"## {s['title']}"]
+        if "intro" in s:
+            out += ["", wrap(s["intro"])]
+        bold = s.get("bold", True)
+        rows = [
+            [f"**{term}**" if bold else term, meaning]
+            for term, meaning in s["entries"].items()
+        ]
+        out += [""] + format_table(s["columns"], rows)
+    return "\n".join(out) + "\n"
+
+
+def main(argv):
+    text = render()
+    if not argv:
+        sys.stdout.write(text)
+        return 0
+    if argv == ["--write"]:
+        DOC.write_text(text, encoding="utf-8")
+        return 0
+    if argv == ["--check"]:
+        if DOC.read_text(encoding="utf-8") != text:
+            print(
+                f"{DOC.relative_to(ROOT)}: out of date; run tools/glossary.py --write"
+            )
+            return 1
+        return 0
+    sys.exit(__doc__)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

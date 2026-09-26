@@ -17,6 +17,7 @@ evidence: code
 | Stream | Scope | Carries | Control | Rate |
 | --- | --- | --- | --- | --- |
 | Track | voice | notes | teleport | sometimes |
+| Sequence | song | patterns | loop | row |
 
 ## Key ideas
 

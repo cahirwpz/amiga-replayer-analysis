@@ -1,0 +1,163 @@
+# Source of docs/glossary.md. Edit here, then run tools/glossary.py --write.
+# Tools read sections by `key`. Entries are term: meaning, in Markdown.
+title: Glossary
+intro: One line per term. Every acronym used in this repo must appear here.
+sections:
+
+  - key: hardware
+    title: Amiga hardware
+    columns: [Term, Meaning]
+    entries:
+      ADKCON: Paula control register. Selects attach modes, among other things.
+      AUDxLC: Channel x sample start address. Reloaded into the pointer at each wrap.
+      AUDxLEN: Channel x sample length, in words.
+      AUDxPER: 'Channel x period: clock divider that sets pitch.'
+      AUDxVOL: Channel x volume, 0 to 64.
+      CCK: Colour clock, 3.546895 MHz on PAL. Paula's time unit.
+      CIA: Timer chip. Replayers use it for tempo independent of the display.
+      CPU: The Motorola 68000 family processor.
+      DMA: Direct memory access. Paula fetches samples without the CPU.
+      PAL: European TV standard. Sets the Amiga clock and 50 Hz frame rate.
+      PWM: Pulse-width modulation. Paula uses it to apply volume.
+      VBL: Vertical blank interrupt, once per frame. The usual replayer tick.
+      HRM: Commodore's Amiga Hardware Reference Manual.
+      channel: One of Paula's four hardware sound outputs.
+      period: Paula's pitch value. Higher period, lower pitch.
+
+  - key: computers
+    title: Other computers
+    columns: [Term, Meaning]
+    entries:
+      C64: 'Commodore 64: 8-bit home computer with the SID sound chip.'
+      ST: 'Atari ST: home computer with a YM2149 sound chip.'
+
+  - key: sound
+    title: Sound and synthesis
+    columns: [Term, Meaning]
+    entries:
+      sample: Recorded sound data, played from memory.
+      waveform: A short sample loop, often built or changed by code.
+      PCM: 'Sampled sound: a stream of stored amplitude values.'
+      ADSR: 'Attack, decay, sustain, release: the four phases of a volume envelope.'
+      LFO: 'Low-frequency oscillator: slow periodic change, e.g. vibrato.'
+      MIDI: Standard protocol for sending notes to synthesizers.
+
+  - key: music
+    title: Music theory
+    columns: [Term, Meaning]
+    entries:
+      note: A pitch, often with an instrument, that starts sound.
+      transpose: Offset added to every note of a track or instrument.
+      arpeggio: Fast cycle of note offsets, making a chord-like sound.
+      portamento: Slide of the pitch, often towards a target note.
+      vibrato: Periodic pitch change.
+
+  - key: tracker
+    title: Tracker terms
+    columns: [Term, Meaning]
+    entries:
+      tick: One run of the replayer, usually once per frame.
+      row: One line of a pattern. It lasts `speed` ticks.
+      speed: Ticks per row.
+      track: One column of note data, often one per voice.
+      pattern: A block of rows, played by one or more tracks.
+      position: 'One entry of the song''s play order: patterns to play.'
+      subsong: A separate tune inside one module.
+      voice: One part of the music. Usually one voice per channel.
+      instrument: 'What a note plays: sample or waveform, plus settings.'
+      instrument transpose: Offset added to every instrument number of a track.
+      sound effect: A sound the game starts, outside the music.
+
+  - key: programs
+    title: Programs and formats
+    columns: [Term, Meaning]
+    entries:
+      AHX: 'Abyss Highest eXperience: Amiga chiptune tracker, 1990s.'
+      MED: Music editor by Teijo Kinnunen, later OctaMED. Tracker with synth sounds.
+      TFMX: The Final Musicsystem eXtended, by Chris Hülsbeck. Instruments are macro programs.
+      SMUS: 'Simple Music Score: note score format from Electronic Arts.'
+      UADE: Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.
+      IRA: Portable 68000 reassembler. Turns a player binary into assembler source.
+      EG: SoundMon's envelope generator. It sweeps a wave shape, not the volume.
+      MOD: 'SoundMon''s modulation walker: writes one table value into the wave.'
+
+  - key: project
+    title: This project
+    columns: [Term, Meaning]
+    entries:
+      C1: Advanced level of the CEFR language scale. Our target reader.
+      FK: 'Flesch-Kincaid grade: a readability score. Lower is easier.'
+
+  - key: card
+    title: Card terms
+    columns: [Term, Meaning]
+    entries:
+      stream: A position in some data that the player steps through.
+      scope: 'Where a stream''s position lives: song, track, voice or instrument.'
+      generator: Stateful process that is not a stream, e.g. a vibrato state machine.
+      interaction: One stream acting on another, e.g. a jump or a trigger.
+      tables: 'Control level: data walked in order, no opcodes.'
+      commands: 'Control level: data with opcodes, but no conditions.'
+      program: 'Control level: opcodes with conditions or calls.'
+      code: 'Evidence: original or disassembled replayer source.'
+      port: 'Evidence: a port of the original replayer.'
+      docs: 'Evidence: documentation only.'
+      disasm: 'Evidence: our own IRA disassembly of a player binary.'
+      module: Replay code ships inside the music file.
+
+  - key: stream_names
+    title: Stream names
+    intro: The first word of each name in a card's Streams table. Add a word here before using it, e.g. "Pitch" for "Pitch list".
+    columns: [Word, Stream]
+    entries:
+      Positions: The song's play order.
+      Pattern: Rows of notes, one column per voice.
+      Track: One column of note data.
+      Volume: Volume values or an envelope.
+      Pitch: Note offsets or pitch values.
+      Wave: Waveform changes.
+      Arpeggio: Arpeggio offsets.
+      Vibrato: Vibrato offsets.
+      ADSR: Volume envelope table.
+      LFO: Periodic pitch offsets from a table.
+      EG: SoundMon's wave shape sweep.
+      MOD: SoundMon's wave sample writes.
+
+  - key: avoid
+    title: Avoided terms
+    intro: Other names for terms above. Checked outside code quotes, so a format's own term can still appear as `code`.
+    columns: [Avoid, Use]
+    bold: false
+    entries:
+      sequence: positions
+      order list: positions
+      song entry: position
+      song step: position
+      step list: positions
+      subtune: subsong
+      sound number: instrument number
+      sound record: instrument
+      sound transpose: instrument transpose
+
+  - key: control
+    title: Control vocabulary
+    intro: Words used in the Control column of player cards.
+    columns: [Word, Meaning]
+    entries:
+      loop: Go back to a loop point.
+      jump: Go to another position or another stream.
+      call: Jump, then return.
+      wait: Pause for N ticks.
+      cond: Branch on a condition.
+      end: Stop the stream.
+      mode: Off, play once, or loop.
+      none: No flow control.
+
+  - key: rate
+    title: Rate vocabulary
+    columns: [Word, Meaning]
+    entries:
+      tick: Steps every tick.
+      every N ticks: N is set per instrument.
+      row: Steps every row.
+      pattern end: Steps when a pattern ends.

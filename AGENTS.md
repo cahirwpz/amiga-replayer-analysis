@@ -46,7 +46,9 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
 
 Readers are C1 non-native speakers with limited attention.
 
-- Use plain words. Define each acronym in `docs/glossary.md`.
+- Use plain words. Define each acronym in `data/glossary.yaml`.
+- Name things with glossary terms. When you replace a synonym, add it to the
+  glossary's avoided terms.
 - One claim per sentence. No filler, no hedging.
 - Put technical detail in tables or code, which skip prose limits.
 - Answer chat questions in the same style.
@@ -72,17 +74,22 @@ Readers are C1 non-native speakers with limited attention.
 ## Repo hygiene
 
 - Never edit `ext/`. Update submodule pins only on request.
-- After a pin update, run `tools/inventory.py --write`. Then run
-  `tools/links.py --fix-rows *.md docs players` to repoint links to inventory
-  rows.
+- After a pin update, run `tools/inventory.py --write`, then
+  `tools/links.py --fix-rows *.md docs players`.
 - Link player names to their inventory row, with the name as link title.
-- Run `source ./activate` once per shell. Python tools go in `requirements.txt`.
-- Before each commit, stage and run `pre-commit run --all-files`. Formatters
-  change files, so stage again and rerun until it passes.
-- Checks: `cogload` (size limits, set in its `PROFILES`), `links`, `cards`,
-  `inventory`, `tool-tests`.
+- Run `source ./activate` once per shell.
+- Before each commit, stage and run `pre-commit run --all-files`. Stage again
+  and rerun until it passes.
 - Never commit without the user's approval for that commit. Approval never
   carries over.
+
+## Tools
+
+- Never parse Markdown with regexes. Tools read data from `data/` (YAML or CSV),
+  or parse Markdown with [`tools/mdtools.py`](tools/mdtools.py).
+- Edit the glossary in `data/glossary.yaml`, then run
+  `tools/glossary.py --write`.
+- Python packages go in `requirements.txt`.
 
 ## Shell pitfalls
 

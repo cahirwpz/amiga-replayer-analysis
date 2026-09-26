@@ -16,41 +16,44 @@ Checks:
   - `path.cnf:Label` citations name a LABEL or SYMBOL in an IRA config;
     the path is relative to the repo root, e.g. data/disasm/X.cnf:Play
 
-Prints `file:line: rule: detail` for each problem; exits 1 if any.
+Markdown is parsed by tools/mdtools.py. Prints `file:line: rule: detail`
+for each problem; exits 1 if any.
 """
 
 import csv
 import re
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
+
+from mdtools import children, read
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCES = ROOT / "ext" / "uade" / "amigasrc" / "players"
 INVENTORY = ROOT / "data" / "inventory.csv"
 
-# [text](target "title"); the title is optional.
-LINK_RE = re.compile(r'(?<!!)\[[^\]]*\]\(([^)\s]+)(?:\s+"([^"]*)")?\)')
-CITE_RE = re.compile(r"`([^`]*?):(\d+)(?:-(\d+))?`")
-LABEL_CITE_RE = re.compile(r"`([\w./+-]+\.cnf):([A-Za-z_]\w*)`")
-FENCE_RE = re.compile(r"^\s*(```|~~~)")
+
+def citation(code):
+    """Split a code span like `file.s:12`, `:12-14` or `x.cnf:Label`.
+
+    Returns (file, first, last, label); (None, ...) if it is no citation.
+    """
+    name, sep, tail = code.rpartition(":")
+    if not sep:
+        return None, None, None, None
+    first, _, last = tail.partition("-")
+    if first.isdigit() and (not last or last.isdigit()):
+        return name, int(first), int(last) if last else None, None
+    if name.endswith(".cnf") and tail.isidentifier():
+        return name, None, None, tail
+    return None, None, None, None
 
 
-def front_matter(lines):
-    """Return ({key: raw value}, index of first body line)."""
-    if not lines or lines[0].strip() != "---":
-        return {}, 0
-    meta = {}
-    for i in range(1, len(lines)):
-        if lines[i].strip() == "---":
-            return meta, i + 1
-        if lines[i][:1].isspace() and meta:
-            # Continuation, e.g. a list that prettier wrapped.
-            last = next(reversed(meta))
-            meta[last] = f"{meta[last]} {lines[i].strip()}".strip()
-            continue
-        key, _, value = lines[i].partition(":")
-        meta[key.strip()] = value.strip()
-    return meta, 0
+def spans(doc):
+    """Yield (line, child) for every inline child in the document body."""
+    for token in doc.tokens:
+        if token.type == "inline":
+            yield from children(token)
 
 
 def source_dir(value):
@@ -94,89 +97,98 @@ def check_row(dest, num, title, report):
         report(f'{dest.name}#L{num} does not start with "{title}"')
 
 
+def row_anchor(href):
+    """(file part, row) of a link like `data/inventory.csv?plain=1#L60`."""
+    target, _, anchor = href.partition("#")
+    target = target.split("?")[0]
+    row = int(anchor[1:]) if anchor[:1] == "L" and anchor[1:].isdigit() else None
+    return target, row
+
+
+def links(doc):
+    """Yield (line, href, title) for each link in the document."""
+    for n, child in spans(doc):
+        if child.type == "link_open":
+            yield n, child.attrs.get("href", ""), child.attrs.get("title")
+
+
 def check(path, known_players):
     rel = path.resolve().relative_to(ROOT).as_posix()
-    lines = path.read_text(encoding="utf-8").splitlines()
+    doc = read(path)
+    meta = doc.meta
     errors = []
 
     def err(n, rule, detail):
         errors.append(f"{rel}:{n}: {rule}: {detail}")
 
-    meta, body = front_matter(lines)
     is_card = "player" in meta and "source" in meta
-    src = source_dir(meta["source"]) if is_card else None
+    src = source_dir(str(meta["source"])) if is_card else None
     if is_card and not src.exists():
         err(1, "source", f"{meta['source']} does not exist")
     if is_card and not src.is_dir():
         src = None  # a missing source, or an IRA config cited by label
     if is_card:
-        for name in re.findall(r"[\w.+-]+", meta.get("related", "")):
+        for name in meta.get("related") or []:
             if name not in known_players:
                 err(1, "related", f"{name} not in data/inventory.csv")
 
-    in_code = False
+    for n, href, title in links(doc):
+        if urlsplit(href).scheme or href.startswith("#"):
+            continue  # URL or in-page anchor
+        target, row = row_anchor(href)
+        dest = path.parent / target
+        if not dest.exists():
+            err(n, "link", f"{target} does not exist")
+        elif row is not None:
+            check_row(dest, row, title, lambda d: err(n, "link", d))
+
     last_file = None
-    for n, line in enumerate(lines[body:], start=body + 1):
-        if FENCE_RE.match(line):
-            in_code = not in_code
+    for n, child in spans(doc):
+        if child.type != "code_inline":
             continue
-        if in_code:
+        name, first, last, label = citation(child.content)
+        if name is None:
             continue
-        for target, title in LINK_RE.findall(line):
-            if re.match(r"[a-z]+:", target) or target.startswith("#"):
-                continue  # URL or in-page anchor
-            target, _, anchor = target.partition("#")
-            target = target.split("?")[0]
-            dest = path.parent / target
-            if not dest.exists():
-                err(n, "link", f"{target} does not exist")
-                continue
-            row = re.fullmatch(r"L(\d+)", anchor)
-            if row:
-                check_row(dest, int(row.group(1)), title, lambda d: err(n, "link", d))
-        for name, label in LABEL_CITE_RE.findall(line):
+        if label:
             cnf = ROOT / name
             if not cnf.is_file():
                 err(n, "cite", f"{name} does not exist")
             elif label not in cnf_labels(cnf):
                 err(n, "cite", f"{name} has no label {label}")
+            continue
         if not src:
             continue
-        for name, first, last in CITE_RE.findall(line):
-            if name:
-                last_file = src / name
-            elif last_file is None:
-                err(n, "cite", f":{first} has no preceding file")
-                continue
-            if not last_file.is_file():
-                err(n, "cite", f"{name} not found under {meta['source']}")
-                last_file = None
-                continue
-            count = line_count(last_file)
-            for num in filter(None, (first, last)):
-                if not 1 <= int(num) <= count:
-                    err(n, "cite", f"{last_file.name}:{num} beyond {count} lines")
+        if name:
+            last_file = src / name
+        elif last_file is None:
+            err(n, "cite", f":{first} has no preceding file")
+            continue
+        if not last_file.is_file():
+            err(n, "cite", f"{name} not found under {meta['source']}")
+            last_file = None
+            continue
+        count = line_count(last_file)
+        for num in filter(None, (first, last)):
+            if not 1 <= num <= count:
+                err(n, "cite", f"{last_file.name}:{num} beyond {count} lines")
     return errors
-
-
-ROW_LINK_RE = re.compile(r'(\]\(([^)\s#?]+)(?:\?[^)\s#]*)?#L)(\d+)(\s+"([^"]+)"\))')
 
 
 def fix_rows(path):
     """Point each titled `#L<n>` link at the row that starts with its title."""
     text = path.read_text(encoding="utf-8")
-
-    def repl(m):
-        dest = path.parent / m.group(2)
-        if not dest.is_file():
-            return m.group(0)
+    new = text
+    for _, href, title in links(read(path)):
+        target, row = row_anchor(href)
+        dest = path.parent / target
+        if row is None or not title or not dest.is_file():
+            continue
         rows = dest.read_text(encoding="utf-8", errors="replace").splitlines()
-        for i, row in enumerate(rows, start=1):
-            if starts(row, m.group(5)):
-                return f"{m.group(1)}{i}{m.group(4)}"
-        return m.group(0)
-
-    new = ROW_LINK_RE.sub(repl, text)
+        for i, line in enumerate(rows, start=1):
+            if starts(line, title):
+                fixed = href[: href.rindex("#L")] + f"#L{i}"
+                new = new.replace(f'({href} "{title}")', f'({fixed} "{title}")')
+                break
     if new != text:
         path.write_text(new, encoding="utf-8")
 

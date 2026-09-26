@@ -55,8 +55,8 @@ links: [<url>]
 
 ## Rules
 
-- Use plain English for terms not in `docs/glossary.md`. Name operations
-  plainly, e.g. "shift the wave by one sample".
+- Use plain English for terms not in [the glossary](glossary.md). Name
+  operations plainly, e.g. "shift the wave by one sample".
 - Add `track: <n>` to `streams` only when tracks are not bound to voices.
 - `links` is optional: first-hand pages, e.g. by the author. Omit if none.
 - Mark what you hear, if stated, as "(inference)".

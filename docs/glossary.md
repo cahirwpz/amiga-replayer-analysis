@@ -1,63 +1,92 @@
+<!-- Generated from data/glossary.yaml by tools/glossary.py. -->
+
 # Glossary
 
 One line per term. Every acronym used in this repo must appear here.
 
-| Term        | Meaning                                                                            |
-| ----------- | ---------------------------------------------------------------------------------- |
-| **ADKCON**  | Paula control register. Selects attach modes, among other things.                  |
-| **ADSR**    | Attack, decay, sustain, release: the four phases of a volume envelope.             |
-| **AHX**     | Abyss Highest eXperience: Amiga chiptune tracker, 1990s.                           |
-| **AUDxLC**  | Channel x sample start address. Reloaded into the pointer at each wrap.            |
-| **AUDxLEN** | Channel x sample length, in words.                                                 |
-| **AUDxPER** | Channel x period: clock divider that sets pitch.                                   |
-| **AUDxVOL** | Channel x volume, 0 to 64.                                                         |
-| **C1**      | Advanced level of the CEFR language scale. Our target reader.                      |
-| **C64**     | Commodore 64: 8-bit home computer with the SID sound chip.                         |
-| **CCK**     | Colour clock, 3.546895 MHz on PAL. Paula's time unit.                              |
-| **CIA**     | Timer chip. Replayers use it for tempo independent of the display.                 |
-| **CPU**     | The Motorola 68000 family processor.                                               |
-| **DMA**     | Direct memory access. Paula fetches samples without the CPU.                       |
-| **EG**      | SoundMon's envelope generator. It sweeps a wave shape, not the volume.             |
-| **FK**      | Flesch-Kincaid grade: a readability score. Lower is easier.                        |
-| **HRM**     | Commodore's Amiga Hardware Reference Manual.                                       |
-| **IRA**     | Portable 68000 reassembler. Turns a player binary into assembler source.           |
-| **LFO**     | Low-frequency oscillator: slow periodic change, e.g. vibrato.                      |
-| **MED**     | Music editor by Teijo Kinnunen, later OctaMED. Tracker with synth sounds.          |
-| **MIDI**    | Standard protocol for sending notes to synthesizers.                               |
-| **MOD**     | SoundMon's modulation walker: writes one table value into the wave.                |
-| **PAL**     | European TV standard. Sets the Amiga clock and 50 Hz frame rate.                   |
-| **PCM**     | Sampled sound: a stream of stored amplitude values.                                |
-| **PWM**     | Pulse-width modulation. Paula uses it to apply volume.                             |
-| **SMUS**    | Simple Music Score: note score format from Electronic Arts.                        |
-| **ST**      | Atari ST: home computer with a YM2149 sound chip.                                  |
-| **TFMX**    | The Final Musicsystem eXtended, by Chris Hülsbeck. Instruments are macro programs. |
-| **UADE**    | Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.               |
-| **VBL**     | Vertical blank interrupt, once per frame. The usual replayer tick.                 |
+## Amiga hardware
+
+| Term        | Meaning                                                                 |
+| ----------- | ----------------------------------------------------------------------- |
+| **ADKCON**  | Paula control register. Selects attach modes, among other things.       |
+| **AUDxLC**  | Channel x sample start address. Reloaded into the pointer at each wrap. |
+| **AUDxLEN** | Channel x sample length, in words.                                      |
+| **AUDxPER** | Channel x period: clock divider that sets pitch.                        |
+| **AUDxVOL** | Channel x volume, 0 to 64.                                              |
+| **CCK**     | Colour clock, 3.546895 MHz on PAL. Paula's time unit.                   |
+| **CIA**     | Timer chip. Replayers use it for tempo independent of the display.      |
+| **CPU**     | The Motorola 68000 family processor.                                    |
+| **DMA**     | Direct memory access. Paula fetches samples without the CPU.            |
+| **PAL**     | European TV standard. Sets the Amiga clock and 50 Hz frame rate.        |
+| **PWM**     | Pulse-width modulation. Paula uses it to apply volume.                  |
+| **VBL**     | Vertical blank interrupt, once per frame. The usual replayer tick.      |
+| **HRM**     | Commodore's Amiga Hardware Reference Manual.                            |
+| **channel** | One of Paula's four hardware sound outputs.                             |
+| **period**  | Paula's pitch value. Higher period, lower pitch.                        |
+
+## Other computers
+
+| Term    | Meaning                                                    |
+| ------- | ---------------------------------------------------------- |
+| **C64** | Commodore 64: 8-bit home computer with the SID sound chip. |
+| **ST**  | Atari ST: home computer with a YM2149 sound chip.          |
+
+## Sound and synthesis
+
+| Term         | Meaning                                                                |
+| ------------ | ---------------------------------------------------------------------- |
+| **sample**   | Recorded sound data, played from memory.                               |
+| **waveform** | A short sample loop, often built or changed by code.                   |
+| **PCM**      | Sampled sound: a stream of stored amplitude values.                    |
+| **ADSR**     | Attack, decay, sustain, release: the four phases of a volume envelope. |
+| **LFO**      | Low-frequency oscillator: slow periodic change, e.g. vibrato.          |
+| **MIDI**     | Standard protocol for sending notes to synthesizers.                   |
+
+## Music theory
+
+| Term           | Meaning                                                |
+| -------------- | ------------------------------------------------------ |
+| **note**       | A pitch, often with an instrument, that starts sound.  |
+| **transpose**  | Offset added to every note of a track or instrument.   |
+| **arpeggio**   | Fast cycle of note offsets, making a chord-like sound. |
+| **portamento** | Slide of the pitch, often towards a target note.       |
+| **vibrato**    | Periodic pitch change.                                 |
 
 ## Tracker terms
 
-| Term                     | Meaning                                                |
-| ------------------------ | ------------------------------------------------------ |
-| **tick**                 | One run of the replayer, usually once per frame.       |
-| **voice**                | One part of the music. Usually one voice per channel.  |
-| **channel**              | One of Paula's four hardware sound outputs.            |
-| **sample**               | Recorded sound data, played from memory.               |
-| **waveform**             | A short sample loop, often built or changed by code.   |
-| **instrument**           | What a note plays: sample or waveform, plus settings.  |
-| **note**                 | A pitch, often with an instrument, that starts sound.  |
-| **period**               | Paula's pitch value. Higher period, lower pitch.       |
-| **row**                  | One line of a pattern. It lasts `speed` ticks.         |
-| **speed**                | Ticks per row.                                         |
-| **track**                | One column of note data, often one per voice.          |
-| **pattern**              | A block of rows, played by one or more tracks.         |
-| **position**             | One entry of the song's play order: patterns to play.  |
-| **subsong**              | A separate tune inside one module.                     |
-| **sound effect**         | A sound the game starts, outside the music.            |
-| **transpose**            | Offset added to every note of a track or instrument.   |
-| **instrument transpose** | Offset added to every instrument number of a track.    |
-| **arpeggio**             | Fast cycle of note offsets, making a chord-like sound. |
-| **portamento**           | Slide of the pitch, often towards a target note.       |
-| **vibrato**              | Periodic pitch change.                                 |
+| Term                     | Meaning                                               |
+| ------------------------ | ----------------------------------------------------- |
+| **tick**                 | One run of the replayer, usually once per frame.      |
+| **row**                  | One line of a pattern. It lasts `speed` ticks.        |
+| **speed**                | Ticks per row.                                        |
+| **track**                | One column of note data, often one per voice.         |
+| **pattern**              | A block of rows, played by one or more tracks.        |
+| **position**             | One entry of the song's play order: patterns to play. |
+| **subsong**              | A separate tune inside one module.                    |
+| **voice**                | One part of the music. Usually one voice per channel. |
+| **instrument**           | What a note plays: sample or waveform, plus settings. |
+| **instrument transpose** | Offset added to every instrument number of a track.   |
+| **sound effect**         | A sound the game starts, outside the music.           |
+
+## Programs and formats
+
+| Term     | Meaning                                                                            |
+| -------- | ---------------------------------------------------------------------------------- |
+| **AHX**  | Abyss Highest eXperience: Amiga chiptune tracker, 1990s.                           |
+| **MED**  | Music editor by Teijo Kinnunen, later OctaMED. Tracker with synth sounds.          |
+| **TFMX** | The Final Musicsystem eXtended, by Chris Hülsbeck. Instruments are macro programs. |
+| **SMUS** | Simple Music Score: note score format from Electronic Arts.                        |
+| **UADE** | Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.               |
+| **IRA**  | Portable 68000 reassembler. Turns a player binary into assembler source.           |
+| **EG**   | SoundMon's envelope generator. It sweeps a wave shape, not the volume.             |
+| **MOD**  | SoundMon's modulation walker: writes one table value into the wave.                |
+
+## This project
+
+| Term   | Meaning                                                       |
+| ------ | ------------------------------------------------------------- |
+| **C1** | Advanced level of the CEFR language scale. Our target reader. |
+| **FK** | Flesch-Kincaid grade: a readability score. Lower is easier.   |
 
 ## Card terms
 
@@ -75,6 +104,43 @@ One line per term. Every acronym used in this repo must appear here.
 | **docs**        | Evidence: documentation only.                                        |
 | **disasm**      | Evidence: our own IRA disassembly of a player binary.                |
 | **module**      | Replay code ships inside the music file.                             |
+
+## Stream names
+
+The first word of each name in a card's Streams table. Add a word here before
+using it, e.g. "Pitch" for "Pitch list".
+
+| Word          | Stream                               |
+| ------------- | ------------------------------------ |
+| **Positions** | The song's play order.               |
+| **Pattern**   | Rows of notes, one column per voice. |
+| **Track**     | One column of note data.             |
+| **Volume**    | Volume values or an envelope.        |
+| **Pitch**     | Note offsets or pitch values.        |
+| **Wave**      | Waveform changes.                    |
+| **Arpeggio**  | Arpeggio offsets.                    |
+| **Vibrato**   | Vibrato offsets.                     |
+| **ADSR**      | Volume envelope table.               |
+| **LFO**       | Periodic pitch offsets from a table. |
+| **EG**        | SoundMon's wave shape sweep.         |
+| **MOD**       | SoundMon's wave sample writes.       |
+
+## Avoided terms
+
+Other names for terms above. Checked outside code quotes, so a format's own term
+can still appear as `code`.
+
+| Avoid           | Use                  |
+| --------------- | -------------------- |
+| sequence        | positions            |
+| order list      | positions            |
+| song entry      | position             |
+| song step       | position             |
+| step list       | positions            |
+| subtune         | subsong              |
+| sound number    | instrument number    |
+| sound record    | instrument           |
+| sound transpose | instrument transpose |
 
 ## Control vocabulary
 

@@ -44,11 +44,13 @@ repos:
       - id: markdownlint             # Linter for Markdown style and consistency
         args: [ --fix ]
 
+  # The venv from ./activate holds requirements.txt; the git hook may run
+  # without it being active.
   - repo: local
     hooks:
       - id: cogload                  # Cognitive load limits, see tools/cogload.py
         name: cogload
-        entry: python3 tools/cogload.py
+        entry: .venv/bin/python3 tools/cogload.py
         language: system
         types: [markdown]
         # Glossary changes can break any file, so always check all of them.
@@ -57,7 +59,7 @@ repos:
 
       - id: links                    # Links and source citations resolve
         name: links
-        entry: python3 tools/links.py
+        entry: .venv/bin/python3 tools/links.py
         language: system
         types: [markdown]
         pass_filenames: false
@@ -65,22 +67,29 @@ repos:
 
       - id: cards                    # Player card structure, see docs/card-template.md
         name: cards
-        entry: python3 tools/cards.py
+        entry: .venv/bin/python3 tools/cards.py
         language: system
         types: [markdown]
         pass_filenames: false
         args: [ players/ ]
 
+      - id: glossary                 # docs/glossary.md matches data/glossary.yaml
+        name: glossary
+        entry: .venv/bin/python3 tools/glossary.py --check
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: inventory                # data/inventory.csv and docs/inventory.md are fresh
         name: inventory
-        entry: python3 tools/inventory.py --check
+        entry: .venv/bin/python3 tools/inventory.py --check
         language: system
         pass_filenames: false
         always_run: true
 
       - id: tool-tests               # Self-tests for the checkers above
         name: tool-tests
-        entry: python3 -m unittest discover -s tests
+        entry: .venv/bin/python3 -m unittest discover -s tests
         language: system
         pass_filenames: false
         always_run: true

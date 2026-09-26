@@ -29,6 +29,8 @@ import re
 import sys
 from pathlib import Path
 
+from mdtools import format_table
+
 ROOT = Path(__file__).resolve().parent.parent
 UADE = ROOT / "ext" / "uade"
 PLAYERS = UADE / "players"
@@ -238,36 +240,23 @@ def counts(table):
     def tally(name, values):
         return [(v, sum(1 for r in body if r[col[name]] == v)) for v in values]
 
-    lines = [
-        BEGIN,
-        "",
-        "| Group | Players |",
-        "| --- | --- |",
-        f"| Binaries in UADE | {len(body)} |",
-        f"| With source | {len(with_src)} |",
-        f"| Binary only | {len(body) - len(with_src)} |",
-        "",
-        f"{len(with_src)} players map to {len(units)} source directories.",
-        "",
-        "| How source was found | Players |",
-        "| --- | --- |",
+    groups = [
+        ["Binaries in UADE", str(len(body))],
+        ["With source", str(len(with_src))],
+        ["Binary only", str(len(body) - len(with_src))],
     ]
-    lines += [
-        f"| {v} | {n} |" for v, n in tally("match", ["hash", "name", "manual", "none"])
-    ]
-    lines += ["", "| Where replay logic is | Players |", "| --- | --- |"]
-    lines += [
-        f"| {v} | {n} |"
+    found = [[v, str(n)] for v, n in tally("match", ["hash", "name", "manual", "none"])]
+    replay = [
+        [v, str(n)]
         for v, n in tally("replay", ["uade", "module", "check", "port", "disasm"])
     ]
+    lines = [BEGIN, ""]
+    lines += format_table(["Group", "Players"], groups)
+    lines += ["", f"{len(with_src)} players map to {len(units)} source directories."]
+    lines += [""] + format_table(["How source was found", "Players"], found)
+    lines += [""] + format_table(["Where replay logic is", "Players"], replay)
     lines += ["", END]
     return "\n".join(lines)
-
-
-def norm_ws(text):
-    """Compare Markdown ignoring the padding prettier adds to tables."""
-    text = re.sub(r"-{3,}", "---", text)
-    return re.sub(r"[ \t]+", " ", re.sub(r" *\| *", "|", text)).strip()
 
 
 def doc_with(block):
@@ -291,7 +280,7 @@ def main(argv):
         stale = []
         if CSV.read_text(encoding="utf-8") != text:
             stale.append(str(CSV.relative_to(ROOT)))
-        if norm_ws(doc_with(block)[1]) != norm_ws(block):
+        if doc_with(block)[1] != block:
             stale.append(str(DOC.relative_to(ROOT)))
         for path in stale:
             print(f"{path}: out of date; run tools/inventory.py --write")

@@ -5,14 +5,18 @@ Usage: cogload.py FILE.md|DIR...
 
 Prints `file:line: rule: detail` for each violation; exits 1 if any.
 Limits depend on the file's directory (see PROFILES). Code is exempt.
+Also flags acronyms missing from data/glossary.yaml, and its avoided terms.
+Markdown is parsed by tools/mdtools.py; regexes only see the extracted prose.
 """
 
 import re
 import sys
 from pathlib import Path
 
+import glossary
+from mdtools import CODE, line_of, plain, read
+
 ROOT = Path(__file__).resolve().parent.parent
-GLOSSARY = ROOT / "docs" / "glossary.md"
 
 DEFAULT = {
     "sentence_words": 16,  # words per sentence
@@ -50,14 +54,14 @@ PROFILES = [
 
 # Files exempt from the acronym check.
 ACRONYM_EXEMPT = {"AGENTS.md", "docs/glossary.md"}
+# Files exempt from the avoided-terms check.
+AVOID_EXEMPT = {"docs/glossary.md"}
 
 # FK grade is noisy on tiny samples.
 FK_MIN_WORDS = 50
 
 ABBREVIATIONS = ["e.g.", "i.e.", "vs.", "etc.", "cf.", "approx.", "no."]
 
-LIST_RE = re.compile(r"^(\s*)(?:[-*+]|\d+[.)])\s+(.*)$")
-FENCE_RE = re.compile(r"^\s*(```|~~~)")
 ACRONYM_RE = re.compile(r"\b([A-Z][A-Z0-9]+)s?\b")
 WORD_RE = re.compile(r"[^\W_]", re.UNICODE)
 ROMAN_RE = re.compile(r"[IVX]+")  # "Mugician II" is not an acronym
@@ -74,17 +78,6 @@ def profile_for(path):
             limits.update(overrides)
             break
     return rel, limits
-
-
-def clean(text):
-    """Reduce inline Markdown to plain prose. Inline code becomes one word."""
-    text = re.sub(r"`[^`]*`", "CODE", text)
-    text = re.sub(r"!\[([^\]]*)\]\([^)]*\)", r"\1", text)
-    text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
-    text = re.sub(r"\[([^\]]*)\]\[[^\]]*\]", r"\1", text)
-    text = re.sub(r"<[^>]+>", " ", text)
-    text = re.sub(r"[*_]{1,3}", "", text)
-    return text
 
 
 def words(text):
@@ -111,93 +104,43 @@ def syllables(word):
     return max(n, 1)
 
 
-def load_glossary():
-    terms = set()
-    if not GLOSSARY.exists():
-        return None
-    for line in GLOSSARY.read_text(encoding="utf-8").splitlines():
-        m = re.match(r"^\s*(?:[-*+]\s+|\|\s*)?\*\*(.+?)\*\*", line)
-        if m:
-            for term in re.split(r"[/,]", m.group(1)):
-                terms.add(term.strip())
-    return terms
+def load_avoided():
+    """(pattern, avoided, preferred) for each glossary avoided term."""
+    return [
+        (re.compile(rf"\b{re.escape(term)}s?\b", re.IGNORECASE), term, use)
+        for term, use in glossary.avoided().items()
+    ]
 
 
-def parse(lines):
-    """Yield (kind, lineno, payload) blocks.
+def blocks(doc):
+    """Yield (kind, line, text, list_event) for each block of prose.
 
-    kind: 'para' (text), 'item' (text, indent), 'cell' (text), 'heading' (text).
+    kind: 'heading', 'para' or 'cell'. Lists come as separate events:
+    ('list-open', line), ('item', line) and ('list-close', line).
     """
-    in_code = False
-    start = 0
-    if lines and lines[0].strip() == "---":
-        for i in range(1, len(lines)):
-            if lines[i].strip() == "---":
-                start = i + 1
-                break
-
-    para, para_line = [], 0
-    item, item_line, item_indent = None, 0, 0
-
-    def flush():
-        nonlocal para, item
-        out = []
-        if para:
-            out.append(("para", para_line, " ".join(para)))
-            para = []
-        if item is not None:
-            out.append(("item", item_line, (" ".join(item), item_indent)))
-            item = None
-        return out
-
-    for i in range(start, len(lines)):
-        n = i + 1
-        line = lines[i]
-        if FENCE_RE.match(line):
-            yield from flush()
-            in_code = not in_code
-            continue
-        if in_code:
-            continue
-        stripped = line.strip()
-        if not stripped:
-            yield from flush()
-            yield ("blank", n, None)
-            continue
-        if stripped.startswith("<!--"):
-            continue
-        if stripped.startswith("#"):
-            yield from flush()
-            yield ("heading", n, stripped.lstrip("#").strip())
-            continue
-        if stripped.startswith("|"):
-            yield from flush()
-            if re.fullmatch(r"[|:\-\s]+", stripped):
-                continue
-            for cell in stripped.strip("|").split("|"):
-                yield ("cell", n, cell.strip())
-            continue
-        m = LIST_RE.match(line)
-        if m:
-            yield from flush()
-            item, item_line, item_indent = [m.group(2)], n, len(m.group(1))
-            continue
-        if item is not None and line.startswith(" "):
-            item.append(stripped)
-            continue
-        if stripped.startswith(">"):
-            stripped = stripped.lstrip("> ").strip()
-        if item is not None:
-            yield from flush()
-        if not para:
-            para_line = n
-        para.append(stripped)
-    yield from flush()
+    tokens = doc.tokens
+    for i, token in enumerate(tokens):
+        kind = token.type
+        if kind in ("bullet_list_open", "ordered_list_open"):
+            yield "list-open", line_of(token), None
+        elif kind in ("bullet_list_close", "ordered_list_close"):
+            yield "list-close", 0, None
+        elif kind == "list_item_open":
+            yield "item", line_of(token), None
+        elif kind == "inline":
+            parent = tokens[i - 1].type
+            block = {
+                "heading_open": "heading",
+                "paragraph_open": "para",
+                "th_open": "cell",
+                "td_open": "cell",
+            }.get(parent)
+            if block:
+                yield block, line_of(token), plain(token)
 
 
-def check(path, glossary):
+def check(path, known_terms, avoided=()):
     rel, lim = profile_for(path)
-    lines = path.read_text(encoding="utf-8").splitlines()
     errors = []
 
     def err(line, rule, detail):
@@ -206,51 +149,35 @@ def check(path, glossary):
     total_words = 0
     prose_words = prose_sentences = prose_syllables = 0
     unknown = {}
+    lists = []  # one [item count, first line] per open list
 
-    # List tracking: stack of [indent, item_count, first_line].
-    stack = []
-    pending_blank = False
-
-    def close_lists(indent=-1):
-        while stack and stack[-1][0] > indent:
-            ind, count, first = stack.pop()
+    for kind, n, text in blocks(read(path)):
+        if kind == "list-open":
+            lists.append([0, n])
+            if len(lists) > lim["list_depth"]:
+                err(n, "list-depth", f"{len(lists)} > {lim['list_depth']}")
+            continue
+        if kind == "list-close":
+            count, first = lists.pop()
             if count > lim["list_items"]:
                 err(first, "list-items", f"{count} > {lim['list_items']}")
-
-    for kind, n, payload in parse(lines):
-        if kind == "blank":
-            pending_blank = True
             continue
         if kind == "item":
-            text, indent = payload
-            close_lists(indent)
-            if stack and stack[-1][0] == indent:
-                stack[-1][1] += 1
-            else:
-                stack.append([indent, 1, n])
-            if len(stack) > lim["list_depth"]:
-                err(n, "list-depth", f"{len(stack)} > {lim['list_depth']}")
-        elif kind == "para" and pending_blank:
-            close_lists()
-        elif kind in ("heading", "cell"):
-            close_lists()
-        pending_blank = False
+            lists[-1][0] += 1
+            continue
 
-        if kind == "item":
-            text = payload[0]
-        else:
-            text = payload
-        text = clean(text)
         w = words(text)
         total_words += len(w)
-
-        if glossary is not None:
-            for m in ACRONYM_RE.finditer(text):
-                term = m.group(1)
-                if term == "CODE" or ROMAN_RE.fullmatch(term):
-                    continue
-                if term not in glossary:
-                    unknown.setdefault(m.group(1), n)
+        if rel not in AVOID_EXEMPT:
+            for pattern, term, use in avoided:
+                if pattern.search(text):
+                    err(n, "avoid", f"`{term}`: use `{use}`")
+        for m in ACRONYM_RE.finditer(text):
+            term = m.group(1)
+            if term == CODE or ROMAN_RE.fullmatch(term):
+                continue
+            if term not in known_terms:
+                unknown.setdefault(term, n)
         if kind == "cell":
             if len(w) > lim["cell_words"]:
                 err(n, "cell-words", f"{len(w)} > {lim['cell_words']}")
@@ -272,7 +199,6 @@ def check(path, glossary):
             prose_words += len(sw)
             prose_syllables += sum(syllables(x) for x in sw)
         prose_sentences += len(sents)
-    close_lists()
 
     if total_words > lim["file_words"]:
         err(1, "file-words", f"{total_words} > {lim['file_words']}")
@@ -286,16 +212,17 @@ def check(path, glossary):
             err(1, "fk-grade", f"{grade:.1f} > {lim['fk_grade']}")
     if rel not in ACRONYM_EXEMPT:
         for term, n in unknown.items():
-            err(n, "acronym", f"{term} not in docs/glossary.md")
+            err(n, "acronym", f"{term} not in data/glossary.yaml")
     return errors
 
 
 def main(argv):
-    glossary = load_glossary()
+    known_terms = glossary.terms()
+    avoided = load_avoided()
     errors = []
     for arg in map(Path, argv):
         for path in sorted(arg.rglob("*.md")) if arg.is_dir() else [arg]:
-            errors += check(path, glossary)
+            errors += check(path, known_terms, avoided)
     for e in errors:
         print(e)
     return 1 if errors else 0

@@ -53,7 +53,7 @@ Findings so far, for the cards above. Paths are relative to
 
 ### `TFMX-Pro`: `wanted_team/TFMX-Pro/src/TFMX Pro_v5.asm`
 
-- Song steps list 8 tracks. Special steps stop, loop, set speed or fade.
+- Each position lists 8 tracks. Special positions stop, loop, set speed or fade.
   `:2362-2388`
 - Tracks are not voices: a note names a macro and a channel. `:2189-2199`
 - Pattern opcodes: end, loop, jump, wait, call, return, key-up. `:2211-2226`
