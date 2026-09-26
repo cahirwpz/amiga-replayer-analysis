@@ -173,6 +173,7 @@ sections:
       EG: SoundMon's wave shape sweep.
       MOD: SoundMon's wave sample writes.
       Macro: A program of opcodes that plays a sound.
+      Performance: "AHX's instrument list: wave, note and two commands per step."
 
   - key: avoid
     title: Avoided terms

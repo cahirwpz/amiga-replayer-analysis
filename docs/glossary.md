@@ -165,21 +165,22 @@ How we know that one player grew from another.
 The first word of each name in a card's Streams table. Add a word here before
 using it, e.g. "Pitch" for "Pitch list".
 
-| Word          | Stream                                   |
-| ------------- | ---------------------------------------- |
-| **Positions** | The song's play order.                   |
-| **Pattern**   | Rows of notes, one column per voice.     |
-| **Track**     | One column of note data.                 |
-| **Volume**    | Volume values or an envelope.            |
-| **Pitch**     | Note offsets or pitch values.            |
-| **Wave**      | Waveform changes.                        |
-| **Arpeggio**  | Arpeggio offsets.                        |
-| **Vibrato**   | Vibrato offsets.                         |
-| **ADSR**      | Volume envelope table.                   |
-| **LFO**       | Periodic pitch offsets from a table.     |
-| **EG**        | SoundMon's wave shape sweep.             |
-| **MOD**       | SoundMon's wave sample writes.           |
-| **Macro**     | A program of opcodes that plays a sound. |
+| Word            | Stream                                                       |
+| --------------- | ------------------------------------------------------------ |
+| **Positions**   | The song's play order.                                       |
+| **Pattern**     | Rows of notes, one column per voice.                         |
+| **Track**       | One column of note data.                                     |
+| **Volume**      | Volume values or an envelope.                                |
+| **Pitch**       | Note offsets or pitch values.                                |
+| **Wave**        | Waveform changes.                                            |
+| **Arpeggio**    | Arpeggio offsets.                                            |
+| **Vibrato**     | Vibrato offsets.                                             |
+| **ADSR**        | Volume envelope table.                                       |
+| **LFO**         | Periodic pitch offsets from a table.                         |
+| **EG**          | SoundMon's wave shape sweep.                                 |
+| **MOD**         | SoundMon's wave sample writes.                               |
+| **Macro**       | A program of opcodes that plays a sound.                     |
+| **Performance** | AHX's instrument list: wave, note and two commands per step. |
 
 ## Avoided terms
 

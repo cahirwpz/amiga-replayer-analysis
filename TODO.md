@@ -17,7 +17,6 @@ Selection rules:
 
 ### Cards: port, emulation, tricks
 
-- [ ] `AbyssHighestExperience`: synthesis, read from `ext/ahx2play`
 - [ ] `Jochen_Hippel_ST`: Atari ST sound chip emulated on Paula
 
 ### Rejected
@@ -35,14 +34,6 @@ Selection rules:
 
 Findings so far, for the cards above. Paths are relative to
 `ext/uade/amigasrc/players`. Delete a section when its card exists.
-
-### `AbyssHighestExperience`: `ext/ahx2play/replayer.c`
-
-- Not read yet.
-- The original 68000 source was never published. The official release ships only
-  a binary replayer.
-- Sources: [ahx2play](https://github.com/8bitbubsy/ahx2play),
-  [AHX tools on scene.org](https://files.scene.org/view/resources/code/utils/winuaedemotoolchain5v3.zip).
 
 ### `Jochen_Hippel_ST`
 
