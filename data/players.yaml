@@ -75,7 +75,7 @@ FutureComposer1.4:
     player: FutureComposer1.3
     evidence: code
     why: 1.4 adds opcodes; waveforms move from player to module
-    cite: ext/uade/amigasrc/players/defect/fc14/FC1.4.s:203
+    cite: data/annot/FutureComposer1.4.yaml:InitWaveforms
   head: true
 
 JochenHippel_UADE:
@@ -115,7 +115,7 @@ MugicianII:
   after:
     player: Mugician
     evidence: port
-    cite: ext/c-flod/neoart/flod/digitalmugician/DMPlayer.c:652
+    cite: ext/c-flod/neoart/flod/digitalmugician/DMPlayer.c:DMPlayer_loader
   head: true
   links: [https://proofofconcept.nl/portfolio/mugician/]
 
@@ -151,7 +151,7 @@ SoundMon2.2:
     player: SoundMon2.0
     evidence: code
     why: 2.2 adds the MOD walker and wave effects
-    cite: ext/uade/amigasrc/players/uade/soundmon/Soundmon2.2.s:758
+    cite: data/annot/SoundMon2.2.yaml:Effect1
   head: true
 
 SoundPlayer:

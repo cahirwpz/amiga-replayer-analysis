@@ -1,0 +1,6 @@
+# Annotations for the Sonix Music Driver replayer. Render: tools/annot.py
+source: ext/uade/amigasrc/players/wanted_team/SonixMusicDriver/src/Sonix Music Driver_v1.asm
+sha1: cbc51331dfe6728963dd9a685a2d34afa7a9e1fc
+
+labels:
+  Jump1: AddFilterBank

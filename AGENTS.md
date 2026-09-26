@@ -12,7 +12,7 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
 `TODO.md` keeps:
 
 - open tasks, in order, and questions for the user
-- reading notes for unfinished work, with `file:line`
+- reading notes for unfinished work, with `file:Label`
 - decisions still pending
 
 `TODO.md` never keeps:

@@ -55,8 +55,9 @@ class Links(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual({"link", "cite", "path"}, rules, out)
         self.assertIn("docs/nope.md does not exist", out)
-        self.assertIn("99999 beyond", out)
+        self.assertIn("`src/Mugician II_v8.asm:99999` names a line", out)
         self.assertIn("src/nope.asm not found", out)
+        self.assertIn("Mugician II_v8.asm has no label NoSuchLabel", out)
         self.assertIn("README.md#L99999 beyond", out)
         self.assertIn("sample.cnf has no label NoSuchLabel", out)
         self.assertIn("none.cnf does not exist", out)
@@ -80,10 +81,14 @@ class Annot(unittest.TestCase):
         spec = self.annot.load(self.dir / "good.yaml")
         lines = (self.dir / "sample.s").read_bytes().decode("latin-1").split("\n")
         out = self.annot.render(spec, lines)
-        self.assertEqual(out[1], " bsr\tNextNote\t; appel\xe9")
-        self.assertEqual(out[4:6], [";; NextNote: read one note.", "NextNote:"])
+        self.assertEqual(out[1:3], ["Call:", " bsr\tNextNote\t; appel\xe9"])
+        self.assertEqual(out[5:7], [";; NextNote: read one note.", "NextNote:"])
         self.assertEqual(
-            out[6], " move.w\t#NextNote-Play,d0\t;; distance between the labels"
+            out[7], " move.w\t#NextNote-Play,d0\t;; distance between the labels"
+        )
+        self.assertEqual(
+            self.annot.listing_labels(self.dir / "good.yaml"),
+            {"Play", "Call", "NextNote"},
         )
 
     def test_reports_bad_annotations(self):
@@ -145,7 +150,11 @@ class Players(unittest.TestCase):
                     "SoundMon2.2": {
                         "provenance": "rumour",
                         "family": "SoundMon",
-                        "after": {"player": "Mugician", "evidence": "vibes"},
+                        "after": {
+                            "player": "Mugician",
+                            "evidence": "vibes",
+                            "cite": "data/annot/SoundMon2.2.yaml:758",
+                        },
                         "colour": "blue",
                     },
                 }
@@ -157,6 +166,7 @@ class Players(unittest.TestCase):
             "evidence `vibes`",
             "same family",
             "unknown field `colour`",
+            "SoundMon2.2.yaml has no label 758",
         ):
             self.assertIn(text, out)
 

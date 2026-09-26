@@ -57,5 +57,4 @@ streams: { song: <n>, voice: <n>, instrument: <n> }
 - Mark what you hear, if stated, as "(inference)".
 - Anything that needs more than about 10 words goes to `details/`, linked.
 - Skip "Generators and interactions" when there is nothing to say.
-- Cite as `file:line`, relative to the player's source from
-  `tools/inventory.py`.
+- Cite by label, as [`AGENTS.md`](../AGENTS.md#evidence) says.

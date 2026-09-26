@@ -3,13 +3,6 @@
 The hand-off between sessions. What belongs here: see
 [`AGENTS.md`](AGENTS.md#sessions).
 
-## Labels instead of line numbers
-
-- [ ] Replace line citations with labels. Left: four cards, three pages in
-      `details/`, `cite` in `data/players.yaml`, reading notes below.
-- [ ] `tools/links.py`: check `file:Label` against the source; reject
-      `file:line`.
-
 ## Pilot
 
 Twelve cards test the card template before the full survey.
@@ -52,27 +45,31 @@ Findings so far, for the cards above. Paths are relative to
 ### `TFMX-Pro`: `wanted_team/TFMX-Pro/src/TFMX Pro_v5.asm`
 
 - Each position lists 8 tracks. Special positions stop, loop, set speed or fade.
-  `:2362-2388`
-- Tracks are not voices: a note names a macro and a channel. `:2189-2199`
-- Pattern opcodes: end, loop, jump, wait, call, return, key-up. `:2211-2226`
-- Macro opcode table has 52 entries. `:2607`
-- Conditions: split by note or volume `:2932`, test memory bytes `:2834`.
-- Macros start notes and key-ups on other channels. `:3036-3048`
-- The `ims` opcodes set up runtime sample synthesis. `:3232-3300`
+  `data/annot/TFMX-Pro.yaml:newtrack`
+- Tracks are not voices: a note names a macro and a channel. `:TrackNote`
+- Pattern opcodes: end, loop, jump, wait, call, return, key-up. `:PatternOpcode`
+- Macro opcode table has 52 entries. `:jumptable1`
+- Conditions: split by note or volume `:msplitk`, test memory bytes
+  `:mbytecheck`.
+- Macros start notes and key-ups on other channels. `:mplaynote`
+- The `ims` opcodes set up runtime sample synthesis. `:mimssstart`
 
 ### `MED`: `uade/med/common/proplayer.a`
 
 - Original source, not a disassembly.
-- Synth sounds run two lists per voice: volume and waveform. `:603-779`
-- Volume opcodes from `:649`, waveform opcodes from `:736`.
+- Synth sounds run two lists per voice: volume and waveform.
+  `ext/uade/amigasrc/players/uade/med/common/proplayer.a:synth_start2`
+- Volume opcodes: `:synth_vtbl`. Waveform opcodes: `:synth_wfctbl`.
 - Jumps between the two lists are expected. Not yet seen in code.
-- Synth notes start at `:560`. Notes can also go out as MIDI. `:517`
+- Synth notes start at `:handleSynthnote`. Notes can also go out as MIDI.
+  `:handleMIDInote`
 
 ### `SonixMusicDriver`: `wanted_team/SonixMusicDriver/src/Sonix Music Driver_v1.asm`
 
 - Plays `SMUS` note scores, not patterns. Source: its readme.
-- Synth sounds allocate a filter bank `:651`; setup at `:2810`.
-- Synthesis code starts at `:5175`. Not read yet.
+- Synth sounds allocate a filter bank
+  `data/annot/SonixMusicDriver.yaml:AddFilterBank`; setup at `:SetFilter`.
+- Synthesis code starts at `:SYNTHTECH`. Not read yet.
 
 ### `AbyssHighestExperience`: `ext/ahx2play/replayer.c`
 
@@ -104,10 +101,12 @@ Findings so far, for the cards above. Paths are relative to
 
 - [ ] Mugician II: cross-check effect numbers with
       `ext/c-flod/neoart/flod/digitalmugician/DMPlayer.c`.
-- [ ] Mugician II: can mixed voices play synth waves? `DMPlayer.c:136` takes
-      mixed voices from a sample pointer (not verified).
-- [ ] Mugician II: card says mixing uses channel 0, `DMPlayer.c:612` uses
-      channel 3. Resolve.
+- [ ] Mugician II: can mixed voices play synth waves?
+      `ext/c-flod/neoart/flod/digitalmugician/DMPlayer.c:DMPlayer_process` takes
+      mixed voices from a sample pointer:
+      `voice->mixPtr = sample->super.pointer` (not verified).
+- [ ] Mugician II: card says mixing uses channel 0, `:DMPlayer_initialize` uses
+      channel 3: `chan = &self->super.amiga->channels[3]`. Resolve.
 - [ ] Inventory: read the five players marked `check`.
 - [ ] `RobHubbard` was rejected: UADE keeps its code in modules. Does
       `ext/c-flod/neoart/flod/hubbard/RHPlayer.c` reopen it?

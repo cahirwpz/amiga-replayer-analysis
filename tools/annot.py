@@ -8,16 +8,18 @@ in ext/, which stays read-only:
 
   source: ext/uade/amigasrc/players/uade/soundmon/Soundmon2.2.s
   sha1: 0123...          # `sha1sum` of the source; a pin update must fix it
-  labels:                # original label: new name
+  labels:                # original label, or source line: new name
     bpmusic: PlayTick
+    881: ModWrite        # a new label before line 881
   comments:              # source line: comment appended to that line
     185: vibrato step, shared by all voices
   banners:               # source line: block comment above that line
     622: Synth walkers, once per tick.
 
 Line numbers are those of the pinned source. Renames change whole
-identifiers outside `;` comments. Added comments start with `;;`, so they
-never pass for the author's.
+identifiers outside `;` comments. New labels get a line of their own; the
+listing is for reading, so they may split the scope of local labels. Added
+comments start with `;;`, so they never pass for the author's.
 
 The YAML is the committed artefact. Output goes to
 build/annot/<player><suffix>, never committed. With --check, nothing is
@@ -67,6 +69,11 @@ def code_part(line):
     return code, sep + rest
 
 
+def defined(lines):
+    """Labels the source defines: identifiers in column 1."""
+    return {m.group(0) for line in lines if (m := re.match(IDENT, line))}
+
+
 def check(spec, lines, sha1):
     """Yield problems with the spec against the source lines."""
     for key in sorted(set(spec) - FIELDS):
@@ -75,12 +82,15 @@ def check(spec, lines, sha1):
         yield f"sha1 is {spec.get('sha1')}, source has {sha1}"
 
     labels = spec.get("labels") or {}
-    defined = {m.group(0) for line in lines if (m := re.match(IDENT, line))}
+    known = defined(lines)
     used = {w for line in lines for w in re.findall(IDENT, code_part(line)[0])}
     for old, new in labels.items():
-        if not isinstance(old, str) or not isinstance(new, str):
+        if isinstance(old, int):
+            if not 1 <= old <= len(lines):
+                yield f"labels: line {old} is not in the source"
+        elif not isinstance(old, str) or not isinstance(new, str):
             yield f"labels: {old}: {new} is not a pair of strings; quote it"
-        elif old not in defined:
+        elif old not in known:
             yield f"label {old} is not defined in the source"
         if not re.fullmatch(IDENT, str(new)):
             yield f"{new} is not an identifier"
@@ -106,7 +116,8 @@ def check(spec, lines, sha1):
 
 def render(spec, lines):
     """The annotated source, as a list of lines."""
-    labels = spec.get("labels") or {}
+    labels = {k: v for k, v in (spec.get("labels") or {}).items() if isinstance(k, str)}
+    new = {k: v for k, v in (spec.get("labels") or {}).items() if isinstance(k, int)}
     comments = spec.get("comments") or {}
     banners = spec.get("banners") or {}
     rename = None
@@ -118,6 +129,8 @@ def render(spec, lines):
         if num in banners:
             out.append(";; " + "-" * 60)
             out += [f";; {t}".rstrip() for t in banners[num].strip().split("\n")]
+        if num in new:
+            out.append(f"{new[num]}:")
         if rename:
             code, rest = code_part(line)
             line = rename.sub(lambda m: labels[m.group(0)], code) + rest
@@ -125,6 +138,42 @@ def render(spec, lines):
             line = f"{line.rstrip()}\t;; {comments[num].strip()}"
         out.append(line)
     return out
+
+
+def source_lines(spec):
+    """(raw bytes, lines) of the annotated source."""
+    data = (ROOT / str(spec["source"])).read_bytes()
+    return data, data.decode("latin-1").split("\n")
+
+
+def listing_labels(path):
+    """Every label in the rendered listing; for citations."""
+    spec = load(path)
+    labels = spec.get("labels") or {}
+    renamed = {k for k in labels if isinstance(k, str)}
+    return (defined(source_lines(spec)[1]) - renamed) | set(labels.values())
+
+
+def cited_labels(path, cache={}):
+    """Labels a citation `path:Label` may name; None if the file has none.
+
+    Assembler: identifiers in column 1. C: function names. IRA config: LABEL
+    and SYMBOL. data/annot/*.yaml: the labels of the rendered listing.
+    """
+    if path not in cache:
+        text = path.read_bytes().decode("latin-1")
+        suffix = path.suffix.lower()
+        if suffix == ".yaml":
+            cache[path] = listing_labels(path) if path.parent.name == "annot" else None
+        elif suffix == ".cnf":
+            found = re.finditer(r"^(?:LABEL|SYMBOL)\s+(\S+)\s", text, re.M)
+            cache[path] = {m.group(1) for m in found}
+        elif suffix in (".c", ".h"):
+            found = re.finditer(r"^[A-Za-z_][^;()=\n]*?\b(\w+)\s*\(", text, re.M)
+            cache[path] = {m.group(1) for m in found}
+        else:
+            cache[path] = defined(text.split("\n"))
+    return cache[path]
 
 
 def process(path, write):
@@ -137,8 +186,7 @@ def process(path, write):
     source = ROOT / str(spec.get("source", ""))
     if not spec.get("source") or not source.is_file():
         return [f"{rel}: source {spec.get('source')} does not exist"]
-    data = source.read_bytes()
-    lines = data.decode("latin-1").split("\n")
+    data, lines = source_lines(spec)
     problems = [
         f"{rel}: {p}" for p in check(spec, lines, hashlib.sha1(data).hexdigest())
     ]

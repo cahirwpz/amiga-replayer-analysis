@@ -1,0 +1,39 @@
+# Annotations for the SoundPlayer replayer. Render: tools/annot.py
+source: ext/uade/amigasrc/players/wanted_team/SoundPlayer/src/SoundPlayer_v1.asm
+sha1: c00350c86a129b65cdb82fa34f5e568d4d2e20f7
+
+labels:
+  lbC06392C: LoadInstrument
+  lbC0639D6: InitVoices
+  967: GameReadsFlag
+  lbC063D18: RowTimer
+  lbC063D4E: ReadRow
+  lbC063D8A: VoiceWait
+  lbC063DD8: NoteRestart
+  lbC063E38: VolumeSlide
+  lbC063ECE: NoteStop
+  lbC063F1E: RowCommands
+  lbC063F4C: RunCommand
+  # command handlers
+  lbC063FD8: CmdFilterOff
+  lbC063FE2: CmdFilterOn
+  lbC063FEC: CmdVolume
+  lbC063FFE: CmdSlideUp
+  lbC064012: CmdSlideDown
+  lbC064026: CmdSetFlag
+  lbC064038: CmdHold
+  lbC06403E: CmdRelease
+  lbC064044: CmdClearFlags
+  lbC064054: CmdRepeatStart
+  lbC06406C: CmdRepeatEnd
+  lbC064086: CmdStepBack
+  lbC064090: CmdRestart
+  lbC064098: CmdVolModOn
+  lbC0640B0: CmdPerModOn
+  lbC0640C8: CmdClearFlag
+  lbC0640DA: CmdVolModOff
+  lbC0640F2: CmdPerModOff
+  lbC064102: CmdPerModOff2
+  lbC06410A: CmdStop
+  lbC064144: CmdWait
+  lbW0642F4: CommandTable

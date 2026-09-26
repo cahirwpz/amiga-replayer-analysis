@@ -14,11 +14,12 @@ nothing.
 ## Key ideas
 
 - A row names only an instrument. Each instrument has a fixed period.
-  `src/Digital Sonix & Chrome_v1.asm:1293`
-- Each instrument loops a set number of times, then falls silent. `:1256`
-  `:1320`
-- Game sound effects take a voice from the music until they end. `:648` `:759`
-- A position repeats its pattern N times. `:856`
+  `data/annot/DigitalSonixChrome.yaml:SetFixedPeriod`
+- Each instrument loops a set number of times, then falls silent.
+  `:SetLoopCount` `:CountLoopPass`
+- Game sound effects take a voice from the music until they end.
+  `:SfxClaimVoice` `:CheckSfxVoice`
+- A position repeats its pattern N times. `:CountRepeats`
 
 ## Streams
 
@@ -30,9 +31,9 @@ nothing.
 ## Generators and interactions
 
 - Loop counter: the interrupt at each loop pass counts down. At zero it plays
-  silence and frees the voice. `:1320` `:1353`
-- A new note busy-waits for the channel's audio interrupt. `:1288`
-- A position with zero repeats ends the subsong. `:876`
+  silence and frees the voice. `:CountLoopPass` `:LoopsDone`
+- A new note busy-waits for the channel's audio interrupt. `:WaitAudioIrq`
+- A position with zero repeats ends the subsong. `:NextPosition`
 
 ## State
 
@@ -44,5 +45,6 @@ nothing.
 
 ## Open questions
 
-- A lower instrument number wins a voice (`:651`). Is that a priority scheme?
+- A lower instrument number wins a voice (`:SfxClaimVoice`). Is that a priority
+  scheme?
 - Did any other game use this format?

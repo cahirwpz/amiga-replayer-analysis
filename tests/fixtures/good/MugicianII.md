@@ -19,11 +19,11 @@ vibrato table.
 ## Key ideas
 
 - Envelopes and vibrato read other waveforms as tables.
-  `src/Mugician II_v8.asm:2360`
+  `src/Mugician II_v8.asm:lbC01039A`
 - Effects rewrite the waveform in place, e.g. crossfade two waves, smooth, shift
-  by one sample. `:2506` [All 15 effects](../../../details/MugicianII-effects.md).
-- Row length alternates between two speeds (swing). `:1849`
-- Voices 4–7 are mixed into channel 0. `:4146`
+  by one sample. `:lbL0104E8` [All 15 effects](../../../details/MugicianII-effects.md).
+- Row length alternates between two speeds (swing). `:lbC00FC10`
+- Voices 4–7 are mixed into channel 0. `:lbC010982`
 
 ## Streams
 
@@ -39,9 +39,9 @@ vibrato table.
 ## Generators and interactions
 
 - Voices on one instrument share its effect. It still steps once per tick.
-  `:2264`
-- Note-on copies a source waveform over the working one. `:2128`
-- Command 9 toggles the audio filter every tick. `:2243`
+  `:lbC0102B0`
+- Note-on copies a source waveform over the working one. `:lbC010146`
+- Command 9 toggles the audio filter every tick. `:lbC01029E`
 
 ## State
 

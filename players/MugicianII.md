@@ -13,11 +13,12 @@ The 128-byte waveform serves as played wave, volume envelope and vibrato table.
 ## Key ideas
 
 - Envelopes and vibrato read other waveforms as tables.
-  `src/Mugician II_v8.asm:2360`
+  `data/annot/MugicianII.yaml:VolumeFromWave`
 - Effects rewrite the waveform in place, e.g. crossfade two waves, smooth, shift
-  by one sample. `:2506` [All 15 effects](../details/MugicianII-effects.md).
-- Row length alternates between two speeds (swing). `:1849`
-- Voices 4–7 are mixed into channel 0. `:4146`
+  by one sample. `:EffectTable`
+  [All 15 effects](../details/MugicianII-effects.md).
+- Row length alternates between two speeds (swing). `:SwingSpeeds`
+- Voices 4–7 are mixed into channel 0. `:MixVoices`
 
 ## Streams
 
@@ -33,9 +34,9 @@ The 128-byte waveform serves as played wave, volume envelope and vibrato table.
 ## Generators and interactions
 
 - Voices on one instrument share its effect. It still steps once per tick.
-  `:2264`
-- Note-on copies a source waveform over the played one. `:2128`
-- Command 9 toggles the audio filter every tick. `:2243`
+  `:EffectOncePerTick`
+- Note-on copies a source waveform over the played one. `:CopyWaveA`
+- Command 9 toggles the audio filter every tick. `:VoiceTick`
 
 ## State
 

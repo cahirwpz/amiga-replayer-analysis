@@ -1,0 +1,10 @@
+# Annotations for the Future Composer 1.4 replayer. Render: tools/annot.py
+source: ext/uade/amigasrc/players/defect/fc14/FC1.4.s
+sha1: 002e86d8538e9a688a782ae98d5b9cb41208b08a
+
+labels:
+  203: InitWaveforms
+  508: PortaSpeed
+  519: AddInstrTranspose
+  585: RestartVolList
+  789: DoPortamento

@@ -15,6 +15,7 @@ import sys
 from functools import cache
 from pathlib import Path
 
+import annot
 import glossary
 import yaml
 
@@ -91,6 +92,14 @@ def validate(data=None):
         for name in facts.get("related") or []:
             if name not in binaries_:
                 err(player, f"related `{name}` is not a binary")
+        for link in links:
+            if isinstance(link, dict) and "cite" in link:
+                name, _, label = str(link["cite"]).rpartition(":")
+                path = ROOT / name
+                if not path.is_file():
+                    err(player, f"cite: {name} does not exist")
+                elif label not in (annot.cited_labels(path) or ()):
+                    err(player, f"cite: {path.name} has no label {label}")
         after = facts.get("after") or {}
         if after and "family" not in facts:
             err(player, "`after` needs `family`")

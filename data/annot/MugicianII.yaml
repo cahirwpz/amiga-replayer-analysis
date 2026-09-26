@@ -1,0 +1,31 @@
+# Annotations for the Mugician II replayer. Render: tools/annot.py
+source: ext/uade/amigasrc/players/wanted_team/MugicianII/src/Mugician II_v8.asm
+sha1: 1463a01d119442cdb037d34cf17dfe51dadc82c1
+
+labels:
+  1849: SwingSpeeds
+  2128: CopyWaveA
+  lbC01029E: VoiceTick
+  lbC0102B0: RunEffect
+  2262: SynthWavesOnly
+  2264: EffectOncePerTick
+  2294: EffectDelay
+  lbC01039A: VolumeFromWave
+  lbC0104E6: NoEffect
+  lbL0104E8: EffectTable
+  lbC010838: Effect1
+  lbC01070C: Effect2
+  lbC0107F2: Effect3
+  lbC010802: Effect4
+  lbC0106B2: Effect5
+  lbC01069C: Effect6
+  lbC010798: Effect7
+  lbC0106CC: Effect8
+  lbC01076A: Effect9
+  lbC010850: Effect10
+  lbC010568: Effect11
+  lbC010602: Effect12
+  lbC010876: Effect13
+  lbC0107BC: Effect14
+  lbC010816: Effect15
+  lbC010982: MixVoices

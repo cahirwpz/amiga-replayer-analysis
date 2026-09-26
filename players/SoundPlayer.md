@@ -13,10 +13,12 @@ Pattern commands switch Paula's attach modes, so one channel modulates the next.
 ## Key ideas
 
 - Commands set attach bits: volume or period modulation of the next channel.
-  `src/SoundPlayer_v1.asm:1359` `:1383`
-- All voices read one list of rows, each from its own position. `:776` `:1041`
-- Commands set flags that the game can read. `:1316` `:967`
-- Instruments are IFF 8SVX samples: a first part, then a repeat part. `:684`
+  `data/annot/SoundPlayer.yaml:CmdVolModOn` `:CmdVolModOff`
+- All voices read one list of rows, each from its own position. `:InitVoices`
+  `:ReadRow`
+- Commands set flags that the game can read. `:CmdSetFlag` `:GameReadsFlag`
+- Instruments are IFF 8SVX samples: a first part, then a repeat part.
+  `:LoadInstrument`
 - [All commands](../details/SoundPlayer-commands.md).
 
 ## Streams
@@ -27,11 +29,11 @@ Pattern commands switch Paula's attach modes, so one channel modulates the next.
 
 ## Generators and interactions
 
-- Waits and repeats count per voice, so the columns drift apart. `:1060`
-- Volume slides by 1 every N ticks, until 0 or 63. `:1122`
-- A row comes every 6 ticks; the speed is fixed. `:1019`
+- Waits and repeats count per voice, so the columns drift apart. `:VoiceWait`
+- Volume slides by 1 every N ticks, until 0 or 63. `:VolumeSlide`
+- A row comes every 6 ticks; the speed is fixed. `:RowTimer`
 - A note stops its channel on the row tick and restarts it one tick later.
-  `:1187` `:1086`
+  `:NoteStop` `:NoteRestart`
 
 ## State
 

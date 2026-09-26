@@ -1,0 +1,7 @@
+# Annotations for the TFMX Pro replayer. Render: tools/annot.py
+source: ext/uade/amigasrc/players/wanted_team/TFMX-Pro/src/TFMX Pro_v5.asm
+sha1: acad9359686d6062bd983b45940ed15177fc739c
+
+labels:
+  2189: TrackNote
+  play3: PatternOpcode

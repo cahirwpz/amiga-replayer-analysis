@@ -12,11 +12,12 @@ Each instrument runs two command lists: volume, and pitch with waveform.
 
 ## Key ideas
 
-- The pitch list also sets waveforms and slides pitch. `FC1.4.s:568` `:648`
-- A pitch step with bit 7 set is a fixed note, not an offset. `:726`
-- The module carries up to 80 waveforms. `:203`
-- `E9` picks one sample out of a pack of samples. `:606`
-- Positions can transpose instrument numbers. `:519`
+- The pitch list also sets waveforms and slides pitch.
+  `data/annot/FutureComposer1.4.yaml:testnewsound` `:testpitchbend`
+- A pitch step with bit 7 set is a fixed note, not an offset. `:lockednote`
+- The module carries up to 80 waveforms. `:InitWaveforms`
+- `E9` picks one sample out of a pack of samples. `:testE9`
+- Positions can transpose instrument numbers. `:AddInstrTranspose`
 
 ## Streams
 
@@ -29,11 +30,11 @@ Each instrument runs two command lists: volume, and pitch with waveform.
 
 ## Generators and interactions
 
-- Vibrato starts after a delay. Depth grows per octave. `:744`
-- Portamento, pitch slides and volume slides step every second tick. `:789`
-  `:711`
-- Portamento speed comes from the next row's second byte. `:508`
-- `E2` and `E9` restart the volume list; `E4` does not. `:585`
+- Vibrato starts after a delay. Depth grows per octave. `:vibrator`
+- Portamento, pitch slides and volume slides step every second tick.
+  `:DoPortamento` `:do_VOLbend`
+- Portamento speed comes from the next row's second byte. `:PortaSpeed`
+- `E2` and `E9` restart the volume list; `E4` does not. `:RestartVolList`
 
 ## State
 

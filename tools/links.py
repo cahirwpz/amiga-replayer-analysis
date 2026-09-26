@@ -6,13 +6,13 @@ Usage: links.py FILE.md|DIR...
 Checks:
   - relative Markdown links point to existing files
   - `#L<n>` links name an existing line
-  - player cards (front matter has `player`): `file:line` citations name an
-    existing line under the player's source, as tools/inventory.py finds it;
-    a bare `:line` refers to the file of the previous citation
-  - `path.cnf:Label` citations name a LABEL or SYMBOL in an IRA config;
-    the path is relative to the repo root, e.g. data/disasm/X.cnf:Play
-  - `data/annot/X.yaml:Label` citations name a new label in an annotation
-    file, see tools/annot.py
+  - `file:Label` citations name a label in that file, as
+    annot.cited_labels() finds it
+    Paths starting with ext/ or data/ are relative to the repo root. In
+    player cards (front matter has `player`), other paths are relative to
+    the player's source, as tools/inventory.py finds it. A bare `:Label`
+    refers to the file of the previous citation.
+  - no citation names a line number, e.g. `file.s:12`
   - code spans that start with a repo folder, e.g. `docs/x.md` or
     `ext/uade/y.s:12`, name a path that exists. Placeholders in angle
     brackets and globs are skipped.
@@ -26,32 +26,45 @@ import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 
+import annot
 import inventory
-import yaml
 from mdtools import children, read
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCES = ROOT / "ext" / "uade" / "amigasrc" / "players"
 
 
-def citation(code):
-    """Split a code span like `file.s:12`, `:12-14` or `x.cnf:Label`.
+# Files a citation may name.
+CITED = (".s", ".asm", ".a", ".i", ".c", ".h", ".cnf", ".yaml")
 
-    Returns (file, first, last, label); (None, ...) if it is no citation.
+
+def citation(code):
+    """Split a code span like `file.s:Label`, `:Label` or `file.s:12`.
+
+    Returns (file, label, line); file is "" for a bare `:Label`. Returns
+    None if the span is no citation.
     """
     name, sep, tail = code.rpartition(":")
-    if not sep:
-        return None, None, None, None
-    first, _, last = tail.partition("-")
-    if first.isdigit() and (not last or last.isdigit()):
-        return name, int(first), int(last) if last else None, None
-    if name.endswith((".cnf", ".yaml")) and tail.isidentifier():
-        return name, None, None, tail
-    return None, None, None, None
+    if not sep or (name and not name.lower().endswith(CITED)):
+        return None
+    if re.fullmatch(r"\d+(-\d+)?", tail):
+        return name, None, tail
+    if tail.isidentifier():
+        return name, tail, None
+    return None
 
 
 # Code spans starting with these name repo paths, relative to the root.
-REPO_DIRS = ("data/", "details/", "docs/", "ext/", "ideas/", "players/", "tools/")
+REPO_DIRS = (
+    "data/",
+    "details/",
+    "docs/",
+    "ext/",
+    "ideas/",
+    "players/",
+    "tests/",
+    "tools/",
+)
 
 
 def repo_path(code):
@@ -74,18 +87,6 @@ def spans(doc):
 def source_dir(value):
     """`ext/` and `data/` are relative to the repo root; the rest to SOURCES."""
     return ROOT / value if value.startswith(("ext/", "data/")) else SOURCES / value
-
-
-def our_labels(path, cache={}):
-    """Labels we named: in an IRA config or a tools/annot.py file."""
-    if path not in cache:
-        text = path.read_text()
-        if path.suffix == ".yaml":
-            cache[path] = set((yaml.safe_load(text) or {}).get("labels", {}).values())
-        else:
-            found = re.finditer(r"^(?:LABEL|SYMBOL)\s+(\S+)\s", text, re.M)
-            cache[path] = {m.group(1) for m in found}
-    return cache[path]
 
 
 def sources():
@@ -154,31 +155,34 @@ def check(path, known_sources):
         path_ = repo_path(child.content)
         if path_ and not (ROOT / path_).exists():
             err(n, "path", f"{path_} does not exist")
-        name, first, last, label = citation(child.content)
-        if name is None:
+        cite = citation(child.content)
+        if cite is None:
             continue
-        if label:
-            cnf = ROOT / name
-            if not cnf.is_file():
-                err(n, "cite", f"{name} does not exist")
-            elif label not in our_labels(cnf):
-                err(n, "cite", f"{name} has no label {label}")
+        name, label, line = cite
+        if line:
+            err(n, "cite", f"`{child.content}` names a line; cite a label")
             continue
-        if not src:
-            continue
-        if name:
+        if name.startswith(REPO_DIRS):
+            last_file = ROOT / name
+        elif name and src:
             last_file = src / name
-        elif last_file is None:
-            err(n, "cite", f":{first} has no preceding file")
-            continue
-        if not last_file.is_file():
-            err(n, "cite", f"{name} not found under {source}")
+        elif name:
+            err(n, "cite", f"{name} must start with ext/ or data/")
             last_file = None
             continue
-        count = line_count(last_file)
-        for num in filter(None, (first, last)):
-            if not 1 <= num <= count:
-                err(n, "cite", f"{last_file.name}:{num} beyond {count} lines")
+        elif last_file is None:
+            err(n, "cite", f":{label} has no preceding file")
+            continue
+        if not last_file.is_file():
+            where = f"under {source}" if src and not name.startswith(REPO_DIRS) else ""
+            err(n, "cite", f"{name or last_file.name} not found {where}".rstrip())
+            last_file = None
+            continue
+        known = annot.cited_labels(last_file)
+        if known is None:
+            err(n, "cite", f"{last_file.name} has no labels")
+        elif label not in known:
+            err(n, "cite", f"{last_file.name} has no label {label}")
     return errors
 
 
