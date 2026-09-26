@@ -36,7 +36,10 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
 
 - Write at executive-summary level by default.
 - Go deeper only when the user asks. Put deep dives in `details/`.
-- One idea per page. One replayer per card.
+- One idea per page. One lineage per card, see
+  [`docs/lineage.md`](docs/lineage.md).
+- A card covers a lineage's latest version. If it is binary-only, disassemble
+  it. A version with a distinct idea gets its own card.
 - Prefer a table over prose when comparing things.
 
 ## Writing

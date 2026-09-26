@@ -11,6 +11,7 @@ One line per term. Every acronym used in this repo must appear here.
 | **AUDxPER** | Channel x period: clock divider that sets pitch.                                   |
 | **AUDxVOL** | Channel x volume, 0 to 64.                                                         |
 | **C1**      | Advanced level of the CEFR language scale. Our target reader.                      |
+| **C64**     | Commodore 64: 8-bit home computer with the SID sound chip.                         |
 | **CCK**     | Colour clock, 3.546895 MHz on PAL. Paula's time unit.                              |
 | **CIA**     | Timer chip. Replayers use it for tempo independent of the display.                 |
 | **CPU**     | The Motorola 68000 family processor.                                               |

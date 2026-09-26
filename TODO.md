@@ -135,6 +135,7 @@ Findings so far, for the cards above. Paths are relative to
 ## Later
 
 - [ ] Full survey of the remaining players with readable source.
+- [ ] Compare code for the `name` rows in `docs/lineage.md`.
 - [ ] Tag `ProTracker`-like players in the inventory.
 - [ ] Pick the first binary-only player to disassemble. Filter by scope first.
 - [ ] Before disassembling a player, look for a port of it outside UADE.
