@@ -27,13 +27,19 @@ All twelve pilot cards exist.
 
 ## After the pilot
 
-- [ ] Review the cards with the user.
-- [ ] Migrate 11 cards to the new template in the review. Done: `TimFollin`,
-      `TFMX-Pro`. Then drop the legacy forms in `tools/cards.py`; require
-      Channel outputs.
+### Fix the current cards
+
+- [ ] Migrate 11 cards to the new template. Done: `TimFollin`, `TFMX-Pro`. Then
+      drop the legacy forms in `tools/cards.py`; require Channel outputs.
+- [ ] Re-check the `AbyssHighestExperience` card against a disassembly. See the
+      disassembly queue.
 - [ ] Tune limits in `tools/cogload.py` and the card template.
 - [ ] Fix the classification axes: control, themes, streams. They live in the
       glossary and the card template.
+
+### Then
+
+- [ ] Review the cards with the user.
 - [ ] Write the first technique pages in `ideas/`.
 - [ ] Add a check that `ideas:` slugs in cards exist.
 - [ ] Generate a technique index from the slugs, for the front page.
