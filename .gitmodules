@@ -7,3 +7,6 @@
 [submodule "ext/c-flod"]
 	path = ext/c-flod
 	url = https://github.com/rofl0r/c-flod
+[submodule "ext/oktalyzer"]
+	path = ext/oktalyzer
+	url = https://github.com/hitchhikr/oktalyzer

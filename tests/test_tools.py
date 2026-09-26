@@ -236,6 +236,19 @@ class Disasm(unittest.TestCase):
         self.assertEqual(found["DTP_PlayerName"], 0xB2)
         self.assertEqual(found["DTP_Interrupt"], 0x1B8)
 
+    def test_links_an_object_file(self):
+        obj = ROOT / "ext" / "oktalyzer" / "original" / "sources" / "okplay2.o"
+        exe, labels, entries = self.disasm.link(obj.read_bytes())
+        names = dict(labels)
+        hs = self.disasm.hunks(exe)
+        # `bsr StopAll` at $6: the displacement counts from its own word.
+        disp = int.from_bytes(hs[0][1][8:10], "big", signed=True)
+        self.assertEqual(8 + disp, names["StopAll"])
+        self.assertEqual(hs[1][0], 0x10A4)  # hunks back to back, as IRA loads them
+        self.assertIn(names["OK_Play"], entries)  # exported, never referenced
+        self.assertIn(names["ReplayHandler"], entries)  # reached by a branch
+        self.assertNotIn(names["FullPeriodTab"], entries)  # read as data
+
     def test_every_player_has_a_code_tag(self):
         for binary in sorted(self.disasm.PLAYERS.iterdir()):
             if binary.is_file():

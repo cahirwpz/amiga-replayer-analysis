@@ -1,18 +1,34 @@
 #!/usr/bin/env python3
-"""Disassemble UADE player binaries with IRA.
+"""Disassemble UADE player binaries and other 68k hunk files with IRA.
 
 Usage: disasm.py install
-       disasm.py seed PLAYER
-       disasm.py listing PLAYER
+       disasm.py seed PLAYER|FILE
+       disasm.py listing PLAYER|FILE
 
   install  download IRA from Aminet, build it, copy it to .venv/bin/ira
-  seed     create data/disasm/PLAYER.cnf; refuses to overwrite it
-  listing  write build/disasm/PLAYER.asm from the config
+  seed     create data/disasm/NAME.cnf; refuses to overwrite it
+  listing  write build/disasm/NAME.asm from the config
+
+PLAYER is a binary in ext/uade/players; NAME is the player. FILE is a path
+under ext/ to an executable or an object file; NAME is its stem, e.g.
+ext/oktalyzer/original/sources/okplay2.o gives okplay2. `listing` takes the
+same argument as `seed`.
 
 Players are EaglePlayer binaries. Their code is reached only through a tag
 list of function pointers, which IRA does not follow. `seed` reads that list,
 runs `ira -preproc` once from each code tag, and merges the CODE areas. Every
 pointer tag also becomes a LABEL named after the tag, e.g. DTP_Interrupt.
+
+Object files (HUNK_UNIT) call even their own routines through external
+references, which IRA leaves unresolved. Both commands first link the unit
+into an executable: references to its own symbols are patched, 32-bit ones
+become relocations. Entries are the symbols that a branch or jump reaches,
+and those that nothing in the unit references (the exported API). Every
+defined symbol becomes a LABEL. Other executables start at offset 0; their
+HUNK_SYMBOL names become labels.
+
+`seed` drops an entry whose code would run past the end of its hunk: it is
+data. It prints each entry and whether it was kept.
 
 The config is the committed artefact. Add CODE ranges IRA missed and rename
 labels by hand; cards cite them as `data/disasm/PLAYER.cnf:Label`. Listings
@@ -82,10 +98,17 @@ DATA_TAGS = {
     "EP_EagleBase",
 }
 
-HUNK_HEADER = 0x3F3
+HUNK_HEADER, HUNK_UNIT = 0x3F3, 0x3E7
 HUNK_CODE, HUNK_DATA, HUNK_BSS = 0x3E9, 0x3EA, 0x3EB
 HUNK_RELOC32, HUNK_RELOC32SHORT, HUNK_DREL32 = 0x3EC, 0x3FC, 0x3F7
 HUNK_SYMBOL, HUNK_DEBUG, HUNK_END, HUNK_NAME = 0x3F0, 0x3F1, 0x3F2, 0x3E8
+HUNK_EXT = 0x3EF
+# HUNK_EXT entry types: definitions are below 128, references above.
+EXT_REF32, EXT_REF16, EXT_REF8 = 129, 131, 132
+# Opcodes of a branch or jump whose target is the reference that follows:
+# Bcc.W and BSR.W ($6x00), JMP/JSR (d16,PC), JMP/JSR abs.l.
+BRANCH16 = re.compile(rb"[\x60-\x6f]\x00|\x4e[\xba\xfa]", re.S)
+BRANCH32 = {b"\x4e\xb9", b"\x4e\xf9"}
 
 
 def tag_names():
@@ -110,10 +133,11 @@ def tag_names():
     return names
 
 
-def hunks(data):
+def hunks(data, symbols=None):
     """Return (base address, contents, {offset: target hunk}) per hunk.
 
     IRA places hunks back to back from address 0, sized by the header.
+    Appends (name, address) of each HUNK_SYMBOL entry to `symbols`.
     """
     words = struct.unpack(f">{len(data) // 4}I", data[: len(data) // 4 * 4])
     if words[0] != HUNK_HEADER:
@@ -158,7 +182,13 @@ def hunks(data):
             p += (q + 1) // 2
         elif kind == HUNK_SYMBOL:
             while words[p]:
-                p += words[p] + 2
+                n = words[p]
+                if symbols is not None:
+                    name = data[4 * (p + 1) : 4 * (p + 1 + n)].rstrip(b"\0")
+                    symbols.append(
+                        (name.decode("latin-1"), bases[len(out) - 1] + words[p + 1 + n])
+                    )
+                p += n + 2
             p += 1
         elif kind in (HUNK_DEBUG, HUNK_NAME):
             p += words[p] + 1
@@ -167,6 +197,145 @@ def hunks(data):
         else:
             raise ValueError(f"unsupported hunk type ${kind:x}")
     return [(bases[i], c, r) for i, (c, r) in enumerate(out)]
+
+
+def unit(data):
+    """Parse an object file; return its hunks as dicts.
+
+    Keys: type (hunk type word, memory flags kept), size (longwords),
+    contents, relocs {offset: target hunk}, defs [(name, offset)],
+    refs [(ext type, name, [offsets])], symbols [(name, offset)].
+    """
+    words = struct.unpack(f">{len(data) // 4}I", data[: len(data) // 4 * 4])
+    if words[0] != HUNK_UNIT:
+        raise ValueError("not an object file")
+    p = 2 + words[1]
+    out, cur = [], None
+
+    def name_at(q, n):
+        return data[4 * q : 4 * (q + n)].rstrip(b"\0").decode("latin-1")
+
+    while p < len(words):
+        kind = words[p] & 0x3FFFFFFF
+        if kind in (HUNK_CODE, HUNK_DATA, HUNK_BSS):
+            n = words[p + 1] & 0x3FFFFFFF
+            body = (
+                b"" if kind == HUNK_BSS else bytes(data[4 * (p + 2) : 4 * (p + 2 + n)])
+            )
+            cur = dict(type=words[p], size=n, contents=body, relocs={})
+            cur.update(defs=[], refs=[], symbols=[])
+            out.append(cur)
+            p += 2 if kind == HUNK_BSS else 2 + n
+        elif kind == HUNK_RELOC32:
+            p += 1
+            while words[p]:
+                n, target = words[p], words[p + 1]
+                for off in words[p + 2 : p + 2 + n]:
+                    cur["relocs"][off] = target
+                p += 2 + n
+            p += 1
+        elif kind == HUNK_EXT:
+            p += 1
+            while words[p]:
+                ext, n = words[p] >> 24, words[p] & 0xFFFFFF
+                name = name_at(p + 1, n)
+                p += 1 + n
+                if ext < 128:
+                    if ext == 1:  # EXT_DEF; absolute and resident values are no offsets
+                        cur["defs"].append((name, words[p]))
+                    p += 1
+                else:
+                    if ext == 130:  # EXT_COMMON: a size comes first
+                        p += 1
+                    count = words[p]
+                    cur["refs"].append((ext, name, list(words[p + 1 : p + 1 + count])))
+                    p += 1 + count
+            p += 1
+        elif kind == HUNK_SYMBOL:
+            p += 1
+            while words[p]:
+                n = words[p]
+                cur["symbols"].append((name_at(p + 1, n), words[p + 1 + n]))
+                p += n + 2
+            p += 1
+        elif kind in (HUNK_DEBUG, HUNK_NAME):
+            p += 2 + words[p + 1]
+        elif kind == HUNK_END:
+            p += 1
+        else:
+            raise ValueError(f"unsupported hunk type ${kind:x} in object file")
+    return out
+
+
+def link(data):
+    """Link an object file into an executable, as IRA would load it.
+
+    Returns (executable bytes, labels [(name, address)], entries {address}).
+    References to symbols the unit does not define stay unresolved.
+    """
+    hs = unit(data)
+    bases = [4 * sum(h["size"] for h in hs[:i]) for i in range(len(hs))]
+    defs = {name: (i, off) for i, h in enumerate(hs) for name, off in h["defs"]}
+    labels = [(name, bases[i] + off) for name, (i, off) in defs.items()]
+    labels += [
+        (name, bases[i] + off) for i, h in enumerate(hs) for name, off in h["symbols"]
+    ]
+    referenced, branched = set(), set()
+    for i, h in enumerate(hs):
+        code = bytearray(h["contents"])
+        for ext, name, offsets in h["refs"]:
+            if name not in defs:
+                continue
+            target, value = defs[name]
+            referenced.add(name)
+            for off in offsets:
+                if ext == EXT_REF32:
+                    old = int.from_bytes(code[off : off + 4], "big")
+                    code[off : off + 4] = ((old + value) & 0xFFFFFFFF).to_bytes(
+                        4, "big"
+                    )
+                    h["relocs"][off] = target
+                    if bytes(code[off - 2 : off]) in BRANCH32:
+                        branched.add(name)
+                elif ext == EXT_REF16 and target == i:
+                    old = int.from_bytes(code[off : off + 2], "big", signed=True)
+                    code[off : off + 2] = ((old + value - off) & 0xFFFF).to_bytes(
+                        2, "big"
+                    )
+                    if BRANCH16.fullmatch(bytes(code[off - 2 : off])):
+                        branched.add(name)
+                elif ext == EXT_REF8 and target == i:
+                    code[off] = (code[off] + value - off - 1) & 0xFF
+                    if 0x60 <= code[off - 1] <= 0x6F:  # Bcc.S or BSR.S
+                        branched.add(name)
+                else:
+                    raise ValueError(f"cannot resolve {name}: EXT type {ext}")
+        h["contents"] = bytes(code)
+    entries = {
+        bases[i] + off
+        for name, (i, off) in defs.items()
+        if hs[i]["type"] & 0x3FFFFFFF == HUNK_CODE
+        and (name in branched or name not in referenced)
+    }
+    out = [HUNK_HEADER, 0, len(hs), 0, len(hs) - 1]
+    out += [h["size"] | (h["type"] & 0xC0000000) for h in hs]
+    for h in hs:
+        kind = h["type"] & 0x3FFFFFFF
+        if kind == HUNK_BSS:
+            out += [kind, h["size"]]
+        else:
+            body = h["contents"].ljust(4 * h["size"], b"\0")
+            out += [kind, h["size"], *struct.unpack(f">{h['size']}I", body)]
+        by_target = {}
+        for off, target in sorted(h["relocs"].items()):
+            by_target.setdefault(target, []).append(off)
+        if by_target:
+            out.append(HUNK_RELOC32)
+            for target, offsets in sorted(by_target.items()):
+                out += [len(offsets), target, *offsets]
+            out.append(0)
+        out.append(HUNK_END)
+    return struct.pack(f">{len(out)}I", *out), labels, entries
 
 
 def pointer(hs, hunk, off):
@@ -217,48 +386,93 @@ def merge(areas):
     return out
 
 
-def seed(player):
-    cnf = CONFIGS / f"{player}.cnf"
+def resolve(arg):
+    """(config name, input path) for a player name or a file under ext/."""
+    if "/" not in arg and (PLAYERS / arg).is_file():
+        return arg, PLAYERS / arg
+    path = (ROOT / arg).resolve()
+    if not path.is_file() or not path.is_relative_to(ROOT / "ext"):
+        sys.exit(f"{arg} is neither a player in ext/uade/players nor a file under ext/")
+    if (PLAYERS / path.stem).is_file() and path != PLAYERS / path.stem:
+        sys.exit(f"{path.stem} is also a player; its config name would clash")
+    return path.stem, path
+
+
+def load(path):
+    """(executable bytes, labels [(name, address)], entry addresses)."""
+    data = path.read_bytes()
+    if data[:4] == HUNK_UNIT.to_bytes(4, "big"):
+        exe, labels, entries = link(data)
+        return exe, labels, sorted(entries)
+    if path.parent == PLAYERS:
+        found = tags(path)
+        entries = {a for n, a in found if n not in DATA_TAGS}
+        return data, found, sorted(entries)
+    symbols = []
+    hunks(data, symbols)
+    return data, symbols, [0]
+
+
+def seed(arg):
+    name, path = resolve(arg)
+    cnf = CONFIGS / f"{name}.cnf"
     if cnf.exists():
         sys.exit(f"{cnf.relative_to(ROOT)} exists; edit it or delete it first")
-    found = tags(PLAYERS / player)
+    exe, found, entries = load(path)
     labels, seen = [], set()
-    for name, addr in found:
+    for label, addr in found:
         if addr not in seen:  # one routine may serve several tags
-            labels.append((name, addr))
+            labels.append((label, addr))
             seen.add(addr)
-    entries = sorted({a for n, a in found if n not in DATA_TAGS})
-    areas, header = [], []
+    bounds = [(base, base + len(body)) for base, body, _ in hunks(exe)]
+    areas, header, rejected = [], [], []
     with tempfile.TemporaryDirectory() as tmp:
         # IRA names the config after the input minus its extension.
-        shutil.copy(PLAYERS / player, Path(tmp) / "p")
+        (Path(tmp) / "p").write_bytes(exe)
         for addr in entries:
             (Path(tmp) / "p.cnf").unlink(missing_ok=True)
             run_ira(tmp, *FLAGS, "-preproc", f"-entry=${addr:x}", "p", "p.asm")
+            found = []
             for line in (Path(tmp) / "p.cnf").read_text().splitlines():
                 m = re.fullmatch(r"CODE \$(\w+) - \$(\w+)", line)
                 if m:
-                    areas.append((int(m.group(1), 16), int(m.group(2), 16)))
+                    found.append((int(m.group(1), 16), int(m.group(2), 16)))
                 elif line.split()[0] in ("MACHINE", "OFFSET"):
                     header = header if line in header else header + [line]
+            # Code never runs past its hunk's contents; such an entry is data.
+            # IRA also reports an empty area at each hunk start.
+            inside = [
+                any(lo <= a and b <= hi for lo, hi in bounds) for a, b in found if b > a
+            ]
+            if all(inside):
+                areas += found
+            else:
+                rejected.append(addr)
     lines = header + ["ENTRY $00000000"]
     lines += [f"CODE ${a:08X} - ${b:08X}" for a, b in merge(areas)]
     lines += [f"LABEL {n} ${a:08X}" for n, a in sorted(labels, key=lambda x: x[1])]
     CONFIGS.mkdir(parents=True, exist_ok=True)
     cnf.write_text("\n".join(lines + ["END"]) + "\n")
-    print(f"{cnf.relative_to(ROOT)}: {len(entries)} entries, {len(labels)} labels")
+    print(
+        f"{cnf.relative_to(ROOT)}: {len(entries) - len(rejected)} entries, {len(labels)} labels"
+    )
+    names = dict((addr, label) for label, addr in reversed(labels))
+    for addr in entries:
+        verdict = "rejected: runs past its hunk" if addr in rejected else "entry"
+        print(f"  ${addr:08X} {names.get(addr, '')}: {verdict}")
 
 
-def listing(player):
-    cnf = CONFIGS / f"{player}.cnf"
+def listing(arg):
+    name, path = resolve(arg)
+    cnf = CONFIGS / f"{name}.cnf"
     if not cnf.exists():
-        sys.exit(f"{cnf.relative_to(ROOT)} missing; run: disasm.py seed {player}")
+        sys.exit(f"{cnf.relative_to(ROOT)} missing; run: disasm.py seed {arg}")
     LISTINGS.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
-        shutil.copy(PLAYERS / player, Path(tmp) / "p")
+        (Path(tmp) / "p").write_bytes(load(path)[0])
         shutil.copy(cnf, Path(tmp) / "p.cnf")
         run_ira(tmp, *FLAGS, "-config", "p", "p.asm")
-        out = LISTINGS / f"{player}.asm"
+        out = LISTINGS / f"{name}.asm"
         shutil.copy(Path(tmp) / "p.asm", out)
     print(out.relative_to(ROOT))
 
@@ -291,8 +505,6 @@ def main(argv):
     if argv == ["install"]:
         return install()
     if len(argv) == 2 and argv[0] in ("seed", "listing"):
-        if not (PLAYERS / argv[1]).is_file():
-            sys.exit(f"{argv[1]} is not in ext/uade/players")
         if not IRA.exists():
             sys.exit("IRA missing; run: source ./activate")
         return {"seed": seed, "listing": listing}[argv[0]](argv[1])

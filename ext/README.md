@@ -16,6 +16,18 @@ The Unix Amiga Delitracker Emulator, from
 - Four source folders have no player binary: `other/max_trax`, `uade/ps3m`,
   `wanted_team/Musicline4V` and `wanted_team/Musicline8V`.
 
+## `oktalyzer`
+
+Franck Charlet's disassembly of the Oktalyzer 1.57 tracker by Armin Sander, from
+[GitHub](https://github.com/hitchhikr/oktalyzer). Licence: `BSD-2-Clause`.
+
+- Pinned at the first commit with `src/okta.asm`. Later commits change the
+  mixer.
+- `original/sources` holds the author's replay objects, `okplay1.o` and
+  `okplay2.o`. Our IRA configs: `data/disasm/okplay1.cnf` and
+  `data/disasm/okplay2.cnf`.
+- `replay/` in later commits is a new replay, not the author's.
+
 ## `ahx2play`
 
 A C port of the AHX 2.3d-sp3 replayer by Olav Sørensen, from
