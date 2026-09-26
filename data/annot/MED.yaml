@@ -1,0 +1,41 @@
+# Annotations for the MED/OctaMED 4-channel replayer. Render: tools/annot.py
+source: ext/uade/amigasrc/players/uade/med/common/proplayer.a
+sha1: 1c39c9ba00348061d69f6be8f8eb59b8bf6a78a8
+
+labels:
+  handleSynthnote: StartSynthNote
+  synth_start2: SynthTick
+  synth_vtbl: VolumeOpcodes
+  synth_wfctbl: WaveOpcodes
+  syv_fa: VolJumpWaveList
+  syw_fa: WaveJumpVolList
+  syv_f4: VolEnvOnce
+  syv_f5: VolEnvLoop
+  syw_f7: VibratoWave
+  syw_fc: ArpeggioStart
+  synth_arpeggio: SynthArpeggio
+  f_0e: CmdWaveListPos
+  1672: SynthRelease
+  plr_skipseq: NextPlaySeq
+  1028: NextSection
+
+comments:
+  562: "-2: hybrid, a sample played through the synth lists"
+  585: cleared unless command E set the wave list position
+  638: values below $80 set the volume
+  664: jump the other list, the wave list
+  667: the envelope reads a waveform as volumes
+  683: "waveform pointers at instrument offset 278"
+  718: values below $80 select a waveform
+  742: vibrato shape read from a waveform
+  748: the bytes after `$fc` are arpeggio offsets, up to a negative byte
+  775: jump the other list, the volume list
+  781: arpeggio steps every tick
+  1672: hold time over, so the volume list jumps to the decay position
+
+banners:
+  598: |
+    SynthTick: once per tick for a synth or hybrid voice.
+    Two lists per instrument, 128 bytes each: volume at offset 22,
+    waveform at offset 150. Each steps every N ticks, N per list.
+    Bytes $f0-$ff are opcodes.

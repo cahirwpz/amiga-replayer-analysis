@@ -34,6 +34,10 @@ ArtOfNoise-4V:
 ArtOfNoise-8V:
   source: uade/artofnoise
 
+MED:
+  provenance: original
+  author: Teijo Kinnunen
+
 DavidWhittaker:
   source: ext/c-flod/neoart/flod/whittaker
   note: C port of Flod 4.1 DWPlayer

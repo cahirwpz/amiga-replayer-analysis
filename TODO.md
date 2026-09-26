@@ -15,7 +15,6 @@ Selection rules:
 
 ### Cards: synthesis
 
-- [ ] `MED`: synth volume and waveform command lists
 - [ ] `SonicArranger`: synth instruments
 - [ ] `SonixMusicDriver`: note score, synth with filter bank
 - [ ] `SynthDream`: synth format, not yet read
@@ -40,16 +39,6 @@ Selection rules:
 
 Findings so far, for the cards above. Paths are relative to
 `ext/uade/amigasrc/players`. Delete a section when its card exists.
-
-### `MED`: `uade/med/common/proplayer.a`
-
-- Original source, not a disassembly.
-- Synth sounds run two lists per voice: volume and waveform.
-  `ext/uade/amigasrc/players/uade/med/common/proplayer.a:synth_start2`
-- Volume opcodes: `:synth_vtbl`. Waveform opcodes: `:synth_wfctbl`.
-- Jumps between the two lists are expected. Not yet seen in code.
-- Synth notes start at `:handleSynthnote`. Notes can also go out as MIDI.
-  `:handleMIDInote`
 
 ### `SonixMusicDriver`: `wanted_team/SonixMusicDriver/src/Sonix Music Driver_v1.asm`
 
