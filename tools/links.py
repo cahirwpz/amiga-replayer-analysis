@@ -13,6 +13,8 @@ Checks:
   - player cards (front matter has `player`): `source` exists; `related` players are in the inventory
   - player cards: `file:line` citations name an existing line in `source`;
     a bare `:line` refers to the file of the previous citation
+  - `path.cnf:Label` citations name a LABEL or SYMBOL in an IRA config;
+    the path is relative to the repo root, e.g. data/disasm/X.cnf:Play
 
 Prints `file:line: rule: detail` for each problem; exits 1 if any.
 """
@@ -29,6 +31,7 @@ INVENTORY = ROOT / "data" / "inventory.csv"
 # [text](target "title"); the title is optional.
 LINK_RE = re.compile(r'(?<!!)\[[^\]]*\]\(([^)\s]+)(?:\s+"([^"]*)")?\)')
 CITE_RE = re.compile(r"`([^`]*?):(\d+)(?:-(\d+))?`")
+LABEL_CITE_RE = re.compile(r"`([\w./+-]+\.cnf):([A-Za-z_]\w*)`")
 FENCE_RE = re.compile(r"^\s*(```|~~~)")
 
 
@@ -46,8 +49,17 @@ def front_matter(lines):
 
 
 def source_dir(value):
-    """`ext/...` is relative to the repo root; anything else to SOURCES."""
-    return ROOT / value if value.startswith("ext/") else SOURCES / value
+    """`ext/` and `data/` are relative to the repo root; the rest to SOURCES."""
+    return ROOT / value if value.startswith(("ext/", "data/")) else SOURCES / value
+
+
+def cnf_labels(path, cache={}):
+    if path not in cache:
+        cache[path] = {
+            m.group(1)
+            for m in re.finditer(r"^(?:LABEL|SYMBOL)\s+(\S+)\s", path.read_text(), re.M)
+        }
+    return cache[path]
 
 
 def players():
@@ -88,9 +100,10 @@ def check(path, known_players):
     meta, body = front_matter(lines)
     is_card = "player" in meta and "source" in meta
     src = source_dir(meta["source"]) if is_card else None
-    if is_card and not src.is_dir():
+    if is_card and not src.exists():
         err(1, "source", f"{meta['source']} does not exist")
-        src = None
+    if is_card and not src.is_dir():
+        src = None  # a missing source, or an IRA config cited by label
     if is_card:
         for name in re.findall(r"[\w.+-]+", meta.get("related", "")):
             if name not in known_players:
@@ -116,6 +129,12 @@ def check(path, known_players):
             row = re.fullmatch(r"L(\d+)", anchor)
             if row:
                 check_row(dest, int(row.group(1)), title, lambda d: err(n, "link", d))
+        for name, label in LABEL_CITE_RE.findall(line):
+            cnf = ROOT / name
+            if not cnf.is_file():
+                err(n, "cite", f"{name} does not exist")
+            elif label not in cnf_labels(cnf):
+                err(n, "cite", f"{name} has no label {label}")
         if not src:
             continue
         for name, first, last in CITE_RE.findall(line):

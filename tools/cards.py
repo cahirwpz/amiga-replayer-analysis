@@ -34,9 +34,9 @@ KEYS = [
     "evidence",
 ]
 ALLOWED = {
-    "code": {"uade", "module"},
+    "code": {"uade", "module", "disasm"},
     "control": {"tables", "commands", "program"},
-    "evidence": {"code", "port", "docs"},
+    "evidence": {"code", "port", "docs", "disasm"},
 }
 THEMES = {"synthesis", "mixing", "tricks", "emulation"}
 SCOPES = ["song", "track", "voice", "instrument"]

@@ -18,6 +18,7 @@ The `replay` column says where the replay logic is:
   module   - in the music file; the UADE source only patches it
   check    - patch markers found, but not clearly a wrapper; read the source
   port     - a port outside UADE, under ext/
+  disasm   - no source; data/disasm/<player>.cnf drives an IRA disassembly
 """
 
 import csv
@@ -39,6 +40,7 @@ SOURCE_EXT = {".s", ".asm", ".a", ".i"}
 EXT_SOURCE_EXT = SOURCE_EXT | {".c", ".h"}
 HUNK_HEADER = bytes.fromhex("000003f3")  # AmigaOS executable
 
+DISASM = ROOT / "data" / "disasm"
 CSV = ROOT / "data" / "inventory.csv"
 DOC = ROOT / "docs" / "inventory.md"
 BEGIN, END = "<!-- counts:begin -->", "<!-- counts:end -->"
@@ -48,6 +50,7 @@ PATCH_RE = re.compile(r"PatchTable|FindIt\d|^Patch\d", re.M)
 ROUTINE_RE = re.compile(r"^lbC", re.M)  # disassembler routine labels
 
 # Player -> replay location, where the heuristic in replay() is wrong.
+# Binary-only players found to be wrappers go here as "module".
 REPLAY = {
     "TFMX-Pro": "uade",  # original source with named labels, see card
 }
@@ -190,7 +193,10 @@ def rows():
             continue
         src, how = locate(b, by_hash, by_name)
         files, lines = stats(Path(src)) if src else (0, 0)
-        where = replay(b.name, Path(src)) if files else ""
+        where = replay(b.name, Path(src)) if files else REPLAY.get(b.name, "")
+        cnf = DISASM / f"{b.name}.cnf"
+        if not files and not where and cnf.exists():
+            src, where = cnf.relative_to(ROOT).as_posix(), "disasm"
         note = NOTES.get(b.name, "")
         out.append(
             [
@@ -244,7 +250,7 @@ def counts(table):
     lines += ["", "| Where replay logic is | Players |", "| --- | --- |"]
     lines += [
         f"| {v} | {n} |"
-        for v, n in tally("replay", ["uade", "module", "check", "port"])
+        for v, n in tally("replay", ["uade", "module", "check", "port", "disasm"])
     ]
     lines += ["", END]
     return "\n".join(lines)

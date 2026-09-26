@@ -47,6 +47,7 @@ Readers are C1 non-native speakers with limited attention.
 - One claim per sentence. No filler, no hedging.
 - Put technical detail in tables or code, which skip prose limits.
 - Answer chat questions in the same style.
+- Say each thing once. Tool usage lives in the tool's docstring.
 
 ## Evidence
 
@@ -54,8 +55,16 @@ Readers are C1 non-native speakers with limited attention.
   Elsewhere, cite as `ext/uade/path:line`.
 - Mark guesses as guesses. Mark what you hear as "(inference)".
 - Keyword scans only pick candidates. A claim needs code that was read.
-- Use only players whose `replay` is `uade` or `port` in the inventory.
+- Use only players whose `replay` is `uade`, `port` or `disasm` in the
+  inventory.
+- Cite our disassembly by label: `data/disasm/<player>.cnf:<Label>`. Listing
+  line numbers are not stable.
 - Evidence levels are defined in [the glossary](docs/glossary.md).
+
+## Disassembly
+
+- Binary-only players: see [`tools/disasm.py`](tools/disasm.py). Commit configs,
+  never listings.
 
 ## Repo hygiene
 

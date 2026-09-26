@@ -5,14 +5,15 @@ Copy into `players/<name>.md`. Angle brackets mark placeholders.
 ```markdown
 ---
 player: <binary name in ext/uade/players>
-source: <path under ext/uade/amigasrc/players, or ext/...>
-code: uade | module
+source:
+  <path under ext/uade/amigasrc/players, ext/..., or data/disasm/<player>.cnf>
+code: uade | module | disasm
 control: tables | commands | program
 themes: [synthesis, mixing, tricks]
 ideas: [<idea slug>]
 related: [<player>]
 streams: { song: <n>, voice: <n>, instrument: <n> }
-evidence: code | port | docs
+evidence: code | port | docs | disasm
 ---
 
 # <Player name>

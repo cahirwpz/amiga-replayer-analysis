@@ -146,4 +146,20 @@ Findings so far, for the cards above. Paths are relative to
 
 - [ ] Full survey of the remaining players with readable source.
 - [ ] Tag `ProTracker`-like players in the inventory.
-- [ ] Decide how to cover the binary-only players.
+- [ ] Pick the first binary-only player to disassemble. Filter by scope first.
+- [ ] Module players: decide where sample modules come from.
+
+## Disassembly notes
+
+Tooling works; no config is committed yet. Workflow:
+[`tools/disasm.py`](tools/disasm.py).
+
+- Seeding was tried on `DeltaMusic2.0`, `SIDMon2.0`, `Laxity` and
+  `TFMX-7V-TFHD`.
+- `-preproc` misses code reached by jump tables or pointers. Example:
+  `TFMX-7V-TFHD` keeps `4e75` (`rts`) inside data at `$060c`. Add `CODE` ranges
+  by hand.
+- IRA 2.11 refuses `-preproc` over an existing `.cnf`. So `seed` runs once per
+  tag entry and merges the areas.
+- Many binary-only players are 1–3 kB. Some may be wrappers (guess). Check each
+  one when its config is made.

@@ -55,6 +55,12 @@ class Links(unittest.TestCase):
         self.assertIn("99999 beyond", out)
         self.assertIn("src/nope.asm not found", out)
         self.assertIn('#L3 does not start with "MugicianII"', out)
+        self.assertIn("sample.cnf has no label NoSuchLabel", out)
+        self.assertIn("none.cnf does not exist", out)
+
+    def test_accepts_label_citations(self):
+        code, _, out = run("links.py", FIXTURES / "good" / "labels.md")
+        self.assertEqual(code, 0, out)
 
 
 class Cards(unittest.TestCase):
@@ -73,6 +79,28 @@ class Cards(unittest.TestCase):
             "file name should be",
         ):
             self.assertIn(text, out)
+
+
+class Disasm(unittest.TestCase):
+    """Tag-list parsing only; IRA itself is not run here."""
+
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import disasm
+
+        self.disasm = disasm
+
+    def test_finds_tags_by_address(self):
+        found = dict(self.disasm.tags(self.disasm.PLAYERS / "DeltaMusic2.0"))
+        self.assertEqual(found["DTP_PlayerName"], 0xB2)
+        self.assertEqual(found["DTP_Interrupt"], 0x1B8)
+
+    def test_every_player_has_a_code_tag(self):
+        for binary in sorted(self.disasm.PLAYERS.iterdir()):
+            if binary.is_file():
+                with self.subTest(player=binary.name):
+                    names = {n for n, _ in self.disasm.tags(binary)}
+                    self.assertTrue(names - self.disasm.DATA_TAGS)
 
 
 if __name__ == "__main__":

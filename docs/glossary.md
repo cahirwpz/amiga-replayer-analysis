@@ -17,6 +17,7 @@ One line per term. Every acronym used in this repo must appear here.
 | **DMA**     | Direct memory access. Paula fetches samples without the CPU.                       |
 | **FK**      | Flesch-Kincaid grade: a readability score. Lower is easier.                        |
 | **HRM**     | Commodore's Amiga Hardware Reference Manual.                                       |
+| **IRA**     | Portable 68000 reassembler. Turns a player binary into assembler source.           |
 | **MED**     | Music editor by Teijo Kinnunen, later OctaMED. Tracker with synth sounds.          |
 | **MIDI**    | Standard protocol for sending notes to synthesizers.                               |
 | **PAL**     | European TV standard. Sets the Amiga clock and 50 Hz frame rate.                   |
@@ -56,6 +57,7 @@ One line per term. Every acronym used in this repo must appear here.
 | **code**        | Evidence: original or disassembled replayer source.                  |
 | **port**        | Evidence: a port of the original replayer.                           |
 | **docs**        | Evidence: documentation only.                                        |
+| **disasm**      | Evidence: our own IRA disassembly of a player binary.                |
 | **module**      | Replay code ships inside the music file.                             |
 
 ## Control vocabulary
