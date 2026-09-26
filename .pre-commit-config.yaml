@@ -81,7 +81,7 @@ repos:
         pass_filenames: false
         always_run: true
 
-      - id: players                  # data/players.yaml is valid; docs/players.md is fresh
+      - id: players                  # data/players.yaml is valid
         name: players
         entry: .venv/bin/python3 tools/players.py --check
         language: system

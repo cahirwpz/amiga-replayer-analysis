@@ -9,8 +9,9 @@ and its many relatives are left out.
 ## Where to start
 
 1. [Paula in one page](docs/paula.md): the hardware every replayer works around.
-2. [Players](docs/players.md): every card, with provenance and lineage.
-3. [Details](details/): deep dives, only where a card needs one.
+2. [Player cards](players/): one page per replayer.
+3. [Player facts](data/players.yaml): provenance, lineage, authors.
+4. [Details](details/): deep dives, only where a card needs one.
 
 Unknown terms are in [the glossary](docs/glossary.md).
 
@@ -26,7 +27,7 @@ The shape is fixed by [the card template](docs/card-template.md).
 
 - Every claim in a player card cites a source line.
 - Sources: UADE's replayers, original or disassembled, and C ports.
-  [Players](docs/players.md) lists each card's provenance and lineage.
+  [Player facts](data/players.yaml) records each player's provenance.
 - Binary-only players: our own IRA disassembly. See
   [`tools/disasm.py`](tools/disasm.py).
 - Players whose replay code hides inside music files are left out.

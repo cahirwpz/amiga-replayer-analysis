@@ -1,5 +1,5 @@
 # Hand-written facts per player. Keys are binary names in ext/uade/players.
-# tools/players.py checks this file and writes the tables in docs/players.md.
+# tools/players.py checks this file.
 # tools/inventory.py reads `source`, `replay` and `note` from here.
 #
 # Fields, all optional:

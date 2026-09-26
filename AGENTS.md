@@ -35,8 +35,8 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
 
 - Write at executive-summary level by default.
 - Go deeper only when the user asks. Put deep dives in `details/`.
-- One idea per page. One lineage per card, see
-  [`docs/players.md`](docs/players.md#lineages).
+- One idea per page. One lineage per card; see `family` in
+  [`data/players.yaml`](data/players.yaml).
 - A card covers a lineage's latest version. If it is binary-only, disassemble
   it. A version with a distinct idea gets its own card.
 - Prefer a table over prose when comparing things.
@@ -87,8 +87,8 @@ Readers are C1 non-native speakers with limited attention.
 
 - Never parse Markdown with regexes. Tools read data from `data/` (YAML or CSV),
   or parse Markdown with [`tools/mdtools.py`](tools/mdtools.py).
-- Edit `data/glossary.yaml` or `data/players.yaml`, then run
-  `tools/glossary.py --write` or `tools/players.py --write`.
+- Edit the glossary in `data/glossary.yaml`, then run
+  `tools/glossary.py --write`.
 - Python packages go in `requirements.txt`.
 
 ## Shell pitfalls
