@@ -59,11 +59,12 @@ Readers are C1 non-native speakers with limited attention.
 - Cite code by label, never by line. Cards cite `file:Label` under the player's
   source. Elsewhere: `ext/<path>:<Label>`.
 - Mark guesses as guesses. Mark what you hear as "(inference)".
-- Keyword scans only pick candidates. A claim needs code that was read.
-- Use only players whose `replay` is `uade`, `port` or `disasm`.
+- Keyword scans only pick candidates. A claim needs 68k replay code that was
+  read.
+- Record provenance in `data/players.yaml`: `original`, `disassembly` or `ira`.
+  A port only shows where to look.
 - Our labels: `data/annot/<player>.yaml:<Label>` or
   `data/disasm/<player>.cnf:<Label>`. Add missing ones.
-- Record provenance per player in `data/players.yaml`.
 
 ## Listings
 
@@ -75,7 +76,7 @@ Readers are C1 non-native speakers with limited attention.
 
 - Never edit submodules in `ext/` or update their pins unasked.
 - For a pin update, diff the output of `tools/inventory.py` before and after.
-- Link player names to their card, if one exists.
+- Link each player name to its card, if any.
 - Run `source ./activate` once per shell.
 - Before each commit, stage and run `pre-commit run --all-files`. Stage again
   and rerun until it passes.
@@ -92,7 +93,6 @@ Readers are C1 non-native speakers with limited attention.
 
 ## Shell pitfalls
 
-- Sources are Latin-1. `grep` silently finds nothing in them. Use
-  `tools/srcgrep.py`.
+- Sources are Latin-1, so `grep` finds nothing. Use `tools/srcgrep.py`.
 - `ls` is aliased to a long listing. Use Python `glob` in scripts.
 - `sed` patterns fail silently. Edit with Python and assert each match.

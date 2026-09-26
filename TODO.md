@@ -11,20 +11,19 @@ Selection rules:
 
 - Formats that did not prevail on the demoscene. No `ProTracker`-like players.
 - Themes: cheap but expressive synthesis, unusual tricks, soft voice mixing.
-- `replay` must be `uade` or `port` in the output of `tools/inventory.py`.
+- `replay` must be `uade` in the output of `tools/inventory.py`.
 
 All twelve pilot cards exist.
 
 ### Rejected
 
-| Player                                                           | Reason                              |
-| ---------------------------------------------------------------- | ----------------------------------- |
-| `RobHubbard`, `BenDaglish-SID`, `JankoMrsicFlogel`, `Special-FX` | Replay code is in the module        |
-| `PreTracker`                                                     | Replay code is a prebuilt binary    |
-| `Pokeynoise`, `ADPCM_mono`                                       | Too primitive or already well known |
-| `Mugician`                                                       | Covered by `MugicianII`             |
-| `JochenHippel-7V`                                                | Mixing is covered by `MugicianII`   |
-| `PTK-Prowiz`                                                     | `ProTracker`-like                   |
+| Player                     | Reason                              |
+| -------------------------- | ----------------------------------- |
+| `PreTracker`               | Replay code is a prebuilt binary    |
+| `Pokeynoise`, `ADPCM_mono` | Too primitive or already well known |
+| `Mugician`                 | Covered by `MugicianII`             |
+| `JochenHippel-7V`          | Mixing is covered by `MugicianII`   |
+| `PTK-Prowiz`               | `ProTracker`-like                   |
 
 ## After the pilot
 
@@ -33,16 +32,12 @@ All twelve pilot cards exist.
 - [ ] Fix the classification axes: control, themes, streams. They live in the
       glossary and the card template.
 - [ ] Write the first technique pages in `ideas/`.
+- [ ] Write a `TimFollin` card. Source is a `disassembly`. Replay:
+      `ext/uade/amigasrc/players/other/timfollin/DP_TimFollin.asm:_play1`.
 - [ ] Add a check that `ideas:` slugs in cards exist.
 - [ ] Generate a technique index from the slugs, for the front page.
 
 ## Open questions
-
-- [ ] Decide: bring `RobHubbard` back? Its Flod port has its own replay logic
-      and meets the `replay: port` rule.
-      `ext/c-flod/neoart/flod/hubbard/RHPlayer.c:RHPlayer_loader`
-- [ ] AHX: does the UADE binary replayer differ from the tracker code in
-      `ext/ahx2play`? Needs an IRA disassembly of the binary.
 
 ### Needs outside material
 
@@ -58,8 +53,57 @@ All twelve pilot cards exist.
 - [ ] Compare code for the `name` lineage links in `data/players.yaml`.
 - [ ] Note `ProTracker`-like players in `data/players.yaml`.
 - [ ] Pick the first binary-only player to disassemble. Filter by scope first.
-- [ ] Before disassembling a player, look for a port of it outside UADE.
+- [ ] Before disassembling a player, look for a port of it outside UADE. Use it
+      as a map, not as evidence.
 - [ ] Module players: decide where sample modules come from.
+
+## Reading notes: `TimFollin`
+
+Source: `ext/uade/amigasrc/players/other/timfollin/DP_TimFollin.asm`. Read in
+full; no card yet.
+
+- Streams: one byte track per voice, no positions or patterns. Byte `> 0` is a
+  note, then a duration byte (`L_103E`). Byte `<= 0` is an opcode via `bratab`.
+- Control: `program` level. Call, return, goto, counted loop (`L_1120`,
+  `L_1150`, `L_113E`, `L_10E6`, `L_10F2`).
+- Instruments carry only a sample: length word and data at `+$32` (`L_D8E`). The
+  track sets all expression.
+
+| Opcode | Label    | Effect                                                       |
+| ------ | -------- | ------------------------------------------------------------ |
+| 1      | `L_11F2` | Select instrument                                            |
+| 6      | `L_1166` | Envelope: start, attack and decay speed, sustain level       |
+| 7      | `L_11AE` | Portamento speed; next note becomes the target (`L_F98`)     |
+| 8      | `L_119E` | Trill: note +n / −n, separate up and down times (`L_F5E`)    |
+| 9      | `L_11B6` | Delayed vibrato or sweep in period units (`L_F1C`)           |
+| 10     | `L_115E` | Transpose                                                    |
+| 11     | `L_1102` | Fixed duration; notes then carry no duration byte            |
+| 13     | `L_11E2` | Flags: next wave index (bits 0–5), chain (6), early gate (7) |
+| 14     | `L_1218` | Pulse-width sweep speed; resets the pulse (`L_1226`)         |
+| 17     | `L_11CA` | Next note ignores transpose                                  |
+
+- Pulse-width modulation: `L_E1E` moves the edge of a 32-byte pulse between
+  indexes 4 and `$1E`. Only instruments 0–3.
+- Sample chaining (flag bit 6): one frame after the note starts, `L_D40` sets a
+  second sample. The first sample plays once.
+- Open: `L_1226` resets bytes at `+2`, but the pulse edits and playback use
+  `+$32`. Adapter bug or format detail? Not yet known.
+- Song hacks: subsong 13 volume (`L_DFA`), subsong 14 start volume (`L_B78`).
+- Guess: "Mike D." is Mike Follin. Guess: the 15 fixed subsongs tie it to one
+  game.
+
+## Disassembly queue
+
+A port is not evidence (see [`AGENTS.md`](AGENTS.md#evidence)). These players
+need 68k code first.
+
+| Player                   | Why                                          | Map                              |
+| ------------------------ | -------------------------------------------- | -------------------------------- |
+| `AbyssHighestExperience` | Card rests on a port; re-check it            | `ext/ahx2play`                   |
+| `RobHubbard`             | Replay code is in the module; needs a module | `ext/c-flod/neoart/flod/hubbard` |
+| `BenDaglish-SID`         | Replay code is in the module; needs a module | —                                |
+| `JankoMrsicFlogel`       | Replay code is in the module; needs a module | —                                |
+| `Special-FX`             | Replay code is in the module; needs a module | —                                |
 
 ## Disassembly notes
 
