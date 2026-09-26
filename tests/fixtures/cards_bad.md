@@ -19,6 +19,13 @@ evidence: code
 | Track | voice | conductor | notes | teleport | sometimes |
 | Sequence | song | sequencer | patterns | loop | row |
 
+## Sequencer
+
+| Aspect | Value | Label |
+| --- | --- | --- |
+| Time | grid | x |
+| Routing | magic | x |
+
 ## Generators
 
 | Generator | Scope | States | Writes | Rate | Set by | Note-on |

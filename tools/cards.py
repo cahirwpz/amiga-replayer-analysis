@@ -5,11 +5,13 @@ Usage: cards.py FILE.md|DIR...
 
 A card is a Markdown file whose front matter has a `player` key. Checks:
   - front matter keys and their allowed values
-  - file name matches `player`; `player` is a UADE binary and has a
-    provenance in data/players.yaml
+  - file name matches `player`; `player` is a UADE binary, or has
+    `replay: source`, and has a provenance in data/players.yaml
   - sections present and in order
   - Streams table: header, scope, role, name's first word, and Control/Rate
     words from data/glossary.yaml
+  - Sequencer table: the aspects in order; each value word from the
+    aspect's glossary section
   - Generators table: scope, Rate and Note-on words; Set by names a stream
   - Channel outputs table: output words; each writer is `Name (mode)` with a
     name from the card and a write mode from the glossary
@@ -46,6 +48,7 @@ STATE_SCOPES = {"Voice", "Instrument", "Global"}
 SECTIONS = [
     ("Key ideas", True),
     ("Streams", True),
+    ("Sequencer", False),
     ("Generators", False),
     ("Generators and interactions", False),  # legacy
     ("Channel outputs", False),
@@ -66,6 +69,16 @@ GENERATORS_HEADER = [
 ]
 OUTPUTS_HEADER = ["Output", "Writers, in tick order"]
 INTERACTIONS_HEADER = ["From", "To", "Event"]
+SEQUENCER_HEADER = ["Aspect", "Value", "Label"]
+# Aspect: its glossary section, in the required row order.
+ASPECTS = {
+    "Time": "seq_time",
+    "Unit": "seq_unit",
+    "Note end": "seq_note_end",
+    "Routing": "seq_routing",
+    "Reuse": "seq_reuse",
+    "Tempo": "seq_tempo",
+}
 WRITER_RE = re.compile(r"(.+?) \((.+)\)")
 STATE_HEADER = ["Scope", "Fields"]
 
@@ -108,7 +121,8 @@ def check(path, known, vocab, facts):
     player = str(meta["player"])
     if path.stem != player:
         err(1, "player", f"file name should be {player}.md")
-    if player not in known:
+    source_only = facts.get(player, {}).get("replay") == "source"
+    if player not in known and not source_only:
         err(1, "player", f"{player} is not a binary in ext/uade/players")
     if "provenance" not in facts.get(player, {}):
         err(1, "player", f"{player} has no provenance in data/players.yaml")
@@ -185,6 +199,29 @@ def check(path, known, vocab, facts):
                         f"`{scope}: {streams.get(scope, 0)}` but table has {counts[scope]}",
                     )
 
+    if "Sequencer" in body:
+        rows = table(body["Sequencer"])
+        if not rows or rows[0][1] != SEQUENCER_HEADER:
+            n = rows[0][0] if rows else 1
+            err(n, "sequencer", f"header must be {SEQUENCER_HEADER}")
+        else:
+            aspects = [cells[0] for _, cells in rows[1:]]
+            if aspects != list(ASPECTS):
+                err(rows[0][0], "sequencer", f"aspects must be {list(ASPECTS)}")
+            for n, cells in rows[1:]:
+                if len(cells) != len(SEQUENCER_HEADER):
+                    err(n, "sequencer", "wrong number of columns")
+                    continue
+                aspect, value, _ = cells
+                allowed = vocab.get(ASPECTS.get(aspect), set())
+                for w in words(value):
+                    if w not in allowed:
+                        err(
+                            n,
+                            "sequencer",
+                            f"{aspect.lower()} `{w}` not in the glossary",
+                        )
+
     if "Generators" in body:
         rows = table(body["Generators"])
         if not rows or rows[0][1] != GENERATORS_HEADER:
@@ -260,6 +297,7 @@ def main(argv):
     known = players.binaries()
     keys = ["control", "rate", "stream_names", "roles"]
     keys += ["note_on", "outputs", "write_modes", "ends"]
+    keys += list(ASPECTS.values())
     vocab = {key: glossary.words(key) for key in keys}
     facts = players.load()
     errors = []

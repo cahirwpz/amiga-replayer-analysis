@@ -25,6 +25,17 @@ streams: { song: <n>, voice: <n>, instrument: <n> }
 | ------ | ------- | ------ | -------------------------- | ------------ | ------ |
 | <name> | <scope> | <role> | <what it sets; data owner> | <vocabulary> | <rate> |
 
+## Sequencer
+
+| Aspect   | Value   | Label      |
+| -------- | ------- | ---------- |
+| Time     | <words> | `:<Label>` |
+| Unit     | <words> | `:<Label>` |
+| Note end | <words> | `:<Label>` |
+| Routing  | <words> | `:<Label>` |
+| Reuse    | <words> | `:<Label>` |
+| Tempo    | <words> | `:<Label>` |
+
 ## Generators
 
 | Generator | Scope   | States   | Writes   | Rate   | Set by    | Note-on  |
@@ -69,6 +80,10 @@ streams: { song: <n>, voice: <n>, instrument: <n> }
 
 ## Tables
 
+- Sequencer: how the score places notes in time, ends them and routes them to
+  voices. Each value is one or more words from the aspect's glossary section.
+- With `allocated` routing, add bullets below the Sequencer table. They give the
+  voice allocation rules: free voice first, which voice gets stolen, priorities.
 - Generators: a stateful process that is not a stream, e.g. an envelope.
   - Rate: how often its state changes.
   - Set by: the streams that set its parameters, or `instrument` for fixed

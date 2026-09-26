@@ -179,6 +179,14 @@ SoundPlayer:
   year: 1991
   game: Lemmings
 
+MaxTrax:
+  source: other/max_trax
+  replay: source
+  provenance: original
+  author: Talin (David Joiner) and Joe Pearce
+  year: 1991
+  note: Music-X playback driver; LGPL source, no UADE binary
+
 TimFollin:
   provenance: disassembly
   author: Tim Follin / Mike D.
@@ -220,6 +228,11 @@ RobHubbard:
 
 Sound-FX:
   ports: [ext/c-flod/neoart/flod/soundfx]
+
+Andrew_Parton:
+  provenance: disassembly
+  provenance_guess: true
+  note: raw MIDI stream; MIDI channel AND 3 picks the Paula channel
 
 # Read to settle `check` in tools/inventory.py.
 BenDaglish:

@@ -18,6 +18,7 @@ The `replay` column says where the replay logic is:
   check    - patch markers found, but not clearly a wrapper; read the source
   port     - a port outside UADE, under ext/
   disasm   - no source; data/disasm/<player>.cnf drives an IRA disassembly
+  source   - original source, but no UADE binary; listed after the binaries
 
 Caveats:
   - `lines` includes old versions kept next to new ones: an upper bound.
@@ -198,6 +199,12 @@ def rows():
                 pref.get(b.name, ""),
             ]
         )
+    for name, facts in sorted(FACTS.items()):
+        if facts.get("replay") == "source":
+            src = facts["source"]
+            files, lines = stats(Path(src))
+            note = NOTES.get(name, "")
+            out.append([name, "", src, "manual", "source", files, lines, note, ""])
     return out
 
 

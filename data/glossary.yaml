@@ -89,6 +89,39 @@ sections:
       instrument transpose: Offset added to every instrument number of a track.
       sound effect: A sound the game starts, outside the music.
 
+  - key: midi
+    title: MIDI and sequencers
+    intro: Standard MIDI terms. Note-on and note-off are under Sound and synthesis.
+    columns: [Term, Meaning]
+    entries:
+      SMF: 'Standard MIDI File: a header chunk `MThd`, then one `MTrk` chunk per track.'
+      MIDI channel: One of 16 logical channels in a MIDI stream. Not a Paula channel.
+      velocity: How hard a note is struck, 0 to 127. Players often map it to volume.
+      program change: A MIDI event that picks the instrument of a MIDI channel.
+      pitch bend: A MIDI event that shifts the pitch of a whole MIDI channel.
+      CC: 'Control change: a MIDI event that sets a MIDI channel parameter by number.'
+      CC 1: Modulation wheel.
+      CC 5: Portamento time.
+      CC 6: Data entry. Sets the parameter that an RPN picks.
+      CC 7: Channel volume.
+      CC 10: Pan.
+      CC 64: 'Damper pedal: while it is down, note-offs are held back.'
+      CC 65: Portamento on or off.
+      CC 100, 101: Pick an RPN.
+      CC 121: Reset all controllers.
+      CC 123: All notes off.
+      RPN: 'Registered parameter number: a MIDI channel parameter set through CCs, e.g. the pitch bend range.'
+      meta event: An SMF event for the player, not for instruments, e.g. tempo.
+      sysex: 'System exclusive: a MIDI message for one maker''s device.'
+      running status: A MIDI stream may leave out a status byte that repeats.
+      delta time: The wait before an event, in pulses.
+      pulse: The time unit of a MIDI sequencer, a fraction of a quarter note.
+      PPQ: 'Pulses per quarter note: the time resolution of an SMF.'
+      tempo: Beats per minute; in an SMF, microseconds per quarter note.
+      voice allocation: Choosing a voice for a note at note-on.
+      voice stealing: Taking a busy voice for a new note when none is free.
+      multisample: An instrument with several samples, each for a range of notes.
+
   - key: programming
     title: Programming
     intro: Code patterns we cite from replayer source.
@@ -220,6 +253,66 @@ sections:
       note end: Steps when the current note's length runs out.
       note-on: Acts once per note, at or just after its start.
       sample wrap: Steps each time Paula finishes a pass of the sample.
+      delta: Steps when the wait before the next event runs out.
+
+  - key: seq_time
+    title: 'Sequencer: time'
+    intro: Words for the Time row of a card's Sequencer table. How the score places events in time.
+    columns: [Word, Meaning]
+    entries:
+      rows: A fixed grid. Every row lasts the same time.
+      lengths: Each note carries its length; the next event follows it.
+      deltas: Each event carries the wait before the next one.
+      times: Each event carries its start time.
+
+  - key: seq_unit
+    title: 'Sequencer: unit'
+    intro: Words for the Unit row. The unit of lengths, deltas or times.
+    columns: [Word, Meaning]
+    entries:
+      tick: One replayer tick.
+      row: One row, `speed` ticks long.
+      pulse: A fraction of a beat. The tempo sets its length.
+      ms: A millisecond.
+
+  - key: seq_note_end
+    title: 'Sequencer: note end'
+    intro: Words for the Note end row. What ends a note.
+    columns: [Word, Meaning]
+    entries:
+      next note: The next note on the same voice.
+      length: The length that the note carries.
+      note-off: A separate note-off event.
+      program: The instrument program.
+
+  - key: seq_routing
+    title: 'Sequencer: routing'
+    intro: Words for the Routing row. How a note finds its voice.
+    columns: [Word, Meaning]
+    entries:
+      fixed: A track always plays on the same voice.
+      per note: Each note names its voice.
+      allocated: The player picks a voice at note-on; see voice allocation.
+
+  - key: seq_reuse
+    title: 'Sequencer: reuse'
+    intro: Words for the Reuse row. How the score repeats material.
+    columns: [Word, Meaning]
+    entries:
+      patterns: Positions play stored blocks again.
+      calls: A stream calls a part of itself or another stream, then returns.
+      loops: A stream repeats a part N times.
+      none: The score repeats nothing; it is written out.
+
+  - key: seq_tempo
+    title: 'Sequencer: tempo'
+    intro: Words for the Tempo row. How the score sets its speed.
+    columns: [Word, Meaning]
+    entries:
+      speed: The score sets ticks per row.
+      timer: The score sets the tick rate.
+      scaled: Each tick adds a tempo-dependent amount to the score clock.
+      none: The score cannot change its speed.
 
   - key: roles
     title: Role vocabulary

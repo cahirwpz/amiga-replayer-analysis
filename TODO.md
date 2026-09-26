@@ -29,13 +29,22 @@ All twelve pilot cards exist.
 
 ### Fix the current cards
 
-- [ ] Migrate 11 cards to the new template. Done: `TimFollin`, `TFMX-Pro`. Then
-      drop the legacy forms in `tools/cards.py`; require Channel outputs.
+- [ ] Migrate 11 cards to the new template, with Sequencer. Done: `TimFollin`,
+      `TFMX-Pro`. Then drop the legacy forms in `tools/cards.py`; require
+      Channel outputs.
 - [ ] Re-check the `AbyssHighestExperience` card against a disassembly. See the
       disassembly queue.
 - [ ] Tune limits in `tools/cogload.py` and the card template.
 - [ ] Fix the classification axes: control, themes, streams. They live in the
       glossary and the card template.
+
+### New cards: MIDI model
+
+- [ ] `MIDI-Loriciel` card. Reading notes below. The MIDI events it handles, CCs
+      included, go to a `details/` page.
+- [ ] MaxTrax card (`replay: source`). Read `NoteOn` for voice allocation and
+      `MusicServer` for timing and CCs, in
+      `ext/uade/amigasrc/players/other/max_trax/max.asm`. CCs go to `details/`.
 
 ### Then
 
@@ -63,6 +72,27 @@ All twelve pilot cards exist.
 - [ ] Before disassembling a player, look for a port of it outside UADE. Use it
       as a map, not as evidence.
 - [ ] Module players: decide where sample modules come from.
+
+## Reading notes: MIDI model
+
+`MIDI-Loriciel` source: `MIDI - Loriciel_v1.asm`. Labels are Wanted Team's.
+
+- `lbC00001C`: reads an SMF; one state per `MTrk`. Tempo from the header.
+- `Play`: per track, subtract 4 pulses per tick; read events when due.
+- `lbW00052A`: note-on, note-off, program change. Note-on with velocity 0 is a
+  note-off (`lbC0001C8`).
+- `lbW00053E`: meta events. Tempo `$51` sets the timer (`lbC00024C`); end of
+  track `$2F`; `$20` sets the MIDI channel. Other events are skipped.
+- `lbC000B30`: voice allocation. It takes a free voice first. Else it steals a
+  voice of the same MIDI channel, else voice 0.
+- `lbC000B66`: note-off frees the voice only if the MIDI channel's last note
+  matches.
+- `lbC000844`: program change picks a multisample; note ranges choose the
+  sample. `lbC000904`: velocity curve to volume.
+
+MaxTrax source: `ext/uade/amigasrc/players/other/max_trax/`. Its `driver.i`
+declares 16 MIDI channels and 4 voices with priority. It also has attack and
+release envelopes, damper pedal, pitch bend range and tempo slides.
 
 ## Disassembly queue
 

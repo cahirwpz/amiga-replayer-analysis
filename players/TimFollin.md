@@ -35,6 +35,17 @@ seven small generators.
 | ------ | ----- | --------- | ----------------------------------------- | --------------------- | -------- |
 | Track  | voice | sequencer | note, length, instrument, generator setup | loop, jump, call, end | note end |
 
+## Sequencer
+
+| Aspect   | Value        | Label                 |
+| -------- | ------------ | --------------------- |
+| Time     | lengths      | `:PlayNote`           |
+| Unit     | tick         | `:NoteTimer`          |
+| Note end | length       | `:NoteTimer`          |
+| Routing  | fixed        | `:ReadTrack`          |
+| Reuse    | calls, loops | `:CmdCall` `:CmdLoop` |
+| Tempo    | none         | `:Tick`               |
+
 ## Generators
 
 | Generator   | Scope | States              | Writes    | Rate          | Set by | Note-on |

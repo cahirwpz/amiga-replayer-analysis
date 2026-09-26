@@ -118,7 +118,7 @@ class Cards(unittest.TestCase):
         code, rules, out = run("cards.py", FIXTURES / "cards_bad.md")
         self.assertEqual(code, 1)
         expected = {"front-matter", "player", "section", "streams"}
-        expected |= {"generators", "outputs", "interactions"}
+        expected |= {"generators", "outputs", "interactions", "sequencer"}
         self.assertEqual(expected, rules, out)
         for text in (
             "`control: bytecode`",
@@ -141,6 +141,9 @@ class Cards(unittest.TestCase):
             "writer `Nobody` is not on the card",
             "mode `twist`",
             "`nowhere` is not on the card",
+            "aspects must be",
+            "time `grid`",
+            "routing `magic`",
         ):
             self.assertIn(text, out)
 
@@ -155,11 +158,17 @@ class Players(unittest.TestCase):
     def test_accepts_the_repo_file(self):
         self.assertEqual(self.players.validate(), [])
 
+    def test_accepts_a_source_only_player(self):
+        facts = {"MaxTrax": {"replay": "source", "source": "other/max_trax"}}
+        self.assertEqual(self.players.validate(facts), [])
+
     def test_reports_bad_facts(self):
         out = "\n".join(
             self.players.validate(
                 {
                     "NoSuchPlayer": {},
+                    "SourceOnly": {"replay": "source", "source": "other/nowhere"},
+                    "MED": {"replay": "source", "source": "other/max_trax"},
                     "SoundMon2.2": {
                         "provenance": "rumour",
                         "family": "SoundMon",
@@ -180,6 +189,8 @@ class Players(unittest.TestCase):
             "same family",
             "unknown field `colour`",
             "SoundMon2.2.yaml has no label 758",
+            "SourceOnly: `replay: source` needs an existing `source`",
+            "MED: `replay: source` is for players without a binary",
         ):
             self.assertIn(text, out)
 

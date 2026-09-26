@@ -22,6 +22,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "data" / "players.yaml"
 BINARIES = ROOT / "ext" / "uade" / "players"
+SOURCES = ROOT / "ext" / "uade" / "amigasrc" / "players"
 
 FIELDS = {
     "source": str,
@@ -41,7 +42,7 @@ FIELDS = {
     "related": list,
     "links": list,
 }
-REPLAY = {"uade", "module", "check", "port", "disasm"}
+REPLAY = {"uade", "module", "check", "port", "disasm", "source"}
 
 
 @cache
@@ -64,11 +65,19 @@ def validate(data=None):
         errors.append(f"{SOURCE.relative_to(ROOT)}: {player}: {detail}")
 
     for player, facts in data.items():
-        if player not in binaries_:
-            err(player, "not a binary in ext/uade/players")
         if not isinstance(facts, dict):
             err(player, "facts must be a mapping")
             continue
+        if facts.get("replay") == "source":
+            # Original source without a UADE binary, e.g. MaxTrax.
+            src = str(facts.get("source", ""))
+            base = ROOT if src.startswith("ext/") else SOURCES
+            if player in binaries_:
+                err(player, "`replay: source` is for players without a binary")
+            if not src or not (base / src).exists():
+                err(player, "`replay: source` needs an existing `source`")
+        elif player not in binaries_:
+            err(player, "not a binary in ext/uade/players")
         for key, value in facts.items():
             if key not in FIELDS:
                 err(player, f"unknown field `{key}`")
