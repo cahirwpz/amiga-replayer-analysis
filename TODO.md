@@ -15,7 +15,6 @@ Selection rules:
 
 ### Cards: synthesis
 
-- [ ] `SonixMusicDriver`: note score, synth with filter bank
 - [ ] `SynthDream`: synth format, not yet read
 
 ### Cards: port, emulation, tricks
@@ -38,13 +37,6 @@ Selection rules:
 
 Findings so far, for the cards above. Paths are relative to
 `ext/uade/amigasrc/players`. Delete a section when its card exists.
-
-### `SonixMusicDriver`: `wanted_team/SonixMusicDriver/src/Sonix Music Driver_v1.asm`
-
-- Plays `SMUS` note scores, not patterns. Source: its readme.
-- Synth sounds allocate a filter bank
-  `data/annot/SonixMusicDriver.yaml:AddFilterBank`; setup at `:SetFilter`.
-- Synthesis code starts at `:SYNTHTECH`. Not read yet.
 
 ### `AbyssHighestExperience`: `ext/ahx2play/replayer.c`
 

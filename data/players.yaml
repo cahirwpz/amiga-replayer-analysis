@@ -162,6 +162,10 @@ SonicArranger:
   provenance: disassembly
   author: Carsten Schlote, Branko Mikiç and Carsten Herbst
 
+SonixMusicDriver:
+  provenance: disassembly
+  author: Mark Riley
+
 SoundPlayer:
   provenance: disassembly
   author: Scott Johnston

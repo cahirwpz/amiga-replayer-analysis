@@ -1,6 +1,73 @@
 # Annotations for the Sonix Music Driver replayer. Render: tools/annot.py
+# The file holds three copies of the driver: SNX, TINY and SMUS scores.
+# We annotate the SNX copy only.
 source: ext/uade/amigasrc/players/wanted_team/SonixMusicDriver/src/Sonix Music Driver_v1.asm
 sha1: cbc51331dfe6728963dd9a685a2d34afa7a9e1fc
 
 labels:
   Jump1: AddFilterBank
+  # score
+  lbC01E798: SetTempo
+  lbC01E7DA: ReadTracks
+  lbC01E818: ReadEvent
+  lbC01E8E2: NoteEvent
+  lbC01E928: WaitEvent
+  lbC01E938: InstrumentEvent
+  lbC01E960: TempoEvent
+  lbC01E6E2: RestartScore
+  # instrument types
+  lbC01E996: TickInstruments
+  lbC01EC0E: SynthTick
+  lbC01EBE8: SynthWrite
+  # synth
+  lbC01ED26: Lfo
+  lbC01ED76: Envelope
+  lbC01EDF4: OctaveShift
+  2665: SelectFilter
+  lbC01EEFA: WaveModes
+  lbC01EF32: BlendCopy
+  lbC01EF6C: StretchHalves
+  lbW01F0FE: FilterCutoffs
+
+comments:
+  647: "'Synthesis' instrument file, 502 bytes"
+  651: plus 64 filtered waves of 128 bytes
+  2047: tick length, used to scale rates
+  2078: "$ffff: end of track"
+  2081: "$c000 and above: wait N ticks"
+  2087: "below $80: note number, then velocity"
+  2088: "$80 instrument, $81 volume, $82 tempo, $83 unknown"
+  2151: velocity 0 releases the note
+  2169: velocity scales the volume
+  2226: the instrument type's tick routine
+  2257: the instrument type's register routine
+  2539: "note state 2: release"
+  2548: LFO rate scaled by tick length
+  2581: envelope rate scaled by tick length
+  2691: two buffers per voice, used in turn
+  2876: feedback per sample, about 0.9
+
+banners:
+  2213: |
+    TickInstruments: every instrument type is a small driver with two
+    entry points: tick, then write Paula registers.
+  2455: |
+    SynthTick: pitch with portamento, LFO, envelope, then the wave.
+    Instrument offsets: $24 wave (128 bytes), $a4 LFO table (256 bytes),
+    $1ac volume, $1ae envelope to volume, $1b0 LFO to volume,
+    $1b2 portamento time, $1b4 LFO to pitch, $1b6 filter base,
+    $1b8 envelope to filter, $1ba LFO to filter, $1bc LFO rate,
+    $1be LFO mode, $1c0 LFO delay, $1c2 wave mode rate, $1c4 stretch depth,
+    $1c6 four envelope levels, $1ce four envelope rates.
+  2568: |
+    Envelope: stages 0 attack, 2 decay, 4 sustain, 6 release.
+    Each stage moves the level towards its target at its rate.
+  2665: |
+    SelectFilter: filter index = base - envelope * amount + LFO * amount.
+    The index picks one of 64 filtered copies of the wave.
+  2712: |
+    Wave modes: BlendCopy averages the wave with a copy read at a moving
+    offset. StretchHalves plays one half faster and the other slower.
+  2866: |
+    OneFilter: run a resonant low-pass filter over the 128-byte wave,
+    once for each of 64 cutoffs.
