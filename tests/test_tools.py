@@ -229,7 +229,7 @@ class Inventory(unittest.TestCase):
 
 
 class Disasm(unittest.TestCase):
-    """Tag-list parsing only; IRA itself is not run here."""
+    """Tag lists and linking; IRA and vasm are not run here."""
 
     def setUp(self):
         sys.path.insert(0, str(ROOT / "tools"))
@@ -243,17 +243,18 @@ class Disasm(unittest.TestCase):
         self.assertEqual(found["DTP_Interrupt"], 0x1B8)
 
     def test_links_an_object_file(self):
+        if not self.disasm.VLINK.exists():
+            self.skipTest("vlink missing; run: source ./activate")
         obj = ROOT / "ext" / "oktalyzer" / "original" / "sources" / "okplay2.o"
-        exe, labels, entries = self.disasm.link(obj.read_bytes())
+        exe, labels, entries = self.disasm.load(obj)
         names = dict(labels)
         hs = self.disasm.hunks(exe)
         # `bsr StopAll` at $6: the displacement counts from its own word.
         disp = int.from_bytes(hs[0][1][8:10], "big", signed=True)
         self.assertEqual(8 + disp, names["StopAll"])
         self.assertEqual(hs[1][0], 0x10A4)  # hunks back to back, as IRA loads them
-        self.assertIn(names["OK_Play"], entries)  # exported, never referenced
-        self.assertIn(names["ReplayHandler"], entries)  # reached by a branch
-        self.assertNotIn(names["FullPeriodTab"], entries)  # read as data
+        self.assertIn(names["OK_Play"], entries)  # a code symbol
+        self.assertNotIn(names["PBuff"], entries)  # in a BSS hunk
 
     def test_every_player_has_a_code_tag(self):
         for binary in sorted(self.disasm.PLAYERS.iterdir()):

@@ -159,6 +159,8 @@ Code patterns we cite from replayer source.
 | **audio.device** | AmigaOS's Paula driver. Programs queue sample requests to it.                               |
 | **IFF**          | Interchange File Format by Electronic Arts. 8SVX is its sample type.                        |
 | **IRA**          | Portable 68000 reassembler. Turns a player binary into assembler source.                    |
+| **vlink**        | Portable linker by Frank Wille. Links object files into executables.                        |
+| **vasm**         | Portable assembler by Volker Barthelmann and Frank Wille.                                   |
 | **EG**           | SoundMon's envelope generator. It sweeps a wave shape, not the volume.                      |
 | **MOD**          | SoundMon's modulation walker: writes one table value into the wave.                         |
 

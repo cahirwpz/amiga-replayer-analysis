@@ -7,10 +7,15 @@ function replayer_analysis_activate {
   # shellcheck source=/dev/null
   source .venv/bin/activate || return 1
   python3 -m pip -q install -U -r requirements.txt || return 1
-  # Built once from the current Aminet release; delete it to update.
-  if ! [ -x .venv/bin/ira ]; then
-    python3 tools/disasm.py install || return 1
-  fi
+  # IRA: the current Aminet release; vlink and vasm: tags pinned in
+  # tools/disasm.py. Built once; delete one to rebuild all three.
+  local tool
+  for tool in ira vlink vasmm68k_mot; do
+    if ! [ -x ".venv/bin/$tool" ]; then
+      python3 tools/disasm.py install || return 1
+      break
+    fi
+  done
   # CI runs the hooks directly; a git hook there would be pointless.
   if [[ "$GITHUB_ACTIONS" != "true" ]]; then
     pre-commit install || return 1

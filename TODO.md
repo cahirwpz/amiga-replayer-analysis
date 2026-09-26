@@ -35,12 +35,6 @@ All twelve pilot cards exist.
 - [ ] Fix the classification axes: control, themes, streams. They live in the
       glossary and the card template.
 
-### Tools
-
-- [ ] Reconsider `tools/disasm.py`: its size, its own hunk linker for object
-      files, and its reliance on IRA. One option: build `vlink` in `install` and
-      drop the Python linker.
-
 ### New cards: MIDI model
 
 - [ ] `MIDI-Loriciel` card. Reading notes below. The MIDI events it handles, CCs
@@ -107,11 +101,15 @@ need 68k code first.
 
 ## Disassembly notes
 
-Tooling works for player binaries, executables and object files. Workflow:
+Tooling works for player binaries, executables and object files. vlink links
+objects; `listing` checks that vasm rebuilds the input. Workflow:
 [`tools/disasm.py`](tools/disasm.py).
 
 - Committed configs: `okplay1` and `okplay2`, Oktalyzer's replay objects. They
   match `okta.asm`. No player config yet.
+- `seed` on an object makes every code symbol an entry. `ChannelModes`,
+  `SH_Speed` and `SH_Len` are data. Their bogus `CODE` range in `okplay1` and
+  `okplay2` was removed by hand.
 
 - Seeding was tried on `DeltaMusic2.0`, `SIDMon2.0`, `Laxity` and
   `TFMX-7V-TFHD`.
