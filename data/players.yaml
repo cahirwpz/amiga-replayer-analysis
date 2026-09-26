@@ -166,6 +166,11 @@ SonixMusicDriver:
   provenance: disassembly
   author: Mark Riley
 
+SynthDream:
+  provenance: disassembly
+  author: Laurens Tummers and John Tonnard
+  year: 1991
+
 SoundPlayer:
   provenance: disassembly
   author: Scott Johnston

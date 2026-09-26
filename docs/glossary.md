@@ -215,9 +215,10 @@ Words used in the Control column of player cards.
 
 ## Rate vocabulary
 
-| Word              | Meaning                    |
-| ----------------- | -------------------------- |
-| **tick**          | Steps every tick.          |
-| **every N ticks** | N is set per instrument.   |
-| **row**           | Steps every row.           |
-| **pattern end**   | Steps when a pattern ends. |
+| Word              | Meaning                                        |
+| ----------------- | ---------------------------------------------- |
+| **tick**          | Steps every tick.                              |
+| **every N ticks** | N is set per instrument.                       |
+| **row**           | Steps every row.                               |
+| **pattern end**   | Steps when a pattern ends.                     |
+| **note end**      | Steps when the current note's length runs out. |

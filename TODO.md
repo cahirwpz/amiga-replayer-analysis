@@ -15,8 +15,6 @@ Selection rules:
 
 ### Cards: synthesis
 
-- [ ] `SynthDream`: synth format, not yet read
-
 ### Cards: port, emulation, tricks
 
 - [ ] `AbyssHighestExperience`: synthesis, read from `ext/ahx2play`
@@ -49,10 +47,6 @@ Findings so far, for the cards above. Paths are relative to
 ### `Jochen_Hippel_ST`
 
 - Its readme says it uses Hippel's Atari ST sound chip emulator. Code not read.
-
-### `SynthDream`
-
-- Not read yet.
 
 ## After the pilot
 

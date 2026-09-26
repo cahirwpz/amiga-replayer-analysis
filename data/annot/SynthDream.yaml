@@ -1,0 +1,61 @@
+# Annotations for the Synth Dream replayer. Render: tools/annot.py
+source: ext/uade/amigasrc/players/wanted_team/SynthDream/src/Synth Dream_v2.asm
+sha1: 7d72e2a74b50d29ae5158209ce76797e000827a1
+
+labels:
+  # per voice, every tick
+  lbC000060: VoiceTick
+  lbC00007C: NextPosition
+  lbC0000B2: ReadPosition
+  lbC0000D6: ReadEvent
+  lbW000C40: EventTable
+  lbC000172: VolumeWalker
+  lbC0001E4: NoteWalker
+  lbC00023A: FineWalker
+  lbC000328: Glide
+  lbC000354: PulseWalker
+  # events
+  lbC000CA4: LegatoOn
+  lbC000CB4: SwitchVolTable
+  lbC000CC8: SwitchFineTable
+  lbC000E60: GlideToFit
+  lbC000F0C: LoadInstrument
+  lbC000F32: RestEvent
+  # data
+  lbL000FB6: Periods
+  lbL0013F6: PitchUp
+  lbL0010D6: PitchDown
+  lbL001716: PulseWaves
+
+comments:
+  729: "$fe: loop this voice's positions; $ff: stop the voice"
+  772: events $24 and above only modify; the loop reads on
+  795: the delay is over; switch to the other volume table
+  804: the delay is over; switch to the other fine pitch table
+  835: minus the note's and the position's volume offsets
+  902: plus the position's transpose
+  995: lower the edge sample, between high and low
+  1726: the position can swap this instrument for another
+  1819: slide rate chosen so the glide fills the note
+
+banners:
+  716: |
+    VoiceTick: each voice has its own positions and events.
+    A position is 12 bytes: pattern, transpose, repeat count, instrument
+    swap (from, to), volume offset.
+  764: |
+    ReadEvent: an event is a word opcode and its arguments.
+    Most events carry a length in ticks, and some of: note, volume,
+    instrument, glide.
+  809: |
+    Four table walkers, one step per tick: volume, note offset,
+    fine pitch, pulse wave. A table is a list of runs:
+    count, repeat, then `count` values. $ff restarts the table.
+  957: |
+    PulseWalker: a value picks width W of 16 and an amount A. Copy the
+    16-byte pulse wave with W low samples, then lower sample W by A.
+  1638: |
+    EventTable: 24 events. Opcodes $00-$22 combine length, note, volume
+    and instrument. $24-$2e: legato on/off, table switches, slides.
+  2378: |
+    PulseWaves: 16 pulse waves of 16 bytes; wave W has W low samples.

@@ -212,3 +212,4 @@ sections:
       every N ticks: N is set per instrument.
       row: Steps every row.
       pattern end: Steps when a pattern ends.
+      note end: Steps when the current note's length runs out.
