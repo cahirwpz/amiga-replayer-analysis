@@ -15,6 +15,9 @@ Checks:
     `:line` refers to the file of the previous citation
   - `path.cnf:Label` citations name a LABEL or SYMBOL in an IRA config;
     the path is relative to the repo root, e.g. data/disasm/X.cnf:Play
+  - code spans that start with a repo folder, e.g. `docs/x.md` or
+    `ext/uade/y.s:12`, name a path that exists. Placeholders in angle
+    brackets and globs are skipped.
 
 Markdown is parsed by tools/mdtools.py. Prints `file:line: rule: detail`
 for each problem; exits 1 if any.
@@ -47,6 +50,20 @@ def citation(code):
     if name.endswith(".cnf") and tail.isidentifier():
         return name, None, None, tail
     return None, None, None, None
+
+
+# Code spans starting with these name repo paths, relative to the root.
+REPO_DIRS = ("data/", "details/", "docs/", "ext/", "ideas/", "players/", "tools/")
+
+
+def repo_path(code):
+    """The path a code span names, without `:line`; None if it names none."""
+    if not code.startswith(REPO_DIRS) or any(c in code for c in "<>*"):
+        return None
+    path = code.split(":")[0]
+    if not (ROOT / path).exists() and (ROOT / path.split()[0]).exists():
+        return path.split()[0]  # a command with arguments
+    return path
 
 
 def spans(doc):
@@ -143,6 +160,9 @@ def check(path, known_sources):
     for n, child in spans(doc):
         if child.type != "code_inline":
             continue
+        path_ = repo_path(child.content)
+        if path_ and not (ROOT / path_).exists():
+            err(n, "path", f"{path_} does not exist")
         name, first, last, label = citation(child.content)
         if name is None:
             continue

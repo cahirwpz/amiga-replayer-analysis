@@ -94,7 +94,8 @@ Findings so far, for the cards above. Paths are relative to
 
 - [ ] Review the cards with the user.
 - [ ] Tune limits in `tools/cogload.py` and the card template.
-- [ ] Fix the classification axes in `docs/method.md`.
+- [ ] Fix the classification axes: control, themes, streams. They live in the
+      glossary and the card template.
 - [ ] Write the first technique pages in `ideas/`.
 - [ ] Add a check that `ideas:` slugs in cards exist.
 - [ ] Generate a technique index from the slugs, for the front page.

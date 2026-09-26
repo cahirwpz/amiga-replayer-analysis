@@ -55,7 +55,8 @@ class Links(unittest.TestCase):
     def test_reports_each_rule(self):
         code, rules, out = run("links.py", FIXTURES / "links_bad.md")
         self.assertEqual(code, 1)
-        self.assertEqual({"link", "cite"}, rules, out)
+        self.assertEqual({"link", "cite", "path"}, rules, out)
+        self.assertIn("docs/nope.md does not exist", out)
         self.assertIn("99999 beyond", out)
         self.assertIn("src/nope.asm not found", out)
         self.assertIn('#L3 does not start with "MugicianII"', out)

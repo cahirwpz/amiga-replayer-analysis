@@ -57,7 +57,7 @@ Readers are C1 non-native speakers with limited attention.
 ## Evidence
 
 - In player cards, cite as `file:line` relative to the player's inventory
-  `source`. Elsewhere, cite as `ext/uade/path:line`.
+  `source`. Elsewhere, cite as `ext/uade/<path>:<line>`.
 - Mark guesses as guesses. Mark what you hear as "(inference)".
 - Keyword scans only pick candidates. A claim needs code that was read.
 - Use only players whose `replay` is `uade`, `port` or `disasm` in the
