@@ -5,6 +5,7 @@ One line per term. Every acronym used in this repo must appear here.
 | Term        | Meaning                                                                 |
 | ----------- | ----------------------------------------------------------------------- |
 | **ADKCON**  | Paula control register. Selects attach modes, among other things.       |
+| **AHX**     | Abyss Highest eXperience: Amiga chiptune tracker, 1990s.                |
 | **AUDxLC**  | Channel x sample start address. Reloaded into the pointer at each wrap. |
 | **AUDxLEN** | Channel x sample length, in words.                                      |
 | **AUDxPER** | Channel x period: clock divider that sets pitch.                        |

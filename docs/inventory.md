@@ -5,14 +5,14 @@ Every replayer binary in `uade/players`, and where its source is. Full list:
 
 ## Counts
 
-| Group                 | Players |
-| --------------------- | ------- |
-| Binaries in UADE      | 176     |
-| With assembler source | 130     |
-| Binary only           | 46      |
+| Group            | Players |
+| ---------------- | ------- |
+| Binaries in UADE | 176     |
+| With source      | 131     |
+| Binary only      | 45      |
 
 Several players share one source directory, for example the `MED` and tracker
-families. So 130 players map to 123 source directories.
+families. So 131 players map to 124 source directories.
 
 ## How source was found
 
@@ -20,8 +20,14 @@ families. So 130 players map to 123 source directories.
 | ------ | ------- | --------------------------------------------------- |
 | hash   | 106     | A byte-identical binary sits next to the source.    |
 | name   | 22      | Binary name matches a source file or directory.     |
-| manual | 3       | Set by hand in `tools/inventory.py`.                |
-| none   | 45      | Searched by name and version string. Nothing found. |
+| manual | 4       | Set by hand in `tools/inventory.py`.                |
+| none   | 44      | Searched by name and version string. Nothing found. |
+
+## Sources from outside UADE
+
+`AbyssHighestExperience` (AHX) has no source in UADE. The original 68000 source
+was never published. `ext/ahx2play` is a C port of the same replayer, used as
+`evidence: port`.
 
 ## Source without a player binary
 
@@ -37,7 +43,7 @@ Four source directories have no binary in `uade/players`:
   bounds.
 - Three binaries have no version string: `EMS-6`, `Mark_Cooksey_Old`,
   `ScottJohnston`.
-- `SynthPack` matched a directory that holds no source. Hence 45 + 1
+- `SynthPack` matched a directory that holds no source. Hence 44 + 1
   binary-only.
 - Binary-only players can still be classified from docs and sibling players.
 

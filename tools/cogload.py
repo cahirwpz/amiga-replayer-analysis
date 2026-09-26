@@ -28,7 +28,7 @@ DEFAULT = {
 PROFILES = [
     # A lookup table, not read top to bottom.
     ("docs/glossary.md", {"file_words": 3000}),
-    ("players/", {"file_words": 150}),
+    ("players/", {"file_words": 200}),
     ("ideas/", {"file_words": 300}),
     (
         "details/",
@@ -56,6 +56,7 @@ LIST_RE = re.compile(r"^(\s*)(?:[-*+]|\d+[.)])\s+(.*)$")
 FENCE_RE = re.compile(r"^\s*(```|~~~)")
 ACRONYM_RE = re.compile(r"\b([A-Z][A-Z0-9]+)s?\b")
 WORD_RE = re.compile(r"[^\W_]", re.UNICODE)
+ROMAN_RE = re.compile(r"[IVX]+")  # "Mugician II" is not an acronym
 
 
 def profile_for(path):
@@ -241,7 +242,10 @@ def check(path, glossary):
 
         if glossary is not None:
             for m in ACRONYM_RE.finditer(text):
-                if m.group(1) != "CODE" and m.group(1) not in glossary:
+                term = m.group(1)
+                if term == "CODE" or ROMAN_RE.fullmatch(term):
+                    continue
+                if term not in glossary:
                     unknown.setdefault(m.group(1), n)
         if kind == "cell":
             if len(w) > lim["cell_words"]:

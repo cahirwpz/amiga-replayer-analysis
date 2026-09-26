@@ -1,5 +1,5 @@
 player,prefixes,version,source,match,files,lines,note
-AbyssHighestExperience,"ahx,thx",AHX-DeliPlayer_2.3d-sp3 (Dec 98),,none,0,0,
+AbyssHighestExperience,"ahx,thx",AHX-DeliPlayer_2.3d-sp3 (Dec 98),ext/ahx2play,manual,12,3994,C port of the AHX 2.3d-sp3 replayer (evidence: port)
 ActionAmics,ast,Action Amics SoundTools V0.1 player module V1.1 (05 April 93),,none,0,0,
 ADPCM_mono,adpcm,Adaptative Delta Pulse Code Modulation player module V1.1 (29 Sep 2014),wanted_team/ADPCM_mono,hash,1,1221,
 Alcatraz_Packer,alp,Alcatraz Packer player module V1.1 (2 Feb 2008),wanted_team/Alcatraz_Packer,hash,2,3174,

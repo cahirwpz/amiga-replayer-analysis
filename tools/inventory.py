@@ -24,10 +24,14 @@ SOURCES = UADE / "amigasrc" / "players"
 CONF = UADE / "eagleplayer.conf"
 
 SOURCE_EXT = {".s", ".asm", ".a", ".i"}
+# Sources outside UADE, e.g. ports, live under ext/ and may be in C.
+EXT_SOURCE_EXT = SOURCE_EXT | {".c", ".h"}
 HUNK_HEADER = bytes.fromhex("000003f3")  # AmigaOS executable
 
 # Binary name -> source path relative to SOURCES, when automatic matching fails.
+# Paths starting with "ext/" are relative to the repo root instead.
 OVERRIDES = {
+    "AbyssHighestExperience": "ext/ahx2play",
     "ArtOfNoise-4V": "uade/artofnoise",
     "ArtOfNoise-8V": "uade/artofnoise",
     "FutureComposer1.4": "defect/fc14",
@@ -35,6 +39,7 @@ OVERRIDES = {
 
 # Free-text remarks, e.g. a sibling player with source for the same format.
 NOTES = {
+    "AbyssHighestExperience": "C port of the AHX 2.3d-sp3 replayer (evidence: port)",
     "TFMX-TFHD": "same format as TFMX (has source)",
     "TFMX-7V-TFHD": "same format as TFMX-7V (has source)",
     "TFMX-Pro-TFHD": "same format as TFMX-Pro (has source)",
@@ -90,10 +95,14 @@ def index_sources():
 
 
 def stats(unit):
+    if unit.parts[0] == "ext":
+        base, exts = ROOT / unit, EXT_SOURCE_EXT
+    else:
+        base, exts = SOURCES / unit, SOURCE_EXT
     files = [
         f
-        for f in (SOURCES / unit).rglob("*")
-        if f.is_file() and f.suffix.lower() in SOURCE_EXT
+        for f in base.rglob("*")
+        if f.is_file() and f.suffix.lower() in exts and ".git" not in f.parts
     ]
     lines = sum(len(f.read_bytes().splitlines()) for f in files)
     return len(files), lines

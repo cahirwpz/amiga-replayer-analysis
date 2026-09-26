@@ -1,6 +1,6 @@
 # See https://pre-commit.com for more information
 
-exclude: ^uade/
+exclude: ^(uade|ext)/
 
 repos:
   # --- COMMON/GENERAL HOOKS ---
