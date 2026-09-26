@@ -15,8 +15,6 @@ Selection rules:
 
 ### Cards: synthesis
 
-- [ ] [`FutureComposer1.3`](data/inventory.csv?plain=1#L47 "FutureComposer1.3"):
-      volume and pitch command lists
 - [ ] [`SoundMon2.2`](data/inventory.csv?plain=1#L142 "SoundMon2.2"): four table
       walkers per voice
 - [ ] [`TFMX-Pro`](data/inventory.csv?plain=1#L161 "TFMX-Pro"): macro language
@@ -56,18 +54,6 @@ Selection rules:
 
 Findings so far, for the cards above. Paths are relative to
 `ext/uade/amigasrc/players`. Delete a section when its card exists.
-
-### `FutureComposer1.3`: `defect/fc13/FutureComposer_1.3.s`
-
-- Song rows: pattern, transpose and sound transpose per voice, plus speed.
-  `:434-458`
-- Pattern rows: note and info byte. Info bits 6–7 switch portamento. `:466-491`
-- Instrument is a volume list. Its header names a pitch list and vibrato
-  settings. `:504-525`
-- Volume opcodes: `E0` loop, `E1` end, `E8` wait. `:641-671`
-- Pitch opcodes add `E2` and `E4` set wave, `E3` vibrato, `E7` jump. `:530-640`
-- Vibrato is an up/down state machine with a delay. `:684-731`
-- Built-in waveforms start at `:883`.
 
 ### `SoundMon2.2`: `uade/soundmon/Soundmon2.2.s`
 
