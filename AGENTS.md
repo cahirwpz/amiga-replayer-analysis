@@ -61,14 +61,15 @@ Readers are C1 non-native speakers with limited attention.
 - Mark guesses as guesses. Mark what you hear as "(inference)".
 - Keyword scans only pick candidates. A claim needs code that was read.
 - Use only players whose `replay` is `uade`, `port` or `disasm`.
-- Cite our disassembly by label: `data/disasm/<player>.cnf:<Label>`. Listing
-  line numbers are not stable.
+- Cite listings by label: `data/disasm/<player>.cnf:<Label>` or
+  `data/annot/<player>.yaml:<Label>`.
 - Record provenance per player in `data/players.yaml`.
 
-## Disassembly
+## Listings
 
-- Binary-only players: see [`tools/disasm.py`](tools/disasm.py). Commit configs,
-  never listings.
+- Binaries: [`tools/disasm.py`](tools/disasm.py). Sources:
+  [`tools/annot.py`](tools/annot.py). Commit inputs, never listings.
+- Annotate only what a card needs.
 
 ## Repo hygiene
 

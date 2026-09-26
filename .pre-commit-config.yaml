@@ -81,6 +81,13 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: annot                    # data/annot/*.yaml match their sources
+        name: annot
+        entry: .venv/bin/python3 tools/annot.py --check
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: players                  # data/players.yaml is valid
         name: players
         entry: .venv/bin/python3 tools/players.py --check

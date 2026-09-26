@@ -1,0 +1,10 @@
+source: tests/fixtures/annot/sample.s
+sha1: "0000"
+colour: blue
+labels:
+  nope: Nope
+  Play: NextNote
+  next: NextNote
+  "null": rts
+comments:
+  99: beyond the end

@@ -60,10 +60,51 @@ class Links(unittest.TestCase):
         self.assertIn("README.md#L99999 beyond", out)
         self.assertIn("sample.cnf has no label NoSuchLabel", out)
         self.assertIn("none.cnf does not exist", out)
+        self.assertIn("good.yaml has no label next", out)
 
     def test_accepts_label_citations(self):
         code, _, out = run("links.py", FIXTURES / "good" / "labels.md")
         self.assertEqual(code, 0, out)
+
+
+class Annot(unittest.TestCase):
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import annot
+
+        self.annot = annot
+        self.dir = FIXTURES / "annot"
+
+    def test_renders_labels_and_comments(self):
+        self.assertEqual(self.annot.process(self.dir / "good.yaml", write=False), [])
+        spec = self.annot.load(self.dir / "good.yaml")
+        lines = (self.dir / "sample.s").read_bytes().decode("latin-1").split("\n")
+        out = self.annot.render(spec, lines)
+        self.assertEqual(out[1], " bsr\tNextNote\t; appel\xe9")
+        self.assertEqual(out[4:6], [";; NextNote: read one note.", "NextNote:"])
+        self.assertEqual(
+            out[6], " move.w\t#NextNote-Play,d0\t;; distance between the labels"
+        )
+
+    def test_reports_bad_annotations(self):
+        out = "\n".join(self.annot.process(self.dir / "bad.yaml", write=False))
+        for text in (
+            "unknown field `colour`",
+            "sha1 is 0000",
+            "label nope is not defined",
+            "NextNote is the new name of several labels",
+            "label null is not defined",
+            "rts already occurs",
+            "line 99 is not in the source",
+        ):
+            self.assertIn(text, out)
+
+    def test_rejects_duplicate_keys(self):
+        out = "\n".join(self.annot.process(self.dir / "duplicate.yaml", write=False))
+        self.assertIn("duplicate key 2", out)
+
+    def test_accepts_the_repo_files(self):
+        self.assertEqual(self.annot.main(["--check"]), 0)
 
 
 class Cards(unittest.TestCase):

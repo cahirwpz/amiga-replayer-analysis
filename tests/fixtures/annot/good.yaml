@@ -1,0 +1,9 @@
+source: tests/fixtures/annot/sample.s
+sha1: 43a95614c16372ff985744747051fc55b966108c
+labels:
+  next: NextNote
+comments:
+  5: distance between the labels
+banners:
+  4: |
+    NextNote: read one note.

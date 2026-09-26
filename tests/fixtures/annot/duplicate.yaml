@@ -1,0 +1,4 @@
+source: tests/fixtures/annot/sample.s
+comments:
+  2: one
+  2: two

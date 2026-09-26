@@ -1,0 +1,199 @@
+# Annotations for the SoundMon 2.2 replayer. Render: tools/annot.py
+source: ext/uade/amigasrc/players/uade/soundmon/Soundmon2.2.s
+sha1: 618b0b2b25d56ac13ca328751b3ee8f8f7d9659c
+
+labels:
+  # song setup
+  bpinit: InitSong
+  findhighest: FindLastPattern
+  initloop: SamplePtrLoop
+  # every tick
+  bpmusic: PlayTick
+  bploop1: TickVoiceLoop
+  bpnovibr: NoVibrato
+  bpvibr: WriteVoice
+  bpdoarp: Arpeggio
+  not0: ArpSecond
+  not1: ArpBase
+  not2: NextTickVoice
+  bpplayarp: SetArpPeriod
+  # every row
+  bpskip1: PlayRow
+  bpxx: DmaWait
+  bploopel: RestoreWaveLoop
+  bploop2: StartNoteLoop
+  bpnext: ReadRow
+  bploop3: ReadRowVoiceLoop
+  bpskip4: NewNote
+  bp_do1: AddNoteTranspose
+  bp_not1: SetNotePeriod
+  bpskip5: HaveInstrument
+  bp_do2: AddInstrTranspose
+  bp_not2: CheckRestart
+  bpsamplechange: RestartVoice
+  bpoptionals: Options
+  notopt0: OptVolume
+  bpskip3: OptSpeed
+  bpskip9: OptFilter
+  bpskipb: FilterOn
+  bpskipa: OptSlideUp
+  noportup: OptSlideDown
+  noportdn: OptVibrato
+  notopt6: OptJump
+  notopt7: OptAutoSlide
+  notopt8: OptEffect
+  notopt11: OptAutoArp
+  bpdoautoarp: SetAutoArp
+  notopt13: RestartAdsr
+  bpskip2: NextRowVoice
+  bp_is_ma: NextRow
+  bpskip8: ReadRowDone
+  # note start
+  bpplayit: StartNote
+  bpplaysynthetic: StartSynthNote
+  bpadsroff: NoAdsrVolume
+  bpflipper: CheckWaveSave
+  bpcopyzooi: SaveWave
+  # synth walkers
+  bpsynth: RunWalkers
+  bpsynthloop: RunWalkersLoop
+  bpyessynth: AdsrWalker
+  bpendadsr: LfoWalker
+  bpendlfo: EgWalker
+  bpislow: EgShrink
+  bpishigh: EgGrow
+  bpnexteg: EgStep
+  bpendeg: Effect1
+  avloop: AverageLoop
+  bpnofilter: Effect2
+  bpnotthis: Effect3
+  bpnotthis2: Effect4
+  bpnotthis3: Effect5
+  bpnotthis4: Effect6
+  bpopt6loop: CopyNextTableLoop
+  bpnotthis5: ModWalker
+  bpnomod: WalkersDone
+  # data
+  "null": EmptySample
+  bpcurrent: Voices
+  bpstep: Position
+  bppatcount: RowOffset
+  st: InstrTranspose
+  tr: NoteTranspose
+  bpcount: TickCount
+  bpdelay: Speed
+  arpcount: ArpStep
+  numtables: TableCount
+  bpnextstep: JumpPosition
+  lfopointer: VibratoPtr
+  lfotable: VibratoTable
+  dma: DmaMask
+  tables: TablePool
+  bpbuffer: SavedWaves
+  bpper: Periods
+  samples: SamplePtrs
+  bpsong: Song
+
+comments:
+  132: "'V.3' in the header: the module has a table pool"
+  155: a pattern is 16 rows of 3 bytes
+  159: the table pool follows the patterns
+  162: each table is 64 bytes
+  180: arpeggio cycles over 4 ticks
+  185: vibrato step, shared by all voices
+  201: vibrato depth divides the table value
+  215: step 0 adds the high nibbles
+  228: step 1 adds the low nibbles
+  239: steps 2 and 3 play the base note
+  245: synth walkers run every tick
+  262: bit 15 of the period flags a new note
+  268: write the saved 32 bytes back into the wave
+  311: instrument transpose for this voice
+  312: note transpose for this voice
+  334: "option 10: argument high nibble set -> no note transpose"
+  347: options 13-15 change the note without a restart
+  410: filter off
+  413: filter on
+  435: jump to this position after the row
+  446: select the wave effect (0-6)
+  456: option 13 toggles effect 1
+  458: option 15 keeps the ADSR walker running
+  504: "$ff in the first name byte: synth instrument"
+  564: waves and control tables share one pool
+  580: ADSR table values are signed; centre them to 0..255
+  589: volume scaled by the table value (0..63)
+  599: EG, MOD or an effect will change the wave
+  607: remember which wave was saved
+  608: save the first 32 bytes of the wave
+  654: signed table value -> 0..255
+  681: signed pitch offset
+  688: LFO depth divides the table value
+  719: the EG walker changes the wave in place
+  721: table value -> sample count 0..31
+  737: restore samples from the saved copy
+  745: negate samples of the saved copy
+  765: effects touch only the first 32 bytes
+  766: the byte before the wave, i.e. the previous table's last byte
+  785: saved copy, read backward
+  803: saved copy, read forward
+  822: next table in the pool
+  840: saved copy, same as effect 3
+  864: copy the next table over the wave
+  881: byte 32 of the wave, outside the saved 32 bytes
+  895: one 36-byte record per voice, see the banner
+
+banners:
+  128: |
+    InitSong: find the table pool and the sample addresses.
+  179: |
+    PlayTick: runs once per tick.
+    Updates periods, vibrato and arpeggio; runs the synth walkers.
+    Every `Speed` ticks it reads a row.
+  261: |
+    Restore the waves that the previous notes changed.
+  295: |
+    ReadRow: read one row for each voice.
+    A row entry is 3 bytes: note; instrument (high nibble) and option
+    (low nibble); option argument.
+  383: |
+    Options: the low nibble of the second byte.
+    0 arpeggio, 1 volume, 2 speed, 3 filter, 4 slide up, 5 slide down,
+    6 vibrato, 7 jump, 8 auto slide, 9 auto arpeggio, 10 transposes off,
+    11 effect, 13-15 auto arpeggio without a restart.
+  496: |
+    StartNote: start the note on this voice's audio channel.
+    Sample instruments play from memory; synth instruments play a wave.
+  544: |
+    StartSynthNote: set up the four walkers and the effect.
+    Synth instrument, 32 bytes:
+       0 $ff (synth)         1 wave table        2 wave length (words)
+       4 ADSR control        5 ADSR table        6 ADSR length   8 ADSR speed
+       9 LFO control        10 LFO table        11 LFO depth
+      12 LFO length         14 LFO delay        15 LFO speed
+      16 EG control         17 EG table         18 EG length
+      20 EG delay           21 EG speed
+      22 effect             23 effect speed     24 effect delay
+      25 MOD control        26 MOD table        27 MOD speed
+      28 MOD delay          29 volume           30 MOD length
+    Control: 0 off, 1 once, other values loop.
+  622: |
+    RunWalkers: once per tick, for each synth voice.
+    Order: ADSR (volume), LFO (period), EG (wave), effect (wave), MOD (wave).
+    Each walker waits `speed` ticks, then reads one table value.
+  701: |
+    EgWalker: the table value N sets how many leading samples are negated.
+    It works on the difference between the old and the new N.
+  757: |
+    Wave effects 1-6. Each changes the first 32 bytes of the wave.
+  867: |
+    ModWalker: write one table value into the wave.
+  894: |
+    Voice record, 36 bytes, one per voice:
+       0 period (bit 15: new note)   2 volume    3 instrument
+       4 sample start                8 length (words)
+      10 note     11 arpeggio        12 auto slide    13 auto arpeggio
+      14 EG, 16 LFO, 18 ADSR, 20 MOD: table positions
+      22 EG, 23 LFO, 24 ADSR, 25 MOD, 26 effect: delay counters
+      27 synth flag       28 current EG value
+      29 EG, 30 LFO, 31 ADSR, 32 MOD: control
+      34 vibrato depth    35 effect

@@ -9,3 +9,4 @@ A [missing link](no/such/file.md). `src/Mugician II_v8.asm:99999` and
 A [missing line](../../README.md#L99999).
 A `docs/nope.md` path.
 A `tests/fixtures/sample.cnf:NoSuchLabel` and `tests/fixtures/none.cnf:Play`.
+A `tests/fixtures/annot/good.yaml:next` label.

@@ -11,6 +11,8 @@ Checks:
     a bare `:line` refers to the file of the previous citation
   - `path.cnf:Label` citations name a LABEL or SYMBOL in an IRA config;
     the path is relative to the repo root, e.g. data/disasm/X.cnf:Play
+  - `data/annot/X.yaml:Label` citations name a new label in an annotation
+    file, see tools/annot.py
   - code spans that start with a repo folder, e.g. `docs/x.md` or
     `ext/uade/y.s:12`, name a path that exists. Placeholders in angle
     brackets and globs are skipped.
@@ -25,6 +27,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 import inventory
+import yaml
 from mdtools import children, read
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -42,7 +45,7 @@ def citation(code):
     first, _, last = tail.partition("-")
     if first.isdigit() and (not last or last.isdigit()):
         return name, int(first), int(last) if last else None, None
-    if name.endswith(".cnf") and tail.isidentifier():
+    if name.endswith((".cnf", ".yaml")) and tail.isidentifier():
         return name, None, None, tail
     return None, None, None, None
 
@@ -73,12 +76,15 @@ def source_dir(value):
     return ROOT / value if value.startswith(("ext/", "data/")) else SOURCES / value
 
 
-def cnf_labels(path, cache={}):
+def our_labels(path, cache={}):
+    """Labels we named: in an IRA config or a tools/annot.py file."""
     if path not in cache:
-        cache[path] = {
-            m.group(1)
-            for m in re.finditer(r"^(?:LABEL|SYMBOL)\s+(\S+)\s", path.read_text(), re.M)
-        }
+        text = path.read_text()
+        if path.suffix == ".yaml":
+            cache[path] = set((yaml.safe_load(text) or {}).get("labels", {}).values())
+        else:
+            found = re.finditer(r"^(?:LABEL|SYMBOL)\s+(\S+)\s", text, re.M)
+            cache[path] = {m.group(1) for m in found}
     return cache[path]
 
 
@@ -155,7 +161,7 @@ def check(path, known_sources):
             cnf = ROOT / name
             if not cnf.is_file():
                 err(n, "cite", f"{name} does not exist")
-            elif label not in cnf_labels(cnf):
+            elif label not in our_labels(cnf):
                 err(n, "cite", f"{name} has no label {label}")
             continue
         if not src:
