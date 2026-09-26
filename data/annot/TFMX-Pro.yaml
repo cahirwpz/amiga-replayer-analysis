@@ -3,5 +3,111 @@ source: ext/uade/amigasrc/players/wanted_team/TFMX-Pro/src/TFMX Pro_v5.asm
 sha1: acad9359686d6062bd983b45940ed15177fc739c
 
 labels:
+  # every tick
+  irqin: PlayTick
+  synthesizer: VoicesTick
+  sequencer: Sequencer
+  # tracks and positions
+  play1x: TrackStart
   2189: TrackNote
   play3: PatternOpcode
+  pend: PatternEnd
+  pgosub: PatternCall
+  ppseq: StartOtherTrack
+  newtrack: NewPosition
+  jumptable3: PositionSpecials
+  cont: SetTracks
+  # a note reaches a voice
+  noteport: NoteToVoice
+  portnote: PortaNote
+  fxplay: PlaySoundEffect
+  # macros
+  macros: RunMacro
+  mac2: MacroStep
+  jumptable1: MacroOpcodes
+  mwait: MacroWait
+  mcont: MacroGoto
+  mgosub: MacroCall
+  mskip: SkipFirstPass
+  mloopkey: LoopWhileKey
+  mwaitkeyo: WaitNoteOff
+  mwavewait: WaitLoops
+  mwadr: CountLoopIrq
+  msplitk: SplitByNote
+  msplitv: SplitByVolume
+  mplaynote: PlayOtherVoice
+  mskeyup: NoteOffOtherVoice
+  mmovenextto: CopyToMacro
+  maddword: AddToMacro
+  mandword: AndToMacro
+  msetchip: WriteChipReg
+  mbyteset: SetByte
+  mbytecheck: CheckByte
+  mchecksetrnd: CheckByteTrap
+  mriff: StartRiff
+  mimssstart: ImsSource
+  mimsdelta: ImsFilter
+  # generators, every tick
+  smodin: SweepStart
+  imsin: ImsRender
+  vibratos: Vibrato
+  glides: Portamento
+  envelopes: Envelope
+  riffplay: RiffPlay
+  3630: RiffRandom
+  3674: RiffEcho
+  fader: Fade
+
+comments:
+  1937: "IMS: the ims macro opcodes"
+  1949: "guess: the byte check opcodes $2b-$2d"
+  2155: "$80-$8f keep the pattern running into the new position"
+  2184: "$80-$bf: note, then wait; $c0-$ef: portamento note"
+  2233: any track's end moves the whole song on
+  2349: this pattern goes to another track
+  2393: "negative: keep the old pattern, only take the transpose"
+  2841: "absolute address in the first 512 KB"
+  2853: "$dff000, the custom chip base"
+  2880: "check failed: write a random byte to low memory"
+  2958: overwrite a statement of another macro
+  2966: offset counts words from this statement
+  3040: the voice comes from this statement's third byte
+  3071: detune scales the period by (256 + detune) / 256
+  3350: the start address swings back and forth
+  3359: the next voice's buffer
+  3367: step += mod2, once per byte
+  3383: output moves towards the source by at most `delta`
+  3387: negated copy for the next voice
+  3593: the riff byte is a note offset
+  3663: sometimes jump to a random riff step
+  3686: 5/8 of the volume
+  3689: the next voice
+  3988: a lower priority cannot take the voice
+
+banners:
+  2123: |
+    Tracks: 8 tracks, each reads its pattern until a wait.
+    Tracks are not voices: every note names its voice.
+  2171: |
+    Pattern entry, 4 bytes: note, macro, volume (high nibble) and voice
+    (low nibble), detune. Notes $f0-$fe are opcodes.
+  2362: |
+    NewPosition: a position is 16 bytes, one word per track: pattern
+    number, transpose. $effe starts a special position.
+  2607: |
+    Macro statement, 4 bytes: opcode, then 3 bytes of arguments.
+    A macro runs statements until a wait, a stop or a note change.
+  3317: |
+    Per-voice generators, once per tick: start sweep, IMS, vibrato,
+    portamento, envelope, riff, fade.
+  3351: |
+    ImsRender: build up to 256 bytes into this voice's buffer.
+    Read the source with a step that changes per byte; mod2 adds to the
+    step, mod1 is the start step. Both swing back and forth over ticks.
+  3560: |
+    RiffPlay: the source calls it the Ballblazer special routine.
+    Plays the bytes of a macro as note offsets, every `riffspeed` ticks.
+    Flags: bit 0 random steps and rests, bit 1 echo on the next voice.
+  3760: |
+    NoteToVoice: a 4-byte note goes to the voice in its low nibble.
+    $f5 note-off, $f6 vibrato, $f7 envelope, $fc sound effect lock.

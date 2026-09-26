@@ -15,7 +15,6 @@ Selection rules:
 
 ### Cards: synthesis
 
-- [ ] `TFMX-Pro`: macro language with conditions and calls
 - [ ] `MED`: synth volume and waveform command lists
 - [ ] `SonicArranger`: synth instruments
 - [ ] `SonixMusicDriver`: note score, synth with filter bank
@@ -41,18 +40,6 @@ Selection rules:
 
 Findings so far, for the cards above. Paths are relative to
 `ext/uade/amigasrc/players`. Delete a section when its card exists.
-
-### `TFMX-Pro`: `wanted_team/TFMX-Pro/src/TFMX Pro_v5.asm`
-
-- Each position lists 8 tracks. Special positions stop, loop, set speed or fade.
-  `data/annot/TFMX-Pro.yaml:newtrack`
-- Tracks are not voices: a note names a macro and a channel. `:TrackNote`
-- Pattern opcodes: end, loop, jump, wait, call, return, key-up. `:PatternOpcode`
-- Macro opcode table has 52 entries. `:jumptable1`
-- Conditions: split by note or volume `:msplitk`, test memory bytes
-  `:mbytecheck`.
-- Macros start notes and key-ups on other channels. `:mplaynote`
-- The `ims` opcodes set up runtime sample synthesis. `:mimssstart`
 
 ### `MED`: `uade/med/common/proplayer.a`
 

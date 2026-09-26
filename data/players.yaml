@@ -166,6 +166,8 @@ TFMX:
 TFMX-Pro:
   # Original source with named labels; the heuristic misreads it.
   replay: uade
+  provenance: original
+  author: Chris Hülsbeck
   family: TFMX
   head: true
 

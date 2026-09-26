@@ -103,18 +103,19 @@ Code patterns we cite from replayer source.
 
 ## Programs and formats
 
-| Term     | Meaning                                                                            |
-| -------- | ---------------------------------------------------------------------------------- |
-| **AHX**  | Abyss Highest eXperience: Amiga chiptune tracker, 1990s.                           |
-| **MED**  | Music editor by Teijo Kinnunen, later OctaMED. Tracker with synth sounds.          |
-| **TFMX** | The Final Musicsystem eXtended, by Chris Hülsbeck. Instruments are macro programs. |
-| **SMUS** | Simple Music Score: note score format from Electronic Arts.                        |
-| **YAML** | Plain-text data format. Our hand-written data files use it.                        |
-| **UADE** | Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.               |
-| **IFF**  | Interchange File Format by Electronic Arts. 8SVX is its sample type.               |
-| **IRA**  | Portable 68000 reassembler. Turns a player binary into assembler source.           |
-| **EG**   | SoundMon's envelope generator. It sweeps a wave shape, not the volume.             |
-| **MOD**  | SoundMon's modulation walker: writes one table value into the wave.                |
+| Term     | Meaning                                                                                     |
+| -------- | ------------------------------------------------------------------------------------------- |
+| **AHX**  | Abyss Highest eXperience: Amiga chiptune tracker, 1990s.                                    |
+| **MED**  | Music editor by Teijo Kinnunen, later OctaMED. Tracker with synth sounds.                   |
+| **TFMX** | The Final Musicsystem eXtended, by Chris Hülsbeck. Instruments are macro programs.          |
+| **IMS**  | TFMX's interference modulation synthesis: a wave rebuilt each tick from a resampled source. |
+| **SMUS** | Simple Music Score: note score format from Electronic Arts.                                 |
+| **YAML** | Plain-text data format. Our hand-written data files use it.                                 |
+| **UADE** | Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.                        |
+| **IFF**  | Interchange File Format by Electronic Arts. 8SVX is its sample type.                        |
+| **IRA**  | Portable 68000 reassembler. Turns a player binary into assembler source.                    |
+| **EG**   | SoundMon's envelope generator. It sweeps a wave shape, not the volume.                      |
+| **MOD**  | SoundMon's modulation walker: writes one table value into the wave.                         |
 
 ## This project
 
@@ -164,20 +165,21 @@ How we know that one player grew from another.
 The first word of each name in a card's Streams table. Add a word here before
 using it, e.g. "Pitch" for "Pitch list".
 
-| Word          | Stream                               |
-| ------------- | ------------------------------------ |
-| **Positions** | The song's play order.               |
-| **Pattern**   | Rows of notes, one column per voice. |
-| **Track**     | One column of note data.             |
-| **Volume**    | Volume values or an envelope.        |
-| **Pitch**     | Note offsets or pitch values.        |
-| **Wave**      | Waveform changes.                    |
-| **Arpeggio**  | Arpeggio offsets.                    |
-| **Vibrato**   | Vibrato offsets.                     |
-| **ADSR**      | Volume envelope table.               |
-| **LFO**       | Periodic pitch offsets from a table. |
-| **EG**        | SoundMon's wave shape sweep.         |
-| **MOD**       | SoundMon's wave sample writes.       |
+| Word          | Stream                                   |
+| ------------- | ---------------------------------------- |
+| **Positions** | The song's play order.                   |
+| **Pattern**   | Rows of notes, one column per voice.     |
+| **Track**     | One column of note data.                 |
+| **Volume**    | Volume values or an envelope.            |
+| **Pitch**     | Note offsets or pitch values.            |
+| **Wave**      | Waveform changes.                        |
+| **Arpeggio**  | Arpeggio offsets.                        |
+| **Vibrato**   | Vibrato offsets.                         |
+| **ADSR**      | Volume envelope table.                   |
+| **LFO**       | Periodic pitch offsets from a table.     |
+| **EG**        | SoundMon's wave shape sweep.             |
+| **MOD**       | SoundMon's wave sample writes.           |
+| **Macro**     | A program of opcodes that plays a sound. |
 
 ## Avoided terms
 

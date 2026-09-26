@@ -105,6 +105,7 @@ sections:
       AHX: 'Abyss Highest eXperience: Amiga chiptune tracker, 1990s.'
       MED: Music editor by Teijo Kinnunen, later OctaMED. Tracker with synth sounds.
       TFMX: The Final Musicsystem eXtended, by Chris Hülsbeck. Instruments are macro programs.
+      IMS: "TFMX's interference modulation synthesis: a wave rebuilt each tick from a resampled source."
       SMUS: 'Simple Music Score: note score format from Electronic Arts.'
       YAML: Plain-text data format. Our hand-written data files use it.
       UADE: Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.
@@ -171,6 +172,7 @@ sections:
       LFO: Periodic pitch offsets from a table.
       EG: SoundMon's wave shape sweep.
       MOD: SoundMon's wave sample writes.
+      Macro: A program of opcodes that plays a sound.
 
   - key: avoid
     title: Avoided terms
