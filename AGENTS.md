@@ -84,8 +84,8 @@ Readers are C1 non-native speakers with limited attention.
 
 ## Tools
 
-- Never parse Markdown with regexes. Tools read data from `data/` (YAML or CSV),
-  or parse Markdown with [`tools/mdtools.py`](tools/mdtools.py).
+- Markdown is presentation; data lives in `data/` as YAML or CSV. Never parse
+  Markdown with regexes; use [`tools/mdtools.py`](tools/mdtools.py).
 - Edit the glossary in `data/glossary.yaml`, then run
   `tools/glossary.py --write`.
 - Python packages go in `requirements.txt`.
