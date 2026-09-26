@@ -18,9 +18,11 @@ One line per term. Every acronym used in this repo must appear here.
 | **FK**      | Flesch-Kincaid grade: a readability score. Lower is easier.                        |
 | **HRM**     | Commodore's Amiga Hardware Reference Manual.                                       |
 | **MED**     | Music editor by Teijo Kinnunen, later OctaMED. Tracker with synth sounds.          |
+| **MIDI**    | Standard protocol for sending notes to synthesizers.                               |
 | **PAL**     | European TV standard. Sets the Amiga clock and 50 Hz frame rate.                   |
 | **PCM**     | Sampled sound: a stream of stored amplitude values.                                |
 | **PWM**     | Pulse-width modulation. Paula uses it to apply volume.                             |
+| **SMUS**    | Simple Music Score: note score format from Electronic Arts.                        |
 | **ST**      | Atari ST: home computer with a YM2149 sound chip.                                  |
 | **TFMX**    | The Final Musicsystem eXtended, by Chris Hülsbeck. Instruments are macro programs. |
 | **UADE**    | Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.               |

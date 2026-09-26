@@ -28,6 +28,8 @@ DEFAULT = {
 PROFILES = [
     # A lookup table, not read top to bottom.
     ("docs/glossary.md", {"file_words": 3000}),
+    # Working notes; sections go away as tasks are done.
+    ("TODO.md", {"file_words": 1000}),
     ("players/", {"file_words": 200}),
     ("ideas/", {"file_words": 300}),
     (

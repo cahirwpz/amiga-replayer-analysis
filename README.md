@@ -41,7 +41,7 @@ The shape is fixed by [the card template](docs/card-template.md).
 
 ## Evidence
 
-- Every claim cites a source line.
+- Every claim in a player card cites a source line.
 - Sources: UADE's replayers, original or disassembled, and a C port of `AHX`.
 - Players whose replay code hides inside music files are left out.
 - What you would hear is marked as "(inference)".

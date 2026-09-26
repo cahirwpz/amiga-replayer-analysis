@@ -1,26 +1,132 @@
 # Open work
 
-Tasks in order. Progress lives here, not in `README.md`.
+The hand-off between sessions. What belongs here: see
+[`AGENTS.md`](AGENTS.md#sessions).
 
-## Pilot cards
+## Pilot
 
-See [the pilot](docs/pilot.md) for why each player was chosen.
+Twelve cards test the card template before the full survey.
 
-- [x] [`MugicianII`](players/MugicianII.md)
-- [ ] `FutureComposer1.3`
-- [ ] `SoundMon2.2`
-- [ ] `TFMX-Pro`
-- [ ] `MED`
-- [ ] `SonicArranger`
-- [ ] `SonixMusicDriver`
+Selection rules:
 
-## Pilot cards, second half
+- Formats that did not prevail on the demoscene. No `ProTracker`-like players.
+- Themes: cheap but expressive synthesis, unusual tricks, soft voice mixing.
+- `replay` must be `uade` or `port` in [the inventory](docs/inventory.md).
 
-- [ ] `AbyssHighestExperience`, from `ext/ahx2play`
-- [ ] `SynthDream`
-- [ ] `Jochen_Hippel_ST`
-- [ ] `SoundPlayer`
-- [ ] `DigitalSonixChrome`
+### Cards: synthesis
+
+- [ ] [`FutureComposer1.3`](data/inventory.csv?plain=1#L47 "FutureComposer1.3"):
+      volume and pitch command lists
+- [ ] [`SoundMon2.2`](data/inventory.csv?plain=1#L142 "SoundMon2.2"): four table
+      walkers per voice
+- [ ] [`TFMX-Pro`](data/inventory.csv?plain=1#L161 "TFMX-Pro"): macro language
+      with conditions and calls
+- [ ] [`MED`](data/inventory.csv?plain=1#L84 "MED"): synth volume and waveform
+      command lists
+- [ ] [`SonicArranger`](data/inventory.csv?plain=1#L134 "SonicArranger"): synth
+      instruments
+- [ ] [`SonixMusicDriver`](data/inventory.csv?plain=1#L135 "SonixMusicDriver"):
+      note score, synth with filter bank
+- [ ] [`SynthDream`](data/inventory.csv?plain=1#L154 "SynthDream"): synth
+      format, not yet read
+
+### Cards: port, emulation, tricks
+
+- [ ] [`AbyssHighestExperience`](data/inventory.csv?plain=1#L2 "AbyssHighestExperience"):
+      synthesis, read from `ext/ahx2play`
+- [ ] [`Jochen_Hippel_ST`](data/inventory.csv?plain=1#L65 "Jochen_Hippel_ST"):
+      Atari ST sound chip emulated on Paula
+- [ ] [`SoundPlayer`](data/inventory.csv?plain=1#L143 "SoundPlayer"): attach
+      modes, confirmed in code
+- [ ] [`DigitalSonixChrome`](data/inventory.csv?plain=1#L34 "DigitalSonixChrome"):
+      audio interrupts count loop repeats
+
+### Rejected
+
+| Player                                                           | Reason                              |
+| ---------------------------------------------------------------- | ----------------------------------- |
+| `RobHubbard`, `BenDaglish-SID`, `JankoMrsicFlogel`, `Special-FX` | Replay code is in the module        |
+| `PreTracker`                                                     | Replay code is a prebuilt binary    |
+| `Pokeynoise`, `ADPCM_mono`                                       | Too primitive or already well known |
+| `Mugician`                                                       | Covered by `MugicianII`             |
+| `JochenHippel-7V`                                                | Mixing is covered by `MugicianII`   |
+| `PTK-Prowiz`                                                     | `ProTracker`-like                   |
+
+## Reading notes
+
+Findings so far, for the cards above. Paths are relative to
+`ext/uade/amigasrc/players`. Delete a section when its card exists.
+
+### `FutureComposer1.3`: `defect/fc13/FutureComposer_1.3.s`
+
+- Song rows: pattern, transpose and sound transpose per voice, plus speed.
+  `:434-458`
+- Pattern rows: note and info byte. Info bits 6–7 switch portamento. `:466-491`
+- Instrument is a volume list. Its header names a pitch list and vibrato
+  settings. `:504-525`
+- Volume opcodes: `E0` loop, `E1` end, `E8` wait. `:641-671`
+- Pitch opcodes add `E2` and `E4` set wave, `E3` vibrato, `E7` jump. `:530-640`
+- Vibrato is an up/down state machine with a delay. `:684-731`
+- Built-in waveforms start at `:883`.
+
+### `SoundMon2.2`: `uade/soundmon/Soundmon2.2.s`
+
+- Four table walkers per voice: volume, vibrato, wave offset, modulation.
+  `:573-880`
+- Each has a table, delay, speed, length and mode: off, once or loop.
+- Voice state layout is commented at `:895-903`.
+- Not read yet: note handling and wave effects.
+
+### `TFMX-Pro`: `wanted_team/TFMX-Pro/src/TFMX Pro_v5.asm`
+
+- Song steps list 8 tracks. Special steps stop, loop, set speed or fade.
+  `:2362-2388`
+- Tracks are not voices: a note names a macro and a channel. `:2189-2199`
+- Pattern opcodes: end, loop, jump, wait, call, return, key-up. `:2211-2226`
+- Macro opcode table has 52 entries. `:2607`
+- Conditions: split by note or volume `:2932`, test memory bytes `:2834`.
+- Macros start notes and key-ups on other channels. `:3036-3048`
+- The `ims` opcodes set up runtime sample synthesis. `:3232-3300`
+
+### `MED`: `uade/med/common/proplayer.a`
+
+- Original source, not a disassembly.
+- Synth sounds run two lists per voice: volume and waveform. `:603-779`
+- Volume opcodes from `:649`, waveform opcodes from `:736`.
+- Jumps between the two lists are expected. Not yet seen in code.
+- Synth notes start at `:560`. Notes can also go out as MIDI. `:517`
+
+### `SonixMusicDriver`: `wanted_team/SonixMusicDriver/src/Sonix Music Driver_v1.asm`
+
+- Plays `SMUS` note scores, not patterns. Source: its readme.
+- Synth sounds allocate a filter bank `:651`; setup at `:2810`.
+- Synthesis code starts at `:5175`. Not read yet.
+
+### `SoundPlayer`: `wanted_team/SoundPlayer/src/SoundPlayer_v1.asm`
+
+- Sets and clears attach bits for channels 0–2. `:1359-1392`
+- Rest not read.
+
+### `DigitalSonixChrome`: `wanted_team/DigitalSonixChrome/src/Digital Sonix & Chrome_v1.asm`
+
+- One audio interrupt handler per channel. `:497`
+- The handler counts loop repeats, then loads the next buffer. `:1305-1343`
+
+### `AbyssHighestExperience`: `ext/ahx2play/replayer.c`
+
+- Not read yet.
+- The original 68000 source was never published. The official release ships only
+  a binary replayer.
+- Sources: [ahx2play](https://github.com/8bitbubsy/ahx2play),
+  [AHX tools on scene.org](https://files.scene.org/view/resources/code/utils/winuaedemotoolchain5v3.zip).
+
+### `Jochen_Hippel_ST`
+
+- Its readme says it uses Hippel's Atari ST sound chip emulator. Code not read.
+
+### `SonicArranger`, `SynthDream`
+
+- Not read yet.
 
 ## After the pilot
 
