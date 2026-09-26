@@ -5,6 +5,7 @@ One line per term. Every acronym used in this repo must appear here.
 | Term        | Meaning                                                                            |
 | ----------- | ---------------------------------------------------------------------------------- |
 | **ADKCON**  | Paula control register. Selects attach modes, among other things.                  |
+| **ADSR**    | Attack, decay, sustain, release: the four phases of a volume envelope.             |
 | **AHX**     | Abyss Highest eXperience: Amiga chiptune tracker, 1990s.                           |
 | **AUDxLC**  | Channel x sample start address. Reloaded into the pointer at each wrap.            |
 | **AUDxLEN** | Channel x sample length, in words.                                                 |
@@ -16,11 +17,14 @@ One line per term. Every acronym used in this repo must appear here.
 | **CIA**     | Timer chip. Replayers use it for tempo independent of the display.                 |
 | **CPU**     | The Motorola 68000 family processor.                                               |
 | **DMA**     | Direct memory access. Paula fetches samples without the CPU.                       |
+| **EG**      | SoundMon's envelope generator. It sweeps a wave shape, not the volume.             |
 | **FK**      | Flesch-Kincaid grade: a readability score. Lower is easier.                        |
 | **HRM**     | Commodore's Amiga Hardware Reference Manual.                                       |
 | **IRA**     | Portable 68000 reassembler. Turns a player binary into assembler source.           |
+| **LFO**     | Low-frequency oscillator: slow periodic change, e.g. vibrato.                      |
 | **MED**     | Music editor by Teijo Kinnunen, later OctaMED. Tracker with synth sounds.          |
 | **MIDI**    | Standard protocol for sending notes to synthesizers.                               |
+| **MOD**     | SoundMon's modulation walker: writes one table value into the wave.                |
 | **PAL**     | European TV standard. Sets the Amiga clock and 50 Hz frame rate.                   |
 | **PCM**     | Sampled sound: a stream of stored amplitude values.                                |
 | **PWM**     | Pulse-width modulation. Paula uses it to apply volume.                             |

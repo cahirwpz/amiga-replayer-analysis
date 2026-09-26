@@ -43,6 +43,11 @@ def front_matter(lines):
     for i in range(1, len(lines)):
         if lines[i].strip() == "---":
             return meta, i + 1
+        if lines[i][:1].isspace() and meta:
+            # Continuation, e.g. a list that prettier wrapped.
+            last = next(reversed(meta))
+            meta[last] = f"{meta[last]} {lines[i].strip()}".strip()
+            continue
         key, _, value = lines[i].partition(":")
         meta[key.strip()] = value.strip()
     return meta, 0

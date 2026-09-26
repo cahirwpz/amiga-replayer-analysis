@@ -15,8 +15,6 @@ Selection rules:
 
 ### Cards: synthesis
 
-- [ ] [`SoundMon2.2`](data/inventory.csv?plain=1#L142 "SoundMon2.2"): four table
-      walkers per voice
 - [ ] [`TFMX-Pro`](data/inventory.csv?plain=1#L161 "TFMX-Pro"): macro language
       with conditions and calls
 - [ ] [`MED`](data/inventory.csv?plain=1#L84 "MED"): synth volume and waveform
@@ -54,14 +52,6 @@ Selection rules:
 
 Findings so far, for the cards above. Paths are relative to
 `ext/uade/amigasrc/players`. Delete a section when its card exists.
-
-### `SoundMon2.2`: `uade/soundmon/Soundmon2.2.s`
-
-- Four table walkers per voice: volume, vibrato, wave offset, modulation.
-  `:573-880`
-- Each has a table, delay, speed, length and mode: off, once or loop.
-- Voice state layout is commented at `:895-903`.
-- Not read yet: note handling and wave effects.
 
 ### `TFMX-Pro`: `wanted_team/TFMX-Pro/src/TFMX Pro_v5.asm`
 
