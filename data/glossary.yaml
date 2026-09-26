@@ -77,6 +77,7 @@ sections:
       TFMX: The Final Musicsystem eXtended, by Chris Hülsbeck. Instruments are macro programs.
       SMUS: 'Simple Music Score: note score format from Electronic Arts.'
       UADE: Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.
+      IFF: 'Interchange File Format by Electronic Arts. 8SVX is its sample type.'
       IRA: Portable 68000 reassembler. Turns a player binary into assembler source.
       EG: SoundMon's envelope generator. It sweeps a wave shape, not the volume.
       MOD: 'SoundMon''s modulation walker: writes one table value into the wave.'

@@ -32,8 +32,6 @@ Selection rules:
       synthesis, read from `ext/ahx2play`
 - [ ] [`Jochen_Hippel_ST`](data/inventory.csv?plain=1#L65 "Jochen_Hippel_ST"):
       Atari ST sound chip emulated on Paula
-- [ ] [`SoundPlayer`](data/inventory.csv?plain=1#L143 "SoundPlayer"): attach
-      modes, confirmed in code
 
 ### Rejected
 
@@ -75,11 +73,6 @@ Findings so far, for the cards above. Paths are relative to
 - Plays `SMUS` note scores, not patterns. Source: its readme.
 - Synth sounds allocate a filter bank `:651`; setup at `:2810`.
 - Synthesis code starts at `:5175`. Not read yet.
-
-### `SoundPlayer`: `wanted_team/SoundPlayer/src/SoundPlayer_v1.asm`
-
-- Sets and clears attach bits for channels 0–2. `:1359-1392`
-- Rest not read.
 
 ### `AbyssHighestExperience`: `ext/ahx2play/replayer.c`
 
