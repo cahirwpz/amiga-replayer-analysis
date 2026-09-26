@@ -19,7 +19,7 @@ jobs:
           # links, cards and inventory read ext/uade and ext/ahx2play.
           submodules: true
       - name: Cache hook environments
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
