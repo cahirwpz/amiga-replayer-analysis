@@ -71,6 +71,13 @@ repos:
         pass_filenames: false
         args: [ players/ ]
 
+      - id: inventory                # data/inventory.csv and docs/inventory.md are fresh
+        name: inventory
+        entry: python3 tools/inventory.py --check
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: tool-tests               # Self-tests for the checkers above
         name: tool-tests
         entry: python3 -m unittest discover -s tests

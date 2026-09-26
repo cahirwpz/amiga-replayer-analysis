@@ -3,8 +3,6 @@
 Paula is the Amiga sound chip. This page lists only the facts that shape
 replayer design.
 
-Full, cited reference: `docs/paula.md` in the ghostown-spookytown-2 repo.
-
 ## What a channel has
 
 Four channels. Each has a sample pointer, a length, a period and a volume.

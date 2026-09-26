@@ -1,18 +1,29 @@
 #!/usr/bin/env python3
 """List UADE replayers and locate their assembler source.
 
-Usage: inventory.py > data/inventory.csv
+Usage: inventory.py [--write | --check]
+
+  (no option)  print the CSV to stdout
+  --write      write data/inventory.csv and the counts block of docs/inventory.md
+  --check      exit 1 if either file is out of date
 
 One row per binary in ext/uade/players. The source is found by, in order:
   hash     - a byte-identical binary exists inside a source directory
   name     - normalised binary name matches a source file or directory name
   manual   - entry in OVERRIDES
   none     - no source found; searched by name and version string
+
+The `replay` column says where the replay logic is:
+  uade     - in the UADE source (original or disassembled)
+  module   - in the music file; the UADE source only patches it
+  check    - patch markers found, but not clearly a wrapper; read the source
+  port     - a port outside UADE, under ext/
 """
 
 import csv
 import difflib
 import hashlib
+import io
 import re
 import sys
 from pathlib import Path
@@ -27,6 +38,19 @@ SOURCE_EXT = {".s", ".asm", ".a", ".i"}
 # Sources outside UADE, e.g. ports, live under ext/ and may be in C.
 EXT_SOURCE_EXT = SOURCE_EXT | {".c", ".h"}
 HUNK_HEADER = bytes.fromhex("000003f3")  # AmigaOS executable
+
+CSV = ROOT / "data" / "inventory.csv"
+DOC = ROOT / "docs" / "inventory.md"
+BEGIN, END = "<!-- counts:begin -->", "<!-- counts:end -->"
+
+# Wrappers find code inside the module and patch it.
+PATCH_RE = re.compile(r"PatchTable|FindIt\d|^Patch\d", re.M)
+ROUTINE_RE = re.compile(r"^lbC", re.M)  # disassembler routine labels
+
+# Player -> replay location, where the heuristic in replay() is wrong.
+REPLAY = {
+    "TFMX-Pro": "uade",  # original source with named labels, see card
+}
 
 # Binary name -> source path relative to SOURCES, when automatic matching fails.
 # Paths starting with "ext/" are relative to the repo root instead.
@@ -108,6 +132,22 @@ def stats(unit):
     return len(files), lines
 
 
+def replay(player, unit):
+    if player in REPLAY:
+        return REPLAY[player]
+    if unit.parts[0] == "ext":
+        return "port"
+    text = "".join(
+        f.read_bytes().decode("latin-1")
+        for f in (SOURCES / unit).rglob("*")
+        if f.is_file() and f.suffix.lower() in SOURCE_EXT and "AMP" not in f.name
+    )
+    patches = len(PATCH_RE.findall(text))
+    if patches >= 5 and len(ROUTINE_RE.findall(text)) < 20:
+        return "module"
+    return "check" if patches else "uade"
+
+
 def closest(name, units):
     """Some source directories carry copies of other players' binaries."""
     return max(
@@ -129,23 +169,117 @@ def locate(binary, by_hash, by_name):
     return "", "none"
 
 
-def main():
+def rows():
     by_hash, by_name = index_sources()
     pref = prefixes()
-    w = csv.writer(sys.stdout, lineterminator="\n")
-    w.writerow(
-        ["player", "prefixes", "version", "source", "match", "files", "lines", "note"]
-    )
+    out = [
+        [
+            "player",
+            "prefixes",
+            "version",
+            "source",
+            "match",
+            "replay",
+            "files",
+            "lines",
+            "note",
+        ]
+    ]
     for b in sorted(PLAYERS.iterdir(), key=lambda p: p.name.lower()):
         if not b.is_file():
             continue
         src, how = locate(b, by_hash, by_name)
         files, lines = stats(Path(src)) if src else (0, 0)
+        where = replay(b.name, Path(src)) if files else ""
         note = NOTES.get(b.name, "")
-        w.writerow(
-            [b.name, pref.get(b.name, ""), version(b), src, how, files, lines, note]
+        out.append(
+            [
+                b.name,
+                pref.get(b.name, ""),
+                version(b),
+                src,
+                how,
+                where,
+                files,
+                lines,
+                note,
+            ]
         )
+    return out
+
+
+def to_csv(table):
+    buf = io.StringIO()
+    csv.writer(buf, lineterminator="\n").writerows(table)
+    return buf.getvalue()
+
+
+def counts(table):
+    """Markdown block with the numbers quoted in docs/inventory.md."""
+    body = table[1:]
+    with_src = [r for r in body if int(r[6]) > 0]
+    units = {r[3] for r in with_src}
+
+    def tally(col, values):
+        return [(v, sum(1 for r in body if r[col] == v)) for v in values]
+
+    lines = [
+        BEGIN,
+        "",
+        "| Group | Players |",
+        "| --- | --- |",
+        f"| Binaries in UADE | {len(body)} |",
+        f"| With source | {len(with_src)} |",
+        f"| Binary only | {len(body) - len(with_src)} |",
+        "",
+        f"{len(with_src)} players map to {len(units)} source directories.",
+        "",
+        "| How source was found | Players |",
+        "| --- | --- |",
+    ]
+    lines += [f"| {v} | {n} |" for v, n in tally(4, ["hash", "name", "manual", "none"])]
+    lines += ["", "| Where replay logic is | Players |", "| --- | --- |"]
+    lines += [
+        f"| {v} | {n} |" for v, n in tally(5, ["uade", "module", "check", "port"])
+    ]
+    lines += ["", END]
+    return "\n".join(lines)
+
+
+def norm_ws(text):
+    """Compare Markdown ignoring the padding prettier adds to tables."""
+    text = re.sub(r"-{3,}", "---", text)
+    return re.sub(r"[ \t]+", " ", re.sub(r" *\| *", "|", text)).strip()
+
+
+def doc_with(block):
+    doc = DOC.read_text(encoding="utf-8")
+    a, b = doc.index(BEGIN), doc.index(END) + len(END)
+    return doc[:a] + block + doc[b:], doc[a:b]
+
+
+def main(argv):
+    table = rows()
+    text = to_csv(table)
+    block = counts(table)
+    if not argv:
+        sys.stdout.write(text)
+        return 0
+    if argv == ["--write"]:
+        CSV.write_text(text, encoding="utf-8")
+        DOC.write_text(doc_with(block)[0], encoding="utf-8")
+        return 0
+    if argv == ["--check"]:
+        stale = []
+        if CSV.read_text(encoding="utf-8") != text:
+            stale.append(str(CSV.relative_to(ROOT)))
+        if norm_ws(doc_with(block)[1]) != norm_ws(block):
+            stale.append(str(DOC.relative_to(ROOT)))
+        for path in stale:
+            print(f"{path}: out of date; run tools/inventory.py --write")
+        return 1 if stale else 0
+    sys.exit(__doc__)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main(sys.argv[1:]))

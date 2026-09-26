@@ -20,6 +20,7 @@ One line per term. Every acronym used in this repo must appear here.
 | **PAL**     | European TV standard. Sets the Amiga clock and 50 Hz frame rate.        |
 | **PCM**     | Sampled sound: a stream of stored amplitude values.                     |
 | **PWM**     | Pulse-width modulation. Paula uses it to apply volume.                  |
+| **ST**      | Atari ST: home computer with a YM2149 sound chip.                       |
 | **UADE**    | Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.    |
 | **VBL**     | Vertical blank interrupt, once per frame. The usual replayer tick.      |
 

@@ -38,9 +38,9 @@ Python venv and installs the pre-commit hooks.
 
 ## Status
 
-| Step                                           | State                              |
-| ---------------------------------------------- | ---------------------------------- |
-| 1. Scaffold                                    | done                               |
-| 2. Inventory of replayers                      | done: 176 players, 131 with source |
-| 3. Pilot on about 10 players, then tune limits | next                               |
-| 4. Full survey and idea pages                  | planned                            |
+| Step                          | State                                    |
+| ----------------------------- | ---------------------------------------- |
+| 1. Scaffold                   | done                                     |
+| 2. Inventory of replayers     | done, see [inventory](docs/inventory.md) |
+| 3. Pilot, then tune limits    | in progress, see [pilot](docs/pilot.md)  |
+| 4. Full survey and idea pages | planned                                  |
