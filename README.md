@@ -20,14 +20,16 @@ enforces size limits; `tools/cogload.py` defines them.
 
 ## Layout
 
-| Path               | Content                         |
-| ------------------ | ------------------------------- |
-| `uade/`            | UADE source, as a git submodule |
-| `ideas/`           | One page per distinct idea      |
-| `players/`         | One card per replayer           |
-| `details/`         | Deep dives on request           |
-| `docs/`            | Paula summary, glossary         |
-| `tools/cogload.py` | Cognitive load checker          |
+| Path                 | Content                            |
+| -------------------- | ---------------------------------- |
+| `uade/`              | UADE source, as a git submodule    |
+| `ideas/`             | One page per distinct idea         |
+| `players/`           | One card per replayer              |
+| `details/`           | Deep dives on request              |
+| `docs/`              | Paula summary, glossary, inventory |
+| `data/inventory.csv` | Every replayer and its source      |
+| `tools/cogload.py`   | Cognitive load checker             |
+| `tools/inventory.py` | Builds the inventory               |
 
 ## Setup
 
@@ -36,9 +38,9 @@ Python venv and installs the pre-commit hooks.
 
 ## Status
 
-| Step                                           | State   |
-| ---------------------------------------------- | ------- |
-| 1. Scaffold                                    | done    |
-| 2. Inventory of replayers                      | next    |
-| 3. Pilot on about 10 players, then tune limits | planned |
-| 4. Full survey and idea pages                  | planned |
+| Step                                           | State                              |
+| ---------------------------------------------- | ---------------------------------- |
+| 1. Scaffold                                    | done                               |
+| 2. Inventory of replayers                      | done: 176 players, 130 with source |
+| 3. Pilot on about 10 players, then tune limits | next                               |
+| 4. Full survey and idea pages                  | planned                            |

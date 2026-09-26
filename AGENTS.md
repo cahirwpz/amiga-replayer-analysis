@@ -27,11 +27,12 @@ there, in `DEFAULT` and `PROFILES`. Run it before committing.
 ## Evidence
 
 - Cite UADE source as `uade/path:line`.
-- Say when a player has no source, only a binary.
+- Say when a player has no source, only a binary. `data/inventory.csv` knows.
 - Mark guesses as guesses.
 
 ## Repo hygiene
 
 - Never edit `uade/`. Update the submodule pin only on request.
+- After a pin update, regenerate `data/inventory.csv` with `tools/inventory.py`.
 - Run `source ./activate` once per shell. Python tools go in `requirements.txt`.
 - Run `pre-commit run --all-files` before each commit.
