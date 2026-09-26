@@ -18,6 +18,8 @@
 #   distinct          the idea that earns this version its own card.
 #   influences        [{player or name, evidence, link}]: older programs it
 #                     built on, with no shared code that we know of.
+#   ports             other code for the same player under ext/, e.g. to
+#                     cross-check. `source` already counts; do not repeat it.
 #   related           other players worth comparing.
 #   links             first-hand pages, e.g. by the author.
 
@@ -58,11 +60,13 @@ DigitalSonixChrome:
   game: Dragon's Breath
 
 FutureComposer1.3:
+  ports: [ext/c-flod/neoart/flod/futurecomposer]
   provenance: original
   provenance_guess: true
   family: Future Composer
 
 FutureComposer1.4:
+  ports: [ext/c-flod/neoart/flod/futurecomposer]
   source: defect/fc14
   provenance: original
   provenance_guess: true
@@ -75,9 +79,11 @@ FutureComposer1.4:
   head: true
 
 JochenHippel_UADE:
+  ports: [ext/c-flod/neoart/flod/hippel]
   family: Jochen Hippel
 
 JochenHippelCOSO:
+  ports: [ext/c-flod/neoart/flod/hippel]
   family: Jochen Hippel
 
 JochenHippel-CoSo_UADE:
@@ -92,6 +98,7 @@ Jochen_Hippel_ST:
   distinct: Atari ST sound chip emulated on Paula
 
 Mugician:
+  ports: [ext/c-flod/neoart/flod/digitalmugician]
   family: Digital Mugician
   author: Reinier van Vliet
   year: 1990
@@ -101,6 +108,7 @@ Mugician:
       link: https://proofofconcept.nl/portfolio/sidmon/
 
 MugicianII:
+  ports: [ext/c-flod/neoart/flod/digitalmugician]
   provenance: disassembly
   author: Reinier van Vliet
   family: Digital Mugician
@@ -112,6 +120,7 @@ MugicianII:
   links: [https://proofofconcept.nl/portfolio/mugician/]
 
 SIDMon1.0:
+  ports: [ext/c-flod/neoart/flod/sidmon]
   family: SIDMon
   author: Reinier van Vliet
   year: 1989
@@ -130,9 +139,11 @@ SIDMon2.0:
   head: true
 
 SoundMon2.0:
+  ports: [ext/c-flod/neoart/flod/soundmon]
   family: SoundMon
 
 SoundMon2.2:
+  ports: [ext/c-flod/neoart/flod/soundmon]
   provenance: original
   author: Brian Postma
   family: SoundMon
@@ -173,3 +184,12 @@ TFMX-7V-TFHD:
 
 TFMX-Pro-TFHD:
   note: same format as TFMX-Pro (has source)
+
+Fred:
+  ports: [ext/c-flod/neoart/flod/fred]
+
+RobHubbard:
+  ports: [ext/c-flod/neoart/flod/hubbard]
+
+Sound-FX:
+  ports: [ext/c-flod/neoart/flod/soundfx]

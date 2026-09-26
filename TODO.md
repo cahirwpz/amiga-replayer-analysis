@@ -11,7 +11,7 @@ Selection rules:
 
 - Formats that did not prevail on the demoscene. No `ProTracker`-like players.
 - Themes: cheap but expressive synthesis, unusual tricks, soft voice mixing.
-- `replay` must be `uade` or `port` in [the inventory](docs/inventory.md).
+- `replay` must be `uade` or `port` in [the inventory](data/inventory.csv).
 
 ### Cards: synthesis
 
@@ -109,6 +109,8 @@ Findings so far, for the cards above. Paths are relative to
 - [ ] Mugician II: card says mixing uses channel 0, `DMPlayer.c:612` uses
       channel 3. Resolve.
 - [ ] Inventory: read the five players marked `check`.
+- [ ] `RobHubbard` was rejected: UADE keeps its code in modules. Does
+      `ext/c-flod/neoart/flod/hubbard/RHPlayer.c` reopen it?
 
 ## Later
 

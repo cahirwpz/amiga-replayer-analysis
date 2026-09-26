@@ -73,10 +73,10 @@ Readers are C1 non-native speakers with limited attention.
 
 ## Repo hygiene
 
-- Never edit `ext/`. Update submodule pins only on request.
+- Never edit submodules in `ext/` or update their pins unasked.
 - After a pin update, run `tools/inventory.py --write`, then
-  `tools/links.py --fix-rows *.md docs players`.
-- Link player names to their inventory row, with the name as link title.
+  `tools/links.py --fix-rows *.md docs players ext/README.md`.
+- Link player names to their inventory row, titled with the name.
 - Run `source ./activate` once per shell.
 - Before each commit, stage and run `pre-commit run --all-files`. Stage again
   and rerun until it passes.

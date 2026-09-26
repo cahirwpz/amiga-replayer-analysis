@@ -3,8 +3,8 @@
 
 Usage: players.py [--write | --check]
 
-  --write  write the generated tables in docs/players.md
-  --check  exit 1 if data/players.yaml is invalid or docs/players.md is stale
+  --write  write the generated tables in docs/players.md and ext/README.md
+  --check  exit 1 if data/players.yaml is invalid or a table is stale
 
 Other tools import this module:
   load()        {player: facts}, as written in data/players.yaml
@@ -23,6 +23,7 @@ from mdtools import block, format_table, replace_block
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "data" / "players.yaml"
 DOC = ROOT / "docs" / "players.md"
+EXT_README = ROOT / "ext" / "README.md"
 BINARIES = ROOT / "ext" / "uade" / "players"
 INVENTORY = ROOT / "data" / "inventory.csv"
 CARDS = ROOT / "players"
@@ -41,6 +42,7 @@ FIELDS = {
     "head": bool,
     "distinct": str,
     "influences": list,
+    "ports": list,
     "related": list,
     "links": list,
 }
@@ -85,6 +87,9 @@ def validate(data=None):
                 err(player, f"evidence `{link['evidence']}` not in {sorted(evidence)}")
             if "player" in link and link["player"] not in binaries:
                 err(player, f"`{link['player']}` is not a binary")
+        for port in facts.get("ports") or []:
+            if not str(port).startswith("ext/") or not (ROOT / str(port)).exists():
+                err(player, f"port `{port}` is not a path under ext/")
         for name in facts.get("related") or []:
             if name not in binaries:
                 err(player, f"related `{name}` is not a binary")
@@ -97,10 +102,16 @@ def validate(data=None):
     return errors
 
 
-def row_links():
-    """{player: Markdown link to its inventory row}, relative to docs/."""
+@cache
+def inventory():
+    """{player: (row number, CSV row)} from data/inventory.csv."""
     with INVENTORY.open(encoding="utf-8") as f:
-        rows = {r["player"]: n for n, r in enumerate(csv.DictReader(f), start=2)}
+        return {r["player"]: (n, r) for n, r in enumerate(csv.DictReader(f), start=2)}
+
+
+def row_links():
+    """{player: Markdown link to its inventory row}, relative to docs/ or ext/."""
+    rows = {p: n for p, (n, _) in inventory().items()}
     return {
         p: f'[`{p}`](../data/inventory.csv?plain=1#L{n} "{p}")' for p, n in rows.items()
     }
@@ -180,7 +191,18 @@ def blocks():
                 [source, rows[player], f"{link['evidence']}: {page}".strip(": ")]
             )
 
+    ports = []
+    for player in sorted(data, key=str.lower):
+        _, row = inventory()[player]
+        source = row["source"]
+        for port in data[player].get("ports", []):
+            use = "possible source" if row["replay"] == "module" else "cross-check"
+            ports.append([rows[player], f"`{port}`", use])
+        if source.startswith("ext/"):
+            ports.append([rows[player], f"`{source}`", "source"])
+
     return {
+        "ports": format_table(["Player", "Port", "Use"], ports),
         "cards": format_table(
             ["Player", "Card", "Provenance", "Who, when, where", "Links"], cards
         ),
@@ -190,25 +212,26 @@ def blocks():
     }
 
 
-def render(doc):
-    for name, lines in blocks().items():
-        doc = replace_block(doc, name, block(name, lines))
-    return doc
+# Page -> names of the generated blocks it holds.
+PAGES = {DOC: ["cards", "lineages", "distinct", "history"], EXT_README: ["ports"]}
 
 
 def main(argv):
     if argv not in (["--write"], ["--check"]):
         sys.exit(__doc__)
     errors = validate()
+    tables = blocks()
+    for page, names in PAGES.items():
+        text = page.read_text(encoding="utf-8")
+        new = text
+        for name in names:
+            new = replace_block(new, name, block(name, tables[name]))
+        if argv == ["--write"]:
+            page.write_text(new, encoding="utf-8")
+        elif new != text:
+            errors.append(f"{page.relative_to(ROOT)}: out of date; run --write")
     for e in errors:
         print(e)
-    doc = DOC.read_text(encoding="utf-8")
-    new = render(doc)
-    if argv == ["--write"]:
-        DOC.write_text(new, encoding="utf-8")
-    elif new != doc:
-        print(f"{DOC.relative_to(ROOT)}: out of date; run tools/players.py --write")
-        return 1
     return 1 if errors else 0
 
 

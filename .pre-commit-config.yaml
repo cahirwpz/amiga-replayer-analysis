@@ -1,7 +1,8 @@
 # See https://pre-commit.com for more information
 
-# Fixtures contain deliberate errors for tests/test_tools.py.
-exclude: ^(ext|tests/fixtures)/
+# Fixtures contain deliberate errors for tests/test_tools.py. Submodules in
+# ext/ are not ours; ext/README.md is.
+exclude: ^(ext/[^/]+/|tests/fixtures/)
 
 repos:
   # --- COMMON/GENERAL HOOKS ---
@@ -55,7 +56,7 @@ repos:
         types: [markdown]
         # Glossary changes can break any file, so always check all of them.
         pass_filenames: false
-        args: [ README.md, AGENTS.md, TODO.md, docs/, players/, ideas/, details/ ]
+        args: [ README.md, AGENTS.md, TODO.md, ext/README.md, docs/, players/, ideas/, details/ ]
 
       - id: links                    # Links and source citations resolve
         name: links
@@ -63,7 +64,7 @@ repos:
         language: system
         types: [markdown]
         pass_filenames: false
-        args: [ README.md, AGENTS.md, TODO.md, docs/, players/, ideas/, details/ ]
+        args: [ README.md, AGENTS.md, TODO.md, ext/README.md, docs/, players/, ideas/, details/ ]
 
       - id: cards                    # Player card structure, see docs/card-template.md
         name: cards
@@ -87,7 +88,7 @@ repos:
         pass_filenames: false
         always_run: true
 
-      - id: inventory                # data/inventory.csv and docs/inventory.md are fresh
+      - id: inventory                # data/inventory.csv is fresh
         name: inventory
         entry: .venv/bin/python3 tools/inventory.py --check
         language: system

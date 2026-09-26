@@ -4,8 +4,8 @@
 Usage: inventory.py [--write | --check]
 
   (no option)  print the CSV to stdout
-  --write      write data/inventory.csv and the counts block of docs/inventory.md
-  --check      exit 1 if either file is out of date
+  --write      write data/inventory.csv
+  --check      exit 1 if data/inventory.csv is out of date
 
 One row per binary in ext/uade/players. The source is found by, in order:
   hash     - a byte-identical binary exists inside a source directory
@@ -19,6 +19,11 @@ The `replay` column says where the replay logic is:
   check    - patch markers found, but not clearly a wrapper; read the source
   port     - a port outside UADE, under ext/
   disasm   - no source; data/disasm/<player>.cnf drives an IRA disassembly
+
+Caveats:
+  - `lines` includes old versions kept next to new ones: an upper bound.
+  - EMS-6, Mark_Cooksey_Old and ScottJohnston have no version string.
+  - SynthPack matches a directory without source; it counts as binary only.
 """
 
 import csv
@@ -30,7 +35,6 @@ import sys
 from pathlib import Path
 
 import players
-from mdtools import format_table
 
 ROOT = Path(__file__).resolve().parent.parent
 UADE = ROOT / "ext" / "uade"
@@ -45,8 +49,6 @@ HUNK_HEADER = bytes.fromhex("000003f3")  # AmigaOS executable
 
 DISASM = ROOT / "data" / "disasm"
 CSV = ROOT / "data" / "inventory.csv"
-DOC = ROOT / "docs" / "inventory.md"
-BEGIN, END = "<!-- counts:begin -->", "<!-- counts:end -->"
 
 # Wrappers find code inside the module and patch it.
 PATCH_RE = re.compile(r"PatchTable|FindIt\d|^Patch\d", re.M)
@@ -206,61 +208,21 @@ def to_csv(table):
     return buf.getvalue()
 
 
-def counts(table):
-    """Markdown block with the numbers quoted in docs/inventory.md."""
-    col = {name: i for i, name in enumerate(table[0])}
-    body = table[1:]
-    with_src = [r for r in body if int(r[col["files"]]) > 0]
-    units = {r[col["source"]] for r in with_src}
-
-    def tally(name, values):
-        return [(v, sum(1 for r in body if r[col[name]] == v)) for v in values]
-
-    groups = [
-        ["Binaries in UADE", str(len(body))],
-        ["With source", str(len(with_src))],
-        ["Binary only", str(len(body) - len(with_src))],
-    ]
-    found = [[v, str(n)] for v, n in tally("match", ["hash", "name", "manual", "none"])]
-    replay = [
-        [v, str(n)]
-        for v, n in tally("replay", ["uade", "module", "check", "port", "disasm"])
-    ]
-    lines = [BEGIN, ""]
-    lines += format_table(["Group", "Players"], groups)
-    lines += ["", f"{len(with_src)} players map to {len(units)} source directories."]
-    lines += [""] + format_table(["How source was found", "Players"], found)
-    lines += [""] + format_table(["Where replay logic is", "Players"], replay)
-    lines += ["", END]
-    return "\n".join(lines)
-
-
-def doc_with(block):
-    doc = DOC.read_text(encoding="utf-8")
-    a, b = doc.index(BEGIN), doc.index(END) + len(END)
-    return doc[:a] + block + doc[b:], doc[a:b]
-
-
 def main(argv):
-    table = rows()
-    text = to_csv(table)
-    block = counts(table)
+    text = to_csv(rows())
     if not argv:
         sys.stdout.write(text)
         return 0
     if argv == ["--write"]:
         CSV.write_text(text, encoding="utf-8")
-        DOC.write_text(doc_with(block)[0], encoding="utf-8")
         return 0
     if argv == ["--check"]:
-        stale = []
         if CSV.read_text(encoding="utf-8") != text:
-            stale.append(str(CSV.relative_to(ROOT)))
-        if doc_with(block)[1] != block:
-            stale.append(str(DOC.relative_to(ROOT)))
-        for path in stale:
-            print(f"{path}: out of date; run tools/inventory.py --write")
-        return 1 if stale else 0
+            print(
+                f"{CSV.relative_to(ROOT)}: out of date; run tools/inventory.py --write"
+            )
+            return 1
+        return 0
     sys.exit(__doc__)
 
 

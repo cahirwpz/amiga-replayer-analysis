@@ -19,7 +19,7 @@ labels by hand; cards cite them as `data/disasm/PLAYER.cnf:Label`. Listings
 are generated, never committed. After adding a config, run
 `tools/inventory.py --write`; the player becomes `replay: disasm`. If the
 replay code turns out to be in the module, delete the config and set the
-player to "module" in REPLAY in tools/inventory.py.
+player to `replay: module` in data/players.yaml.
 
 Only binary-only players are in scope; `replay: module` players are deferred.
 """

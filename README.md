@@ -32,7 +32,8 @@ The shape is fixed by [the card template](docs/card-template.md).
 - Players whose replay code hides inside music files are left out.
 - What you would hear is marked as "(inference)".
 
-[The inventory](docs/inventory.md) lists every UADE replayer and its source.
+[The inventory](data/inventory.csv) lists every UADE replayer and its source.
+[Sources](ext/README.md) describes where the source code comes from.
 
 ## Contributing
 
