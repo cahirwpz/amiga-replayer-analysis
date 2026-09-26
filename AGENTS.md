@@ -36,3 +36,5 @@ there, in `DEFAULT` and `PROFILES`. Run it before committing.
 - After a pin update, regenerate `data/inventory.csv` with `tools/inventory.py`.
 - Run `source ./activate` once per shell. Python tools go in `requirements.txt`.
 - Run `pre-commit run --all-files` before each commit.
+- Never commit without the user's approval for that commit. Approval never
+  carries over.
