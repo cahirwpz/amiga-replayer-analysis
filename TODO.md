@@ -35,6 +35,61 @@ All twelve pilot cards exist.
 - [ ] Fix the classification axes: control, themes, streams. They live in the
       glossary and the card template.
 
+### Card template questions
+
+- [ ] Revise the template. Generate context from `data/players.yaml`.
+
+| Area         | Questions                                                                                          |
+| ------------ | -------------------------------------------------------------------------------------------------- |
+| Context      | Which version, lineage, source, author and known uses does the card cover?                         |
+| Value        | What does each idea enable? What does it cost or limit?                                            |
+| Controllers  | What drives pitch, volume and samples: programs, command streams, table walkers or state machines? |
+| Tables       | Which tables advance independently? Which only map an input to a value?                            |
+| Expression   | Can existing commands express arpeggios or envelope phases without dedicated effects?              |
+| Instruments  | What does an instrument store? Which settings come from tracks or survive notes?                   |
+| Timing       | What advances each process? Do waits count ticks, list activations or sample passes?               |
+| Lifecycle    | What resets on note-on? How do release, hard stop and program end differ?                          |
+| Ownership    | Who owns state? Can voices share or modify waveforms, tables or programs?                          |
+| Outputs      | Which writers add, scale, overwrite or suppress others? Does suppressed state keep advancing?      |
+| Interactions | What does a jump or trigger reset? When does the destination next run?                             |
+| Limits       | What limits calls, loops, voices or sample choice?                                                 |
+| Evidence     | Which labels support each behavior? Which audible results or uses remain unverified?               |
+| Presentation | Can State describe ownership and resets? Can empty Open questions sections disappear?              |
+
+### Tim Follin card
+
+- [ ] Explain track-configured state machines, lookups, fixed timing and both
+      note-length encodings. `data/annot/TimFollin.yaml:VoiceTick`,
+      `:NoteTimer`, `:CmdFixedLength`.
+- [ ] Distinguish track arpeggios from trill. `:PlayNote`, `:CmdTrill`.
+- [ ] Explain gate timing, continuous playback and deferred sample chaining.
+      `:StartSample`, `:GateOff`, `:ChainTick`, `:ChainSample`.
+- [ ] Explain zero-time commands, four return slots and one loop slot.
+      `:ReadTrack`, `:CallStacks`.
+- [ ] Investigate the inactive special subsong and the pulse reset offset.
+      `:_init`, `:ResetPulse`.
+
+### TFMX Pro card
+
+- [ ] Explain macro/riff arpeggios and triggered waits.
+      `data/annot/TFMX-Pro.yaml:maddnote`, `:RiffPlay`, `:MacroWait`.
+- [ ] Explain programmed envelope phases over target ramps. `:menvelope`,
+      `:Envelope`, `:WaitNoteOff`.
+- [ ] Explain sample-pass waits and programmable sample regions. `:WaitLoops`,
+      `:CountLoopIrq`, `:msampleloop`.
+- [ ] Explain inherited state, stopped macros and shared mutable code.
+      `:NoteToVoice`, `:mstop`, `:CopyToMacro`.
+- [ ] Explain pitch precedence and riff progression during portamento.
+      `:Vibrato`, `:Portamento`, `:RiffPlay`.
+- [ ] Correct the fade rate: its shared counter advances once per voice visit.
+      `:VoicesTick`, `:Fade`.
+
+### MED card
+
+- [ ] Revise the card using [the control review](details/MED-control.md). Cover
+      the missing envelope stream, jump timing, both arpeggios and release
+      versus hard stop.
+
 ### New cards: MIDI model
 
 - [ ] `MIDI-Loriciel` card. Reading notes below. The MIDI events it handles, CCs
