@@ -1,0 +1,31 @@
+name: Checks
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  checks:
+    name: Pre-commit hooks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          # links, cards and inventory read ext/uade and ext/ahx2play.
+          submodules: true
+      - name: Cache hook environments
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Run all hooks
+        # Formatters fail here instead of fixing files; the diff shows why.
+        shell: bash
+        run: |
+          . ./activate
+          pre-commit run --all-files --show-diff-on-failure
