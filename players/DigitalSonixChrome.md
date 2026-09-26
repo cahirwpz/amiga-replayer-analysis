@@ -32,6 +32,8 @@ nothing.
 
 - Loop counter: the interrupt at each loop pass counts down. At zero it plays
   silence and frees the voice. `:CountLoopPass` `:LoopsDone`
+- Effect numbers are priorities: a request plays if its number is at most the
+  playing one. A free voice holds `$FF`. `:SfxClaimVoice` `:LoopsDone`
 - A new note busy-waits for the channel's audio interrupt. `:WaitAudioIrq`
 - A position with zero repeats ends the subsong. `:NextPosition`
 
@@ -45,6 +47,4 @@ nothing.
 
 ## Open questions
 
-- A lower instrument number wins a voice (`:SfxClaimVoice`). Is that a priority
-  scheme?
 - Did any other game use this format?

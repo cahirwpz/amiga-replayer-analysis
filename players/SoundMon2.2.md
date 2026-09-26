@@ -41,6 +41,7 @@ A synth voice runs four table walkers over one pool of 64-byte tables.
 - Arpeggio cycles four ticks: two offsets, base note twice. `:Arpeggio`
 - Vibrato uses one 8-step table and position for all voices. `:VibratoTable`
 - The next note restores the original wave. `:RestoreWaveLoop`
+- Voices on one wave change it together. `:EgWalker`
 - Options 13–15 change the note without restarting walkers. `:SetNotePeriod`
 
 ## State
@@ -53,4 +54,4 @@ A synth voice runs four table walkers over one pool of 64-byte tables.
 
 ## Open questions
 
-- Two voices on one wave both change it (guess).
+- None left.

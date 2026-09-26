@@ -18,7 +18,8 @@ The 128-byte waveform serves as played wave, volume envelope and vibrato table.
   by one sample. `:EffectTable`
   [All 15 effects](../details/MugicianII-effects.md).
 - Row length alternates between two speeds (swing). `:SwingSpeeds`
-- Voices 4–7 are mixed into channel 0. `:MixVoices`
+- Voices 4–7 are mixed into one channel. They play samples only. `:MixVoices`
+  `:StartSample`
 
 ## Streams
 
@@ -48,4 +49,4 @@ The 128-byte waveform serves as played wave, volume envelope and vibrato table.
 
 ## Open questions
 
-- Mixed voices seem to play samples only.
+- None left.

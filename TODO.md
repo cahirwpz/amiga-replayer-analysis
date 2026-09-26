@@ -38,17 +38,19 @@ All twelve pilot cards exist.
 
 ## Open questions
 
-- [ ] Mugician II: cross-check effect numbers with
-      `ext/c-flod/neoart/flod/digitalmugician/DMPlayer.c`.
-- [ ] Mugician II: can mixed voices play synth waves?
-      `ext/c-flod/neoart/flod/digitalmugician/DMPlayer.c:DMPlayer_process` takes
-      mixed voices from a sample pointer:
-      `voice->mixPtr = sample->super.pointer` (not verified).
-- [ ] Mugician II: card says mixing uses channel 0, `:DMPlayer_initialize` uses
-      channel 3: `chan = &self->super.amiga->channels[3]`. Resolve.
-- [ ] Inventory: read the five players marked `check`.
-- [ ] `RobHubbard` was rejected: UADE keeps its code in modules. Does
-      `ext/c-flod/neoart/flod/hubbard/RHPlayer.c` reopen it?
+- [ ] Decide: bring `RobHubbard` back? Its Flod port has its own replay logic
+      and meets the `replay: port` rule.
+      `ext/c-flod/neoart/flod/hubbard/RHPlayer.c:RHPlayer_loader`
+- [ ] AHX: does the UADE binary replayer differ from the tracker code in
+      `ext/ahx2play`? Needs an IRA disassembly of the binary.
+
+### Needs outside material
+
+- Modules: which songs use a feature? MED list jumps, TFMX Pro riffs and byte
+  checks, SoundPlayer `DD` and modulation in Lemmings.
+- Docs or credits: Sonic Arranger's `AMF` name. Other games with Digital Sonix &
+  Chrome. Other Synth Dream composers.
+- The sound chip's datasheet: compare the Hippel ST volume table with the chip.
 
 ## Later
 

@@ -43,4 +43,7 @@ The last column is inference, not verified by listening.
   length.
 - Effect 9 adds without clipping, so values wrap around.
 - Effect 15 falls through into effect 5's code. `:Effect15`
-- Not yet cross-checked against an independent replayer.
+- The Flod port has the same 15 effects with the same numbers.
+  `ext/c-flod/neoart/flod/digitalmugician/DMPlayer.c:DMPlayer_process`
+- Flod runs effects only in 4-voice songs. The 68000 code always runs them: its
+  skip flag is a constant 0. `data/annot/MugicianII.yaml:RunEffect`

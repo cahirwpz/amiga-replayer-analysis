@@ -36,7 +36,13 @@ comments:
   2078: "$ffff: end of track"
   2081: "$c000 and above: wait N ticks"
   2087: "below $80: note number, then velocity"
-  2088: "$80 instrument, $81 volume, $82 tempo, $83 unknown"
+  2088: "$80 instrument, $81 volume, $82 tempo, $83 pitch bend"
+  2199: "pitch bend for this track"
+  1600: "track pitch bend: one of 64 period factors, x1.52 to x0.67"
+  4748: "TINY: release the note after 3/4 of its length"
+  6543: "SMUS: $82 time signature"
+  6556: "SMUS: $84 track volume"
+  6960: "SMUS: release the note after 3/4 of its length"
   2151: velocity 0 releases the note
   2169: velocity scales the volume
   2226: the instrument type's tick routine
@@ -48,6 +54,12 @@ comments:
   2876: feedback per sample, about 0.9
 
 banners:
+  4631: |
+    PlayTINY: TINY scores. A note event carries a length, not a velocity.
+    $80 is a rest, $81 changes instrument.
+  6528: |
+    SMUS loader: turn EA duration codes into ticks. A whole note is 32
+    ticks; a dotted note is 1.5 times longer.
   2213: |
     TickInstruments: every instrument type is a small driver with two
     entry points: tick, then write Paula registers.

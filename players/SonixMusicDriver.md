@@ -31,15 +31,17 @@ LFO.
 
 ## Streams
 
-| Stream | Scope | Carries                                   | Control   | Rate |
-| ------ | ----- | ----------------------------------------- | --------- | ---- |
-| Track  | voice | note, velocity, instrument, volume, tempo | wait, end | tick |
+| Stream | Scope | Carries                                         | Control   | Rate |
+| ------ | ----- | ----------------------------------------------- | --------- | ---- |
+| Track  | voice | note, velocity, instrument, volume, tempo, bend | wait, end | tick |
 
 ## Generators and interactions
 
 - Envelope: attack, decay, sustain, release; a level and rate each. `:Envelope`
 - LFO: a 256-byte table; drives pitch, volume and filter. `:Lfo`
 - High notes skip samples to keep the period in range. `:OctaveShift`
+- `TINY` and `SMUS` notes carry a length; they release after 3/4 of it.
+  `:PlayTINY`
 
 ## State
 
@@ -51,6 +53,4 @@ LFO.
 
 ## Open questions
 
-- What does event `$83` set?
-- The file holds three drivers, for `SNX`, `TINY` and `SMUS` scores. How do they
-  differ?
+- None left.

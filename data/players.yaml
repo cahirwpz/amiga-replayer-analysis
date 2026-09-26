@@ -180,6 +180,7 @@ SoundPlayer:
   game: Lemmings
 
 TFMX:
+  replay: uade
   family: TFMX
 
 TFMX-Pro:
@@ -214,3 +215,16 @@ RobHubbard:
 
 Sound-FX:
   ports: [ext/c-flod/neoart/flod/soundfx]
+
+# Read to settle `check` in tools/inventory.py.
+BenDaglish:
+  replay: module
+
+BladePacker:
+  replay: uade
+
+PaulSummers:
+  replay: uade
+
+SeanConran:
+  replay: module

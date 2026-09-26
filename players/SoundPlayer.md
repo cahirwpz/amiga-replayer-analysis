@@ -46,4 +46,4 @@ Pattern commands switch Paula's attach modes, so one channel modulates the next.
 ## Open questions
 
 - Did the Lemmings songs use modulation for timbre or for effects?
-- Command `DD` makes a voice replay its row forever. What for?
+- `DD` parks a voice on its row until a restart. `:CmdStepBack` Why?

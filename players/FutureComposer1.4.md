@@ -35,6 +35,8 @@ Each instrument runs two command lists: volume, and pitch with waveform.
   `:do_VOLbend`
 - Portamento speed comes from the next row's second byte. `:SlideSpeed`
 - `E2` and `E9` restart the volume list; `E4` does not. `:RestartVolList`
+- 1.3's built-in waves form series, one sample apart (inference: sweeps).
+  `ext/uade/amigasrc/players/defect/fc13/FutureComposer_1.3.s:WAVEFORMS`
 
 ## State
 
@@ -46,5 +48,4 @@ Each instrument runs two command lists: volume, and pitch with waveform.
 
 ## Open questions
 
-- Version 1.3 has built-in waveform series, likely for timbre sweeps
-  (inference).
+- None left.

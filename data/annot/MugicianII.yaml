@@ -29,3 +29,10 @@ labels:
   lbC0107BC: Effect14
   lbC010816: Effect15
   lbC010982: MixVoices
+  lbC010896: StartSample
+
+comments:
+  1407: this adaptation mixes into channel 0
+  2257: "the original's skip flag, a constant 0: effects always run"
+  2930: only a sample start sets a mixed voice's pointer
+  3038: the original mixes into channel 3
