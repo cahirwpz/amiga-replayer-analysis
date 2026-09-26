@@ -1,6 +1,6 @@
 # Inventory
 
-Every replayer binary in `uade/players`, and where its source is. Full list:
+Every replayer binary in `ext/uade/players`, and where its source is. Full list:
 `data/inventory.csv`.
 
 ## Counts
@@ -31,7 +31,7 @@ was never published. `ext/ahx2play` is a C port of the same replayer, used as
 
 ## Source without a player binary
 
-Four source directories have no binary in `uade/players`:
+Four source directories have no binary in `ext/uade/players`:
 
 - `other/max_trax`
 - `uade/ps3m`

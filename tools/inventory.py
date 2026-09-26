@@ -3,7 +3,7 @@
 
 Usage: inventory.py > data/inventory.csv
 
-One row per binary in uade/players. The source is found by, in order:
+One row per binary in ext/uade/players. The source is found by, in order:
   hash     - a byte-identical binary exists inside a source directory
   name     - normalised binary name matches a source file or directory name
   manual   - entry in OVERRIDES
@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-UADE = ROOT / "uade"
+UADE = ROOT / "ext" / "uade"
 PLAYERS = UADE / "players"
 SOURCES = UADE / "amigasrc" / "players"
 CONF = UADE / "eagleplayer.conf"

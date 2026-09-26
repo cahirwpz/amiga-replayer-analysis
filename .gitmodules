@@ -1,5 +1,5 @@
 [submodule "uade"]
-	path = uade
+	path = ext/uade
 	url = https://gitlab.com/uade-music-player/uade.git
 [submodule "ext/ahx2play"]
 	path = ext/ahx2play

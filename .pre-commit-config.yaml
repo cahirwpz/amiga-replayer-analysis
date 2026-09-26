@@ -1,6 +1,7 @@
 # See https://pre-commit.com for more information
 
-exclude: ^(uade|ext)/
+# Fixtures contain deliberate errors for tests/test_tools.py.
+exclude: ^(ext|tests/fixtures)/
 
 repos:
   # --- COMMON/GENERAL HOOKS ---
@@ -61,3 +62,18 @@ repos:
         types: [markdown]
         pass_filenames: false
         args: [ README.md, AGENTS.md, docs/, players/, ideas/, details/ ]
+
+      - id: cards                    # Player card structure, see docs/card-template.md
+        name: cards
+        entry: python3 tools/cards.py
+        language: system
+        types: [markdown]
+        pass_filenames: false
+        args: [ players/ ]
+
+      - id: tool-tests               # Self-tests for the checkers above
+        name: tool-tests
+        entry: python3 -m unittest discover -s tests
+        language: system
+        pass_filenames: false
+        always_run: true

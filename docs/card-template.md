@@ -4,8 +4,8 @@ Copy into `players/<name>.md`. Angle brackets mark placeholders.
 
 ```markdown
 ---
-player: <binary name in uade/players>
-source: <path under uade/amigasrc/players, or ext/...>
+player: <binary name in ext/uade/players>
+source: <path under ext/uade/amigasrc/players, or ext/...>
 code: uade | module
 control: tables | commands | program
 themes: [synthesis, mixing, tricks]

@@ -27,7 +27,7 @@ there, in `DEFAULT` and `PROFILES`. Run it before committing.
 ## Evidence
 
 - In player cards, cite as `file:line` relative to the card's `source`.
-  Elsewhere, cite as `uade/path:line`.
+  Elsewhere, cite as `ext/uade/path:line`.
 - Say when a player has no source, only a binary. `data/inventory.csv` knows.
 - Mark guesses as guesses.
 - Evidence levels: `code` (original or disassembled replayer), `port` (a port of
@@ -35,9 +35,11 @@ there, in `DEFAULT` and `PROFILES`. Run it before committing.
 
 ## Repo hygiene
 
-- Never edit `uade/` or `ext/`. Update submodule pins only on request.
+- Never edit `ext/`. Update submodule pins only on request.
 - After a pin update, regenerate `data/inventory.csv` with `tools/inventory.py`.
 - Run `source ./activate` once per shell. Python tools go in `requirements.txt`.
-- Run `pre-commit run --all-files` before each commit.
+- Run `pre-commit run --all-files` before each commit. Markdown checks:
+  `cogload` (size), `links` (links and citations), `cards` (card shape),
+  `tool-tests` (self-tests of the checkers).
 - Never commit without the user's approval for that commit. Approval never
   carries over.

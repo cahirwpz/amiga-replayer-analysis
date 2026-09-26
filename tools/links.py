@@ -5,7 +5,7 @@ Usage: links.py FILE.md|DIR...
 
 Checks:
   - relative Markdown links point to existing files
-  - player cards: `source` exists; `related` players are in the inventory
+  - player cards (front matter has `player`): `source` exists; `related` players are in the inventory
   - player cards: `file:line` citations name an existing line in `source`;
     a bare `:line` refers to the file of the previous citation
 
@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCES = ROOT / "uade" / "amigasrc" / "players"
+SOURCES = ROOT / "ext" / "uade" / "amigasrc" / "players"
 INVENTORY = ROOT / "data" / "inventory.csv"
 
 LINK_RE = re.compile(r"(?<!!)\[[^\]]*\]\(([^)\s]+)\)")
@@ -64,7 +64,7 @@ def check(path, known_players):
         errors.append(f"{rel}:{n}: {rule}: {detail}")
 
     meta, body = front_matter(lines)
-    is_card = rel.startswith("players/") and "source" in meta
+    is_card = "player" in meta and "source" in meta
     src = source_dir(meta["source"]) if is_card else None
     if is_card and not src.is_dir():
         err(1, "source", f"{meta['source']} does not exist")

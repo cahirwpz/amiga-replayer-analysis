@@ -20,17 +20,16 @@ enforces size limits; `tools/cogload.py` defines them.
 
 ## Layout
 
-| Path                 | Content                                  |
-| -------------------- | ---------------------------------------- |
-| `uade/`              | UADE source, as a git submodule          |
-| `ext/`               | Sources from outside UADE, as submodules |
-| `ideas/`             | One page per distinct idea               |
-| `players/`           | One card per replayer                    |
-| `details/`           | Deep dives on request                    |
-| `docs/`              | Paula summary, glossary, inventory       |
-| `data/inventory.csv` | Every replayer and its source            |
-| `tools/cogload.py`   | Cognitive load checker                   |
-| `tools/inventory.py` | Builds the inventory                     |
+| Path                 | Content                                        |
+| -------------------- | ---------------------------------------------- |
+| `ext/`               | UADE and other replayer sources, as submodules |
+| `ideas/`             | One page per distinct idea                     |
+| `players/`           | One card per replayer                          |
+| `details/`           | Deep dives on request                          |
+| `docs/`              | Paula summary, glossary, inventory             |
+| `data/inventory.csv` | Every replayer and its source                  |
+| `tools/cogload.py`   | Cognitive load checker                         |
+| `tools/inventory.py` | Builds the inventory                           |
 
 ## Setup
 
