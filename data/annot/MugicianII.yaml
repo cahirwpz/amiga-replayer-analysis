@@ -29,6 +29,7 @@ labels:
   lbC0107BC: Effect14
   lbC010816: Effect15
   lbC010982: MixVoices
+  lbC010B32: BuildMixTables
   lbC010896: StartSample
   lbC00FF9A: ReadRow
   lbC010432: Portamento

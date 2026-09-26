@@ -35,18 +35,11 @@ All twelve pilot cards exist.
 - [ ] Fix the classification axes: control, themes, streams. They live in the
       glossary and the card template.
 
-### New cards: voice mixing
+### Tools
 
-Reading notes below.
-
-- [ ] Add an `oktalyzer` submodule to `ext/`:
-      <https://github.com/hitchhikr/oktalyzer>, pinned at `38c087b`. Add it to
-      `data/players.yaml` (`disassembly`).
-- [ ] `TFMX-7V` card, mixing only; the `TFMX-Pro` card covers the rest. Separate
-      the original loop from Wanted Team's rewrite.
-- [ ] `Oktalyzer` card, mixing only; its sequencer is `ProTracker`-like.
-- [ ] `ideas/` page on voice mixing: compare `MugicianII`, `TFMX-7V` and
-      `Oktalyzer` in one table.
+- [ ] Reconsider `tools/disasm.py`: its size, its own hunk linker for object
+      files, and its reliance on IRA. One option: build `vlink` in `install` and
+      drop the Python linker.
 
 ### New cards: MIDI model
 
@@ -59,7 +52,7 @@ Reading notes below.
 ### Then
 
 - [ ] Review the cards with the user.
-- [ ] Write the first technique pages in `ideas/`.
+- [ ] Write more technique pages in `ideas/`; `voice-mixing` is the first.
 - [ ] Add a check that `ideas:` slugs in cards exist.
 - [ ] Generate a technique index from the slugs, for the front page.
 
@@ -68,7 +61,8 @@ Reading notes below.
 ### Needs outside material
 
 - Modules: which songs use a feature? MED list jumps, TFMX Pro riffs and byte
-  checks, SoundPlayer `DD` and modulation in Lemmings.
+  checks, SoundPlayer `DD` and modulation in Lemmings. TFMX 7V notes to voice 3.
+- Releases: did a game or demo ship Oktalyzer's replay 1?
 - Docs or credits: Sonic Arranger's `AMF` name. Other games with Digital Sonix &
   Chrome. Other Synth Dream composers.
 - The sound chip's datasheet: compare the Hippel ST volume table with the chip.
@@ -104,34 +98,6 @@ MaxTrax source: `ext/uade/amigasrc/players/other/max_trax/`. Its `driver.i`
 declares 16 MIDI channels and 4 voices with priority. It also has attack and
 release envelopes, damper pedal, pitch bend range and tempo slides.
 
-## Reading notes: voice mixing
-
-TFMX 7V source:
-`ext/uade/amigasrc/players/wanted_team/TFMX-7V/src/TFMX 7V_v4.asm`.
-
-- The live mix loop (`calc1`, `clcback`) is Wanted Team's rewrite. Their comment
-  compares it with the "original Mad Max mixing routine". Mad Max is Hippel.
-- The original loop is still there, commented out, after `killv4`. Each voice
-  reads its own volume table. Code patches the table address (`killv1`) and the
-  loop end (`killf1`).
-- A voice's offset counts up to 0; `bpl` catches the sample end, with no
-  compare. The original loop has it too.
-- `JochenHippel-7V` has the same live loop, word for word.
-- Hippel 7V's table setup (`lbC007560`) picks clipping or sum ÷ 4. `lbC007D2A`
-  ties the buffer length to the tempo. Does TFMX 7V have both?
-- `MugicianII` has the same loop shape; Wanted Team rewrote it from the
-  "original Rhino mixing routine".
-
-Oktalyzer repo: Franck Charlet's disassembly of the tracker, version 1.57.
-
-- Pin `38c087b`: the first commit with `src/okta.asm`; `original/` is still
-  there.
-- Later commits change the mixer; `replay/` is a new replay, not Armin Sander's.
-- `original/sources/okplay1.o`, `okplay2.o`: the author's replay objects. Check
-  them against `src/okta.asm` with `tools/disasm.py`.
-- `original/sources/example1.s`: replay 1 needs a fixed buffer of `$A81C` bytes.
-  Generated mix code or volume tables? (guess)
-
 ## Disassembly queue
 
 A port is not evidence (see [`AGENTS.md`](AGENTS.md#evidence)). These players
@@ -147,8 +113,11 @@ need 68k code first.
 
 ## Disassembly notes
 
-Tooling works; no config is committed yet. Workflow:
+Tooling works for player binaries, executables and object files. Workflow:
 [`tools/disasm.py`](tools/disasm.py).
+
+- Committed configs: `okplay1` and `okplay2`, Oktalyzer's replay objects. They
+  match `okta.asm`. No player config yet.
 
 - Seeding was tried on `DeltaMusic2.0`, `SIDMon2.0`, `Laxity` and
   `TFMX-7V-TFHD`.

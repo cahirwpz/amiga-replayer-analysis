@@ -42,7 +42,7 @@ FIELDS = {
     "related": list,
     "links": list,
 }
-REPLAY = {"uade", "module", "check", "port", "disasm", "source"}
+REPLAY = {"uade", "module", "check", "port", "ext", "disasm", "source"}
 
 
 @cache

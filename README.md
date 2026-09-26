@@ -12,6 +12,7 @@ and its many relatives are left out.
 2. [Player cards](players/): one page per replayer.
 3. [Player facts](data/players.yaml): provenance, lineage, authors.
 4. [Details](details/): deep dives, only where a card needs one.
+5. [Ideas](ideas/): one technique, compared across players.
 
 Unknown terms are in [the glossary](docs/glossary.md).
 
@@ -26,8 +27,9 @@ The shape is fixed by [the card template](docs/card-template.md).
 ## Evidence
 
 - Every claim in a player card cites a source line.
-- Sources: UADE's replayers, original or disassembled, and C ports.
-  [Player facts](data/players.yaml) records each player's provenance.
+- Sources: UADE's replayers, original or disassembled, C ports, and other
+  disassemblies. [Player facts](data/players.yaml) records each player's
+  provenance.
 - Binary-only players: our own IRA disassembly. See
   [`tools/disasm.py`](tools/disasm.py).
 - Players whose replay code hides inside music files are left out.

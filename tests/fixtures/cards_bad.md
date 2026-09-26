@@ -1,5 +1,6 @@
 ---
 player: MugicianII
+base: Nowhere
 source: wanted_team/MugicianII
 code: uade
 control: bytecode

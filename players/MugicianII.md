@@ -2,7 +2,7 @@
 player: MugicianII
 control: { sequencer: commands, instrument: tables }
 themes: [synthesis, mixing]
-ideas: [waveform-as-table, in-place-waveform-effects, swing]
+ideas: [waveform-as-table, in-place-waveform-effects, swing, voice-mixing]
 streams: { song: 1, voice: 4, instrument: 1 }
 ---
 

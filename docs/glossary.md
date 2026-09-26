@@ -23,6 +23,7 @@ One line per term. Every acronym used in this repo must appear here.
 | **DMA**             | Direct memory access. Paula fetches samples without the CPU.                              |
 | **PAL**             | European TV standard. Sets the Amiga clock and 50 Hz frame rate.                          |
 | **PWM**             | Pulse-width modulation. Paula uses it to apply volume. Not the same as pulse width.       |
+| **RAM**             | Random-access memory. The CPU reads and writes it.                                        |
 | **VBL**             | Vertical blank interrupt, once per frame. The usual replayer tick.                        |
 | **HRM**             | Commodore's Amiga Hardware Reference Manual.                                              |
 | **channel**         | One of Paula's four hardware sound outputs. Usually plays one voice; mixing can add more. |
@@ -37,20 +38,23 @@ One line per term. Every acronym used in this repo must appear here.
 
 ## Sound and synthesis
 
-| Term            | Meaning                                                                |
-| --------------- | ---------------------------------------------------------------------- |
-| **sample**      | Recorded sound data, played from memory.                               |
-| **waveform**    | A short sample loop, often built or changed by code.                   |
-| **PCM**         | Sampled sound: a stream of stored amplitude values.                    |
-| **ADSR**        | Attack, decay, sustain, release: the four phases of a volume envelope. |
-| **LFO**         | Low-frequency oscillator: slow periodic change, e.g. vibrato.          |
-| **MIDI**        | Standard protocol for sending notes to synthesizers.                   |
-| **note-on**     | The event that starts a note. A MIDI term.                             |
-| **note-off**    | The event that ends a note, e.g. to start its release. A MIDI term.    |
-| **synth**       | Sound made by code from short waveforms, not from recordings.          |
-| **envelope**    | A curve that changes volume, or another value, during a note.          |
-| **modulation**  | One signal changing a setting of another, e.g. volume or pitch.        |
-| **pulse width** | The share of a square-like wave's cycle spent high.                    |
+| Term            | Meaning                                                                             |
+| --------------- | ----------------------------------------------------------------------------------- |
+| **sample**      | Recorded sound data, played from memory.                                            |
+| **waveform**    | A short sample loop, often built or changed by code.                                |
+| **PCM**         | Sampled sound: a stream of stored amplitude values.                                 |
+| **ADSR**        | Attack, decay, sustain, release: the four phases of a volume envelope.              |
+| **LFO**         | Low-frequency oscillator: slow periodic change, e.g. vibrato.                       |
+| **MIDI**        | Standard protocol for sending notes to synthesizers.                                |
+| **note-on**     | The event that starts a note. A MIDI term.                                          |
+| **note-off**    | The event that ends a note, e.g. to start its release. A MIDI term.                 |
+| **synth**       | Sound made by code from short waveforms, not from recordings.                       |
+| **envelope**    | A curve that changes volume, or another value, during a note.                       |
+| **modulation**  | One signal changing a setting of another, e.g. volume or pitch.                     |
+| **pulse width** | The share of a square-like wave's cycle spent high.                                 |
+| **mixing**      | Adding several voices into one channel's sample data, in software.                  |
+| **mix rate**    | Bytes per second that a mixer writes; the channel plays them at this rate.          |
+| **resampling**  | Reading a sample at another rate, by skipping or repeating bytes. It changes pitch. |
 
 ## Music theory
 
@@ -175,6 +179,7 @@ Code patterns we cite from replayer source.
 | **program**            | Control level: opcodes with conditions or calls.                     |
 | **none**               | Control level: no stream in this role.                               |
 | **module**             | Replay code ships inside the music file.                             |
+| **delta card**         | A card with `base`. It shows only what differs from the base card.   |
 
 ## Provenance
 

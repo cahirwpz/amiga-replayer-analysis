@@ -18,6 +18,8 @@ A card is a Markdown file whose front matter has a `player` key. Checks:
   - Interactions table: From and To name the card's streams or generators,
     or an `ends` word from the glossary
   - State table: header and scope names
+  - `base`, on a delta card: names another card. Streams, Sequencer and
+    State become optional, and names may come from the base card.
 
 Prints `file:line: rule: detail` for each problem; exits 1 if any.
 """
@@ -34,6 +36,9 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # Analysis only. Facts about the player live in data/players.yaml.
 KEYS = ["player", "control", "themes", "ideas", "streams"]
+OPTIONAL_KEYS = ["base"]
+# Sections a delta card may leave to its base card.
+BASE_COVERS = {"Streams", "Sequencer", "State"}
 LEVELS = {"tables", "commands", "program", "none"}
 ROLES = ["sequencer", "instrument"]
 THEMES = {"synthesis", "mixing", "tricks", "emulation"}
@@ -85,6 +90,17 @@ def words(cell):
     return [w.strip() for w in cell.split(",") if w.strip()]
 
 
+def own_names(doc):
+    """Names of the streams and generators a card defines."""
+    body = sections(doc)
+    return {
+        cells[0]
+        for name in ("Streams", "Generators")
+        if name in body
+        for _, cells in table(body[name])[1:]
+    }
+
+
 def check(path, known, vocab, facts):
     rel = path.resolve().relative_to(ROOT).as_posix()
     doc = read(path)
@@ -103,8 +119,15 @@ def check(path, known, vocab, facts):
         if key not in meta:
             err(1, "front-matter", f"missing `{key}`")
     for key in meta:
-        if key not in KEYS:
+        if key not in KEYS + OPTIONAL_KEYS:
             err(1, "front-matter", f"unknown `{key}`")
+    inherited = None  # streams and generators of a valid base card
+    if "base" in meta:
+        base = path.parent / f"{meta['base']}.md"
+        if meta["base"] == meta.get("player") or not base.is_file():
+            err(1, "base", f"`{meta['base']}` is no other card in {path.parent.name}/")
+        else:
+            inherited = own_names(read(base))
     control = meta.get("control")
     if control is not None and (
         not isinstance(control, dict)
@@ -143,6 +166,8 @@ def check(path, known, vocab, facts):
     names = [name for _, name in found]
     order = [name for name, _ in SECTIONS]
     for name, required in SECTIONS:
+        if inherited is not None and name in BASE_COVERS:
+            continue
         if required and name not in names:
             err(1, "section", f"missing `## {name}`")
     for n, name in found:
@@ -153,7 +178,7 @@ def check(path, known, vocab, facts):
         err(1, "section", f"order should be {order}")
 
     body = sections(doc)
-    names = set()  # streams and generators on this card
+    names = set(inherited or ())  # streams and generators this card may name
     if "Streams" in body:
         rows = table(body["Streams"])
         if not rows or rows[0][1] != STREAMS_HEADER:

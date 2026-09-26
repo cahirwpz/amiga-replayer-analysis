@@ -22,6 +22,7 @@ sections:
       DMA: Direct memory access. Paula fetches samples without the CPU.
       PAL: European TV standard. Sets the Amiga clock and 50 Hz frame rate.
       PWM: Pulse-width modulation. Paula uses it to apply volume. Not the same as pulse width.
+      RAM: Random-access memory. The CPU reads and writes it.
       VBL: Vertical blank interrupt, once per frame. The usual replayer tick.
       HRM: Commodore's Amiga Hardware Reference Manual.
       channel: One of Paula's four hardware sound outputs. Usually plays one voice; mixing can add more.
@@ -50,6 +51,9 @@ sections:
       envelope: A curve that changes volume, or another value, during a note.
       modulation: One signal changing a setting of another, e.g. volume or pitch.
       pulse width: The share of a square-like wave's cycle spent high.
+      mixing: Adding several voices into one channel's sample data, in software.
+      mix rate: Bytes per second that a mixer writes; the channel plays them at this rate.
+      resampling: Reading a sample at another rate, by skipping or repeating bytes. It changes pitch.
 
   - key: music
     title: Music theory
@@ -171,6 +175,7 @@ sections:
       program: 'Control level: opcodes with conditions or calls.'
       none: 'Control level: no stream in this role.'
       module: Replay code ships inside the music file.
+      delta card: A card with `base`. It shows only what differs from the base card.
 
   - key: provenance
     title: Provenance

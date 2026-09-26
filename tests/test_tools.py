@@ -117,7 +117,7 @@ class Cards(unittest.TestCase):
     def test_reports_each_rule(self):
         code, rules, out = run("cards.py", FIXTURES / "cards_bad.md")
         self.assertEqual(code, 1)
-        expected = {"front-matter", "player", "section", "streams"}
+        expected = {"front-matter", "player", "section", "streams", "base"}
         expected |= {"generators", "outputs", "interactions", "sequencer"}
         self.assertEqual(expected, rules, out)
         for text in (
@@ -144,8 +144,14 @@ class Cards(unittest.TestCase):
             "aspects must be",
             "time `grid`",
             "routing `magic`",
+            "`Nowhere` is no other card",
         ):
             self.assertIn(text, out)
+
+    def test_accepts_a_delta_card(self):
+        delta = FIXTURES / "good" / "Jochen_Hippel_ST.md"
+        code, _, out = run("cards.py", delta)
+        self.assertEqual(code, 0, out)
 
 
 class Players(unittest.TestCase):

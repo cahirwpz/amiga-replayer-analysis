@@ -94,6 +94,16 @@ streams: { song: <n>, voice: <n>, instrument: <n> }
 - Interactions: events that cross between streams, generators, voices or the
   game. Quirks that are not events go in bullets below the table.
 
+## Delta cards
+
+A version with a distinct idea may share most of its model with the family's
+card. Its delta card has `base: <player>`, naming that card.
+
+- It may skip Streams, Sequencer and State.
+- Its tables may name the base card's streams and generators.
+- Channel outputs lists only the rows that change.
+- `streams` counts only its own Streams table; `{}` if it has none.
+
 ## Rules
 
 - Use plain English for terms not in [the glossary](glossary.md). Name

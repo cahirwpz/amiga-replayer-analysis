@@ -208,8 +208,21 @@ TFMX_ST:
   family: TFMX
 
 TFMX-7V:
+  provenance: disassembly
+  author: Chris Hülsbeck
   family: TFMX
-  distinct: seven voices, some mixed (guess from the name)
+  distinct: voices 4–7 mixed into channel 3; the mixer clocks the tick
+  influences:
+    - player: JochenHippel-7V
+      evidence: docs
+
+Oktalyzer:
+  source: ext/oktalyzer/src
+  replay: ext
+  note: tracker disassembly; the UADE binary is OKPlay2, adapted by DEFECT
+  provenance: disassembly
+  author: Armin Sander
+  links: [https://github.com/hitchhikr/oktalyzer]
 
 TFMX-TFHD:
   note: same format as TFMX (has source)

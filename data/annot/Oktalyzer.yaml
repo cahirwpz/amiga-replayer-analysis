@@ -1,0 +1,54 @@
+# Annotations for Oktalyzer's two replays, in the tracker's disassembly.
+# Replay 1 matches data/disasm/okplay1.cnf, replay 2 data/disasm/okplay2.cnf.
+# Render: tools/annot.py
+source: ext/oktalyzer/src/okta.asm
+sha1: 4f16391e2ca290d201b9d033c92d3c4454984343
+
+labels:
+  # sequencer
+  6670: SongLoop
+  # samples and volume
+  lbC021F62: HalveSample
+  6790: SkipFullSample
+  7397: TrackToChannel
+  # replay 1: generated resamplers
+  lbC023892: Replay1Init
+  lbC023BB0: BuildResamplers
+  lbC023CC0: ResampleTemplates
+  lbL023D90: NoteSteps
+  lbC023A40: RunResampler
+  lbC023AB6: AddPacked
+  # replay 2: the higher note sets the rate
+  7981: PickHigher
+  lbC023FA6: MixPair
+  lbC0240DA: ResampleLower
+  lbC02410A: ResampleLoop
+  lbC024060: AddHigher
+  lbC0241D0: CopySingle
+  8228: DriftFix
+
+comments:
+  5548: mixed-track samples are stored as 7 bits
+  6670: after the last position, start again at 0
+  6790: an 8-bit sample on a mixed track is ignored
+  7397: "tracks 0-1 use channel 0's volume, 2-3 channel 1's, and so on"
+  7482: "replay 1: all channels play at period 227, about 15.6 kHz"
+  7619: add.l adds 4 bytes at once; a carry spills into the next byte
+  7765: code pieces that BuildResamplers copies, one per source step
+  7869: one 16.16 step per note, 36 notes
+  7981: the higher note plays unchanged at its own period
+  8132: a 16-bit fraction picks the source byte; no interpolation
+  8228: a channel that already took its buffer gets one word more
+  8245: busy-wait until each mixed channel took its buffer
+  8335: buffer length in words per frame, per note
+
+banners:
+  7645: |
+    BuildResamplers: for each of 36 notes, write straight-line code that
+    fills 313 bytes from a sample at that note's step. The code goes to
+    the $A81C-byte buffer that example1.s asks for. Where the step repeats
+    a source byte, the code writes the mean of its neighbours instead.
+  7972: |
+    OK_MixBuffers: two voices on one channel. Paula plays the buffer at
+    the higher note's period. The lower voice is resampled into the
+    buffer, the higher one added unchanged. One voice alone is copied.

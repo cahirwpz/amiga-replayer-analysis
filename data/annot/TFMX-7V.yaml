@@ -1,0 +1,48 @@
+# Annotations for the TFMX 7V replayer: the mixer only. The rest matches
+# data/annot/TFMX-Pro.yaml. Render: tools/annot.py
+source: ext/uade/amigasrc/players/wanted_team/TFMX-7V/src/TFMX 7V_v4.asm
+sha1: 843ba9b9209e0c27ed750f33e01ecf2728bc7458
+
+labels:
+  # every tick; names as in TFMX-Pro.yaml
+  irqin: PlayTick
+  noteport: NoteToVoice
+  fader: Fade
+  # the mixer
+  Interrupt: MixInterrupt
+  1266: HookChannel3
+  v7output: MixTick
+  4924: TickFromMixer
+  v7vol_freq: VolumeAndStep
+  v7dma: FakeDma
+  4724: ShortLoopSilent
+  calc1: MixLoop
+  4942: OriginalMixLoop
+  set7on: MixOn
+  set7off: MixOff
+  set7freq: CmdMixSlow
+  3112: SwitchMixing
+  3582: FakeRegisters
+  3074: FadeToChannel3
+  init7voice: BuildMixTables
+  v7contab: ClipTable
+  v7voltab: VolumeTables
+
+comments:
+  1266: the whole replay runs from channel 3's audio interrupt
+  3074: the fade sets the Paula volume of channel 3
+  3112: "a note to voice 3 stops mixing; voices 4-7 start it"
+  3582: voices 4-7 write these RAM blocks, not Paula
+  4512: bytes per tick = rate x 20 x (100 + slow) / 100
+  4636: "-128 x 384, ramp -128..127, +127 x 384: clips the sum of four"
+  4661: sample x volume / 64, offset by $80
+  4724: loops under 32 words play the silent buffer
+  4770: "high byte: volume + 4, so the index skips ClipTable"
+  4776: step = mix period / voice period, 16.16 fixed point
+  5170: no division; the sum of four is clipped
+
+banners:
+  4942: |
+    OriginalMixLoop: the original, kept by Wanted Team as comments.
+    Code patches each voice's `lea` to pick its volume table (killv1-4).
+    A7 serves as a data register.

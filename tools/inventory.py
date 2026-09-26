@@ -17,6 +17,7 @@ The `replay` column says where the replay logic is:
   module   - in the music file; the UADE source only patches it
   check    - patch markers found, but not clearly a wrapper; read the source
   port     - a port outside UADE, under ext/
+  ext      - a disassembly outside UADE, under ext/; set in data/players.yaml
   disasm   - no source; data/disasm/<player>.cnf drives an IRA disassembly
   source   - original source, but no UADE binary; listed after the binaries
 
