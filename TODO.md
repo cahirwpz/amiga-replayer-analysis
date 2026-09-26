@@ -97,6 +97,7 @@ Findings so far, for the cards above. Paths are relative to
 - [ ] Fix the classification axes in `docs/method.md`.
 - [ ] Write the first technique pages in `ideas/`.
 - [ ] Add a check that `ideas:` slugs in cards exist.
+- [ ] Generate a technique index from the slugs, for the front page.
 
 ## Open questions
 
@@ -111,7 +112,7 @@ Findings so far, for the cards above. Paths are relative to
 ## Later
 
 - [ ] Full survey of the remaining players with readable source.
-- [ ] Compare code for the `name` rows in `docs/lineage.md`.
+- [ ] Compare code for the `name` lineage links in `data/players.yaml`.
 - [ ] Tag `ProTracker`-like players in the inventory.
 - [ ] Pick the first binary-only player to disassemble. Filter by scope first.
 - [ ] Before disassembling a player, look for a port of it outside UADE.

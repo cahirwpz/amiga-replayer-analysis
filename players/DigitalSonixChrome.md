@@ -1,13 +1,9 @@
 ---
 player: DigitalSonixChrome
-source: wanted_team/DigitalSonixChrome
-code: uade
 control: tables
 themes: [tricks]
 ideas: [counted-loops, fixed-pitch-instruments, effects-steal-voices]
-related: []
 streams: { song: 1, voice: 1 }
-evidence: code
 ---
 
 # Digital Sonix & Chrome

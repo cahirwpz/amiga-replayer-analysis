@@ -10,7 +10,7 @@ Usage: inventory.py [--write | --check]
 One row per binary in ext/uade/players. The source is found by, in order:
   hash     - a byte-identical binary exists inside a source directory
   name     - normalised binary name matches a source file or directory name
-  manual   - entry in OVERRIDES
+  manual   - `source` in data/players.yaml
   none     - no source found; searched by name and version string
 
 The `replay` column says where the replay logic is:
@@ -29,6 +29,7 @@ import re
 import sys
 from pathlib import Path
 
+import players
 from mdtools import format_table
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -51,36 +52,11 @@ BEGIN, END = "<!-- counts:begin -->", "<!-- counts:end -->"
 PATCH_RE = re.compile(r"PatchTable|FindIt\d|^Patch\d", re.M)
 ROUTINE_RE = re.compile(r"^lbC", re.M)  # disassembler routine labels
 
-# Player -> replay location, where the heuristic in replay() is wrong.
-# Binary-only players found to be wrappers go here as "module".
-REPLAY = {
-    "TFMX-Pro": "uade",  # original source with named labels, see card
-}
-
-# Binary name -> source path relative to SOURCES, when automatic matching fails.
-# Paths starting with "ext/" are relative to the repo root instead.
-OVERRIDES = {
-    "AbyssHighestExperience": "ext/ahx2play",
-    "ArtOfNoise-4V": "uade/artofnoise",
-    "ArtOfNoise-8V": "uade/artofnoise",
-    "FutureComposer1.4": "defect/fc14",
-    "DavidWhittaker": "ext/c-flod/neoart/flod/whittaker",
-    "DeltaMusic1.3": "ext/c-flod/neoart/flod/deltamusic",
-    "DeltaMusic2.0": "ext/c-flod/neoart/flod/deltamusic",
-    "SIDMon2.0": "ext/c-flod/neoart/flod/sidmon",
-}
-
-# Free-text remarks, e.g. a sibling player with source for the same format.
-NOTES = {
-    "AbyssHighestExperience": "C port of the AHX 2.3d-sp3 replayer (evidence: port)",
-    "DavidWhittaker": "C port of Flod 4.1 DWPlayer (evidence: port)",
-    "DeltaMusic1.3": "C port of Flod 4.1 D1Player (evidence: port)",
-    "DeltaMusic2.0": "C port of Flod 4.1 D2Player (evidence: port)",
-    "SIDMon2.0": "C port of Flod 4.1 S2Player (evidence: port)",
-    "TFMX-TFHD": "same format as TFMX (has source)",
-    "TFMX-7V-TFHD": "same format as TFMX-7V (has source)",
-    "TFMX-Pro-TFHD": "same format as TFMX-Pro (has source)",
-}
+# Hand-written overrides and notes: data/players.yaml (`source`, `replay`, `note`).
+FACTS = players.load()
+REPLAY = {p: f["replay"] for p, f in FACTS.items() if "replay" in f}
+OVERRIDES = {p: f["source"] for p, f in FACTS.items() if "source" in f}
+NOTES = {p: f["note"] for p, f in FACTS.items() if "note" in f}
 
 
 def norm(name):

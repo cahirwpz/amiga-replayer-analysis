@@ -1,13 +1,9 @@
 ---
 player: SoundPlayer
-source: wanted_team/SoundPlayer
-code: uade
 control: commands
 themes: [tricks]
 ideas: [attach-modes, per-voice-positions, game-sync-flags]
-related: []
 streams: { voice: 1 }
-evidence: code
 ---
 
 # SoundPlayer

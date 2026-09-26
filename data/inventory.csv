@@ -1,5 +1,5 @@
 player,version,source,match,replay,files,lines,note,prefixes
-AbyssHighestExperience,AHX-DeliPlayer_2.3d-sp3 (Dec 98),ext/ahx2play,manual,port,12,3994,C port of the AHX 2.3d-sp3 replayer (evidence: port),"ahx,thx"
+AbyssHighestExperience,AHX-DeliPlayer_2.3d-sp3 (Dec 98),ext/ahx2play,manual,port,12,3994,C port of the AHX 2.3d-sp3 replayer,"ahx,thx"
 ActionAmics,Action Amics SoundTools V0.1 player module V1.1 (05 April 93),,none,,0,0,,ast
 ADPCM_mono,Adaptative Delta Pulse Code Modulation player module V1.1 (29 Sep 2014),wanted_team/ADPCM_mono,hash,uade,1,1221,,adpcm
 Alcatraz_Packer,Alcatraz Packer player module V1.1 (2 Feb 2008),wanted_team/Alcatraz_Packer,hash,uade,2,3174,,alp
@@ -26,9 +26,9 @@ DaveLowe,Dave Lowe player module V1.2 (9 June 2001),wanted_team/DaveLowe,hash,mo
 DaveLowe_Deli,Dave Lowe DeliPlayer V1.0 (3/9/97) by DARKNESS/SYNERGY,,none,,0,0,,dl_deli
 DaveLoweNew,Dave Lowe New player module V1.1 (8 June 2001),wanted_team/DaveLoweNew,hash,uade,3,6317,,dln
 DavidHanney,David Hanney player module V1.1 (28 Feb 97),,none,,0,0,,dh
-DavidWhittaker,David Whittaker player module V1.0 (11 Nov 2000),ext/c-flod/neoart/flod/whittaker,manual,port,8,1245,C port of Flod 4.1 DWPlayer (evidence: port),"dw,dwold,oldw"
-DeltaMusic1.3,DeltaMusic Player 1.30 (13.11.97),ext/c-flod/neoart/flod/deltamusic,manual,port,12,1319,C port of Flod 4.1 D1Player (evidence: port),"dlm1,dm1,dm"
-DeltaMusic2.0,Deltamusic V2.0 player module V1.2 (10 May 93),ext/c-flod/neoart/flod/deltamusic,manual,port,12,1319,C port of Flod 4.1 D2Player (evidence: port),"dlm2,dm2"
+DavidWhittaker,David Whittaker player module V1.0 (11 Nov 2000),ext/c-flod/neoart/flod/whittaker,manual,port,8,1245,C port of Flod 4.1 DWPlayer,"dw,dwold,oldw"
+DeltaMusic1.3,DeltaMusic Player 1.30 (13.11.97),ext/c-flod/neoart/flod/deltamusic,manual,port,12,1319,C port of Flod 4.1 D1Player,"dlm1,dm1,dm"
+DeltaMusic2.0,Deltamusic V2.0 player module V1.2 (10 May 93),ext/c-flod/neoart/flod/deltamusic,manual,port,12,1319,C port of Flod 4.1 D2Player,"dlm2,dm2"
 Desire,Desire player module V1.0 (30 Apr 2002),wanted_team/Desire,hash,module,2,1398,,dsr
 DIGI-Booster,DIGI Booster 1.x replayer (20060409),,none,,0,0,,"db,digi"
 DigitalSonixChrome,Digital Sonix & Chrome player module V1.0 (19 May 2003),wanted_team/DigitalSonixChrome,hash,uade,1,1659,,dsc
@@ -128,7 +128,7 @@ SCUMM,SCUMM Player module V1.0 (25 Mar 95),,none,,0,0,,scumm
 SeanConnolly,Sean Connolly player module V1.1 (29 Oct 1999),,none,,0,0,,"s-c,scn"
 SeanConran,Sean Conran player module V1.2 (10 Nov 2003),wanted_team/SeanConran,hash,check,1,1388,,scr
 SIDMon1.0,SIDMon 1.0 player module for UADE(23 Dec. 2001),uade/sidmon1,name,uade,1,256,,"sid1,smn,sid"
-SIDMon2.0,Sidmon-II Eagleplayer V1.8 (30 Aug 93),ext/c-flod/neoart/flod/sidmon,manual,port,19,2098,C port of Flod 4.1 S2Player (evidence: port),sid2
+SIDMon2.0,Sidmon-II Eagleplayer V1.8 (30 Aug 93),ext/c-flod/neoart/flod/sidmon,manual,port,19,2098,C port of Flod 4.1 S2Player,sid2
 Sierra-AGI,Sierra AGI player module V1.0 (14 Jan 2006),wanted_team/Sierra-AGI,hash,uade,3,4363,,agi
 Silmarils,Silmarils player module V1.0 (22 Oct 2001),,none,,0,0,,mok
 SonicArranger,Sonic Arranger 2.18 player module V1.0 (28 Feb 2009),wanted_team/Sonic_Arranger,hash,uade,1,3081,,"sa,sonic,sa-p,lion,sa_old"

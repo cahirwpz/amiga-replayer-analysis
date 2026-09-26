@@ -1,7 +1,5 @@
 ---
 player: SoundMon2.2
-source: uade/soundmon
-code: uade
 control: tables
 themes: [synthesis]
 ideas:
@@ -11,9 +9,7 @@ ideas:
     in-place-waveform-effects,
     partial-wave-inversion,
   ]
-related: [SoundMon2.0]
 streams: { song: 1, voice: 5 }
-evidence: code
 ---
 
 # SoundMon 2.2

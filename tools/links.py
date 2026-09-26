@@ -10,9 +10,9 @@ Checks:
   - relative Markdown links point to existing files
   - `#L<n>` links name an existing line; a link title must start that line,
     e.g. [Future Composer](data/inventory.csv?plain=1#L60 "FutureComposer1.3")
-  - player cards (front matter has `player`): `source` exists; `related` players are in the inventory
-  - player cards: `file:line` citations name an existing line in `source`;
-    a bare `:line` refers to the file of the previous citation
+  - player cards (front matter has `player`): `file:line` citations name an
+    existing line under the player's source in data/inventory.csv; a bare
+    `:line` refers to the file of the previous citation
   - `path.cnf:Label` citations name a LABEL or SYMBOL in an IRA config;
     the path is relative to the repo root, e.g. data/disasm/X.cnf:Play
 
@@ -70,9 +70,10 @@ def cnf_labels(path, cache={}):
     return cache[path]
 
 
-def players():
+def sources():
+    """{player: source path} from data/inventory.csv."""
     with INVENTORY.open(encoding="utf-8") as f:
-        return {row["player"] for row in csv.DictReader(f)}
+        return {row["player"]: row["source"] for row in csv.DictReader(f)}
 
 
 def line_count(path, cache={}):
@@ -112,7 +113,7 @@ def links(doc):
             yield n, child.attrs.get("href", ""), child.attrs.get("title")
 
 
-def check(path, known_players):
+def check(path, known_sources):
     rel = path.resolve().relative_to(ROOT).as_posix()
     doc = read(path)
     meta = doc.meta
@@ -121,16 +122,12 @@ def check(path, known_players):
     def err(n, rule, detail):
         errors.append(f"{rel}:{n}: {rule}: {detail}")
 
-    is_card = "player" in meta and "source" in meta
-    src = source_dir(str(meta["source"])) if is_card else None
-    if is_card and not src.exists():
-        err(1, "source", f"{meta['source']} does not exist")
-    if is_card and not src.is_dir():
-        src = None  # a missing source, or an IRA config cited by label
-    if is_card:
-        for name in meta.get("related") or []:
-            if name not in known_players:
-                err(1, "related", f"{name} not in data/inventory.csv")
+    source = known_sources.get(str(meta.get("player", ""))) or ""
+    src = source_dir(source) if source else None
+    if "player" in meta and not source:
+        err(1, "source", f"{meta['player']} has no source in data/inventory.csv")
+    if src and not src.is_dir():
+        src = None  # an IRA config, cited by label
 
     for n, href, title in links(doc):
         if urlsplit(href).scheme or href.startswith("#"):
@@ -164,7 +161,7 @@ def check(path, known_players):
             err(n, "cite", f":{first} has no preceding file")
             continue
         if not last_file.is_file():
-            err(n, "cite", f"{name} not found under {meta['source']}")
+            err(n, "cite", f"{name} not found under {source}")
             last_file = None
             continue
         count = line_count(last_file)
@@ -196,7 +193,7 @@ def fix_rows(path):
 def main(argv):
     fix = argv[:1] == ["--fix-rows"]
     argv = argv[1:] if fix else argv
-    known = players()
+    known = sources()
     errors = []
     for arg in map(Path, argv):
         for path in sorted(arg.rglob("*.md")) if arg.is_dir() else [arg]:

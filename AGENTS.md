@@ -30,14 +30,13 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
 - Themes: cheap but expressive synthesis, unusual tricks, soft voice mixing.
 - Describe control: streams, their state, and what instruments carry. Paula
   features matter less.
-- Current work: the pilot, in `TODO.md`.
 
 ## Depth
 
 - Write at executive-summary level by default.
 - Go deeper only when the user asks. Put deep dives in `details/`.
 - One idea per page. One lineage per card, see
-  [`docs/lineage.md`](docs/lineage.md).
+  [`docs/players.md`](docs/players.md#lineages).
 - A card covers a lineage's latest version. If it is binary-only, disassemble
   it. A version with a distinct idea gets its own card.
 - Prefer a table over prose when comparing things.
@@ -52,19 +51,20 @@ Readers are C1 non-native speakers with limited attention.
 - One claim per sentence. No filler, no hedging.
 - Put technical detail in tables or code, which skip prose limits.
 - Answer chat questions in the same style.
-- Say each thing once. Tool usage lives in the tool's docstring.
+- Say each thing once. Elsewhere, link to it or generate it from `data/`. Tool
+  usage lives in the tool's docstring.
 
 ## Evidence
 
-- In player cards, cite as `file:line` relative to the card's `source`.
-  Elsewhere, cite as `ext/uade/path:line`.
+- In player cards, cite as `file:line` relative to the player's inventory
+  `source`. Elsewhere, cite as `ext/uade/path:line`.
 - Mark guesses as guesses. Mark what you hear as "(inference)".
 - Keyword scans only pick candidates. A claim needs code that was read.
 - Use only players whose `replay` is `uade`, `port` or `disasm` in the
   inventory.
 - Cite our disassembly by label: `data/disasm/<player>.cnf:<Label>`. Listing
   line numbers are not stable.
-- Evidence levels are defined in [the glossary](docs/glossary.md).
+- Record provenance per player in `data/players.yaml`.
 
 ## Disassembly
 
@@ -87,8 +87,8 @@ Readers are C1 non-native speakers with limited attention.
 
 - Never parse Markdown with regexes. Tools read data from `data/` (YAML or CSV),
   or parse Markdown with [`tools/mdtools.py`](tools/mdtools.py).
-- Edit the glossary in `data/glossary.yaml`, then run
-  `tools/glossary.py --write`.
+- Edit `data/glossary.yaml` or `data/players.yaml`, then run
+  `tools/glossary.py --write` or `tools/players.py --write`.
 - Python packages go in `requirements.txt`.
 
 ## Shell pitfalls

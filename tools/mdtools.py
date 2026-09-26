@@ -11,6 +11,9 @@ Writing produces text that prettier leaves unchanged, so generated files can
 be compared byte for byte:
   format_table(header, rows)   a table padded like prettier pads it
   wrap(text)                   a paragraph wrapped at 80 columns
+  block(name, lines)           a generated block between two HTML comments
+  find_block(text, name)       that block inside a page, markers included
+  replace_block(text, name, b) the page with that block replaced
 """
 
 from dataclasses import dataclass, field
@@ -146,3 +149,23 @@ def wrap(text):
         else:
             lines.append(atom)
     return "\n".join(lines)
+
+
+def _markers(name):
+    return f"<!-- {name}:begin -->", f"<!-- {name}:end -->"
+
+
+def block(name, lines):
+    """A generated block. Hand-written text may surround it on the page."""
+    begin, end = _markers(name)
+    return "\n".join([begin, "", *lines, "", end])
+
+
+def find_block(text, name):
+    begin, end = _markers(name)
+    a = text.index(begin)
+    return text[a : text.index(end, a) + len(end)]
+
+
+def replace_block(text, name, new):
+    return text.replace(find_block(text, name), new)

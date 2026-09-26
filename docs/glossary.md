@@ -77,6 +77,7 @@ One line per term. Every acronym used in this repo must appear here.
 | **MED**  | Music editor by Teijo Kinnunen, later OctaMED. Tracker with synth sounds.          |
 | **TFMX** | The Final Musicsystem eXtended, by Chris Hülsbeck. Instruments are macro programs. |
 | **SMUS** | Simple Music Score: note score format from Electronic Arts.                        |
+| **YAML** | Plain-text data format. Our hand-written data files use it.                        |
 | **UADE** | Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.               |
 | **IFF**  | Interchange File Format by Electronic Arts. 8SVX is its sample type.               |
 | **IRA**  | Portable 68000 reassembler. Turns a player binary into assembler source.           |
@@ -101,11 +102,29 @@ One line per term. Every acronym used in this repo must appear here.
 | **tables**      | Control level: data walked in order, no opcodes.                     |
 | **commands**    | Control level: data with opcodes, but no conditions.                 |
 | **program**     | Control level: opcodes with conditions or calls.                     |
-| **code**        | Evidence: original or disassembled replayer source.                  |
-| **port**        | Evidence: a port of the original replayer.                           |
-| **docs**        | Evidence: documentation only.                                        |
-| **disasm**      | Evidence: our own IRA disassembly of a player binary.                |
 | **module**      | Replay code ships inside the music file.                             |
+
+## Provenance
+
+Where the replay code we read comes from. Set per player in `data/players.yaml`.
+
+| Value           | Meaning                                                    |
+| --------------- | ---------------------------------------------------------- |
+| **original**    | The author's own source, e.g. with the author's copyright. |
+| **disassembly** | A disassembly by someone else, e.g. Wanted Team.           |
+| **port**        | A rewrite of the replayer in another language, e.g. C.     |
+| **ira**         | Our own IRA disassembly of a player binary.                |
+
+## Lineage evidence
+
+How we know that one player grew from another.
+
+| Value    | Meaning                                        |
+| -------- | ---------------------------------------------- |
+| **code** | We compared the replay code of both versions.  |
+| **port** | One port plays both versions with one player.  |
+| **docs** | The author or another first-hand page says so. |
+| **name** | Only the player names match. Not compared yet. |
 
 ## Stream names
 

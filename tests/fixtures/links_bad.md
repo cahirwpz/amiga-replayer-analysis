@@ -1,7 +1,5 @@
 ---
 player: MugicianII
-source: wanted_team/MugicianII
-related: [Mugician, NoSuchPlayer]
 ---
 
 # Links fixture

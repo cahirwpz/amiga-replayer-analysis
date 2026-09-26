@@ -1,0 +1,175 @@
+# Hand-written facts per player. Keys are binary names in ext/uade/players.
+# tools/players.py checks this file and writes the tables in docs/players.md.
+# tools/inventory.py reads `source`, `replay` and `note` from here.
+#
+# Fields, all optional:
+#   source            source path when automatic matching fails. `ext/...` is
+#                     relative to the repo root, the rest to
+#                     ext/uade/amigasrc/players.
+#   replay            replay location when the heuristic in inventory.py is wrong.
+#   note              remark for data/inventory.csv.
+#   provenance        where the code we read comes from; values in the glossary.
+#   provenance_guess  true when provenance is a guess.
+#   author, year, game
+#   family            lineage name. Members grow from each other.
+#   after             {player, evidence, why, cite}: the version this one grew
+#                     from. Evidence values are in the glossary.
+#   head              true for the version that carries the family's card.
+#   distinct          the idea that earns this version its own card.
+#   influences        [{player or name, evidence, link}]: older programs it
+#                     built on, with no shared code that we know of.
+#   related           other players worth comparing.
+#   links             first-hand pages, e.g. by the author.
+
+AbyssHighestExperience:
+  source: ext/ahx2play
+  note: C port of the AHX 2.3d-sp3 replayer
+  provenance: port
+
+ArtOfNoise-4V:
+  source: uade/artofnoise
+
+ArtOfNoise-8V:
+  source: uade/artofnoise
+
+DavidWhittaker:
+  source: ext/c-flod/neoart/flod/whittaker
+  note: C port of Flod 4.1 DWPlayer
+  provenance: port
+
+DeltaMusic1.3:
+  source: ext/c-flod/neoart/flod/deltamusic
+  note: C port of Flod 4.1 D1Player
+  provenance: port
+  family: Delta Music
+
+DeltaMusic2.0:
+  source: ext/c-flod/neoart/flod/deltamusic
+  note: C port of Flod 4.1 D2Player
+  provenance: port
+  family: Delta Music
+  after: { player: DeltaMusic1.3, evidence: name }
+  head: true
+
+DigitalSonixChrome:
+  provenance: disassembly
+  author: Andrew E. Bailey and David M. Hanlon
+  year: 1990
+  game: Dragon's Breath
+
+FutureComposer1.3:
+  provenance: original
+  provenance_guess: true
+  family: Future Composer
+
+FutureComposer1.4:
+  source: defect/fc14
+  provenance: original
+  provenance_guess: true
+  family: Future Composer
+  after:
+    player: FutureComposer1.3
+    evidence: code
+    why: 1.4 adds opcodes; waveforms move from player to module
+    cite: ext/uade/amigasrc/players/defect/fc14/FC1.4.s:203
+  head: true
+
+JochenHippel_UADE:
+  family: Jochen Hippel
+
+JochenHippelCOSO:
+  family: Jochen Hippel
+
+JochenHippel-CoSo_UADE:
+  family: Jochen Hippel
+
+JochenHippel-7V:
+  family: Jochen Hippel
+  distinct: seven voices, some mixed
+
+Jochen_Hippel_ST:
+  family: Jochen Hippel
+  distinct: Atari ST sound chip emulated on Paula
+
+Mugician:
+  family: Digital Mugician
+  author: Reinier van Vliet
+  year: 1990
+  influences:
+    - player: SIDMon1.0
+      evidence: docs
+      link: https://proofofconcept.nl/portfolio/sidmon/
+
+MugicianII:
+  provenance: disassembly
+  author: Reinier van Vliet
+  family: Digital Mugician
+  after:
+    player: Mugician
+    evidence: port
+    cite: ext/c-flod/neoart/flod/digitalmugician/DMPlayer.c:652
+  head: true
+  links: [https://proofofconcept.nl/portfolio/mugician/]
+
+SIDMon1.0:
+  family: SIDMon
+  author: Reinier van Vliet
+  year: 1989
+  influences:
+    - name: Hülsbeck's C64 Soundmonitor
+      evidence: docs
+      link: https://proofofconcept.nl/portfolio/sidmon/
+  links: [https://proofofconcept.nl/portfolio/sidmon/]
+
+SIDMon2.0:
+  source: ext/c-flod/neoart/flod/sidmon
+  note: C port of Flod 4.1 S2Player
+  provenance: port
+  family: SIDMon
+  after: { player: SIDMon1.0, evidence: name }
+  head: true
+
+SoundMon2.0:
+  family: SoundMon
+
+SoundMon2.2:
+  provenance: original
+  author: Brian Postma
+  family: SoundMon
+  after:
+    player: SoundMon2.0
+    evidence: code
+    why: 2.2 adds the MOD walker and wave effects
+    cite: ext/uade/amigasrc/players/uade/soundmon/Soundmon2.2.s:758
+  head: true
+
+SoundPlayer:
+  provenance: disassembly
+  author: Scott Johnston
+  year: 1991
+  game: Lemmings
+
+TFMX:
+  family: TFMX
+
+TFMX-Pro:
+  # Original source with named labels; the heuristic misreads it.
+  replay: uade
+  family: TFMX
+  head: true
+
+TFMX_ST:
+  family: TFMX
+
+TFMX-7V:
+  family: TFMX
+  distinct: seven voices, some mixed (guess from the name)
+
+TFMX-TFHD:
+  note: same format as TFMX (has source)
+
+TFMX-7V-TFHD:
+  note: same format as TFMX-7V (has source)
+
+TFMX-Pro-TFHD:
+  note: same format as TFMX-Pro (has source)

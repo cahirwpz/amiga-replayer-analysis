@@ -80,6 +80,13 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: players                  # data/players.yaml is valid; docs/players.md is fresh
+        name: players
+        entry: .venv/bin/python3 tools/players.py --check
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: inventory                # data/inventory.csv and docs/inventory.md are fresh
         name: inventory
         entry: .venv/bin/python3 tools/inventory.py --check

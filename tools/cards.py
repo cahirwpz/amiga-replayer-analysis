@@ -4,8 +4,9 @@
 Usage: cards.py FILE.md|DIR...
 
 A card is a Markdown file whose front matter has a `player` key. Checks:
-  - front matter keys and their allowed values; `links` is optional
-  - file name matches `player`, and `player` is in data/inventory.csv
+  - front matter keys and their allowed values
+  - file name matches `player`; `player` is in data/inventory.csv and has a
+    provenance in data/players.yaml
   - sections present and in order
   - Streams table: header, scope, name's first word, and Control/Rate words
     from data/glossary.yaml
@@ -19,29 +20,15 @@ import sys
 from pathlib import Path
 
 import glossary
+import players
 from mdtools import heading_lines, read, sections, table
 
 ROOT = Path(__file__).resolve().parent.parent
 INVENTORY = ROOT / "data" / "inventory.csv"
 
-KEYS = [
-    "player",
-    "source",
-    "code",
-    "control",
-    "themes",
-    "ideas",
-    "related",
-    "streams",
-    "evidence",
-    "links",
-]
-OPTIONAL = {"links"}
-ALLOWED = {
-    "code": {"uade", "module", "disasm"},
-    "control": {"tables", "commands", "program"},
-    "evidence": {"code", "port", "docs", "disasm"},
-}
+# Analysis only. Facts about the player live in data/players.yaml.
+KEYS = ["player", "control", "themes", "ideas", "streams"]
+ALLOWED = {"control": {"tables", "commands", "program"}}
 THEMES = {"synthesis", "mixing", "tricks", "emulation"}
 SCOPES = ["song", "track", "voice", "instrument"]
 STATE_SCOPES = {"Voice", "Instrument", "Global"}
@@ -58,7 +45,7 @@ STREAMS_HEADER = ["Stream", "Scope", "Carries", "Control", "Rate"]
 STATE_HEADER = ["Scope", "Fields"]
 
 
-def players():
+def inventory_players():
     with INVENTORY.open(encoding="utf-8") as f:
         return {row["player"] for row in csv.DictReader(f)}
 
@@ -71,7 +58,7 @@ def words(cell):
     return [w.strip() for w in cell.split(",") if w.strip()]
 
 
-def check(path, known, vocab):
+def check(path, known, vocab, facts):
     rel = path.resolve().relative_to(ROOT).as_posix()
     doc = read(path)
     meta = doc.meta
@@ -86,7 +73,7 @@ def check(path, known, vocab):
         return errors
 
     for key in KEYS:
-        if key not in meta and key not in OPTIONAL:
+        if key not in meta:
             err(1, "front-matter", f"missing `{key}`")
     for key in meta:
         if key not in KEYS:
@@ -100,13 +87,14 @@ def check(path, known, vocab):
         err(1, "player", f"file name should be {player}.md")
     if player not in known:
         err(1, "player", f"{player} not in data/inventory.csv")
+    if "provenance" not in facts.get(player, {}):
+        err(1, "player", f"{player} has no provenance in data/players.yaml")
 
     themes = meta.get("themes", [])
     if not is_text_list(themes) or not set(themes) <= THEMES:
         err(1, "front-matter", f"`themes` must be a list from {sorted(THEMES)}")
-    for key in ("ideas", "related", "links"):
-        if not is_text_list(meta.get(key, [])):
-            err(1, "front-matter", f"`{key}` must be a list")
+    if not is_text_list(meta.get("ideas", [])):
+        err(1, "front-matter", "`ideas` must be a list")
     streams = meta.get("streams", {})
     if (
         not isinstance(streams, dict)
@@ -178,12 +166,13 @@ def check(path, known, vocab):
 
 
 def main(argv):
-    known = players()
+    known = inventory_players()
     vocab = {key: glossary.words(key) for key in ("control", "rate", "stream_names")}
+    facts = players.load()
     errors = []
     for arg in map(Path, argv):
         for path in sorted(arg.rglob("*.md")) if arg.is_dir() else [arg]:
-            errors += check(path, known, vocab)
+            errors += check(path, known, vocab, facts)
     for e in errors:
         print(e)
     return 1 if errors else 0

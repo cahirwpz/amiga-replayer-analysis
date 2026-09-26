@@ -1,7 +1,5 @@
 ---
 player: MugicianII
-source: wanted_team/MugicianII
-code: uade
 control: tables
 themes: [synthesis, mixing]
 ideas:
@@ -10,10 +8,7 @@ ideas:
     in-place-waveform-effects,
     swing,
   ]
-related:
-  [Mugician]
 streams: { song: 1, voice: 4, instrument: 1 }
-evidence: code
 ---
 
 # Mugician II

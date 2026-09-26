@@ -5,16 +5,10 @@ Copy into `players/<name>.md`. Angle brackets mark placeholders.
 ```markdown
 ---
 player: <binary name in ext/uade/players>
-source:
-  <path under ext/uade/amigasrc/players, ext/..., or data/disasm/<player>.cnf>
-code: uade | module | disasm
 control: tables | commands | program
-themes: [synthesis, mixing, tricks]
+themes: [synthesis, mixing, tricks, emulation]
 ideas: [<idea slug>]
-related: [<player>]
 streams: { song: <n>, voice: <n>, instrument: <n> }
-evidence: code | port | docs | disasm
-links: [<url>]
 ---
 
 # <Player name>
@@ -58,8 +52,9 @@ links: [<url>]
 - Use plain English for terms not in [the glossary](glossary.md). Name
   operations plainly, e.g. "shift the wave by one sample".
 - Add `track: <n>` to `streams` only when tracks are not bound to voices.
-- `links` is optional: first-hand pages, e.g. by the author. Omit if none.
+- Facts about the player go in `data/players.yaml`: provenance, lineage, author,
+  links. A card needs a provenance there.
 - Mark what you hear, if stated, as "(inference)".
 - Anything that needs more than about 10 words goes to `details/`, linked.
 - Skip "Generators and interactions" when there is nothing to say.
-- Cite as `file:line`, relative to the card's `source`.
+- Cite as `file:line`, relative to the player's source in the inventory.

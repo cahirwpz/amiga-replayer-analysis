@@ -55,7 +55,7 @@ class Links(unittest.TestCase):
     def test_reports_each_rule(self):
         code, rules, out = run("links.py", FIXTURES / "links_bad.md")
         self.assertEqual(code, 1)
-        self.assertEqual({"link", "cite", "related"}, rules, out)
+        self.assertEqual({"link", "cite"}, rules, out)
         self.assertIn("99999 beyond", out)
         self.assertIn("src/nope.asm not found", out)
         self.assertIn('#L3 does not start with "MugicianII"', out)
@@ -95,6 +95,41 @@ class Cards(unittest.TestCase):
             "rate `sometimes`",
             "file name should be",
             "name `Sequence` not in the glossary",
+            "unknown `evidence`",
+        ):
+            self.assertIn(text, out)
+
+
+class Players(unittest.TestCase):
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import players
+
+        self.players = players
+
+    def test_accepts_the_repo_file(self):
+        self.assertEqual(self.players.validate(), [])
+
+    def test_reports_bad_facts(self):
+        out = "\n".join(
+            self.players.validate(
+                {
+                    "NoSuchPlayer": {},
+                    "SoundMon2.2": {
+                        "provenance": "rumour",
+                        "family": "SoundMon",
+                        "after": {"player": "Mugician", "evidence": "vibes"},
+                        "colour": "blue",
+                    },
+                }
+            )
+        )
+        for text in (
+            "NoSuchPlayer: not a binary",
+            "`provenance` not in",
+            "evidence `vibes`",
+            "same family",
+            "unknown field `colour`",
         ):
             self.assertIn(text, out)
 
