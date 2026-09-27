@@ -174,25 +174,25 @@ Code patterns we cite from replayer source.
 
 ## Card terms
 
-| Term                    | Meaning                                                                          |
-| ----------------------- | -------------------------------------------------------------------------------- |
-| **stream**              | A position in some data that the player steps through.                           |
-| **scope**               | Where a stream's position lives: song, track, voice or instrument.               |
-| **generator**           | Template 1: stateful process that is not a stream, e.g. a vibrato state machine. |
-| **controller**          | Template 2: any process that writes a channel output.                            |
-| **composition formula** | Code block per output in Sound: which controllers add, scale or override.        |
-| **lifecycle event**     | A point in a note's life: note-on, legato, release, hard stop, program end.      |
-| **interaction**         | One stream acting on another, e.g. a jump or a trigger.                          |
-| **sequencer**           | The streams that decide which note plays and when.                               |
-| **instrument program**  | A stream that a note-on starts or restarts. It shapes that note.                 |
-| **write mode**          | How a writer changes a channel output, e.g. set or add.                          |
-| **table walker**        | A stream that steps through a table: off, once or looping.                       |
-| **tables**              | Template 1 control level: data walked in order, no opcodes.                      |
-| **commands**            | Template 1 control level: data with opcodes, but no conditions.                  |
-| **program**             | Template 1 control level: opcodes with conditions or calls.                      |
-| **none**                | Template 1 control level: no stream in this role.                                |
-| **module**              | Replay code ships inside the music file.                                         |
-| **delta card**          | A card with `base`. It shows only what differs from the base card.               |
+| Term                   | Meaning                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| **stream**             | A position in some data that the player steps through.                               |
+| **scope**              | Where a stream's position lives: song, track, voice or instrument.                   |
+| **generator**          | Template 1: stateful process that is not a stream, e.g. a vibrato state machine.     |
+| **controller**         | Template 2: any process that writes a channel output.                                |
+| **spec**               | A player's model as typed Python in `specs/`. Its CamelCase names are replay labels. |
+| **lifecycle event**    | A point in a note's life: note-on, legato, release, hard stop, program end.          |
+| **interaction**        | One stream acting on another, e.g. a jump or a trigger.                              |
+| **sequencer**          | The streams that decide which note plays and when.                                   |
+| **instrument program** | A stream that a note-on starts or restarts. It shapes that note.                     |
+| **write mode**         | How a writer changes a channel output, e.g. set or add.                              |
+| **table walker**       | A stream that steps through a table: off, once or looping.                           |
+| **tables**             | Template 1 control level: data walked in order, no opcodes.                          |
+| **commands**           | Template 1 control level: data with opcodes, but no conditions.                      |
+| **program**            | Template 1 control level: opcodes with conditions or calls.                          |
+| **none**               | Template 1 control level: no stream in this role.                                    |
+| **module**             | Replay code ships inside the music file.                                             |
+| **delta card**         | A card with `base`. It shows only what differs from the base card.                   |
 
 ## Provenance
 

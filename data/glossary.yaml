@@ -176,7 +176,7 @@ sections:
       scope: 'Where a stream''s position lives: song, track, voice or instrument.'
       generator: 'Template 1: stateful process that is not a stream, e.g. a vibrato state machine.'
       controller: 'Template 2: any process that writes a channel output.'
-      composition formula: 'Code block per output in Sound: which controllers add, scale or override.'
+      spec: 'A player''s model as typed Python in `specs/`. Its CamelCase names are replay labels.'
       lifecycle event: 'A point in a note''s life: note-on, legato, release, hard stop, program end.'
       interaction: One stream acting on another, e.g. a jump or a trigger.
       sequencer: The streams that decide which note plays and when.

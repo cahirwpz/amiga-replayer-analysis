@@ -36,14 +36,16 @@ All twelve pilot cards exist.
 ### Card template 2
 
 The template is in [`docs/card-template.md`](docs/card-template.md). `MED` is
-the first card on it.
+the first card on it, with `specs/med.py`.
 
-- [ ] Next session: follow [`FOLLOWUP.md`](FOLLOWUP.md): specs as the executable
-      model, cards as prose.
-- [ ] Review the MED card with the user. Adjust the template from the review.
-- [ ] Migrate TFMX Pro, then Tim Follin; review each. Their items below fold in.
-- [ ] Migrate the other cards. Move each State table to `details/`, and Paula
-      mechanics to `docs/paula.md`.
+- [ ] Review the MED card and `specs/med.py` with the user. Adjust the template
+      from the review.
+- [ ] Migrate TFMX Pro, then Tim Follin, to a spec and a prose card; review
+      each. Their items below fold in.
+- [ ] Migrate the other cards the same way. Paula mechanics go to
+      `specs/paula.py`.
+- [ ] `specs/med.py` stubs `CmdLoop`, `SetTempo` and the pattern effects. Fill
+      them if a card needs them.
 - [ ] After the last card: drop template 1 from `tools/cards.py`, its tests and
       fixtures. Drop the glossary's control levels, generator, role, write modes
       and the DMA output.

@@ -5,6 +5,8 @@ labels:
   2: Call
 comments:
   5: distance between the labels
+types:
+  Tune: [Play]
 banners:
   4: |
     NextNote: read one note.

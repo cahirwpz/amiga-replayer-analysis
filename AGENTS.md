@@ -17,7 +17,7 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
 
 `TODO.md` never keeps:
 
-- finished results: they go to `players/`, `ideas/` or `details/`
+- finished results: they go to `players/`, `specs/`, `ideas/` or `details/`
 - rules and conventions: they go here
 - reasons behind finished work: they go to `docs/`
 - done items: delete them, git keeps the history
@@ -40,6 +40,8 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
 - A card covers a lineage's latest version. If it is binary-only, disassemble
   it. A version with a distinct idea gets its own card.
 - Prefer a table over prose when comparing things.
+- A player's model is its spec, `specs/<player>.py`. Its card is
+  [prose](docs/card-template.md).
 
 ## Writing
 
@@ -51,7 +53,7 @@ the same rules.
 - Name a format's own term once, in code. Add it and replaced synonyms to the
   avoided terms.
 - One claim per sentence, one fact per table cell. No filler, no hedging.
-- Put technical detail in tables or code, which skip prose limits.
+- Put technical detail in tables or specs; they skip prose limits.
 - Name a jump's target, e.g. "jumps to its release part".
 - Say each thing once. Elsewhere, link to it or generate it from `data/`. Tool
   usage lives in the tool's docstring.
@@ -63,8 +65,8 @@ glossary and each label against its code.
 
 - Cite code by label, never by line: `file:<Label>`. On a card, paths start at
   the player's source; elsewhere, at the repo root.
-- A bare `:<Label>` uses the previous citation's file. On a card, before any
-  citation, it uses the player's own labels.
+- A bare `:<Label>` uses the previous citation's file. On a card, it first names
+  a spec function or class.
 - Mark guesses as guesses. Mark what you hear as "(inference)".
 - Keyword scans only pick candidates. A claim needs 68k replay code that was
   read.
@@ -72,13 +74,14 @@ glossary and each label against its code.
   A port only shows where to look.
 - Our labels: `data/annot/<player>.yaml:<Label>` or
   `data/disasm/<player>.cnf:<Label>`. Add missing ones.
-- Cards cite readable CamelCase labels. Rename raw source labels first.
+- Cards cite, and specs name, readable CamelCase labels. Rename raw labels
+  first. Spec classes go in `types:`.
 
 ## Listings
 
 - Binaries: [`tools/disasm.py`](tools/disasm.py). Sources:
   [`tools/annot.py`](tools/annot.py). Commit inputs, never listings.
-- Annotate only what a card needs.
+- Annotate only what a spec needs.
 
 ## Repo hygiene
 

@@ -6,5 +6,12 @@ labels:
   Play: NextNote
   next: NextNote
   "null": rts
+refs:
+  - tests/fixtures/annot/none.txt
+types:
+  lower: [Play]
+  Ghost: [nowhere_word]
+  NextNote: [Play]
+  Empty: []
 comments:
   99: beyond the end

@@ -82,6 +82,14 @@ class Links(unittest.TestCase):
         self.assertIn("none.cnf does not exist", out)
         self.assertIn("good.yaml has no label next", out)
 
+    def test_checks_labels_against_the_spec(self):
+        code, _, out = run("links.py", FIXTURES / "links_spec.md")
+        self.assertEqual(code, 1)
+        self.assertIn("GetBlockAddr is not a function or class in specs/med.py", out)
+        self.assertIn("paula.py has no label NoSuchClass", out)
+        self.assertNotIn("SynthTick", out)
+        self.assertNotIn("Voice", out)
+
     def test_accepts_label_citations(self):
         code, _, out = run("links.py", FIXTURES / "good" / "labels.md")
         self.assertEqual(code, 0, out)
@@ -107,7 +115,7 @@ class Annot(unittest.TestCase):
         )
         self.assertEqual(
             self.annot.listing_labels(self.dir / "good.yaml"),
-            {"Play", "Call", "NextNote"},
+            {"Play", "Call", "NextNote", "Tune"},
         )
 
     def test_reports_bad_annotations(self):
@@ -120,6 +128,11 @@ class Annot(unittest.TestCase):
             "label null is not defined",
             "rts already occurs",
             "line 99 is not in the source",
+            "refs: tests/fixtures/annot/none.txt does not exist",
+            "types: lower is not a CamelCase name",
+            "Ghost: nowhere_word is in neither the source nor refs",
+            "types: NextNote is also a label",
+            "types: Empty needs a list of words",
         ):
             self.assertIn(text, out)
 
@@ -203,6 +216,39 @@ class Cards(unittest.TestCase):
         self.assertEqual(code, 0, out)
 
 
+class Specs(unittest.TestCase):
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import specs
+
+        self.specs = specs
+
+    def test_accepts_the_repo_specs(self):
+        code, _, out = run("specs.py")
+        self.assertEqual(code, 0, out)
+
+    def test_reports_names_without_an_anchor(self):
+        code = "def SynthTick() -> None: ...\n"
+        code += "def NoSuchLabel() -> None: ...\n"
+        code += "def helper() -> None: ...\n"
+        code += "class Voice: ...\n"
+        code += "class Ghost: ...\n"
+        with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
+            spec = Path(tmp) / "med.py"
+            spec.write_text(code, encoding="utf-8")
+            found = list(self.specs.check_names(spec, "MED"))
+        self.assertEqual(
+            [(2, "label"), (5, "type")], [(n, rule) for n, rule, _ in found]
+        )
+
+    def test_reports_type_errors_and_unowned_specs(self):
+        with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
+            (Path(tmp) / "orphan.py").write_text('x: int = "a"\n', encoding="utf-8")
+            code, rules, out = run("specs.py", tmp)
+        self.assertEqual(code, 1)
+        self.assertEqual({"types", "owner"}, rules, out)
+
+
 class Players(unittest.TestCase):
     def setUp(self):
         sys.path.insert(0, str(ROOT / "tools"))
@@ -212,6 +258,10 @@ class Players(unittest.TestCase):
 
     def test_accepts_the_repo_file(self):
         self.assertEqual(self.players.validate(), [])
+
+    def test_reports_a_missing_spec(self):
+        out = "\n".join(self.players.validate({"MED": {"spec": "specs/nope.py"}}))
+        self.assertIn("spec `specs/nope.py` is not a file under specs/", out)
 
     def test_accepts_a_source_only_player(self):
         facts = {"MaxTrax": {"replay": "source", "source": "other/max_trax"}}
