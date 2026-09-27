@@ -1,0 +1,7 @@
+source: tests/fixtures/sample.cnf
+sha1: "0000"
+labels:
+  NextNote: Note
+types:
+  NextNote: [NextNote]
+  Ghost: [nowhere_word]

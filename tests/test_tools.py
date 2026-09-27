@@ -137,6 +137,23 @@ class Annot(unittest.TestCase):
         ):
             self.assertIn(text, out)
 
+    def test_accepts_types_for_a_config(self):
+        self.assertEqual(self.annot.process(self.dir / "config.yaml", write=False), [])
+        self.assertEqual(
+            self.annot.listing_labels(self.dir / "config.yaml"),
+            {"DTP_Interrupt", "NextNote", "Voice"},
+        )
+
+    def test_reports_bad_types_for_a_config(self):
+        out = "\n".join(self.annot.process(self.dir / "config_bad.yaml", write=False))
+        for text in (
+            "`labels` needs a source",
+            "`sha1` needs a source",
+            "types: NextNote is also a label",
+            "Ghost: nowhere_word is in neither the source nor refs",
+        ):
+            self.assertIn(text, out)
+
     def test_rejects_duplicate_keys(self):
         out = "\n".join(self.annot.process(self.dir / "duplicate.yaml", write=False))
         self.assertIn("duplicate key 2", out)

@@ -29,6 +29,10 @@ tools/specs.py.
 tools/specs.py. Each word must occur as a whole word. Citations may name
 types like labels.
 
+A player with only an IRA config has no source to annotate. Its file names
+the config as `source` and holds only `types` and `refs`; the config's own
+LABELs are the new names. It needs no sha1 and renders nothing.
+
 Line numbers are those of the pinned source. Renames change whole
 identifiers outside `;` comments. New labels get a line of their own; the
 listing is for reading, so they may split the scope of local labels. Added
@@ -88,10 +92,20 @@ def defined(lines):
     return {m.group(0) for line in lines if (m := re.match(IDENT, line))}
 
 
+def is_config(spec):
+    """True if the source is one of our IRA configs, data/disasm/*.cnf."""
+    return str(spec.get("source", "")).endswith(".cnf")
+
+
 def check(spec, lines, sha1):
     """Yield problems with the spec against the source lines."""
     for key in sorted(set(spec) - FIELDS):
         yield f"unknown field `{key}`"
+    if is_config(spec):
+        for key in sorted(set(spec) - {"source", "refs", "types"}):
+            yield f"`{key}` needs a source; a config takes only types and refs"
+        yield from check_types(spec, lines, cited_labels(ROOT / spec["source"]))
+        return
     if spec.get("sha1") != sha1:
         yield f"sha1 is {spec.get('sha1')}, source has {sha1}"
 
@@ -188,6 +202,8 @@ def source_lines(spec):
 def listing_labels(path):
     """Every label in the rendered listing, and every type; for citations."""
     spec = load(path)
+    if is_config(spec):
+        return cited_labels(ROOT / spec["source"]) | set(spec.get("types") or {})
     labels = spec.get("labels") or {}
     renamed = {k for k in labels if isinstance(k, str)}
     listing = defined(source_lines(spec)[1]) - renamed
@@ -234,7 +250,7 @@ def process(path, write):
     problems = [
         f"{rel}: {p}" for p in check(spec, lines, hashlib.sha1(data).hexdigest())
     ]
-    if write and not problems:
+    if write and not problems and not is_config(spec):
         OUT.mkdir(parents=True, exist_ok=True)
         dest = OUT / (path.stem + source.suffix)
         dest.write_bytes("\n".join(render(spec, lines)).encode("latin-1"))

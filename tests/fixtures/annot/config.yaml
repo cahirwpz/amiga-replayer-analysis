@@ -1,0 +1,3 @@
+source: tests/fixtures/sample.cnf
+types:
+  Voice: [NextNote]

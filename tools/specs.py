@@ -73,6 +73,8 @@ def old_labels(player):
     """Labels of the player's sources that a spec may not name."""
     old = set()
     for path in annot_files(player):
+        if annot.is_config(annot.load(path)):
+            continue  # the config's labels are new names
         lines = annot.source_lines(annot.load(path))[1]
         old |= annot.defined(lines)
         code = (annot.code_part(line)[0] for line in lines)

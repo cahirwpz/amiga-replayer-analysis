@@ -40,16 +40,12 @@ the first card on it, with `specs/med.py`.
       `hardware/paula.py`. The table lists the cards still on template 1.
 - [ ] Fold each migrated card's `details/` page into its spec's docstrings.
 
-| Card                     | Blocked by     |
-| ------------------------ | -------------- |
-| `AbyssHighestExperience` | Decision below |
-| `MIDI-Loriciel`          | —              |
-| `SonicArranger`          | —              |
-| `SoundPlayer`            | —              |
+| Card            | Blocked by |
+| --------------- | ---------- |
+| `MIDI-Loriciel` | —          |
+| `SonicArranger` | —          |
+| `SoundPlayer`   | —          |
 
-- [ ] `AbyssHighestExperience` has only an IRA config, no source, so it has no
-      `data/annot/` file. Its spec classes then have no `types:` to name them.
-      Ask the user: a types-only annotation file, or another place?
 - [ ] After the last card: decide on `specs/controls.py`. `CommandList` and
       `TableWalker` share logic. `StateMachine` and `Program` are tags that no
       tool reads: drop them, or check them in `tools/specs.py`.
@@ -115,22 +111,6 @@ need 68k code first.
 | `BenDaglish-SID`   | Replay code is in the module; needs a module            | —                                |
 | `JankoMrsicFlogel` | Replay code is in the module; needs a module            | —                                |
 | `Special-FX`       | Replay code is in the module; needs a module            | —                                |
-
-## AHX spec notes
-
-Reading notes for the AHX spec, still to write. Labels are in
-`data/disasm/AbyssHighestExperience.cnf`.
-
-- Tick order: `PlayTick` writes Paula for each voice first, then reads a row,
-  then runs `VoiceFrame`. So Paula gets the values of the previous tick.
-- `LoadWaveCache`: the file `ENV:EaglePlayer/ahx` names a file of all generated
-  waves. If it loads in full, `MakeWaves` is skipped.
-- `MakeFilters` runs each filter once per wave. It takes the filter's start
-  state from `FilterStartStates`, 31 filters × 45 waves. The port runs three
-  warm-up passes instead.
-- `SetTickRate` picks 50, 100, 150 or 200 Hz from `TickRates`.
-- The port's `ProcessStep`, `ProcessFrame`, `pListCommandParse` and `SetAudio`
-  match `ReadRow`, `VoiceFrame`, `PerformanceCommand` and `WriteVoice`.
 
 ## Disassembly notes
 

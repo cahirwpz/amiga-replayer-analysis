@@ -398,7 +398,7 @@ def context_rows(player, facts, sources, cards):
         code = f["provenance"] + (" (guess)" if f.get("provenance_guess") else "")
         src = sources.get(player, {}).get("source") or f.get("source", "")
         if src:
-            path = src if src.startswith("ext/") else f"{UADE_SOURCES}/{src}"
+            path = src if src.startswith(("ext/", "data/")) else f"{UADE_SOURCES}/{src}"
             code += f": `{path}`"
         rows.append(["Code read", code])
     if "spec" in f:

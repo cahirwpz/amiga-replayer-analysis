@@ -56,6 +56,9 @@ sections:
       pitch list: A command list whose values set a voice's pitch, often also its waveform.
       modulation: One signal changing a setting of another, e.g. volume or pitch.
       pulse width: The share of a square-like wave's cycle spent high.
+      low-pass filter: Removes high frequencies. The sound gets duller.
+      high-pass filter: Removes low frequencies. The sound gets thinner.
+      note cut: Ending a note at a set tick, before the next note.
       mixing: Adding several voices into one channel's sample data, in software.
       mix rate: Bytes per second that a mixer writes; the channel plays them at this rate.
       resampling: Reading a sample at another rate, by skipping or repeating bytes. It changes pitch.
@@ -262,6 +265,7 @@ sections:
       sound transpose: instrument transpose
       hybrid: synth sound with a sample
       option: command
+      hard cut: note cut
 
   - key: control
     title: Control vocabulary

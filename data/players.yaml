@@ -25,6 +25,7 @@
 
 AbyssHighestExperience:
   provenance: ira
+  spec: specs/abyss_highest_experience.py
   ports: [ext/ahx2play]
   note: embeds AHX-BinaryPlayer 2.3d-sp3
 

@@ -1,0 +1,11 @@
+# Types for specs/abyss_highest_experience.py. The IRA config holds the labels.
+source: data/disasm/AbyssHighestExperience.cnf
+
+# Classes in the spec: each word is a label of the config.
+types:
+  Instrument: [SetInstrument]
+  Song: [InitModule]
+  Waves: [MakeWaves]
+  Sweep: [SquareSweep, FilterSweep]
+  Voice: [ClearVoice, VoiceFrame]
+  Player: [WorkArea]
