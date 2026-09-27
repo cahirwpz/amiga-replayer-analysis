@@ -210,6 +210,7 @@ TFMX-Pro:
   # Original source with named labels; the heuristic misreads it.
   replay: uade
   provenance: original
+  spec: specs/tfmx_pro.py
   author: Chris Hülsbeck
   family: TFMX
   head: true
@@ -219,6 +220,7 @@ TFMX_ST:
 
 TFMX-7V:
   provenance: disassembly
+  spec: specs/tfmx_7v.py
   author: Chris Hülsbeck
   family: TFMX
   distinct: voices 4–7 mixed into channel 3; the mixer clocks the tick

@@ -7,7 +7,7 @@ labels:
   # every tick; names as in TFMX-Pro.yaml
   irqin: PlayTick
   noteport: NoteToVoice
-  fader: Fade
+  fader: FadeTick
   # the mixer
   Interrupt: MixInterrupt
   1266: HookChannel3
@@ -46,3 +46,9 @@ banners:
     OriginalMixLoop: the original, kept by Wanted Team as comments.
     Code patches each voice's `lea` to pick its volume table (killv1-4).
     A7 serves as a data register.
+
+# Classes in specs/tfmx_7v.py: each word occurs in the source.
+types:
+  FakeChannel: [voice1dat, flagtab]
+  Mixer: [v7field, v7flag]
+  Module7V: [CHfield0, v7mixrate]

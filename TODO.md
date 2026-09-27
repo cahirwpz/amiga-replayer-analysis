@@ -38,8 +38,9 @@ All twelve pilot cards exist.
 The template is in [`docs/card-template.md`](docs/card-template.md). `MED` is
 the first card on it, with `specs/med.py`.
 
-- [ ] Migrate TFMX Pro, then Tim Follin, to a spec and a prose card; review
-      each. Their items below fold in.
+- [ ] Review the TFMX Pro and TFMX 7V cards and their specs with the user.
+- [ ] Migrate Tim Follin to a spec and a prose card; review it. Its items below
+      fold in.
 - [ ] Migrate the other cards the same way. Paula mechanics go to
       `hardware/paula.py`.
 - [ ] `specs/med.py` stubs `CmdLoop` and the pattern effects. Fill them if a
@@ -74,22 +75,6 @@ the first card on it, with `specs/med.py`.
       `:ReadTrack`, `:CallStacks`.
 - [ ] Investigate the inactive special subsong and the pulse reset offset.
       `:_init`, `:ResetPulse`.
-
-### TFMX Pro card
-
-- [ ] Explain macro/riff arpeggios and triggered waits.
-      `data/annot/TFMX-Pro.yaml:maddnote`, `:RiffPlay`, `:MacroWait`.
-- [ ] Explain programmed envelope phases over target ramps. `:menvelope`,
-      `:Envelope`, `:WaitNoteOff`.
-- [ ] Explain sample-pass waits and programmable sample regions. `:WaitLoops`,
-      `:CountLoopIrq`, `:msampleloop`.
-- [ ] Explain inherited state, stopped macros and shared mutable code.
-      `:NoteToVoice`, `:mstop`, `:CopyToMacro`.
-- [ ] Revise pitch and volume composition using
-      [the control review](details/TFMX-Pro-control.md). Cover riff progression
-      during portamento. `:Vibrato`, `:Portamento`, `:RiffPlay`.
-- [ ] Correct the fade rate: its shared counter advances once per voice visit.
-      `:VoicesTick`, `:Fade`.
 
 ### Then
 

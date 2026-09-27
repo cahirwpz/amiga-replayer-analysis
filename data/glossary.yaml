@@ -57,6 +57,8 @@ sections:
       mixing: Adding several voices into one channel's sample data, in software.
       mix rate: Bytes per second that a mixer writes; the channel plays them at this rate.
       resampling: Reading a sample at another rate, by skipping or repeating bytes. It changes pitch.
+      hard sync: A wave restarts at each cycle of another. Its rate changes timbre, not pitch.
+      slew limiter: Limits each sample's move from the last. It rounds sharp edges.
 
   - key: music
     title: Music theory

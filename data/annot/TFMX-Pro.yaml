@@ -49,21 +49,77 @@ labels:
   mimssstart: ImsSource
   mimsdelta: ImsFilter
   # generators, every tick
-  smodin: SweepStart
-  imsin: ImsRender
-  vibratos: Vibrato
-  glides: Portamento
-  envelopes: Envelope
-  riffplay: RiffPlay
+  smodin: SweepTick
+  imsin: ImsTick
+  vibratos: VibratoTick
+  glides: PortamentoTick
+  envelopes: EnvelopeTick
+  riffplay: RiffTick
   3630: RiffRandom
   3674: RiffEcho
-  fader: Fade
+  fader: FadeTick
+
+  # added for specs/tfmx_pro.py
+  specials: VoiceTick
+  patternplay: PlayTracks
+  play2: ReadPattern
+  ploop: PatternLoop
+  pcont: PatternGoto
+  pwait: PatternWait
+  pstop: PatternStop
+  pstopcus: EndCustomPattern
+  pkeyup: PatternNoteOff
+  pportsp: PatternToVoice
+  pfade: PatternFade
+  psendflag: PatternSendFlag
+  stopsong: StopSong
+  loopsong: LoopSong
+  speedsong: SetSpeed
+  fadesong: FadeSong
+  channeloff: StopVoice
+  playpatt1: PlayCustomPattern
+  macadd: EndMacroTick
+  mac3: MacroNext
+  mdmaoff: DmaOffAndReset
+  mdmaoff2: DmaOff
+  mdmaon: DmaOn
+  msetbegin: SetStart
+  msetlen: SetLength
+  mloop: MacroLoop
+  mstop: MacroStop
+  maddnote: AddNote
+  msetnote: SetNote
+  mlastnote: LastNote
+  mputnote: PutNote
+  mclear: ClearEffects
+  mporta: MacroPortamento
+  mvibrato: MacroVibrato
+  maddvolume: NoteVolume
+  msetvolume: MacroVolume
+  menvelope: MacroEnvelope
+  maddbegin: AddStart
+  maddlen: AddLength
+  mreturn: MacroReturn
+  msetperiod: SetPeriod
+  msampleloop: SampleLoop
+  msetone: SetSilence
+  mriff2: RiffMask
+  msendflag: SendFlag
+  mimsslen: ImsLength
+  mimsset1: ImsSetStep
+  mimsmod1: ImsSweepStep
+  mimsset2: ImsSetStepChange
+  mimsmod2: ImsSweepStepChange
+  mimsoff: ImsOff
+  modulations: ModulationTick
+  randomize: Randomize
+  3667: RiffJump
 
 comments:
   1937: "IMS: the ims macro opcodes"
   1949: "guess: the byte check opcodes $2b-$2d"
   2155: "$80-$8f keep the pattern running into the new position"
-  2184: "$80-$bf: note, then wait; $c0-$ef: portamento note"
+  2184: "$7f-$bf: note, then wait; $c0-$ef: portamento note"
   2233: any track's end moves the whole song on
   2309: "reads and writes track 0 (a5), not the running track (a0)"
   2349: this pattern goes to another track
@@ -113,3 +169,20 @@ banners:
   3760: |
     NoteToVoice: a 4-byte note goes to the voice in its low nibble.
     $f5 note-off, $f6 vibrato, $f7 envelope, $fc sound effect lock.
+
+# Classes in specs/tfmx_pro.py: each word occurs in the source.
+types:
+  Score: [database, pattnbase, macrobase]
+  SoundEffect: [fxbase, priocount]
+  Track: [padress, pstep, pawait]
+  Macro: [madress, mstep, mawait]
+  Sweep: [mabadd, mabcount1]
+  Ims: [ims_dlen, ims_mod1]
+  Swing: [ims_mod1add, ims_mod1len2]
+  Vibrato: [vibsize1, vibperiod]
+  Portamento: [potime, poperiod]
+  Envelope: [envolume, envspeed]
+  Riff: [riffsteps, riffstats]
+  Voice: [Synthfield0]
+  Fade: [fadevol, fadeend]
+  Module: [CHfield0, CHfield2]

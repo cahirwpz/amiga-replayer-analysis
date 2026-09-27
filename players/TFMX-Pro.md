@@ -1,7 +1,6 @@
 ---
 player: TFMX-Pro
-control: { sequencer: program, instrument: program }
-themes: [synthesis, tricks]
+template: 2
 ideas:
   [
     macro-instruments,
@@ -10,89 +9,79 @@ ideas:
     resampling-synthesis,
     random-riffs,
   ]
-streams: { song: 1, track: 1, voice: 2 }
 ---
 
 # TFMX Pro
 
-An instrument is a macro: a program that shapes one note.
+An instrument is a program that runs once per tick and shapes one note.
+
+## Context
+
+| Fact      | Value                                                      |
+| --------- | ---------------------------------------------------------- |
+| Player    | `TFMX-Pro`                                                 |
+| Author    | Chris Hülsbeck                                             |
+| Family    | TFMX                                                       |
+| Code read | original: `ext/uade/amigasrc/players/wanted_team/TFMX-Pro` |
+| Spec      | [specs/tfmx_pro.py](../specs/tfmx_pro.py)                  |
 
 ## Key ideas
 
-- 52 opcodes, with branches on note, volume or note-off.
-  `data/annot/TFMX-Pro.yaml:MacroOpcodes` `:SplitByNote`
-  [All opcodes](../details/TFMX-Pro-macros.md).
+- An instrument program has 52 opcodes. They include waits, loops, one call and
+  branches on note, volume and note-off. `:MacroStep` `:SplitByNote`
+  `:WaitNoteOff`
+  - Enables: attack, sustain and release parts, each its own code.
+  - Costs: each sound is written as code.
 - Eight tracks share the voices; each note names its voice. `:TrackNote`
-- Macros rewrite other macros. `:CopyToMacro` `:AddToMacro`
-- IMS rebuilds a wave every tick from a resampled source. `:ImsRender`
-- A riff plays macro bytes as notes, with random jumps. `:RiffPlay`
+  `:NoteToVoice`
+  - Enables: one track plays chords or moves a line across voices.
+  - Costs: two tracks can take the same voice.
+- A note restarts only the macro. Effects, volume and sample carry over.
+  `:NoteToVoice`
+  - Enables: a new note can keep a running vibrato or glide.
+  - Costs: a macro must clear old effects itself. `:ClearEffects`
+- A riff plays a macro's bytes as note offsets. It can jump at random and echo
+  on the next voice. `:RiffTick` `:RiffRandom` `:RiffEcho`
+  - Enables: generative melody from a few bytes.
+  - Costs: all riff steps have the same length.
+- [IMS](../details/TFMX-Pro-IMS.md) rebuilds a voice's wave every tick, as a
+  hard sync with a slew limiter. `:ImsTick`
+  - Enables: sync and filter sweeps from one short sample.
+  - Costs: CPU high: up to 256 bytes per voice per tick.
+- Macros rewrite macros. `:CopyToMacro` `:AddToMacro`
+  - Enables: a sound that changes each time it plays.
+  - Costs: every voice that plays the macro sees the change.
 
-## Streams
+## Composer's view
 
-| Stream     | Scope | Role       | Carries                            | Control                           | Rate          |
-| ---------- | ----- | ---------- | ---------------------------------- | --------------------------------- | ------------- |
-| Positions  | song  | sequencer  | pattern, transpose per track       | loop, end                         | pattern end   |
-| Pattern    | track | sequencer  | note, macro, voice, volume, detune | loop, jump, call, wait, end       | row           |
-| Macro      | voice | instrument | sample, pitch, volume, generators  | loop, jump, call, wait, cond, end | tick          |
-| Pitch riff | voice | instrument | note offset; macro bytes           | loop, jump                        | every N ticks |
+The composer writes patterns and macros. TFMX calls an instrument program a
+`macro`. Positions start one pattern per track.
 
-## Sequencer
+| Aspect   | Answer                                                           | Source                          |
+| -------- | ---------------------------------------------------------------- | ------------------------------- |
+| Notation | Pattern entry: note, macro, volume, voice, detune.               | `:TrackNote`                    |
+| Notation | Macro statement: an opcode and three argument bytes.             | `:MacroStep`                    |
+| Notation | A waiting note or a wait opcode sets the rows to the next entry. | `:ReadPattern`                  |
+| Cost     | A chord is several entries on one track, one per voice.          | `:ReadPattern`                  |
+| Cost     | An arpeggio is a macro loop of notes and waits.                  | `:AddNote` `:MacroLoop`         |
+| Cost     | ADSR: attack, wait, decay, note-off wait, release statements.    | `:MacroEnvelope` `:WaitNoteOff` |
 
-| Aspect   | Value                        | Label                    |
-| -------- | ---------------------------- | ------------------------ |
-| Time     | deltas                       | `:TrackStart` `:pwait`   |
-| Unit     | row                          | `:Sequencer`             |
-| Note end | next note, note-off, program | `:pkeyup` `:WaitNoteOff` |
-| Routing  | per note                     | `:NoteToVoice`           |
-| Reuse    | patterns, calls, loops       | `:PatternCall` `:ploop`  |
-| Tempo    | speed, timer                 | `:speedsong`             |
+## What is unique
 
-## Generators
-
-| Generator   | Scope | States      | Writes    | Rate          | Set by             | Note-on |
-| ----------- | ----- | ----------- | --------- | ------------- | ------------------ | ------- |
-| Start sweep | voice | up, down    | sample    | tick          | Macro              | program |
-| IMS         | voice | off, render | wave data | tick          | Macro              | program |
-| Vibrato     | voice | up, down    | period    | tick          | Macro, Pattern     | program |
-| Portamento  | voice | glide, done | period    | every N ticks | Macro, Pattern     | program |
-| Envelope    | voice | slide, done | volume    | every N ticks | Macro, Pattern     | program |
-| Fade        | song  | slide, done | volume    | every N ticks | Pattern, Positions | keep    |
-
-## Channel outputs
-
-| Output    | Writers, in tick order                                                            |
-| --------- | --------------------------------------------------------------------------------- |
-| Sample    | Macro (set), Start sweep (add)                                                    |
-| Wave data | IMS (edit)                                                                        |
-| Period    | Macro (note), Macro (set), Vibrato (scale), Portamento (scale), Pitch riff (note) |
-| Volume    | Macro (set), Envelope (add), Fade (scale)                                         |
-| DMA       | Macro (on), Macro (off), Positions (off)                                          |
-
-## Interactions
-
-| From       | To          | Event                                                            |
-| ---------- | ----------- | ---------------------------------------------------------------- |
-| Pattern    | Macro       | Note-on restarts it; note-off clears its key flag `:NoteToVoice` |
-| Pattern    | other track | Starts a pattern `:StartOtherTrack`                              |
-| Macro      | other voice | Note-on or note-off `:PlayOtherVoice`                            |
-| Macro      | game        | Sets flags for the game `:msendflag`                             |
-| game       | Macro       | Sound effects lock voices by priority `:NoteToVoice`             |
-| Portamento | Vibrato     | While gliding, vibrato writes no period `:Vibrato`               |
-| Pitch riff | other voice | Echo at 5/8 volume `:RiffEcho`                                   |
-| IMS        | other voice | Negated copy into its buffer `:ImsRender`                        |
-
-- Any pattern end moves all tracks on. `:PatternEnd`
-- Macros clear or pause generators. `:mclear` `:mdmaon`
-- Failed byte checks corrupt memory (guess: anti-cracking). `:CheckByteTrap`
-
-## State
-
-| Scope      | Fields                                                                |
-| ---------- | --------------------------------------------------------------------- |
-| Voice      | macro, step, wait, loop, return, key flag, priority, note, generators |
-| Instrument | none                                                                  |
-| Global     | position, speed, track steps and waits, fade                          |
+- A macro runs statements until a wait or a note opcode ends the tick.
+  `:EndMacroTick`
+- A delayed DMA off acts at the next tick's start, with the shortest period. The
+  macro then restarts the sample in that tick. `:DmaOff` `:PlayTick`
+- A macro can wait for N passes of its sample. `:WaitLoops`
+- A macro can wait for a riff step with bit 7 set. `:MacroWait`
+- Each envelope opcode ramps to a target and stops, so phases are opcodes.
+  `:MacroEnvelope`
+- During portamento, a riff sets only the glide's target and stays on its step.
+  `:RiffTick`
+- The fade counter moves once per voice, so four times per tick. `:FadeTick`
 
 ## Open questions
 
-- Which songs use riffs and byte checks?
+- Which songs use riffs, byte checks and macro rewrites?
+- The source calls the riff code the Ballblazer routine. Is it modelled on
+  Ballblazer's riff music (guess)?

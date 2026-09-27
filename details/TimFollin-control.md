@@ -5,7 +5,7 @@ overflow and describe Paula register values, not perceived pitch from changing
 waveforms. `table(n)` means a note-to-period lookup. A higher period means a
 lower pitch.
 
-For comparison, see [TFMX Pro's controllers](TFMX-Pro-control.md).
+For comparison, see [TFMX Pro's spec](../specs/tfmx_pro.py).
 
 The track sets persistent parameters for state machines. There is no instrument
 program or independent pitch table walker. `data/annot/TimFollin.yaml:ReadTrack`
