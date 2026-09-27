@@ -1,9 +1,9 @@
 """TFMX 7V: TFMX Pro with voices 4-7 mixed into channel 3. TFMX 7V_v4.asm.
 
 Card: players/TFMX-7V.md, a delta card on TFMX Pro. Level 2: the control
-flow runs; leaf math is a stub. Only the mixer is modelled; the rest is
-specs/tfmx_pro.py. Each CamelCase function is a label in
-data/annot/TFMX-7V.yaml; each CamelCase class is in its `types:`.
+flow runs. Only the mixer is modelled; the rest is specs/tfmx_pro.py.
+Each CamelCase function is a label in data/annot/TFMX-7V.yaml; each
+CamelCase class is in its `types:`.
 """
 
 from dataclasses import dataclass, field
@@ -17,6 +17,14 @@ MIX_CHANNEL = 3  # Paula channel 3 plays the mixed buffer
 SHORT_LOOP = 32  # words: shorter loops play the silent buffer
 MIN_SLOW = -32  # v7slodo: percent, at least -32
 MAX_VOLUME = 63  # a mixed voice's volume is clamped here
+MAX_BYTES = 480 + 792  # maxbyts: one buffer
+SILENT_WORDS = MAX_BYTES // 2 - 32  # the silent buffer's loop
+CLIP_EDGE = 384  # ClipTable: 384 × -128, a 256-byte ramp, 384 × +127
+MIX_PERIODS = (  # v7KHztable: channel 3's period for 0..28 kHz
+    *(3580, 3580, 1790, 1193, 895, 716, 597, 511, 447, 398, 358, 325, 298),
+    *(275, 256, 239, 224, 211, 199, 188, 179, 170, 163, 156, 149, 143, 138),
+    *(133, 128),
+)
 
 
 @dataclass
@@ -25,7 +33,9 @@ class FakeChannel(paula.Channel):  # voice1dat: registers in RAM
     see a difference. The mixer reads these fields once per tick."""
 
     restart: bool = True  # v7wset: DMA was off; the next on restarts
-    offset: int = 0  # v7regstore: the position, negative up to the end
+    loop: bytes = b""  # v7loopv, v7loopd: taken at the next wrap
+    source: bytes = b""  # the bytes being read
+    position: int = 0  # v7regstore: 16.16, negative, counts up to the end
     step: int = 0  # v7freq: 16.16 bytes per mixed byte
 
     def enable(self) -> None:
@@ -38,12 +48,16 @@ class FakeChannel(paula.Channel):  # voice1dat: registers in RAM
 @dataclass
 class Mixer:  # v7field, v7flag, v7mixrate, v7slodo
     on: bool = False
-    rate: int = 0  # v7mixrate: an index into v7KHztable
+    rate: int = 16  # v7mixrate: kHz, an index into MIX_PERIODS
     slow: int = 0  # v7slodo: percent added to the tick's length
     bytes_per_tick: int = 0
     period: int = 0  # channel 3's period for the mix rate
-    buffers: list[bytearray] = field(default_factory=lambda: [bytearray(), bytearray()])
-    silence: bytearray = field(default_factory=bytearray)  # v7buffer3
+    buffers: list[bytearray] = field(
+        default_factory=lambda: [bytearray(MAX_BYTES), bytearray(MAX_BYTES)]
+    )  # v7newbuffer, v7oldbuffer
+    silence: bytes = bytes(MAX_BYTES)  # v7buffer3, cleared by MixOff
+    volume: list[bytes] = field(default_factory=list)  # VolumeTables
+    clip: bytes = b""  # ClipTable
 
 
 @dataclass
@@ -58,6 +72,12 @@ def new_voices(clock: Clock, paula_: paula.Paula) -> list[tfmx_pro.Voice]:
     return voices
 
 
+def fakes(module: Module7V) -> list[FakeChannel]:
+    channels = [voice.channel for voice in module.voices[MIXED.start :]]
+    assert all(isinstance(c, FakeChannel) for c in channels)
+    return channels  # type: ignore[return-value]
+
+
 def HookChannel3(module: Module7V) -> None:
     """The whole replay runs from channel 3's audio interrupt, not a timer."""
     mix = module.amiga.paula.channels[MIX_CHANNEL]
@@ -69,25 +89,27 @@ def MixOn(module: Module7V) -> None:
     one 50 Hz tick of sound. `slow` stretches it, so the tick slows."""
     mixer = module.mixer
     mixer.slow = max(mixer.slow, MIN_SLOW)
-    mixer.bytes_per_tick = mix_bytes(mixer.rate, mixer.slow)
-    mixer.period = mix_period(mixer.rate)
+    mixer.bytes_per_tick = (mixer.rate * 20 * (100 + mixer.slow) // 100 + 1) & ~1
+    mixer.period = MIX_PERIODS[mixer.rate]
     channel = module.amiga.paula.channels[MIX_CHANNEL]
     channel.period = mixer.period
     channel.set_volume(0)
-    channel.queue(paula.Sample(bytes(mixer.buffers[0])))
-    for voice in module.voices[MIXED.start :]:
-        assert isinstance(voice.channel, FakeChannel)
-        FakeDma(mixer, voice.channel)
+    # two words, so the first interrupt, and the first mix, come at once
+    channel.queue(paula.Sample(bytes(mixer.buffers[0][:4])))
+    for fake in fakes(module):
+        FakeDma(mixer, fake)
     mixer.on = True
 
 
 def MixOff(module: Module7V) -> None:
-    """Channel 3 becomes a plain voice again. The mixed voices stop."""
+    """Channel 3 becomes a plain voice again. The mixed voices stop and
+    point at the silent buffer."""
     module.mixer.on = False
     tfmx_pro.StopVoice(module, MIX_CHANNEL)
-    for voice in module.voices[MIXED.start :]:
-        assert isinstance(voice.channel, FakeChannel)
-        voice.channel.dma, voice.channel.step = False, 0
+    for fake in fakes(module):
+        fake.dma, fake.step, fake.restart = False, 0, False
+        fake.source = fake.loop = module.mixer.silence
+        fake.position = -len(fake.source) << 16
 
 
 def SwitchMixing(module: Module7V, voice: int) -> None:
@@ -118,20 +140,21 @@ def FadeToChannel3(module: Module7V, voice: tfmx_pro.Voice) -> None:
 
 
 def MixTick(module: Module7V) -> None:
-    """Channel 3 plays the buffer filled last tick. The mixer fills the
-    other one, then runs the replay's tick."""
+    """Channel 3 has just started the buffer mixed last tick. The mixer
+    fills the other one, queues it for the next pass, then runs the
+    replay's tick. The real code writes AUDxLC first; Paula takes it only
+    at the next reload, after the mix. The model's Paula copies, so it
+    queues after the mix."""
     mixer = module.mixer
-    channel = module.amiga.paula.channels[MIX_CHANNEL]
-    channel.queue(paula.Sample(bytes(mixer.buffers[1])))
-    fakes = [v.channel for v in module.voices[MIXED.start :]]
-    for fake in fakes:
-        assert isinstance(fake, FakeChannel)
+    for fake in fakes(module):
         VolumeAndStep(mixer, fake)
-    for fake in fakes:
-        assert isinstance(fake, FakeChannel)
+    for fake in fakes(module):
         FakeDma(mixer, fake)
     mixer.buffers.reverse()
-    MixLoop(mixer, fakes)
+    buffer = mixer.buffers[0]
+    MixLoop(mixer, fakes(module), buffer)
+    channel = module.amiga.paula.channels[MIX_CHANNEL]
+    channel.queue(paula.Sample(bytes(buffer[: mixer.bytes_per_tick])))
     TickFromMixer(module)
 
 
@@ -140,11 +163,13 @@ def TickFromMixer(module: Module7V) -> None:
 
 
 def VolumeAndStep(mixer: Mixer, fake: FakeChannel) -> None:
-    """Step = mix period / voice period. A period of 0 leaves both."""
+    """Step = mix period / voice period, in 16.16. A period of 0 leaves
+    both volume and step as they are."""
     if not fake.period:
         return
     fake.volume = min(fake.volume & 0xFF, MAX_VOLUME)
-    fake.step = (mixer.period << 16) // fake.period
+    quotient = ((mixer.period << 11) // fake.period) & 0xFFFF  # divu
+    fake.step = quotient << 5
 
 
 def FakeDma(mixer: Mixer, fake: FakeChannel) -> None:
@@ -153,31 +178,49 @@ def FakeDma(mixer: Mixer, fake: FakeChannel) -> None:
     if not fake.dma:
         fake.step, fake.restart = 0, True
         return
-    ShortLoopSilent(mixer, fake)
+    fake.loop = ShortLoopSilent(mixer, fake)
     if fake.restart:
         fake.restart = False
-        fake.offset = -2 * fake.length
+        fake.source = fake.loop
+        fake.position = -len(fake.source) << 16
 
 
-def ShortLoopSilent(mixer: Mixer, fake: FakeChannel) -> None:
+def ShortLoopSilent(mixer: Mixer, fake: FakeChannel) -> bytes:
     """Loops under 32 words play the silent buffer, so short synth waves
     are mute on voices 4-7."""
-    if fake.length < SHORT_LOOP:
-        fake.location = paula.Sample(bytes(mixer.silence))
+    if fake.length < SHORT_LOOP or fake.location is None:
+        return mixer.silence[: 2 * SILENT_WORDS]
+    return fake.location.data[: 2 * (fake.length & 0x3FFF)]
 
 
-def MixLoop(mixer: Mixer, fakes: list[paula.Channel]) -> None:
-    """Per mixed byte: each voice's byte through its volume table, the
-    four summed, the sum clipped. No division. 254 cycles per byte."""
-    # see BuildMixTables
+def MixLoop(mixer: Mixer, channels: list[FakeChannel], buffer: bytearray) -> None:
+    """Per mixed byte, each voice: read a byte, look it up in the table
+    of its volume, step on. At the loop's end, the latched loop takes
+    over. The four table bytes are summed and clipped, not divided: one
+    voice alone plays at full level. 254 cycles per byte."""
+    for i in range(mixer.bytes_per_tick):
+        total = 0
+        for fake in channels:
+            byte = fake.source[(fake.position >> 16) + len(fake.source)]
+            total += mixer.volume[fake.volume][byte]
+            fake.position += fake.step
+            if fake.position >= 0:  # past the end: the loop takes over
+                fake.position -= len(fake.loop) << 16
+                fake.source = fake.loop
+        buffer[i] = mixer.clip[total]
 
 
-def BuildMixTables() -> None:
-    """64 volume tables of 256 bytes: sample × volume / 64. A clip table
-    of 1024 bytes: -128 × 384, a ramp, +127 × 384."""
+def BuildMixTables(mixer: Mixer) -> None:
+    """64 volume tables: a byte times volume / 64, offset by $80, so four
+    of them sum to 0..1020 around 512. The clip table maps that sum to a
+    signed byte: 384 × -128, a ramp, 384 × +127."""
+    mixer.volume = [
+        bytes(((signed(b) * volume) >> 6 ^ 0x80) & 0xFF for b in range(256))
+        for volume in range(64)
+    ]
+    ramp = bytes(range(0x80, 0x100)) + bytes(range(0x80))
+    mixer.clip = bytes([0x80] * CLIP_EDGE) + ramp + bytes([0x7F] * CLIP_EDGE)
 
 
-def mix_bytes(rate: int, slow: int) -> int: ...  # v7KHztable
-
-
-def mix_period(rate: int) -> int: ...  # v7KHztable
+def signed(byte: int) -> int:
+    return byte - 256 if byte >= 0x80 else byte
