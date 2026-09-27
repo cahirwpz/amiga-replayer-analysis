@@ -25,7 +25,7 @@ fills a buffer once per tick, and a channel plays it.
   quality. `data/annot/Oktalyzer.yaml:PickHigher`
 - Oktalyzer's replay 1 turns pitch into code: no step arithmetic at run time.
   `data/annot/Oktalyzer.yaml:BuildResamplers`
-- TFMX 7V gives mixed voices RAM register blocks, so the macro engine needs no
+- TFMX 7V gives mixed voices RAM register sets, so the macro engine needs no
   change. `data/annot/TFMX-7V.yaml:FakeRegisters`
 
 ## Cost

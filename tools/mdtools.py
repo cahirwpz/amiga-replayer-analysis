@@ -5,7 +5,9 @@ Reading goes through markdown-it-py, never through regular expressions:
   plain(inline)    the prose of an inline token; code spans become CODE
   children(inline) (line, child) for each child of an inline token
   sections(doc)    body tokens grouped under their `##` headings
+  split(tokens, level)  a token list grouped under headings of one level
   table(tokens)    the first table in a token list, as (line, cells) rows
+  tables(tokens)   every table in a token list, each as table() gives it
 
 Writing produces text that prettier leaves unchanged, so generated files can
 be compared byte for byte:
@@ -79,17 +81,23 @@ def plain(inline):
     return "".join(out).strip()
 
 
-def sections(doc):
-    """{title: tokens} for each `##` heading; tokens run to the next one."""
+def split(tokens, level="h2"):
+    """{title: tokens} for each heading of one level; tokens run to the next
+    heading of that level or higher. Tokens before the first are dropped."""
     out, current = {}, None
-    tokens = doc.tokens
     for i, token in enumerate(tokens):
-        if token.type == "heading_open" and token.tag == "h2":
-            current = plain(tokens[i + 1])
-            out[current] = []
+        if token.type == "heading_open" and token.tag <= level:
+            current = plain(tokens[i + 1]) if token.tag == level else None
+            if current is not None:
+                out[current] = []
         elif current is not None:
             out[current].append(token)
     return out
+
+
+def sections(doc):
+    """{title: tokens} for each `##` heading; tokens run to the next one."""
+    return split(doc.tokens, "h2")
 
 
 def heading_lines(doc, level="h2"):
@@ -116,6 +124,17 @@ def table(tokens):
         elif inside and token.type in ("th_open", "td_open"):
             row[1].append(plain(tokens[i + 1]))
     return rows
+
+
+def tables(tokens):
+    """Every table in tokens, each as table() returns it."""
+    out, start = [], None
+    for i, token in enumerate(tokens):
+        if token.type == "table_open":
+            start = i
+        elif token.type == "table_close":
+            out.append(table(tokens[start : i + 1]))
+    return out
 
 
 def format_table(header, rows):

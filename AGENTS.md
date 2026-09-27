@@ -43,21 +43,28 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
 
 ## Writing
 
-Readers are C1 non-native speakers with limited attention.
+Readers are C1 non-native speakers with limited attention. Chat answers follow
+the same rules.
 
 - Use plain words. Define each acronym in `data/glossary.yaml`.
-- Name things with glossary terms. When you replace a synonym, add it to the
-  glossary's avoided terms.
-- One claim per sentence. No filler, no hedging.
+- Use glossary terms, only in their defined meaning. Define new concepts there.
+- Name a format's own term once, in code. Add it and replaced synonyms to the
+  avoided terms.
+- One claim per sentence, one fact per table cell. No filler, no hedging.
 - Put technical detail in tables or code, which skip prose limits.
-- Answer chat questions in the same style.
+- Name a jump's target, e.g. "jumps to its release part".
 - Say each thing once. Elsewhere, link to it or generate it from `data/`. Tool
   usage lives in the tool's docstring.
 
+Before showing a card, read it as that reader. Check each noun against the
+glossary and each label against its code.
+
 ## Evidence
 
-- Cite code by label, never by line. Cards cite `file:Label` under the player's
-  source. Elsewhere: `ext/<path>:<Label>`.
+- Cite code by label, never by line: `file:<Label>`. On a card, paths start at
+  the player's source; elsewhere, at the repo root.
+- A bare `:<Label>` uses the previous citation's file. On a card, before any
+  citation, it uses the player's own labels.
 - Mark guesses as guesses. Mark what you hear as "(inference)".
 - Keyword scans only pick candidates. A claim needs 68k replay code that was
   read.
@@ -65,6 +72,7 @@ Readers are C1 non-native speakers with limited attention.
   A port only shows where to look.
 - Our labels: `data/annot/<player>.yaml:<Label>` or
   `data/disasm/<player>.cnf:<Label>`. Add missing ones.
+- Cards cite readable CamelCase labels. Rename raw source labels first.
 
 ## Listings
 

@@ -31,31 +31,28 @@ All twelve pilot cards exist.
 
 - [ ] Re-check the `AbyssHighestExperience` card against a disassembly. See the
       disassembly queue.
-- [ ] Tune limits in `tools/cogload.py` and the card template.
-- [ ] Fix the classification axes: control, themes, streams. They live in the
-      glossary and the card template.
 - [ ] Decide whether player-prefixed detail filenames need a rule and checker.
 
-### Card template questions
+### Card template 2
 
-- [ ] Revise the template. Generate context from `data/players.yaml`.
+The template is in [`docs/card-template.md`](docs/card-template.md). `MED` is
+the first card on it.
 
-| Area         | Questions                                                                                          |
-| ------------ | -------------------------------------------------------------------------------------------------- |
-| Context      | Which version, lineage, source, author and known uses does the card cover?                         |
-| Value        | What does each idea enable? What does it cost or limit?                                            |
-| Controllers  | What drives pitch, volume and samples: programs, command streams, table walkers or state machines? |
-| Tables       | Which tables advance independently? Which only map an input to a value?                            |
-| Expression   | Can existing commands express arpeggios or envelope phases without dedicated effects?              |
-| Instruments  | What does an instrument store? Which settings come from tracks or survive notes?                   |
-| Timing       | What advances each process? Do waits count ticks, list activations or sample passes?               |
-| Lifecycle    | What resets on note-on? How do release, hard stop and program end differ?                          |
-| Ownership    | Who owns state? Can voices share or modify waveforms, tables or programs?                          |
-| Outputs      | Which writers add, scale, overwrite or suppress others? Does suppressed state keep advancing?      |
-| Interactions | What does a jump or trigger reset? When does the destination next run?                             |
-| Limits       | What limits calls, loops, voices or sample choice?                                                 |
-| Evidence     | Which labels support each behavior? Which audible results or uses remain unverified?               |
-| Presentation | Can State describe ownership and resets? Can empty Open questions sections disappear?              |
+- [ ] Move card code into Python files, proposed 2026-09-27: `specs/paula.py`
+      (abstract Paula), `specs/controls.py` (controller kinds), `specs/med.py`.
+      Cards show excerpts that `tools/cards.py --write` generates. Labels become
+      checked decorators.
+- [ ] Ask the user: depth level 2 (control flow runs, leaf math stubbed)?
+      Generate Sound tables from the code?
+- [ ] Review the MED card with the user. Adjust the template from the review.
+- [ ] Migrate TFMX Pro, then Tim Follin; review each. Their items below fold in.
+- [ ] Migrate the other cards. Move each State table to `details/`, and Paula
+      mechanics to `docs/paula.md`.
+- [ ] After the last card: drop template 1 from `tools/cards.py`, its tests and
+      fixtures. Drop the glossary's control levels, generator, role, write modes
+      and the DMA output.
+- [ ] Composer's view for MED rests on the format notes. Ask the user for an
+      OctaMED manual that covers synth sounds.
 
 ### Tim Follin card
 
@@ -88,12 +85,6 @@ All twelve pilot cards exist.
       during portamento. `:Vibrato`, `:Portamento`, `:RiffPlay`.
 - [ ] Correct the fade rate: its shared counter advances once per voice visit.
       `:VoicesTick`, `:Fade`.
-
-### MED card
-
-- [ ] Revise the card using [the control review](details/MED-control.md). Cover
-      the missing envelope stream, jump timing, both arpeggios and release
-      versus hard stop.
 
 ### Then
 

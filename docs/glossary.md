@@ -82,18 +82,19 @@ What an operation does to a sound. The "(inference)" notes use these words.
 
 ## Tracker terms
 
-| Term                     | Meaning                                               |
-| ------------------------ | ----------------------------------------------------- |
-| **tick**                 | One run of the replayer, usually once per frame.      |
-| **row**                  | One line of a pattern. It lasts `speed` ticks.        |
-| **speed**                | Ticks per row.                                        |
-| **track**                | One column of note data, often one per voice.         |
-| **pattern**              | A block of rows, played by one or more tracks.        |
-| **position**             | One entry of the song's play order: patterns to play. |
-| **subsong**              | A separate tune inside one module.                    |
-| **instrument**           | What a note plays: sample or waveform, plus settings. |
-| **instrument transpose** | Offset added to every instrument number of a track.   |
-| **sound effect**         | A sound the game starts, outside the music.           |
+| Term                     | Meaning                                                         |
+| ------------------------ | --------------------------------------------------------------- |
+| **tick**                 | One run of the replayer, usually once per frame.                |
+| **row**                  | One line of a pattern. It lasts `speed` ticks.                  |
+| **speed**                | Ticks per row.                                                  |
+| **track**                | One column of note data, often one per voice.                   |
+| **pattern**              | A block of rows, played by one or more tracks.                  |
+| **position**             | One entry of the song's play order: patterns to play.           |
+| **section**              | One entry of a higher play order. It names a list of positions. |
+| **subsong**              | A separate tune inside one module.                              |
+| **instrument**           | What a note plays: sample or waveform, plus settings.           |
+| **instrument transpose** | Offset added to every instrument number of a track.             |
+| **sound effect**         | A sound the game starts, outside the music.                     |
 
 ## MIDI and sequencers
 
@@ -173,22 +174,25 @@ Code patterns we cite from replayer source.
 
 ## Card terms
 
-| Term                   | Meaning                                                              |
-| ---------------------- | -------------------------------------------------------------------- |
-| **stream**             | A position in some data that the player steps through.               |
-| **scope**              | Where a stream's position lives: song, track, voice or instrument.   |
-| **generator**          | Stateful process that is not a stream, e.g. a vibrato state machine. |
-| **interaction**        | One stream acting on another, e.g. a jump or a trigger.              |
-| **sequencer**          | The streams that decide which note plays and when.                   |
-| **instrument program** | A stream that a note-on starts or restarts. It shapes that note.     |
-| **write mode**         | How a writer changes a channel output, e.g. set or add.              |
-| **table walker**       | A stream that steps through a table: off, once or looping.           |
-| **tables**             | Control level: data walked in order, no opcodes.                     |
-| **commands**           | Control level: data with opcodes, but no conditions.                 |
-| **program**            | Control level: opcodes with conditions or calls.                     |
-| **none**               | Control level: no stream in this role.                               |
-| **module**             | Replay code ships inside the music file.                             |
-| **delta card**         | A card with `base`. It shows only what differs from the base card.   |
+| Term                    | Meaning                                                                          |
+| ----------------------- | -------------------------------------------------------------------------------- |
+| **stream**              | A position in some data that the player steps through.                           |
+| **scope**               | Where a stream's position lives: song, track, voice or instrument.               |
+| **generator**           | Template 1: stateful process that is not a stream, e.g. a vibrato state machine. |
+| **controller**          | Template 2: any process that writes a channel output.                            |
+| **composition formula** | Code block per output in Sound: which controllers add, scale or override.        |
+| **lifecycle event**     | A point in a note's life: note-on, legato, release, hard stop, program end.      |
+| **interaction**         | One stream acting on another, e.g. a jump or a trigger.                          |
+| **sequencer**           | The streams that decide which note plays and when.                               |
+| **instrument program**  | A stream that a note-on starts or restarts. It shapes that note.                 |
+| **write mode**          | How a writer changes a channel output, e.g. set or add.                          |
+| **table walker**        | A stream that steps through a table: off, once or looping.                       |
+| **tables**              | Template 1 control level: data walked in order, no opcodes.                      |
+| **commands**            | Template 1 control level: data with opcodes, but no conditions.                  |
+| **program**             | Template 1 control level: opcodes with conditions or calls.                      |
+| **none**                | Template 1 control level: no stream in this role.                                |
+| **module**              | Replay code ships inside the music file.                                         |
+| **delta card**          | A card with `base`. It shows only what differs from the base card.               |
 
 ## Provenance
 
@@ -244,6 +248,7 @@ can still appear as `code`.
 | --------------- | -------------------- |
 | sequence        | positions            |
 | order list      | positions            |
+| block           | pattern              |
 | song entry      | position             |
 | song step       | position             |
 | step list       | positions            |
@@ -267,7 +272,9 @@ Words used in the Control column of player cards.
 | **mode** | Off, play once, or loop.                               |
 | **none** | No flow control.                                       |
 
-## Rate vocabulary
+## Advances by vocabulary
+
+What moves a stream or controller on. Template 1 calls this column Rate.
 
 | Word              | Meaning                                              |
 | ----------------- | ---------------------------------------------------- |
@@ -278,6 +285,7 @@ Words used in the Control column of player cards.
 | **note end**      | Steps when the current note's length runs out.       |
 | **note-on**       | Acts once per note, at or just after its start.      |
 | **sample wrap**   | Steps each time Paula finishes a pass of the sample. |
+| **list visit**    | Steps each time the list that drives it runs.        |
 | **delta**         | Steps when the wait before the next event runs out.  |
 
 ## Sequencer: time
@@ -402,3 +410,37 @@ From and To words in the Interactions table, beside the card's own names.
 | **game**        | The game code that runs the player.   |
 | **other voice** | A voice other than the one that acts. |
 | **other track** | A track other than the one that acts. |
+
+## Controller kinds
+
+Words for the Kind column in a card's Sound tables.
+
+| Word              | Meaning                                                    |
+| ----------------- | ---------------------------------------------------------- |
+| **program**       | Opcodes with conditions or calls.                          |
+| **command list**  | Opcodes with jumps and waits, but no conditions or calls.  |
+| **table walker**  | Steps through a table: off, once or looping.               |
+| **state machine** | Changes its state by rules, e.g. an envelope or a vibrato. |
+| **lookup**        | Maps an input to a value. It has no state of its own.      |
+
+## Owners
+
+Words for the Owner column in Sound: whose data a controller keeps or edits.
+
+| Word           | Meaning                                       |
+| -------------- | --------------------------------------------- |
+| **voice**      | Each voice has its own copy.                  |
+| **instrument** | All voices that play the instrument share it. |
+| **song**       | One copy serves all voices.                   |
+
+## Lifecycle events
+
+Events the lifecycle handlers in a card's Timing section cover.
+
+| Word            | Meaning                                             |
+| --------------- | --------------------------------------------------- |
+| **note-on**     | A new note starts on the voice.                     |
+| **legato**      | A new note starts, but the channel keeps playing.   |
+| **release**     | The note enters its last phase and can still sound. |
+| **hard stop**   | The note stops at once.                             |
+| **program end** | The instrument program ends; the note may sound on. |

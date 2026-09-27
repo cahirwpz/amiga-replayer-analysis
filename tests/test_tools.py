@@ -5,6 +5,7 @@ Run: python3 -m unittest discover -s tests
 
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -26,11 +27,12 @@ def run(tool, *files):
 
 class GoodCard(unittest.TestCase):
     def test_all_checkers_accept_a_good_card(self):
-        good = FIXTURES / "good" / "MugicianII.md"
-        for tool in ("cogload.py", "links.py", "cards.py"):
-            with self.subTest(tool=tool):
-                code, _, out = run(tool, good)
-                self.assertEqual(code, 0, out)
+        for card in ("MugicianII.md", "MED.md"):
+            good = FIXTURES / "good" / card
+            for tool in ("cogload.py", "links.py", "cards.py"):
+                with self.subTest(card=card, tool=tool):
+                    code, _, out = run(tool, good)
+                    self.assertEqual(code, 0, out)
 
 
 class Cogload(unittest.TestCase):
@@ -47,6 +49,22 @@ class Cogload(unittest.TestCase):
         }
         self.assertTrue(expected <= rules, out)
         self.assertEqual(out.count("`sequence`: use"), 1, out)
+
+    def test_tables_can_skip_the_file_limit(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import cogload
+
+        path = FIXTURES / "cogload_tables.md"
+        saved = cogload.PROFILES
+        try:
+            for count, expected in ((True, 1), (False, 0)):
+                limits = {"file_words": 10, "count_tables": count}
+                cogload.PROFILES = [("tests/fixtures/", limits)]
+                errors = cogload.check(path, cogload.glossary.terms())
+                found = [e for e in errors if "file-words" in e]
+                self.assertEqual(len(found), expected, errors)
+        finally:
+            cogload.PROFILES = saved
 
 
 class Links(unittest.TestCase):
@@ -147,6 +165,53 @@ class Cards(unittest.TestCase):
             "`Nowhere` is no other card",
         ):
             self.assertIn(text, out)
+
+    def test_reports_each_template_2_rule(self):
+        code, rules, out = run("cards.py", FIXTURES / "cards_bad_v2.md")
+        self.assertEqual(code, 1)
+        expected = {"front-matter", "player", "section", "context", "composer"}
+        expected |= {"timing", "sequencer", "lifecycle", "sound", "instrument"}
+        expected |= {"interactions", "cell", "label", "code", "types"}
+        self.assertEqual(expected, rules, out)
+        for text in (
+            "unknown `control`",
+            "unknown `## Extra`",
+            "order should be ['Context'",
+            "out of date",
+            "aspects must be ['Notation'",
+            "unknown table header",
+            "name `Sequence`",
+            "advances by `often`",
+            "aspects must be ['Time', 'Unit', 'Routing'",
+            "Timing needs a `python` block with `def on_note(`",
+            "output `Colour`",
+            "needs `python` code before its table",
+            "kind `magic`",
+            "owner `nobody`",
+            "set by `Ghost`",
+            "needs a `python` block with `class Instrument`",
+            "questions must be",
+            "write interactions as `python` code",
+            "one fact per cell",
+            "`plr_loop2` is no readable name",
+            "not Python",
+            'Name "Melody" is not defined',
+            "controller `Wobble` is not in the code",
+        ):
+            self.assertIn(text, out)
+
+    def test_writes_context(self):
+        good = (FIXTURES / "good" / "MED.md").read_text(encoding="utf-8")
+        with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
+            card = Path(tmp) / "MED.md"
+            stale = good.replace("Teijo Kinnunen", "Nobody")
+            self.assertNotEqual(stale, good)
+            card.write_text(stale, encoding="utf-8")
+            self.assertEqual(run("cards.py", card)[0], 1)
+            run("cards.py", "--write", card)
+            self.assertEqual(card.read_text(encoding="utf-8"), good)
+            run("cards.py", "--write", card)
+            self.assertEqual(card.read_text(encoding="utf-8"), good)
 
     def test_accepts_a_delta_card(self):
         delta = FIXTURES / "good" / "Jochen_Hippel_ST.md"

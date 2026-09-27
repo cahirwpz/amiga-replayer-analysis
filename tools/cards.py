@@ -1,12 +1,39 @@
 #!/usr/bin/env python3
 """Check the structure of player cards against docs/card-template.md.
 
-Usage: cards.py FILE.md|DIR...
+Usage: cards.py [--write | --check] FILE.md|DIR...
 
-A card is a Markdown file whose front matter has a `player` key. Checks:
+  --check  (default) report problems
+  --write  regenerate the Context table of template 2 cards from
+           data/players.yaml and tools/inventory.py
+
+A card is a Markdown file whose front matter has a `player` key. Both
+templates check that the file name matches `player`; `player` is a UADE binary,
+or has `replay: source`, and has a provenance in data/players.yaml.
+
+Template 2 (`template: 2`):
+  - front matter keys; sections present and in order
+  - Context matches what --write would generate
+  - Composer's view: a `python` block with `class Score`; the aspects
+    Notation and Cost, in order; each may repeat
+  - every `python` block parses. With the state page,
+    details/<player>-state.md, they form one module that `mypy --strict`
+    checks; `...` bodies are stubs. Each Sound controller, in snake or
+    camel case, is a name in that code
+  - Timing: stream and Sequencer tables and their glossary words; a `python`
+    block with the lifecycle handlers, at least `def on_note(`
+  - Sound: one `###` per output, each with `python` code and a table whose
+    Kind, Advances by and Owner words are in the glossary, and whose
+    Set by names a stream or controller on the card, or `instrument`
+  - Instrument: a `python` block with `class Instrument`; its three
+    questions, in order; each may repeat
+  - no `;` in table cells; cited labels are readable CamelCase names
+  - Interactions: a `python` block, no table
+  - `base`: as in template 1; Composer's view, Timing and Instrument become
+    optional
+
+Template 1 (no `template` key), until its cards are migrated:
   - front matter keys and their allowed values
-  - file name matches `player`; `player` is a UADE binary, or has
-    `replay: source`, and has a provenance in data/players.yaml
   - sections present and in order; Sequencer and Channel outputs are required
   - Streams table: header, scope, role, name's first word, and Control/Rate
     words from data/glossary.yaml
@@ -24,19 +51,33 @@ A card is a Markdown file whose front matter has a `player` key. Checks:
 Prints `file:line: rule: detail` for each problem; exits 1 if any.
 """
 
+import ast
 import re
 import sys
 from pathlib import Path
 
 import glossary
 import players
-from mdtools import heading_lines, read, sections, table
+import inventory
+from mypy import api as mypy_api
+from links import citation
+from mdtools import (
+    children,
+    format_table,
+    heading_lines,
+    line_of,
+    read,
+    sections,
+    split,
+    table,
+    tables,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 
 # Analysis only. Facts about the player live in data/players.yaml.
 KEYS = ["player", "control", "themes", "ideas", "streams"]
-OPTIONAL_KEYS = ["base"]
+OPTIONAL_KEYS = ["base", "template"]
 # Sections a delta card may leave to its base card.
 BASE_COVERS = {"Streams", "Sequencer", "State"}
 LEVELS = {"tables", "commands", "program", "none"}
@@ -82,6 +123,47 @@ WRITER_RE = re.compile(r"(.+?) \((.+)\)")
 STATE_HEADER = ["Scope", "Fields"]
 
 
+# Template 2. Old cards keep template 1 until they are migrated.
+V2_KEYS = ["player", "template", "ideas"]
+V2_SECTIONS = [
+    ("Context", True),
+    ("Key ideas", True),
+    ("Composer's view", True),
+    ("Timing", True),
+    ("Sound", True),
+    ("Instrument", True),
+    ("Interactions", False),
+    ("Open questions", False),
+]
+V2_BASE_COVERS = {"Composer's view", "Timing", "Instrument"}
+CONTEXT_HEADER = ["Fact", "Value"]
+COMPOSER_HEADER = ["Aspect", "Answer", "Source"]
+COMPOSER_ASPECTS = ["Notation", "Cost"]
+TIMING_STREAMS_HEADER = ["Stream", "Scope", "Carries", "Control", "Advances by"]
+V2_ASPECTS = {k: v for k, v in ASPECTS.items() if k != "Note end"}
+SOUND_HEADER = ["Controller", "Kind", "Advances by", "Owner", "Set by", "Label"]
+INSTRUMENT_HEADER = ["Question", "Answer"]
+INSTRUMENT_QUESTIONS = [
+    "Starts on note-on",
+    "Survives the last note",
+    "Track overrides",
+]
+UADE_SOURCES = "ext/uade/amigasrc/players"
+# The card's `python` blocks and its player's state page form one module that
+# `mypy --strict` checks. A body of `...` is a stub, so empty-body is off.
+PRELUDE = [
+    "from __future__ import annotations",
+    "from dataclasses import dataclass",
+    "from enum import Enum, auto",
+    "from typing import NewType",
+]
+BUILD = ROOT / "build" / "cards"
+MYPY_LINE = re.compile(r"^.+?:(\d+): (error|note): (.*)$")
+# A cited label on a template 2 card: CamelCase, no underscores. Raw source
+# labels get a readable name in data/annot/ or data/disasm/ first.
+LABEL_RE = re.compile(r"[A-Z][A-Za-z0-9]*[a-z][A-Za-z0-9]*")
+
+
 def is_text_list(value):
     return isinstance(value, list) and all(isinstance(x, str) for x in value)
 
@@ -91,8 +173,10 @@ def words(cell):
 
 
 def own_names(doc):
-    """Names of the streams and generators a card defines."""
+    """Names of the streams, generators or controllers a card defines."""
     body = sections(doc)
+    if doc.meta.get("template") == 2:
+        return v2_names(body)
     return {
         cells[0]
         for name in ("Streams", "Generators")
@@ -101,7 +185,18 @@ def own_names(doc):
     }
 
 
-def check(path, known, vocab, facts):
+def check_player(path, meta, known, facts, err):
+    player = str(meta["player"])
+    if path.stem != player:
+        err(1, "player", f"file name should be {player}.md")
+    source_only = facts.get(player, {}).get("replay") == "source"
+    if player not in known and not source_only:
+        err(1, "player", f"{player} is not a binary in ext/uade/players")
+    if "provenance" not in facts.get(player, {}):
+        err(1, "player", f"{player} has no provenance in data/players.yaml")
+
+
+def check(path, known, vocab, facts, sources):
     rel = path.resolve().relative_to(ROOT).as_posix()
     doc = read(path)
     meta = doc.meta
@@ -113,6 +208,13 @@ def check(path, known, vocab, facts):
     if doc.meta_error:
         err(1, "front-matter", doc.meta_error)
     if "player" not in meta:
+        return errors
+    template = meta.get("template", 1)
+    if template == 2:
+        check_v2(path, doc, known, vocab, facts, sources, err)
+        return errors
+    if template != 1:
+        err(1, "front-matter", "`template` must be 1 or 2")
         return errors
 
     for key in KEYS:
@@ -136,14 +238,7 @@ def check(path, known, vocab, facts):
     ):
         err(1, "front-matter", f"`control` must map {ROLES} to {sorted(LEVELS)}")
 
-    player = str(meta["player"])
-    if path.stem != player:
-        err(1, "player", f"file name should be {player}.md")
-    source_only = facts.get(player, {}).get("replay") == "source"
-    if player not in known and not source_only:
-        err(1, "player", f"{player} is not a binary in ext/uade/players")
-    if "provenance" not in facts.get(player, {}):
-        err(1, "player", f"{player} has no provenance in data/players.yaml")
+    check_player(path, meta, known, facts, err)
 
     themes = meta.get("themes", [])
     if not is_text_list(themes) or not set(themes) <= THEMES:
@@ -308,17 +403,378 @@ def check(path, known, vocab, facts):
     return errors
 
 
+def card_link(name, cards):
+    """A player name, linked to its card if there is one."""
+    if (cards / f"{name}.md").is_file():
+        return f"[{name}]({name}.md)"
+    return f"`{name}`"
+
+
+def context_rows(player, facts, sources, cards):
+    """Rows of a card's Context table, from data/players.yaml."""
+    f = facts.get(player, {})
+    rows = [["Player", f"`{player}`"]]
+    for key in ("author", "year", "game"):
+        if key in f:
+            rows.append([key.capitalize(), str(f[key])])
+    if "family" in f:
+        rows.append(["Family", str(f["family"])])
+    if "after" in f:
+        rows.append(["Grew from", card_link(f["after"]["player"], cards)])
+    if "influences" in f:
+        names = [
+            card_link(i["player"], cards) if "player" in i else i["name"]
+            for i in f["influences"]
+        ]
+        rows.append(["Influences", ", ".join(names)])
+    if "provenance" in f:
+        code = f["provenance"] + (" (guess)" if f.get("provenance_guess") else "")
+        src = sources.get(player, {}).get("source") or f.get("source", "")
+        if src:
+            path = src if src.startswith("ext/") else f"{UADE_SOURCES}/{src}"
+            code += f": `{path}`"
+        rows.append(["Code read", code])
+    if "links" in f:
+        hosts = [f"[{u.split('/')[2]}]({u})" for u in f["links"]]
+        rows.append(["Links", ", ".join(hosts)])
+    return rows
+
+
+def with_context(text, doc, rows):
+    """The card's text with its Context section replaced by rows."""
+    heads = heading_lines(doc)
+    starts = [n for n, name in heads if name == "Context"]
+    if not starts:
+        return text
+    start = starts[0]
+    after = [n for n, _ in heads if n > start]
+    lines = text.split("\n")
+    end = after[0] - 1 if after else len(lines)
+    tail = lines[end:] if after else [""]
+    return "\n".join(
+        lines[:start] + [""] + format_table(CONTEXT_HEADER, rows) + [""] + tail
+    )
+
+
+def v2_names(body):
+    """Streams in Timing and controllers in Sound."""
+    names = set()
+    for rows in tables(body.get("Timing", [])):
+        if rows and rows[0][1] == TIMING_STREAMS_HEADER:
+            names |= {cells[0] for _, cells in rows[1:]}
+    for tokens in split(body.get("Sound", []), "h3").values():
+        rows = table(tokens)
+        if rows and rows[0][1] == SOUND_HEADER:
+            names |= {cells[0] for _, cells in rows[1:]}
+    return names
+
+
+def grouped(values, order):
+    """True if values hold each item of order, in that order; items may repeat."""
+    return set(values) == set(order) and values == sorted(values, key=order.index)
+
+
+def python_blocks(tokens):
+    """Contents of the `python` code blocks in tokens."""
+    return [
+        t.content for t in tokens if t.type == "fence" and t.info.strip() == "python"
+    ]
+
+
+def python_fences(tokens):
+    """(first content line, code) of each `python` block in tokens."""
+    return [
+        (t.map[0] + 2, t.content)
+        for t in tokens
+        if t.type == "fence" and t.info.strip() == "python" and t.map
+    ]
+
+
+def check_code(player, doc, body, err):
+    """Every `python` block parses; together with the state page, they pass
+    `mypy --strict`. Each Sound controller is a name in that code."""
+    parts, idents = [], set()
+    state = ROOT / "details" / f"{player}-state.md"
+    sources = [(state, read(state).tokens)] if state.is_file() else []
+    for path, tokens in sources + [(doc.path, doc.tokens)]:
+        for first, code in python_fences(tokens):
+            try:
+                tree = ast.parse(code)
+            except SyntaxError as e:
+                err(first + (e.lineno or 1) - 1, "code", f"not Python: {e.msg}")
+                continue
+            parts.append((path, first, code))
+            idents |= identifiers(tree)
+    for tokens in split(body.get("Sound", []), "h3").values():
+        for n, cells in table(tokens)[1:]:
+            snake = cells[0].lower().replace(" ", "_")
+            camel = cells[0].title().replace(" ", "")
+            if snake not in idents and camel not in idents:
+                err(n, "sound", f"controller `{cells[0]}` is not in the code")
+    lines, origin = list(PRELUDE), [None] * len(PRELUDE)
+    for path, first, code in parts:
+        for i, line in enumerate(code.splitlines()):
+            lines.append(line)
+            origin.append((path, first + i))
+    BUILD.mkdir(parents=True, exist_ok=True)
+    module = BUILD / f"{player}.py"
+    module.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    args = ["--strict", "--disable-error-code", "empty-body"]
+    args += ["--no-error-summary", "--hide-error-context"]
+    args += ["--cache-dir", str(ROOT / "build" / "mypy"), str(module)]
+    out, _, _ = mypy_api.run(args)
+    for line in out.splitlines():
+        m = MYPY_LINE.match(line)
+        if not m or m[2] != "error":
+            continue
+        where = origin[int(m[1]) - 1] if int(m[1]) <= len(origin) else None
+        if where and where[0] == doc.path:
+            err(where[1], "types", m[3])
+        elif where:
+            rel = where[0].relative_to(ROOT).as_posix()
+            err(1, "types", f"{rel}:{where[1]}: {m[3]}")
+        else:
+            err(1, "types", m[3])
+
+
+def identifiers(tree):
+    """Names that code defines or uses: variables, attributes, fields,
+    functions, classes and arguments."""
+    out = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name):
+            out.add(node.id)
+        elif isinstance(node, ast.Attribute):
+            out.add(node.attr)
+        elif isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+            out.add(node.name)
+        elif isinstance(node, ast.arg):
+            out.add(node.arg)
+    return out
+
+
+def check_rows(rows, header, rule, err):
+    """Rows after a correct header; reports a wrong header or width."""
+    if not rows or rows[0][1] != header:
+        err(rows[0][0] if rows else 1, rule, f"header must be {header}")
+        return []
+    good = []
+    for n, cells in rows[1:]:
+        if len(cells) != len(header):
+            err(n, rule, "wrong number of columns")
+        else:
+            good.append((n, cells))
+    return good
+
+
+def check_v2(path, doc, known, vocab, facts, sources, err):
+    meta = doc.meta
+    for key in V2_KEYS:
+        if key not in meta:
+            err(1, "front-matter", f"missing `{key}`")
+    for key in meta:
+        if key not in V2_KEYS + ["base"]:
+            err(1, "front-matter", f"unknown `{key}`")
+    if not is_text_list(meta.get("ideas", [])):
+        err(1, "front-matter", "`ideas` must be a list")
+    names = set()
+    delta = False
+    if "base" in meta:
+        base = path.parent / f"{meta['base']}.md"
+        if meta["base"] == meta.get("player") or not base.is_file():
+            err(1, "base", f"`{meta['base']}` is no other card in {path.parent.name}/")
+        else:
+            names |= own_names(read(base))
+            delta = True
+    check_player(path, meta, known, facts, err)
+
+    found = heading_lines(doc)
+    order = [name for name, _ in V2_SECTIONS]
+    present = [name for _, name in found]
+    for name, required in V2_SECTIONS:
+        if required and name not in present and not (delta and name in V2_BASE_COVERS):
+            err(1, "section", f"missing `## {name}`")
+    for n, name in found:
+        if name not in order:
+            err(n, "section", f"unknown `## {name}`")
+    known_found = [name for name in present if name in order]
+    if known_found != sorted(known_found, key=order.index):
+        err(1, "section", f"order should be {order}")
+
+    body = sections(doc)
+    names |= v2_names(body)
+
+    for rows in tables(doc.tokens):
+        for n, cells in rows:
+            for cell in cells:
+                if ";" in cell:
+                    err(n, "cell", f"one fact per cell, no `;`: {cell[:40]}")
+    for token in doc.tokens:
+        if token.type != "inline":
+            continue
+        for n, child in children(token):
+            cited = citation(child.content) if child.type == "code_inline" else None
+            if cited and cited[1] and not LABEL_RE.fullmatch(cited[1]):
+                err(n, "label", f"`{cited[1]}` is no readable name; rename it")
+
+    if "Context" in body:
+        text = path.read_text(encoding="utf-8")
+        rows = context_rows(str(meta["player"]), facts, sources, path.parent)
+        if with_context(text, doc, rows) != text:
+            n = next(n for n, name in found if name == "Context")
+            err(n, "context", "out of date; run tools/cards.py --write")
+
+    check_code(str(meta["player"]), doc, body, err)
+
+    if "Composer's view" in body:
+        if not any("class Score" in c for c in python_blocks(body["Composer's view"])):
+            err(1, "composer", "needs a `python` block with `class Score`")
+        rows = check_rows(
+            table(body["Composer's view"]), COMPOSER_HEADER, "composer", err
+        )
+        if rows and not grouped([cells[0] for _, cells in rows], COMPOSER_ASPECTS):
+            err(rows[0][0], "composer", f"aspects must be {COMPOSER_ASPECTS}, in order")
+
+    if "Timing" in body:
+        kinds = {}
+        for rows in tables(body["Timing"]):
+            header = rows[0][1] if rows else []
+            for kind, want in (
+                ("streams", TIMING_STREAMS_HEADER),
+                ("sequencer", SEQUENCER_HEADER),
+            ):
+                if header == want:
+                    kinds[kind] = rows
+                    break
+            else:
+                err(
+                    rows[0][0] if rows else 1,
+                    "timing",
+                    f"unknown table header {header}",
+                )
+        for kind in ("streams", "sequencer"):
+            if kind not in kinds:
+                err(1, "timing", f"missing the {kind} table")
+        for n, cells in kinds.get("streams", [None])[1:]:
+            if len(cells) != len(TIMING_STREAMS_HEADER):
+                err(n, "timing", "wrong number of columns")
+                continue
+            name, scope, _, control, rate = cells
+            head = name.split()[0] if name.split() else ""
+            if head not in vocab["stream_names"]:
+                err(n, "timing", f"name `{head}` not in the glossary")
+            if scope not in SCOPES:
+                err(n, "timing", f"scope `{scope}` not in {SCOPES}")
+            for w in words(control):
+                if w not in vocab["control"]:
+                    err(n, "timing", f"control `{w}` not in the glossary")
+            if rate not in vocab["rate"]:
+                err(n, "timing", f"advances by `{rate}` not in the glossary")
+        if "sequencer" in kinds:
+            rows = kinds["sequencer"]
+            if [cells[0] for _, cells in rows[1:]] != list(V2_ASPECTS):
+                err(rows[0][0], "sequencer", f"aspects must be {list(V2_ASPECTS)}")
+            for n, cells in rows[1:]:
+                if len(cells) != len(SEQUENCER_HEADER):
+                    err(n, "sequencer", "wrong number of columns")
+                    continue
+                allowed = vocab.get(V2_ASPECTS.get(cells[0]), set())
+                for w in words(cells[1]):
+                    if w not in allowed:
+                        err(
+                            n,
+                            "sequencer",
+                            f"{cells[0].lower()} `{w}` not in the glossary",
+                        )
+        if not any("def on_note(" in code for code in python_blocks(body["Timing"])):
+            err(1, "lifecycle", "Timing needs a `python` block with `def on_note(`")
+
+    if "Sound" in body:
+        outputs = vocab["outputs"] - {"DMA"}
+        blocks = split(body["Sound"], "h3")
+        if not blocks:
+            err(1, "sound", "needs one `###` per output")
+        for output, tokens in blocks.items():
+            head = line_of(tokens[0]) if tokens else 1
+            if output not in outputs:
+                err(head, "sound", f"output `{output}` not in {sorted(outputs)}")
+            kinds = [t.type for t in tokens]
+            if "table_open" not in kinds:
+                err(head, "sound", f"`{output}` has no table")
+                continue
+            before = tokens[: kinds.index("table_open")]
+            if not python_blocks(before):
+                err(head, "sound", f"`{output}` needs `python` code before its table")
+            for n, cells in check_rows(table(tokens), SOUND_HEADER, "sound", err):
+                _, kind, rate, owner, set_by, _ = cells
+                for column, value, key in (
+                    ("kind", kind, "kind"),
+                    ("advances by", rate, "rate"),
+                    ("owner", owner, "owner"),
+                ):
+                    if value not in vocab[key]:
+                        err(n, "sound", f"{column} `{value}` not in the glossary")
+                for w in words(set_by):
+                    if w not in names | {"instrument"}:
+                        err(n, "sound", f"set by `{w}`: not on the card")
+
+    if "Instrument" in body:
+        if not any("class Instrument" in c for c in python_blocks(body["Instrument"])):
+            err(1, "instrument", "needs a `python` block with `class Instrument`")
+        rows = check_rows(
+            table(body["Instrument"]), INSTRUMENT_HEADER, "instrument", err
+        )
+        if rows and not grouped([cells[0] for _, cells in rows], INSTRUMENT_QUESTIONS):
+            err(
+                rows[0][0],
+                "instrument",
+                f"questions must be {INSTRUMENT_QUESTIONS}, in order",
+            )
+
+    if "Interactions" in body:
+        if tables(body["Interactions"]):
+            err(1, "interactions", "write interactions as `python` code, not a table")
+        if not python_blocks(body["Interactions"]):
+            err(1, "interactions", "needs a `python` block")
+
+
+def write_context(path, facts, sources):
+    """Regenerate a template 2 card's Context; return True if it changed."""
+    doc = read(path)
+    if doc.meta.get("template") != 2 or "player" not in doc.meta:
+        return False
+    text = path.read_text(encoding="utf-8")
+    rows = context_rows(str(doc.meta["player"]), facts, sources, path.parent)
+    new = with_context(text, doc, rows)
+    if new != text:
+        path.write_text(new, encoding="utf-8")
+    return new != text
+
+
 def main(argv):
+    write = "--write" in argv
+    argv = [a for a in argv if a not in ("--write", "--check")]
     known = players.binaries()
     keys = ["control", "rate", "stream_names", "roles"]
     keys += ["note_on", "outputs", "write_modes", "ends"]
+    keys += ["kind", "owner"]
     keys += list(ASPECTS.values())
     vocab = {key: glossary.words(key) for key in keys}
     facts = players.load()
+    sources = inventory.table()
+    paths = [
+        path
+        for arg in map(Path, argv)
+        for path in (sorted(arg.rglob("*.md")) if arg.is_dir() else [arg])
+    ]
+    if write:
+        for path in paths:
+            if write_context(path, facts, sources):
+                print(f"wrote {path}")
+        return 0
     errors = []
-    for arg in map(Path, argv):
-        for path in sorted(arg.rglob("*.md")) if arg.is_dir() else [arg]:
-            errors += check(path, known, vocab, facts)
+    for path in paths:
+        errors += check(path, known, vocab, facts, sources)
     for e in errors:
         print(e)
     return 1 if errors else 0

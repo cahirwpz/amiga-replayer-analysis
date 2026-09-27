@@ -37,6 +37,8 @@ ArtOfNoise-8V:
 MED:
   provenance: original
   author: Teijo Kinnunen
+  links:
+    - https://archive.org/details/OctaMED_Professional_v3.00_1992_RBF_Software_CU_Amiga
 
 DavidWhittaker:
   source: ext/c-flod/neoart/flod/whittaker

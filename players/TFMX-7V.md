@@ -13,9 +13,9 @@ streams: {}
 
 ## Key ideas
 
-- Voices 4–7 write to register blocks in RAM, not to Paula. The macro engine
-  stays unchanged. `data/annot/TFMX-7V.yaml:FakeRegisters`
-- The mixer reads these blocks as Paula would. DMA-on restarts the sample; a new
+- Voices 4–7 write to register sets in RAM, not to Paula. The macro engine stays
+  unchanged. `data/annot/TFMX-7V.yaml:FakeRegisters`
+- The mixer reads these sets as Paula would. DMA-on restarts the sample; a new
   loop starts at the wrap. `:FakeDma`
 - Volume costs one table read per byte: 64 tables of 256 bytes. The sum of four
   is clipped, not divided. `:BuildMixTables`

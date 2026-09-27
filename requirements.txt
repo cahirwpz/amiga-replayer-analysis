@@ -3,3 +3,4 @@ markdown-it-py
 mdit-py-plugins
 pre-commit
 PyYAML
+mypy

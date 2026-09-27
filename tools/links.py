@@ -11,7 +11,9 @@ Checks:
     Paths starting with ext/ or data/ are relative to the repo root. In
     player cards (front matter has `player`), other paths are relative to
     the player's source, as tools/inventory.py finds it. A bare `:Label`
-    refers to the file of the previous citation.
+    refers to the file of the previous citation. In a player card, before
+    any other citation, it refers to data/annot/<player>.yaml, else to
+    data/disasm/<player>.cnf.
   - no citation names a line number, e.g. `file.s:12`
   - code spans that start with a repo folder, e.g. `docs/x.md` or
     `ext/uade/y.s:12`, name a path that exists. Placeholders in angle
@@ -94,6 +96,18 @@ def sources():
     return {player: row["source"] for player, row in inventory.table().items()}
 
 
+def default_file(player):
+    """The file a card's bare `:Label` names before any other citation: the
+    player's annotation, else its IRA config."""
+    for path in (
+        ROOT / "data/annot" / f"{player}.yaml",
+        ROOT / "data/disasm" / f"{player}.cnf",
+    ):
+        if path.is_file():
+            return path
+    return None
+
+
 def names_line(href):
     """True for a link to a line, e.g. `x.asm?plain=1#L60` or `#L60-L64`."""
     return re.fullmatch(r"L\d+(-L?\d+)?", urlsplit(href).fragment) is not None
@@ -131,7 +145,7 @@ def check(path, known_sources):
         if not (path.parent / target).exists():
             err(n, "link", f"{target} does not exist")
 
-    last_file = None
+    last_file = default_file(str(meta["player"])) if "player" in meta else None
     for n, child in spans(doc):
         if child.type != "code_inline":
             continue

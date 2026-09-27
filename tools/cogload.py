@@ -23,7 +23,8 @@ DEFAULT = {
     "block_sentences": 3,  # sentences per paragraph or list item
     "list_items": 7,  # items per list (per nesting level)
     "list_depth": 2,  # nested list levels
-    "file_words": 450,  # words per file, tables included
+    "file_words": 450,  # words per file
+    "count_tables": True,  # table cells count toward file_words
     "cell_words": 15,  # words per table cell
     "fk_grade": 12.0,  # Flesch-Kincaid grade of the file's prose
 }
@@ -33,10 +34,11 @@ PROFILES = [
     # A lookup table, not read top to bottom.
     ("docs/glossary.md", {"file_words": 3000}),
     # Working rules; read at the start of every session.
-    ("AGENTS.md", {"file_words": 500}),
+    ("AGENTS.md", {"file_words": 600}),
     # Working notes; sections go away as tasks are done.
     ("TODO.md", {"file_words": 1000}),
-    ("players/", {"file_words": 400}),
+    # Tables are lookups; only prose counts.
+    ("players/", {"file_words": 400, "count_tables": False}),
     ("ideas/", {"file_words": 300}),
     (
         "details/",
@@ -167,7 +169,8 @@ def check(path, known_terms, avoided=()):
             continue
 
         w = words(text)
-        total_words += len(w)
+        if kind != "cell" or lim["count_tables"]:
+            total_words += len(w)
         if rel not in AVOID_EXEMPT:
             for pattern, term, use in avoided:
                 if pattern.search(text):
