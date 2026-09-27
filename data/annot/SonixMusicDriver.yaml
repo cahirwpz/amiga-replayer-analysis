@@ -31,6 +31,38 @@ labels:
   lbC01EF6C: StretchHalves
   lbW01F0FE: FilterCutoffs
 
+  # added for specs/sonix_music_driver.py
+  PlayScore: PlayScore
+  PlaySNX: PlaySNX
+  StartNote: StartNote
+  ReleaseNote: ReleaseNote
+  StopNote: StopNote
+  RampVolume: RampVolume
+  SetFilter: SetFilter
+  OneFilter: OneFilter
+  lbC01EAB8: StepRamps
+  lbC01EC48: SynthStart
+  lbC01F276: SampledTick
+  lbC01F604: IffTick
+  lbC01E286: SampleWrite
+  # readable labels that specs cite
+  SyntTech: SyntTech
+  SSTech: SSTech
+  IFFTech: IFFTech
+  InstallIFF: InstallIFF
+  InstallSNX: InstallSNX
+  DMAWait: DMAWait
+  Clock: Clock
+  SetAdr: SetAdr
+  SetLen: SetLen
+  SetPer: SetPer
+  ChangeVolume: ChangeVolume
+  SongEnd: SongEnd
+  Sonix: Sonix
+  # new names that specs cite
+  lbW01EB58: SemitoneRatios
+  lbW01E3B2: BendFactors
+
 comments:
   647: "'Synthesis' instrument file, 502 bytes"
   651: plus 64 filtered waves of 128 bytes
@@ -85,3 +117,15 @@ banners:
   2866: |
     OneFilter: run a resonant low-pass filter over the 128-byte wave,
     once for each of 64 cutoffs.
+
+# Classes in specs/sonix_music_driver.py: each word occurs in the source.
+types:
+  EnvelopeSetup: [lbC01ED76]
+  SynthInstrument: [SyntTech]
+  SampledSound: [SSTech]
+  IffSound: [IFFTech]
+  Score: [Buffer2]
+  SynthState: [lbC01EC0E]
+  SampleState: [lbC01F276]
+  Voice: [StartNote]
+  Module: [Sonix]

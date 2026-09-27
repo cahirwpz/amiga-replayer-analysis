@@ -1,7 +1,6 @@
 ---
 player: SonixMusicDriver
-control: { sequencer: commands, instrument: none }
-themes: [synthesis]
+template: 2
 ideas:
   [
     event-scores,
@@ -10,7 +9,6 @@ ideas:
     subtractive-synth,
     tempo-independent-rates,
   ]
-streams: { voice: 1 }
 ---
 
 # Sonix Music Driver
@@ -18,74 +16,57 @@ streams: { voice: 1 }
 A synth instrument works like an analog synth: wave, low-pass filter, envelope,
 LFO.
 
+## Context
+
+| Fact      | Value                                                                 |
+| --------- | --------------------------------------------------------------------- |
+| Player    | `SonixMusicDriver`                                                    |
+| Author    | Mark Riley                                                            |
+| Code read | disassembly: `ext/uade/amigasrc/players/wanted_team/SonixMusicDriver` |
+| Spec      | [specs/sonix_music_driver.py](../specs/sonix_music_driver.py)         |
+
 ## Key ideas
 
-- Scores hold events: note with velocity, release, wait. No rows.
-  `data/annot/SonixMusicDriver.yaml:ReadEvent`
-- Each instrument type is a driver with its own tick routine. `:TickInstruments`
-- Loading a synth builds 64 low-pass copies of its wave. `:OneFilter`
+- Scores hold events: note with velocity, wait, instrument, volume, tempo, bend.
+  There are no rows. `:ReadEvent`
+  - Enables: timing like a MIDI sequencer.
+  - Costs: no patterns, so every note is stored.
+- Each instrument type is a driver with two entry points: a tick, then a
+  register write. `:TickInstruments`
+  - Enables: synths, `.ss` samples and 8SVX samples in one score.
+- Loading a synth builds 64 low-pass copies of its wave. `:SetFilter`
+  `:OneFilter`
+  - Enables: filter sweeps for the cost of one copy per tick.
+  - Costs: 8 kB per synth instrument.
 - Envelope and LFO pick one copy per tick: a filter sweep. `:SelectFilter`
+- High notes play fewer bytes of the wave. The period stays between 214 and 428.
+  `:OctaveShift`
+  - Enables: every note plays at 8 to 16.5 kHz.
+  - Costs: the top octave plays a 4-byte wave.
 - Two wave modes: blend with a moving copy, or stretch one half. `:BlendCopy`
   `:StretchHalves`
-- Rates scale with tick length, so tempo does not change them. `:Envelope`
 
-## Streams
+## Composer's view
 
-| Stream | Scope | Role      | Carries                                         | Control   | Rate  |
-| ------ | ----- | --------- | ----------------------------------------------- | --------- | ----- |
-| Track  | voice | sequencer | note, velocity, instrument, volume, tempo, bend | wait, end | delta |
+The composer writes four tracks of events and picks instruments by number. A
+synth instrument sets its wave, filter, envelope, LFO and wave mode.
 
-## Sequencer
+| Aspect   | Answer                                                                 | Source             |
+| -------- | ---------------------------------------------------------------------- | ------------------ |
+| Notation | An event word: a note and velocity, a wait, or a setting.              | `:ReadEvent`       |
+| Notation | A synth: wave, LFO table, envelope, amounts for volume, pitch, filter. | `:SynthInstrument` |
+| Cost     | A note ends with the same note at velocity 0.                          | `:NoteEvent`       |
+| Cost     | A note on a held synth voice keeps its envelope: legato.               | `:Legato`          |
+| Cost     | Every synth note glides from the last pitch, over the portamento time. | `:Portamento`      |
+| Cost     | Synth notes outside 36 to 107 are dropped.                             | `:SynthTick`       |
+| Cost     | Without envelope-to-volume, a release silences the note at once.       | `:OctaveShift`     |
 
-| Aspect   | Value    | Label                     |
-| -------- | -------- | ------------------------- |
-| Time     | deltas   | `:WaitEvent`              |
-| Unit     | tick     | `:ReadTracks`             |
-| Note end | note-off | `:NoteEvent`              |
-| Routing  | fixed    | `:ReadTracks`             |
-| Reuse    | none     | `:RestartScore`           |
-| Tempo    | timer    | `:TempoEvent` `:SetTempo` |
+## What is unique
 
-## Generators
-
-| Generator  | Scope | States                          | Writes                 | Rate | Set by            | Note-on |
-| ---------- | ----- | ------------------------------- | ---------------------- | ---- | ----------------- | ------- |
-| Envelope   | voice | attack, decay, sustain, release | volume, filter         | tick | instrument, Track | restart |
-| LFO        | voice | delay, run                      | period, volume, filter | tick | instrument        | restart |
-| Portamento | voice | glide, done                     | period                 | tick | instrument        | restart |
-| Wave mode  | voice | blend, stretch                  | wave data              | tick | instrument        | keep    |
-
-## Channel outputs
-
-| Output    | Writers, in tick order                                     |
-| --------- | ---------------------------------------------------------- |
-| Period    | Track (note), Portamento (add), LFO (scale), Track (scale) |
-| Volume    | LFO (add), Envelope (scale), Track (scale)                 |
-| Wave data | Envelope (edit), LFO (edit), Wave mode (edit)              |
-| Sample    | Track (set)                                                |
-| DMA       | Track (on)                                                 |
-
-## Interactions
-
-| From  | To       | Event                                             |
-| ----- | -------- | ------------------------------------------------- |
-| Track | Envelope | Velocity 0 starts the release `:NoteEvent`        |
-| Track | Envelope | A note on a held voice keeps it running `:Legato` |
-
-- Envelope and LFO write a filter index. It picks the copy that the tick writes
-  into the voice's buffer. `:SelectFilter`
-- High notes skip samples to keep the period in range. `:OctaveShift`
-- `TINY` and `SMUS` notes carry a length; they release after 3/4 of it.
-  `:PlayTINY`
-
-## State
-
-| Scope      | Fields                                                               |
-| ---------- | -------------------------------------------------------------------- |
-| Voice      | track position, wait, note state, envelope, LFO phase, two buffers   |
-| Instrument | type; synth: wave, 64 filtered copies, LFO table, levels and amounts |
-| Global     | tempo, tick length                                                   |
-
-## Open questions
-
-- None left.
+- Rates and times scale with the tick's length. A tempo change keeps envelopes,
+  LFOs and glides at their speed. `:SetTempo`
+- A synth voice fills a new wave buffer every tick. Paula takes it at the loop's
+  end, so the timbre changes with no restart. `:SynthWrite`
+- After the score loops, the last tempo event still holds. `:RestartScore`
+- Sample notes set period 2 with DMA off, to end the word fast (guess).
+  `:SampledTick`

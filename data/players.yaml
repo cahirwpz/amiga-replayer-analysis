@@ -173,6 +173,7 @@ SonicArranger:
   author: Carsten Schlote, Branko Mikiç and Carsten Herbst
 
 SonixMusicDriver:
+  spec: specs/sonix_music_driver.py
   provenance: disassembly
   author: Mark Riley
 

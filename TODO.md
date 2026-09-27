@@ -47,7 +47,6 @@ the first card on it, with `specs/med.py`.
 | `AbyssHighestExperience` | Its disassembly |
 | `MIDI-Loriciel`          | —               |
 | `SonicArranger`          | —               |
-| `SonixMusicDriver`       | —               |
 | `SoundPlayer`            | —               |
 
 - [ ] After the last card: decide on `specs/controls.py`. `CommandList` and
