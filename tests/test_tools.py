@@ -184,7 +184,7 @@ class Cards(unittest.TestCase):
         code, rules, out = run("cards.py", FIXTURES / "cards_bad_v2.md")
         self.assertEqual(code, 1)
         expected = {"front-matter", "player", "section", "context", "composer"}
-        expected |= {"cell", "label", "code"}
+        expected |= {"cell", "label", "code", "unique"}
         self.assertEqual(expected, rules, out)
         for text in (
             "unknown `control`",
@@ -195,6 +195,8 @@ class Cards(unittest.TestCase):
             "no code on a card",
             "one fact per cell",
             "`plr_loop2` is no readable name",
+            "must be (manual) or labels",
+            "no subheadings",
         ):
             self.assertIn(text, out)
 

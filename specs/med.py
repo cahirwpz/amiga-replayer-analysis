@@ -20,7 +20,6 @@ FIRST_OPCODE = 0x80  # list bytes from here on are opcodes
 WAVE_COUNT = 64  # waveforms per synth sound
 ENVELOPE_LENGTH = 128  # bytes an envelope reads from a waveform
 VIBRATO_STEPS = 32  # waveform bytes synth vibrato reads
-MIN_SYNTH_PERIOD = 113  # synth periods are clamped here
 FINETUNE = range(-8, 8)
 CMD_PORTAMENTO = 3  # pattern command that keeps a hold
 CMD_WAVE_LIST_POS = 0x0E
@@ -469,6 +468,8 @@ def SynthTick(voice: Voice) -> int:
     """Once per tick for a synth or hybrid voice; returns its period.
 
     The volume list runs before the wave list. Each has its own speed.
+    The replay means to clamp the period at 113, but its `moveq #113`
+    writes the wrong register, so no clamp happens.
     """
     sound = synth_sound(voice)
     if voice.volume_list.due():
@@ -483,7 +484,7 @@ def SynthTick(voice: Voice) -> int:
     period = WaveListTick(voice, sound)
     period = SynthArpeggio(voice, period)
     period = SynthVibrato(voice, period)
-    return max(period + voice.pitch_slide, MIN_SYNTH_PERIOD)
+    return period + voice.pitch_slide
 
 
 def VolEnvelopeStep(voice: Voice) -> None:

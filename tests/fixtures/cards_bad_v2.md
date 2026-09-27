@@ -23,11 +23,14 @@ class Score:
 | Aspect   | Answer     | Source       |
 | -------- | ---------- | ------------ |
 | Notation | grid; rows | `:plr_loop2` |
+| Price    | cheap      | format notes |
 
 ## Key ideas
 
 - Sections are out of order.
 
 ## What is unique
+
+### Timing
 
 ## Extra

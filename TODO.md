@@ -38,8 +38,6 @@ All twelve pilot cards exist.
 The template is in [`docs/card-template.md`](docs/card-template.md). `MED` is
 the first card on it, with `specs/med.py`.
 
-- [ ] Review the MED card and `specs/med.py` with the user. Adjust the template
-      from the review.
 - [ ] Migrate TFMX Pro, then Tim Follin, to a spec and a prose card; review
       each. Their items below fold in.
 - [ ] Migrate the other cards the same way. Paula mechanics go to

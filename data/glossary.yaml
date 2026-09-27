@@ -50,6 +50,8 @@ sections:
       note-off: The event that ends a note, e.g. to start its release. A MIDI term.
       synth: Sound made by code from short waveforms, not from recordings.
       envelope: A curve that changes volume, or another value, during a note.
+      volume list: A command list whose values set a voice's volume.
+      wave list: A command list whose values pick a voice's waveform.
       modulation: One signal changing a setting of another, e.g. volume or pitch.
       pulse width: The share of a square-like wave's cycle spent high.
       mixing: Adding several voices into one channel's sample data, in software.
@@ -127,6 +129,7 @@ sections:
       sysex: 'System exclusive: a MIDI message for one maker''s device.'
       running status: A MIDI stream may leave out a status byte that repeats.
       delta time: The wait before an event, in pulses.
+      gate time: How long a note stays on before its release.
       pulse: The time unit of a MIDI sequencer, a fraction of a quarter note.
       PPQ: 'Pulses per quarter note: the time resolution of an SMF.'
       tempo: Beats per minute; in an SMF, microseconds per quarter note.
@@ -142,6 +145,7 @@ sections:
       busy-wait: Waiting in a loop that checks a condition, doing nothing else.
       jump table: A table of code addresses. A number picks which code runs.
       handler: The code that runs for one command or event.
+      opcode: A byte that names an action, e.g. a jump, instead of a value.
 
   - key: programs
     title: Programs and formats
@@ -248,6 +252,7 @@ sections:
       sound number: instrument number
       sound record: instrument
       sound transpose: instrument transpose
+      hybrid: synth sound with a sample
 
   - key: control
     title: Control vocabulary

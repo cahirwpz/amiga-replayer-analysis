@@ -21,70 +21,53 @@ A synth sound runs a volume list and a wave list that jump into each other.
 
 ## Key ideas
 
-- Two opcode lists per instrument, each at its own speed. `:SynthTick`
+- Two command lists per instrument, each at its own speed. `:SynthTick`
   - Enables: a slow volume shape beside fast wave changes.
-  - Costs: 256 bytes of lists per synth sound; CPU low.
+  - Costs: 256 bytes of lists per synth sound.
 - Each list can set the other's position. `:VolJumpWaveList` `:WaveJumpVolList`
   - Enables: a volume phase can start a new wave phrase.
-  - Costs: jumps have no conditions; the target keeps its own clock.
+  - Costs: a jump has no condition.
 - Waveforms double as volume envelopes and vibrato shapes. `:VolEnvOnce`
   `:VibratoWave`
   - Enables: drawn envelope and vibrato shapes, with no new data type.
-  - Costs: an envelope takes 128 list visits; it shares the 64-wave pool.
-- Hybrid instruments run a sample through the same lists. `:StartSynthNote`
+  - Costs: an envelope uses one of the 64 waveform slots.
+- A synth sound can play a sample through the same lists. MED calls it a
+  `hybrid`. `:StartSynthNote`
   - Enables: list envelopes and pitch on a sampled sound.
-  - Costs: the sample fills the first of the 64 waveform entries.
-- Hold ends in a jump to the volume list's release part. `:HoldAndFade`
-  `:SynthRelease`
+  - Costs: the sample takes the first of the 64 waveform slots.
+- When the gate time runs out, the volume list jumps to its release part.
+  `:HoldAndFade` `:SynthRelease`
   - Enables: the list itself shapes the release.
-  - Costs: a note-off command skips it and stops the note at once.
+  - Costs: a note-off command skips the release part: it is a hard stop.
 
 ## Composer's view
 
 The composer writes notes into patterns, one track per voice. MED calls a
-pattern a `block` and a row a `line`. Positions order the patterns; a section
-names a list of positions.
+pattern a `block` and a row a `line`. A section names a list of positions.
 
 | Aspect   | Answer                                                    | Source           |
 | -------- | --------------------------------------------------------- | ---------------- |
 | Notation | A tracker grid: one column per track, one line per row.   | (manual)         |
-| Notation | Synth sounds: two lists of values and opcodes.            | format notes     |
+| Notation | Synth sounds: a volume list and a wave list.              | `:SynthSound`    |
+| Notation | Gate time: an instrument setting, `hold`, in ticks.       | `:Instrument`    |
 | Cost     | A synth arpeggio is one wave-list opcode.                 | `:ArpeggioStart` |
 | Cost     | A pattern arpeggio needs its command on every row.        | `:ArpeggioTick`  |
 | Cost     | A drawn envelope is one waveform and one opcode.          | `:VolEnvOnce`    |
-| Cost     | A release needs no pattern data: hold and decay start it. | `:SynthRelease`  |
+| Cost     | A release needs no pattern data: the gate time starts it. | `:SynthRelease`  |
 
 ## What is unique
 
-### Timing
-
-- Each list runs every N ticks. `:SynthTick`
 - A list's wait counts list visits, not ticks. `:VolWait`
-- A jump moves the other list's position but keeps its clock. `:VolJumpWaveList`
-- Hold counts ticks from the note-on. `:PlayRowNotes`
-- The next row extends hold with an instrument number and no note, or with
+- A jump cancels the other list's wait, but keeps its clock. `:VolJumpWaveList`
+- The next row extends gate time with an instrument number and no note, or with
   portamento. `:ExtendHold`
-- When hold runs out, a synth jumps its volume list to the release part.
-  `:SynthRelease` A note-off command is a hard stop instead. `:CmdNoteOff`
-
-### Sound
-
-- A volume-list visit runs the volume slide, then the envelope, then the list.
-  Each overwrites the one before. `:SynthTick`
+- A volume-list value overwrites the envelope, which overwrites the volume
+  slide. `:SynthTick`
 - A new waveform starts at the channel's next loop, with no restart.
   `:ReadWaveList`
 - Synth arpeggio replaces the period, so pattern portamento then has no effect.
   `:SynthArpeggio`
-- Pattern vibrato and arpeggio apply last. `:UpdatePerVol`
-- A synth note after a synth note keeps the channel playing. `:KeepSynthChannel`
-- Command E sets the wave-list start for a note on the same row.
-  `:CmdWaveListPos`
-
-### Sequencing
-
-- A pattern end starts the next position. `:NextPlaySeq`
-- After the last position, the next section starts. `:NextSection`
-- A pattern command repeats rows. `:CmdLoop`
+- A synth note after a synth note is legato. `:KeepSynthChannel`
 
 ## Open questions
 

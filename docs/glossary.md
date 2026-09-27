@@ -51,6 +51,8 @@ One line per term. Every acronym used in this repo must appear here.
 | **note-off**    | The event that ends a note, e.g. to start its release. A MIDI term.                 |
 | **synth**       | Sound made by code from short waveforms, not from recordings.                       |
 | **envelope**    | A curve that changes volume, or another value, during a note.                       |
+| **volume list** | A command list whose values set a voice's volume.                                   |
+| **wave list**   | A command list whose values pick a voice's waveform.                                |
 | **modulation**  | One signal changing a setting of another, e.g. volume or pitch.                     |
 | **pulse width** | The share of a square-like wave's cycle spent high.                                 |
 | **mixing**      | Adding several voices into one channel's sample data, in software.                  |
@@ -130,6 +132,7 @@ Standard MIDI terms. Note-on and note-off are under Sound and synthesis.
 | **sysex**            | System exclusive: a MIDI message for one maker's device.                                          |
 | **running status**   | A MIDI stream may leave out a status byte that repeats.                                           |
 | **delta time**       | The wait before an event, in pulses.                                                              |
+| **gate time**        | How long a note stays on before its release.                                                      |
 | **pulse**            | The time unit of a MIDI sequencer, a fraction of a quarter note.                                  |
 | **PPQ**              | Pulses per quarter note: the time resolution of an SMF.                                           |
 | **tempo**            | Beats per minute; in an SMF, microseconds per quarter note.                                       |
@@ -146,6 +149,7 @@ Code patterns we cite from replayer source.
 | **busy-wait**  | Waiting in a loop that checks a condition, doing nothing else. |
 | **jump table** | A table of code addresses. A number picks which code runs.     |
 | **handler**    | The code that runs for one command or event.                   |
+| **opcode**     | A byte that names an action, e.g. a jump, instead of a value.  |
 
 ## Programs and formats
 
@@ -245,18 +249,19 @@ using it, e.g. "Pitch" for "Pitch list".
 Other names for terms above. Checked outside code quotes, so a format's own term
 can still appear as `code`.
 
-| Avoid           | Use                  |
-| --------------- | -------------------- |
-| sequence        | positions            |
-| order list      | positions            |
-| block           | pattern              |
-| song entry      | position             |
-| song step       | position             |
-| step list       | positions            |
-| subtune         | subsong              |
-| sound number    | instrument number    |
-| sound record    | instrument           |
-| sound transpose | instrument transpose |
+| Avoid           | Use                       |
+| --------------- | ------------------------- |
+| sequence        | positions                 |
+| order list      | positions                 |
+| block           | pattern                   |
+| song entry      | position                  |
+| song step       | position                  |
+| step list       | positions                 |
+| subtune         | subsong                   |
+| sound number    | instrument number         |
+| sound record    | instrument                |
+| sound transpose | instrument transpose      |
+| hybrid          | synth sound with a sample |
 
 ## Control vocabulary
 

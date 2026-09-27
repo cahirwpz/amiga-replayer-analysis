@@ -21,7 +21,7 @@ ideas: [<idea slug>]
 
 - <Idea.> `:<Label>`
   - Enables: <what it makes possible>.
-  - Costs: <limits, memory, CPU>.
+  - Costs: <limits or memory; CPU only when it is expensive>.
 
 ## Composer's view
 
@@ -34,17 +34,7 @@ ideas: [<idea slug>]
 
 ## What is unique
 
-### Timing
-
-- <When a sound starts, changes and ends.> `:<Label>`
-
-### Sound
-
-- <How outputs combine.> `:<Label>`
-
-### Sequencing
-
-- <How the score orders and reuses patterns.> `:<Label>`
+- <One rule no common tracker has.> `:<Label>`
 
 ## Open questions
 
@@ -72,10 +62,12 @@ A card lets a reader:
 - **Context** is generated from [`data/players.yaml`](../data/players.yaml),
   which also holds manual links. Mark manual citations "(manual)".
 - **Key ideas**: each bullet gives the idea, what it enables and what it costs.
-  CPU is low, medium or high, with a reason.
-- **Composer's view**: prose, then Notation and Cost rows.
-- **What is unique**: short bullets under Timing, Sound and Sequencing. Skip a
-  `###` with nothing unique.
+  Rate CPU only when it is medium or high, with a reason.
+- **Composer's view**: prose, then Notation and Cost rows. A source is
+  "(manual)" or spec labels. Format notes feed the spec; cite its label.
+- **What is unique**: one flat list, no `###`. Each bullet is one rule on
+  timing, sound or sequencing, with its label. Leave out what every tracker
+  does.
 
 ## Delta cards
 

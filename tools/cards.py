@@ -50,6 +50,7 @@ import players
 import inventory
 from links import citation
 from mdtools import (
+    CODE,
     children,
     format_table,
     heading_lines,
@@ -122,6 +123,8 @@ V2_BASE_COVERS = {"Composer's view"}
 CONTEXT_HEADER = ["Fact", "Value"]
 COMPOSER_HEADER = ["Aspect", "Answer", "Source"]
 COMPOSER_ASPECTS = ["Notation", "Cost"]
+# A Composer's view source: the manual, or labels in the spec.
+SOURCE_RE = re.compile(rf"\(manual\)|{CODE}( {CODE})*")
 UADE_SOURCES = "ext/uade/amigasrc/players"
 # A cited label on a template 2 card: CamelCase, no underscores. Raw source
 # labels get a readable name in data/annot/ or data/disasm/ first.
@@ -505,6 +508,14 @@ def check_v2(path, doc, known, vocab, facts, sources, err):
         )
         if rows and not grouped([cells[0] for _, cells in rows], COMPOSER_ASPECTS):
             err(rows[0][0], "composer", f"aspects must be {COMPOSER_ASPECTS}, in order")
+        for n, cells in rows:
+            if not SOURCE_RE.fullmatch(cells[2]):
+                err(n, "composer", f"source `{cells[2]}` must be (manual) or labels")
+
+    if "What is unique" in body:
+        for token in body["What is unique"]:
+            if token.type == "heading_open":
+                err(token.map[0] + 1, "unique", "one flat list, no subheadings")
 
 
 def write_context(path, facts, sources):
