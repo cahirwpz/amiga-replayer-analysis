@@ -28,10 +28,37 @@ labels:
   lbC000B68: PitchNote
   lbC000BE8: PitchToPeriod
   lbC000C46: NoisePeriod
-  lbC000C6E: Vibrato
-  lbC000CBA: Slide
+  lbC000C6E: ScaledVibrato
+  lbC000CBA: ScaledSlide
   lbC000CDE: VolumeOffset
-
+  # added for specs/jochen_hippel_st.py
+  Init_Emu: ResetEmu
+  Play_Emu: EmuTick
+  lbC000530: WriteChannel
+  1332: EmuDigi
+  lbC000DE2: NoiseRandom
+  1729: RestartSong
+  lbC000840: Rest
+  lbC000AB6: PitchLoop
+  lbC000AC8: PitchHold
+  lbC000AE4: SetVibrato
+  lbC000AF4: ToneAndNoise
+  lbC000B04: NoiseOnly
+  lbC000B12: ToneOnly
+  lbC000B20: PitchListJump
+  lbC000B40: PitchWait
+  lbC000B4C: SkipByte
+  lbC000A9A: StopDigi
+  lbC000B56: SlideCommand
+  lbC000AAA: SetToneFlags
+  SIDCom: SidCommand
+  1625: SidVoice
+  lbC000B94: ReadVolume
+  lbC000BBC1: VolumeLoop
+  lbC000BD6: VolumeWait
+  lbC000CF2: ToneFlags
+  lbC000D1C: OctaveVibrato
+  lbC000D92: PeriodSlide
 comments:
   1740: "position entry, per voice: pattern, transpose, instrument transpose, flags"
   1746: "$Fx: volume offset for this voice"
@@ -51,9 +78,24 @@ comments:
 
 banners:
   1286: |
-    Play_Emu: once per tick, after the ST player has run.
+    EmuTick: once per tick, after the ST player has run.
     Read the chip register shadow and set Paula channels 0, 3, 2 for
     chip channels A, B, C. Per channel: tone, noise or silence.
   2531: |
     RegisterShadow: one long per chip register, value in byte 2.
     The ST player writes here instead of to the YM2149.
+
+# Classes in specs/jochen_hippel_st.py: each word occurs in the source.
+types:
+  Subsong: [lbL000F5A]
+  Instrument: [lbL000F4E]
+  DigiSample: [lbL000F6A]
+  Score: [lbL000F66]
+  PitchReader: [lbL000F4A]
+  VolumeReader: [lbL000F4E]
+  Vibrato: [lbC000C6E, lbC000D1C]
+  Voice: [lbL000E72, lbL000EA6, lbL000EDA]
+  ChipRegisters: [lbL000E26]
+  EmuState: [lbL000616]
+  DigiState: [lbW0004C8]
+  Module: [lbW000E6C, lbL000E64]

@@ -39,7 +39,20 @@ The template is in [`docs/card-template.md`](docs/card-template.md). `MED` is
 the first card on it, with `specs/med.py`.
 
 - [ ] Migrate the other cards the same way. Paula mechanics go to
-      `hardware/paula.py`.
+      `hardware/paula.py`. The table lists the cards still on template 1.
+
+| Card                     | Blocked by      |
+| ------------------------ | --------------- |
+| `AbyssHighestExperience` | Its disassembly |
+| `MIDI-Loriciel`          | —               |
+| `MugicianII`             | —               |
+| `Oktalyzer`              | —               |
+| `SonicArranger`          | —               |
+| `SonixMusicDriver`       | —               |
+| `SoundMon2.2`            | —               |
+| `SoundPlayer`            | —               |
+| `SynthDream`             | —               |
+
 - [ ] After the last card: drop template 1 from `tools/cards.py`, its tests and
       fixtures. Drop the glossary's control levels, generator, role, write modes
       and the DMA output.
@@ -49,9 +62,11 @@ the first card on it, with `specs/med.py`.
 ### Hardware model
 
 - [ ] `POLL_CCK` is an estimate from 68000 instruction timings in
-      `specs/med.py:StartDMA` (25) and
-      `specs/digital_sonix_chrome.py:WaitAudioIrq` (20). Measure or cite one
-      poll of `_Wait1line` and of `WaitAudioIrq`.
+      `specs/med.py:StartDMA` (25), `specs/digital_sonix_chrome.py:WaitAudioIrq`
+      (20) and `specs/jochen_hippel_st.py:NotePlay` (15). Measure or cite one
+      poll of each.
+- [ ] `specs/jochen_hippel_st.py` runs Interrupt by a 50 Hz timer. Check
+      DeliTracker's default rate for a player without `DTP_Timer`.
 
 ### Then
 

@@ -1,88 +1,87 @@
 ---
 player: Jochen_Hippel_ST
-control: { sequencer: commands, instrument: commands }
-themes: [emulation]
-ideas: [chip-emulation, register-shadow, log-volume-table]
-streams: { voice: 4 }
+template: 2
+ideas:
+  [chip-emulation, register-shadow, log-volume-table, pitch-list, volume-list]
 ---
 
 # Jochen Hippel ST
 
-The Atari ST player runs as is. A layer turns its sound chip registers into
-Paula settings.
+The ST replay runs as is. A layer turns its sound chip registers into Paula
+settings.
+
+## Context
+
+| Fact      | Value                                                                 |
+| --------- | --------------------------------------------------------------------- |
+| Player    | `Jochen_Hippel_ST`                                                    |
+| Author    | Jochen Hippel                                                         |
+| Family    | Jochen Hippel                                                         |
+| Code read | disassembly: `ext/uade/amigasrc/players/wanted_team/Jochen_Hippel_ST` |
+| Spec      | [specs/jochen_hippel_st.py](../specs/jochen_hippel_st.py)             |
 
 ## Key ideas
 
-- The ST code writes chip registers into a shadow table.
-  `data/annot/Jochen_Hippel_ST.yaml:RegisterShadow`
-- Three chip channels go to Paula channels 0, 3 and 2. `:Play_Emu`
-- Tone: a 4-byte square wave at 7 times the chip period. `:EmuChannel`
-- Noise: a 1024-byte sample. `:EmuNoise`
-- A table maps 16 log volume steps to Paula's linear volume. `:VolumeTable`
-- Paula channel 1 plays digital samples. `:StartDigi`
+- The ST replay writes chip registers into a copy in RAM. Each tick, a layer
+  sets Paula channels 0, 3 and 2 from it. `:Play` `:EmuTick`
+  - Enables: ST songs play with their own replay and data.
+  - Costs: tone and noise on one channel lose the noise.
+- A tone is a looped 4-byte square wave. It restarts only when the channel
+  starts a tone. `:EmuTone`
+  - Enables: a new pitch keeps the wave's phase.
+  - Costs: most tones play up to 23 cents sharp; see
+    [accuracy](../details/Jochen_Hippel_ST-accuracy.md).
+- Noise is a looped 1024-byte random sample at one of 32 periods. `:EmuNoise`
+  - Costs: the noise pitch moves the wrong way.
+- A table maps 16 log volume steps to Paula volume. `:EmuChannel`
+  - Costs: the chip's envelope gives a fixed volume of 32.
+- The pitch list runs every tick; the volume list every N ticks. `:PitchList`
+  `:VolumeList`
+  - Enables: drums that switch between tone and noise, as data.
+- Paula channel 1 plays samples. `:StartDigi` `:EmuDigi`
+  - Enables: a fourth voice.
+  - Costs: while off, it restarts an empty sample every tick.
+- Channel 1 can play a 2-byte pulse (`SID`) at another voice's pitch.
+  `:SidVoice` `:SidPulse`
+  - Enables: a fourth tone voice.
+  - Costs: it restarts every tick.
 
-## Streams
+## Composer's view
 
-| Stream      | Scope | Role       | Carries                                   | Control               | Rate          |
-| ----------- | ----- | ---------- | ----------------------------------------- | --------------------- | ------------- |
-| Positions   | voice | sequencer  | pattern, transposes, speed, volume offset | loop                  | pattern end   |
-| Pattern     | voice | sequencer  | note, instrument, slide, length           | end                   | note end      |
-| Pitch list  | voice | instrument | note offset, chip mode, sample, vibrato   | loop, jump, wait, end | tick          |
-| Volume list | voice | instrument | volume                                    | loop, wait, end       | every N ticks |
+The composer writes positions, patterns, instruments and pitch lists. A pattern
+note carries its length. An instrument names its pitch list and holds its volume
+list.
 
-## Sequencer
+| Aspect   | Answer                                                                     | Source                   |
+| -------- | -------------------------------------------------------------------------- | ------------------------ |
+| Notation | A note: a note byte, a flags byte with the instrument, maybe a third byte. | `:ReadNote`              |
+| Notation | `$fe` sets the length of later notes in rows. `$fd` sets it and rests.     | `:ReadPattern`           |
+| Notation | A position: pattern, transpose, instrument transpose and flags, per voice. | `:NextPosition`          |
+| Notation | Position flags `$fx` set the voice's volume offset. `$ex` set the speed.   | `:NextPosition`          |
+| Notation | An instrument: volume speed, pitch list, vibrato, then the volume list.    | `:Instrument`            |
+| Cost     | A snare switches between noise and tone in its pitch list.                 | `:NoiseOnly` `:ToneOnly` |
+| Cost     | A note with bit 7 changes the pitch and keeps both lists running.          | `:ReadNote`              |
+| Cost     | A new note keeps the old volume until its volume list's first step.        | `:VolumeList`            |
+| Cost     | `$e2` in the pitch list makes the volume list step at once.                | `:RestartVolumeList`     |
+| Cost     | The patterns of all three voices must last equally long.                   | `:NextPosition`          |
 
-| Aspect   | Value     | Label            |
-| -------- | --------- | ---------------- |
-| Time     | lengths   | `:SetNoteLength` |
-| Unit     | row       | `:Play`          |
-| Note end | next note | `:ReadNote`      |
-| Routing  | fixed     | `:InitSong`      |
-| Reuse    | patterns  | `:NextPosition`  |
-| Tempo    | speed     | `:NextPosition`  |
+## What is unique
 
-## Generators
-
-| Generator | Scope | States          | Writes | Rate | Set by                 | Note-on |
-| --------- | ----- | --------------- | ------ | ---- | ---------------------- | ------- |
-| Vibrato   | voice | delay, up, down | period | tick | instrument, Pitch list | restart |
-| Slide     | voice | on, off         | period | tick | Pattern, Pitch list    | restart |
-
-## Channel outputs
-
-These are chip settings. The layer copies them to Paula once per tick.
-
-| Output | Writers, in tick order                        |
-| ------ | --------------------------------------------- |
-| Volume | Volume list (set), Positions (add)            |
-| Period | Pitch list (note), Vibrato (add), Slide (add) |
-| Sample | Pitch list (set)                              |
-| DMA    | Pitch list (on), Pitch list (off)             |
-
-## Interactions
-
-| From       | To          | Event                                                      |
-| ---------- | ----------- | ---------------------------------------------------------- |
-| Pattern    | Pitch list  | A note with bit 7 set keeps both lists running `:ReadNote` |
-| Pitch list | Volume list | `E2` restarts it `:RestartVolumeList`                      |
-| Pitch list | other voice | The chip has one noise period for all `:NoisePeriod`       |
-| Positions  | other voice | Voice 0 counts the song length for all `:NextPosition`     |
-
-- Each voice steps its own position at its own pattern end. `:NextPosition`
-- Tone wins over noise. `:EmuChannel`
-- Tones play up to 23 cents sharp.
-  [Accuracy](../details/Jochen_Hippel_ST-accuracy.md).
-- The chip's envelope is not emulated. `:VolumeTable`
-- The `SID` effect plays a 2-byte wave at the volume's level. `:SidPulse`
-
-## State
-
-| Scope      | Fields                                               |
-| ---------- | ---------------------------------------------------- |
-| Voice      | position, pattern, note length, list positions, mode |
-| Instrument | volume list and speed, vibrato, pitch list           |
-| Global     | chip register shadow, speed                          |
+- Each voice steps to its next position at its own pattern end. Voice 0 counts
+  the positions for all. `:NextPosition` `:RestartSong`
+- Rows are read after the lists, so a new note first sounds on the next tick.
+  `:Play`
+- The three voices share one noise register; the last voice to set it wins.
+  `:NoisePeriod`
+- In noise mode, the noise pitch follows the note. `:PitchToPeriod`
+- `MMME` modules scale vibrato and slide by the period. Older modules double the
+  vibrato for each octave down and slide in period units. `:ScaledVibrato`
+  `:OctaveVibrato` `:PeriodSlide`
+- A silent chip channel restarts an empty sample every tick. Each restart
+  busy-waits for at least three lines. `:EmuChannel` `:NotePlay`
 
 ## Open questions
 
-- How close is the volume table to the chip's curve?
+- How close is the volume table to the chip's curve? `:EmuChannel`
+- Which Hippel versions need `TypePlay`? It makes `$eb`–`$ef` opcodes.
+  `:PitchCommands`

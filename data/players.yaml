@@ -103,6 +103,7 @@ JochenHippel-7V:
   distinct: seven voices, some mixed
 
 Jochen_Hippel_ST:
+  spec: specs/jochen_hippel_st.py
   provenance: disassembly
   author: Jochen Hippel
   family: Jochen Hippel

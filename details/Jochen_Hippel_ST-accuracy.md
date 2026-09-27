@@ -24,6 +24,17 @@ Labels are under `data/annot/Jochen_Hippel_ST.yaml:EmuChannel`.
   Those tones are above 6.9 kHz.
 - The square's shape is exact: two samples low, two high. `:SquareWave`
 
+## Noise
+
+- The chip's noise pitch falls as its register rises. This is a known chip fact,
+  not in this code.
+- The layer plays the noise sample at Paula period 640 − 16 × register.
+  `:EmuNoise`
+- So on Paula, a higher register gives a higher noise pitch: the direction is
+  reversed.
+- The sample is 1024 bytes. Periods 144 to 640 repeat it 24 to 5 times per
+  second. `:InitSamp`
+
 ## What is lost
 
 - Tone and noise on one channel: only the tone plays. `:EmuChannel`
