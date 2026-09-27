@@ -9,7 +9,8 @@ DIR defaults to specs/, checked with hardware/. Checks:
   - each spec is named by a player's `spec` in data/players.yaml, except
     the shared ones in SHARED
   - each top-level CamelCase function in a player's spec is a label, and
-    each CamelCase class is a type, in data/annot/<player>.yaml (see
+    each CamelCase class is a type, in data/annot/<player>.yaml or, for a
+    player with several sources, data/annot/<player>-*.yaml (see
     tools/annot.py); functions may also be labels in
     data/disasm/<player>.cnf
   - snake_case helpers need no label
@@ -37,10 +38,11 @@ MYPY_LINE = re.compile(r"^(.+?):(\d+): error: (.*)$")
 def anchors(player):
     """(labels, types) a player's spec may use."""
     labels, types = set(), set()
-    path = ROOT / "data/annot" / f"{player}.yaml"
-    if path.is_file():
-        labels = annot.listing_labels(path)
-        types = set(annot.load(path).get("types") or {})
+    annots = ROOT / "data/annot"
+    for path in [annots / f"{player}.yaml", *sorted(annots.glob(f"{player}-*.yaml"))]:
+        if path.is_file():
+            labels |= annot.listing_labels(path)
+            types |= set(annot.load(path).get("types") or {})
     cnf = ROOT / "data/disasm" / f"{player}.cnf"
     if cnf.is_file():
         labels |= annot.cited_labels(cnf)

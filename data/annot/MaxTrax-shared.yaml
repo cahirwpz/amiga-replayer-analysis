@@ -10,6 +10,12 @@ labels:
   971: DamperPedal
   1001: PortaOffBug
   1032: RpnSelect
+  # added for specs/maxtrax.py
+  pick_voice: PickVoice
+  pick_voice1: PickSibling
+  calc_incrvol: IncrVolume
+  stop_audio: StopAudio
+  516: EnvelopeStep
 
 comments:
   413: too low for this sample? take the next one, an octave lower
@@ -23,3 +29,7 @@ banners:
     first, the other side if its voices are freer. Between two voices,
     the lower envelope state wins; a round-robin breaks ties. A voice
     with a higher priority or a blocking sound is skipped.
+
+# Classes in specs/maxtrax.py: each word occurs in the source.
+types:
+  Envelope: [voice_Envelope]

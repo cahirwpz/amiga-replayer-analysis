@@ -19,6 +19,15 @@ labels:
   1497: SyncEvent
   1511: BeginRepeat
   1532: EndRepeat
+  # added for specs/maxtrax.py
+  1334: ReadEvents
+  1348: RunEvent
+  1565: ContinueTempo
+  advance_song: SkipMarks
+  check_sound: SoundPlaying
+  2153: ExtraNote
+  2212: ExtraSound
+  2414: ExtraStop
 
 comments:
   654: velocity 0 is ignored here; stop events end notes
@@ -38,3 +47,18 @@ banners:
   1334: |
     Score events, 6 bytes: command, data, start time (a delta), stop time.
     A note's stop time is its length. Other commands keep data there.
+
+# Classes in specs/maxtrax.py: each word occurs in the source or in refs.
+refs:
+  - ext/uade/amigasrc/players/other/max_trax/driver.i
+types:
+  Event: [CookedEvent]
+  Segment: [EnvelopeData]
+  Sample: [SampleData]
+  Patch: [PatchData]
+  Request: [ioa_Cycles]
+  AudioDevice: [AudioDevice]
+  Channel: [ChannelData]
+  StopEvent: [glob_NoteOff]
+  Voice: [VoiceData]
+  Module: [_globaldata]

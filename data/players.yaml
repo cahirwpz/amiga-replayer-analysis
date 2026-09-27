@@ -186,6 +186,7 @@ SoundPlayer:
 
 MaxTrax:
   source: other/max_trax
+  spec: specs/maxtrax.py
   replay: source
   provenance: original
   author: Talin (David Joiner) and Joe Pearce

@@ -14,7 +14,8 @@ Checks:
     the player's source, as tools/inventory.py finds it. A bare `:Label`
     refers to the file of the previous citation. In a player card, before
     any other citation, it refers to data/annot/<player>.yaml, else to
-    data/disasm/<player>.cnf. If the card's player has a `spec` in
+    data/disasm/<player>.cnf; a player with several sources adds the
+    labels of data/annot/<player>-*.yaml. If the card's player has a `spec` in
     data/players.yaml, a label cited from that file must also be a
     function or class in the spec.
   - no citation names a line number, e.g. `file.s:12`
@@ -115,6 +116,15 @@ def default_file(player):
     return None
 
 
+def own_labels(player, path):
+    """The labels a bare `:Label` may name in a card: those of `path`,
+    and of data/annot/<player>-*.yaml for a player with several sources."""
+    known = annot.cited_labels(path)
+    for extra in sorted((ROOT / "data/annot").glob(f"{player}-*.yaml")):
+        known = (known or set()) | (annot.cited_labels(extra) or set())
+    return known
+
+
 def names_line(href):
     """True for a link to a line, e.g. `x.asm?plain=1#L60` or `#L60-L64`."""
     return re.fullmatch(r"L\d+(-L?\d+)?", urlsplit(href).fragment) is not None
@@ -185,7 +195,10 @@ def check(path, known_sources):
             err(n, "cite", f"{name or last_file.name} not found {where}".rstrip())
             last_file = None
             continue
-        known = annot.cited_labels(last_file)
+        if last_file == own:
+            known = own_labels(str(meta["player"]), last_file)
+        else:
+            known = annot.cited_labels(last_file)
         if known is None:
             err(n, "cite", f"{last_file.name} has no labels")
         elif label not in known:
