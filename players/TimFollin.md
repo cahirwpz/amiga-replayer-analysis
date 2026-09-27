@@ -6,7 +6,7 @@ ideas:
     bare-instruments,
     track-programs,
     pulse-width-sweep,
-    semitone-glide,
+    semitone-portamento,
     sample-chaining,
   ]
 ---
@@ -33,10 +33,10 @@ state machines.
   - Costs: every sound change takes track bytes.
 - Commands take no time. A note carries its length, or a fixed length applies.
   `:ReadTrack` `:CmdFixedLength`
-  - Enables: a run of equal notes takes one byte per note.
+  - Enables: notes of one length take one byte each.
   - Costs: voices line up only by counting ticks.
-- Pulse waves are swept in place: every N ticks, one sample byte changes.
-  `:PulseSweep`
+- Instruments 0–3 are pulse waves, swept in place: every N ticks, one sample
+  byte changes. `:PulseSweep`
   - Enables: a moving pulse width with no extra memory.
   - Costs: voices on one pulse instrument share the wave.
 - Flag bit 7 stops the channel one tick before the note ends. Without it, the
@@ -46,7 +46,8 @@ state machines.
 - A second sample follows one tick after the note starts. The first plays once;
   the second loops. `:ChainSample`
   - Enables: an attack sample with its own loop.
-  - Costs: the second sample must be in the subsong's list.
+  - Costs: without flag bit 7, a loop longer than a tick skips the first sample.
+    `:GateOff`
 
 ## Composer's view
 
@@ -64,8 +65,7 @@ are no patterns. Each subsong has its own instrument list.
 
 ## What is unique
 
-- Portamento moves the note index, so the glide steps by semitones.
-  `:Portamento`
+- Portamento moves the note index, so it steps by semitones. `:Portamento`
 - A trill changes the note itself. It shares its direction bit with vibrato.
   `:TrillTick`
 - After a note, vibrato waits a delay; the trill runs during it. `:VibratoTick`

@@ -66,7 +66,7 @@ banners:
     0-3 only), envelope, vibrato or trill, portamento, then the track.
   443: |
     Portamento: the note index moves towards the target by N per tick.
-    The period follows the note table, so the glide steps by semitones.
+    The period follows the note table, so portamento steps by semitones.
   477: |
     ReadTrack: one byte stream per voice. A byte above 0 is a note,
     then a length byte. 0 and $80+n are commands.

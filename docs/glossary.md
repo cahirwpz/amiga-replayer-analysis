@@ -70,6 +70,7 @@ One line per term. Every acronym used in this repo must appear here.
 | **arpeggio**   | Fast cycle of note offsets, making a chord-like sound. |
 | **portamento** | Slide of the pitch, often towards a target note.       |
 | **vibrato**    | Periodic pitch change.                                 |
+| **trill**      | Fast alternation between a note and a note above it.   |
 | **voice**      | One independent part of the music.                     |
 
 ## Sound changes

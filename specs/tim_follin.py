@@ -69,7 +69,7 @@ class Vibrato(StateMachine):  # $74, $78, -$78, -$6C, -$70, -$48
     step: int = 0  # period units per tick
     half: int = 0  # ticks per half cycle; 0: one sweep
     count: int = 0
-    first_up: bool = False  # the direction a note starts with
+    first_up: int = 0  # the direction byte a note starts with
 
 
 @dataclass
@@ -105,7 +105,7 @@ class Voice(Program):  # the fields at tmp+$80, per voice
     glide: int = 0  # -$58: semitones per tick; 0 off
     transpose: int = 0  # -$34
     skip_transpose: bool = False  # -$30: for the next note only
-    up: bool = False  # -$74: vibrato's direction, and trill's side
+    up: int = 0  # -$74: vibrato's direction, and trill's side; EOR 1 flips it
     period: int = 0  # $48(A6,D5)
     flags: int = 0  # -$20: second sample, chain, gate off
     chain_due: bool = False  # -8
@@ -252,27 +252,30 @@ def vibrato_due(voice: Voice) -> bool:
 def VibratoTick(voice: Voice) -> None:
     """Adds or subtracts `step` period units every tick.
     The direction turns every 2 × half ticks; the first turn comes after
-    `half`, so the swing is centred."""
+    `half`, so the swing is centred. The turn flips bit 0 only: a
+    direction byte other than 0 or 1 stays non-zero, so it never turns."""
     vibrato = voice.vibrato
     voice.period += vibrato.step if voice.up else -vibrato.step
     voice.channel.period = voice.period
     vibrato.count = (vibrato.count - 1) & 0xFF
     if vibrato.count == 0 and vibrato.half:
         vibrato.count = 2 * vibrato.half
-        voice.up = not voice.up
+        voice.up ^= 1
 
 
 def TrillTick(voice: Voice) -> bool:
     """Moves the note itself up by `interval`, then down,
-    for upper_ticks and lower_ticks. It shares `up` with vibrato. True:
-    a step happened, so portamento skips this tick."""
+    for upper_ticks and lower_ticks. The first lower part, from the
+    note's start, lasts upper_ticks too. It shares `up` with vibrato; a
+    direction byte other than 0 or 1 only climbs. True: a step happened,
+    so portamento skips this tick."""
     trill = voice.trill
     if not trill.count:
         return False
     trill.count -= 1
     if trill.count:
         return False
-    voice.up = not voice.up
+    voice.up ^= 1
     if voice.up:
         voice.note += trill.interval
         trill.count = trill.upper_ticks
@@ -285,7 +288,7 @@ def TrillTick(voice: Voice) -> bool:
 
 def Portamento(voice: Voice) -> None:
     """The note moves towards the target by `glide` semitones per tick.
-    The period comes from the table, so the glide steps by semitones. A
+    The period comes from the table, so portamento steps by semitones. A
     step overwrites vibrato's period for this tick."""
     if not voice.glide or voice.note == voice.target:
         return
@@ -345,7 +348,7 @@ def PlayNote(module: Module, voice: Voice, byte: int) -> None:
         voice.pos += 1
     voice.trill.count = voice.trill.upper_ticks
     vibrato = voice.vibrato
-    voice.up = False
+    voice.up = 0
     if vibrato.delay:
         vibrato.delay_left, vibrato.count = vibrato.delay, vibrato.half
         voice.up = vibrato.first_up
@@ -458,7 +461,7 @@ def CmdVibrato(module: Module, voice: Voice) -> None:
     next note."""
     vibrato = voice.vibrato
     vibrato.delay, vibrato.step = arg(voice), arg(voice)
-    vibrato.half, vibrato.first_up = arg(voice), bool(arg(voice))
+    vibrato.half, vibrato.first_up = arg(voice), arg(voice)
 
 
 def CmdTranspose(module: Module, voice: Voice) -> None:

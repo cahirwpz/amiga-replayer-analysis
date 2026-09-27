@@ -38,7 +38,6 @@ All twelve pilot cards exist.
 The template is in [`docs/card-template.md`](docs/card-template.md). `MED` is
 the first card on it, with `specs/med.py`.
 
-- [ ] Review the Tim Follin card and its spec with the user.
 - [ ] Migrate the other cards the same way. Paula mechanics go to
       `hardware/paula.py`.
 - [ ] After the last card: drop template 1 from `tools/cards.py`, its tests and
