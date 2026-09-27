@@ -57,6 +57,7 @@ class Row:  # MED: `line`
 @dataclass
 class Pattern:  # MED: `block`
     tracks: list[list[Row]]  # one track per voice; own row count
+    pages: int = 1  # command pages: BlockInfo's page table, plus 1
 
 
 @dataclass
@@ -108,6 +109,7 @@ class Score:  # MMD0song
     lines_per_beat: int  # flags2 bits 0-4, plus 1
     track_volumes: list[int]
     instruments: list[Instrument]
+    st_slides: bool = False  # flags bit 5: slides skip a row's first tick
 
 
 # --- Voice state -------------------------------------------------------
@@ -152,8 +154,13 @@ class Voice:  # track data; track n plays on channel n
     synth_arpeggio: TableWalker = field(default_factory=TableWalker)  # trk_arpgoffs
     synth_vibrato: Vibrato = field(default_factory=Vibrato)
     pattern_portamento: Portamento = field(default_factory=Portamento)
+    row_vibrato: Vibrato = field(default_factory=lambda: Vibrato(wave=SINE))
+    # trk_vibrsz, trk_vibrspd, trk_vibroffs: 4 phase units per sine byte
     pattern_vibrato: int = 0  # trk_vibradjust; command 13 too
     pattern_arpeggio: int = 0  # trk_arpadjust
+    row_note: int = 0  # trk_prevnote: the track's last note, 1-based
+    periods: tuple[int, ...] = ()  # trk_periodtbl: set by the last note
+    no_play: bool = False  # trk_fxtype: a command holds this row's note
     start: bool = False  # this channel's bit in dmaonmsk
     loop: paula.Sample | None = None  # trk_sampleptr, trk_samplelen
 
@@ -168,6 +175,11 @@ class Module:  # MMD0: the playback position lives in the module
     position: int = 0  # mmd_pseqnum
     pattern: int = 0  # mmd_pblock
     row: int = 0  # mmd_pline
+    fx_pattern: int = 0  # fxplineblk: the row whose commands run
+    fx_row: int = 0
+    loop_row: int = 0  # rptline: one loop for the whole song
+    loop_count: int = 0  # rptcounter
+    next_row: int = 0  # nextblockline: a jump's row + 1; 0 none
 
 
 # --- Tick and row ------------------------------------------------------
@@ -194,6 +206,9 @@ def PlayTick(module: Module) -> None:
 def read_row(voice: Voice, row: Row, score: Score) -> None:
     """plr_loop0: an instrument number loads its settings, with or
     without a note. A note without one plays the last instrument."""
+    voice.no_play = False
+    if row.note:
+        voice.row_note = row.note
     if row.instrument is None:
         return
     instrument = score.instruments[row.instrument]
@@ -206,23 +221,25 @@ def read_row(voice: Voice, row: Row, score: Score) -> None:
 
 def PlayRowNotes(module: Module, rows: list[Row]) -> None:
     for voice, row in zip(module.voices, rows):
-        if row.note is None or voice.instrument is None:
+        if not row.note or voice.instrument is None or voice.no_play:
             continue
         voice.hold_left = voice.hold or NEVER  # hold 0: never released
         PlayNote(voice, row.note, voice.instrument, module.score)
 
 
 def PlayNote(voice: Voice, note: int, instrument: Instrument, score: Score) -> None:
-    note = AddTransposes(note, instrument, score)
+    note = AddTransposes(note, instrument, score) - 1  # notes are 1-based
     if not KeepSynthChannel(voice, instrument):
         voice.channel.disable()
     voice.fade_speed = 0
+    voice.row_vibrato.phase = 0
     sound = instrument.sound
     if isinstance(sound, SynthSound):
         StartSynthNote(voice, note, instrument, sound)
     else:
         voice.kind = Kind.SAMPLE
-        voice.period = note_period(fold_octaves(note), instrument.finetune)
+        voice.periods = period_table(instrument.finetune)
+        voice.period = voice.periods[fold_octaves(note)]
         queue_sample(voice, sound)
 
 
@@ -243,11 +260,13 @@ def StartSynthNote(
     voice.note = note
     if sound.hybrid:
         voice.kind = Kind.HYBRID
-        voice.period = note_period(fold_octaves(note), instrument.finetune)
+        voice.periods = period_table(instrument.finetune)
+        voice.period = voice.periods[fold_octaves(note)]
         queue_sample(voice, sound.waves[0])
     else:
         voice.kind = Kind.SYNTH
-        voice.period = synth_period(note, instrument.finetune)
+        voice.periods = synth_table(instrument.finetune)  # 2 octaves lower
+        voice.period = voice.periods[note]  # no octave folding
         voice.start = True  # the wave list queues the first waveform
     voice.synth_arpeggio.mode = Mode.OFF
     voice.volume_list = CommandList(speed=sound.volume_speed)
@@ -262,7 +281,11 @@ def StartSynthNote(
 def AdvSngPtr(module: Module) -> None:
     """Steps to the next row; at a pattern end, to the next position.
     Then looks ahead for rows that extend a hold."""
-    module.row += 1
+    module.fx_pattern, module.fx_row = module.pattern, module.row
+    if module.next_row:
+        module.row, module.next_row = module.next_row - 1, 0
+    else:
+        module.row += 1
     if module.row >= pattern_length(module):
         module.row = 0
         NextPlaySeq(module)
@@ -311,6 +334,23 @@ def DoPreFX(module: Module, rows: list[Row]) -> None:
                 CmdNoteOff(voice)
             elif command.number == CMD_LOOP:
                 CmdLoop(module, command.argument)
+            elif command.number == CMD_PORTAMENTO:
+                SetPortamento(module, voice, row, command.argument)
+
+
+def SetPortamento(module: Module, voice: Voice, row: Row, speed: int) -> None:
+    """Command 3 on a row: its note becomes the target and does not play.
+    The target comes from the table of the voice's last note, with no
+    octave folding. Speed 0 keeps the old speed."""
+    voice.no_play = True
+    if row.note:
+        transpose = voice.instrument.transpose if voice.instrument else 0
+        note = row.note - 1 + module.score.play_transpose + transpose
+        if not voice.periods or note < 0:
+            return
+        voice.pattern_portamento.target = voice.periods[note]
+    if speed:
+        voice.pattern_portamento.speed = speed
 
 
 def CmdWaveListPos(voice: Voice, pos: int) -> None:
@@ -329,7 +369,19 @@ def ChannelOff(voice: Voice) -> None:
     voice.channel.disable()
 
 
-def CmdLoop(module: Module, count: int) -> None: ...  # 0: set loop row; n: repeat
+def CmdLoop(module: Module, count: int) -> None:
+    """Command 16. 0 marks this row. n jumps back to the mark n times,
+    then plays on. One loop serves the whole song, not each track."""
+    if count == 0:
+        module.loop_row = module.row
+        return
+    if module.loop_count:
+        module.loop_count -= 1
+        if module.loop_count == 0:
+            return
+    else:
+        module.loop_count = count
+    module.next_row = module.loop_row + 1
 
 
 def SetTempo(module: Module, tempo: int) -> None:
@@ -367,7 +419,7 @@ def DoFX(module: Module) -> None:
     for page in range(command_pages(module)):
         for voice, row in zip(module.voices, fx_rows(module)):
             if page < len(row.commands):
-                ChannelFX(voice, row.commands[page], module.counter)
+                ChannelFX(module, voice, row.commands[page], module.counter)
     for voice in module.voices:
         UpdatePerVol(voice)
 
@@ -399,23 +451,59 @@ def StartDMA(module: Module) -> None:
         module.amiga.after(STOP_WAIT_CCK, Priority.CPU, dma_on)
 
 
-def ChannelFX(voice: Voice, command: Command, tick: int) -> None:
-    """Tick commands, like ProTracker's."""
+def ChannelFX(module: Module, voice: Voice, command: Command, tick: int) -> None:
+    """Tick commands, like ProTracker's. `tick` counts from 0 in a row."""
     handler = TICK_COMMANDS.get(command.number)
     if handler is not None:
-        handler(voice, command.argument, tick)
+        handler(module, voice, command.argument, tick)
 
 
-def ArpeggioTick(voice: Voice, arg: int, tick: int) -> None: ...  # 3-tick cycle
+def ArpeggioTick(module: Module, voice: Voice, arg: int, tick: int) -> None:
+    """Command 0. A 3-tick cycle: + high nibble, + low nibble, + 0. So a
+    row starts on the high note, unlike ProTracker. The offset is the
+    period difference from the track's last note, in its table."""
+    if not arg or not voice.periods:
+        return
+    offset = (arg >> 4, arg & 0x0F, 0)[tick % 3]
+    transpose = voice.instrument.transpose if voice.instrument else 0
+    base = voice.row_note - 1 + module.score.play_transpose + transpose
+    voice.pattern_arpeggio = voice.periods[base] - voice.periods[base + offset]
 
 
-def PortamentoTick(voice: Voice, arg: int, tick: int) -> None: ...  # moves period
+def PortamentoTick(module: Module, voice: Voice, arg: int, tick: int) -> None:
+    """Command 3. The period moves towards SetPortamento's target by
+    `speed` per tick and stops there. With SoundTracker slides, a row's
+    first tick is skipped."""
+    glide = voice.pattern_portamento
+    if tick == 0 and module.score.st_slides or not glide.target:
+        return
+    if voice.period > glide.target:
+        period = voice.period - glide.speed
+        reached = period <= glide.target
+    else:
+        period = voice.period + glide.speed
+        reached = period >= glide.target
+    if reached:
+        period, glide.target = glide.target, 0
+    voice.period = period
 
 
-def VibratoTick(voice: Voice, arg: int, tick: int) -> None: ...  # sets pattern_vibrato
+def VibratoTick(module: Module, voice: Voice, arg: int, tick: int) -> None:
+    """Command 4. On a row's first tick, the low nibble sets the depth and
+    the high nibble the speed; 0 keeps the old one. Every tick, sine ×
+    depth / 32 goes to the period. A note restarts the phase."""
+    vibrato = voice.row_vibrato
+    if tick == 0 and arg:
+        if arg & 0x0F:
+            vibrato.depth = arg & 0x0F
+        if arg & 0xF0:
+            vibrato.speed = arg >> 3 & 0x3E
+    byte = vibrato.wave[vibrato.phase >> 2 & VIBRATO_STEPS - 1]
+    voice.pattern_vibrato = signed(byte) * vibrato.depth >> 5
+    vibrato.phase = (vibrato.phase + vibrato.speed) & 0xFF
 
 
-TICK_COMMANDS: dict[int, Callable[[Voice, int, int], None]] = {
+TICK_COMMANDS: dict[int, Callable[[Module, Voice, int, int], None]] = {
     0x00: ArpeggioTick,
     0x03: PortamentoTick,
     0x04: VibratoTick,
@@ -509,7 +597,7 @@ def SynthArpeggio(voice: Voice, period: int) -> int:
     offset = voice.synth_arpeggio.step()
     if offset is None:
         return period
-    return table_period(voice, voice.note + offset)
+    return voice.periods[voice.note + offset]
 
 
 def SynthVibrato(voice: Voice, period: int) -> int:
@@ -745,7 +833,7 @@ WAVE_OPCODES: dict[int, ListOpcode] = {
 
 # --- Helpers -----------------------------------------------------------
 
-SINE = bytes(
+SINE: bytes = bytes(
     b & 0xFF  # sinetable: 32 steps of a signed sine
     for b in (0, 25, 49, 71, 90, 106, 117, 125, 127, 125, 117, 106, 90, 71, 49, 25)
     + (0, -25, -49, -71, -90, -106, -117, -125, -127, -125, -117, -106, -90, -71)
@@ -781,28 +869,164 @@ def queue_sample(voice: Voice, sample: paula.Sample) -> None:
     voice.start = True
 
 
-def fold_octaves(note: int) -> int: ...  # octave up or down into 0..62
+PERIODS: dict[int, tuple[int, ...]] = {  # per_8..per7: 24 synth-only, 36 notes
+    -8: (  # per_8
+        *(3628, 3424, 3232, 3051, 2880, 2718, 2565, 2421, 2285, 2157, 2036, 1922),
+        *(1814, 1712, 1616, 1525, 1440, 1359, 1283, 1211, 1143, 1079, 1018, 961),
+        *(907, 856, 808, 762, 720, 678, 640, 604, 570, 538, 508, 480),
+        *(453, 428, 404, 381, 360, 339, 320, 302, 285, 269, 254, 240),
+        *(226, 214, 202, 190, 180, 170, 160, 151, 143, 135, 127, 120),
+    ),
+    -7: (  # per_7
+        *(3588, 3387, 3197, 3017, 2848, 2688, 2537, 2395, 2260, 2133, 2014, 1901),
+        *(1794, 1693, 1598, 1509, 1424, 1344, 1269, 1197, 1130, 1067, 1007, 950),
+        *(900, 850, 802, 757, 715, 675, 636, 601, 567, 535, 505, 477),
+        *(450, 425, 401, 379, 357, 337, 318, 300, 284, 268, 253, 238),
+        *(225, 212, 200, 189, 179, 169, 159, 150, 142, 134, 126, 119),
+    ),
+    -6: (  # per_6
+        *(3576, 3375, 3186, 3007, 2838, 2679, 2529, 2387, 2253, 2126, 2007, 1894),
+        *(1788, 1688, 1593, 1504, 1419, 1339, 1264, 1193, 1126, 1063, 1003, 947),
+        *(894, 844, 796, 752, 709, 670, 632, 597, 563, 532, 502, 474),
+        *(447, 422, 398, 376, 355, 335, 316, 298, 282, 266, 251, 237),
+        *(223, 211, 199, 188, 177, 167, 158, 149, 141, 133, 125, 118),
+    ),
+    -5: (  # per_5
+        *(3548, 3349, 3161, 2984, 2816, 2658, 2509, 2368, 2235, 2110, 1991, 1879),
+        *(1774, 1674, 1580, 1492, 1408, 1329, 1254, 1184, 1118, 1055, 996, 940),
+        *(887, 838, 791, 746, 704, 665, 628, 592, 559, 528, 498, 470),
+        *(444, 419, 395, 373, 352, 332, 314, 296, 280, 264, 249, 235),
+        *(222, 209, 198, 187, 176, 166, 157, 148, 140, 132, 125, 118),
+    ),
+    -4: (  # per_4
+        *(3524, 3326, 3140, 2963, 2797, 2640, 2492, 2352, 2220, 2095, 1978, 1867),
+        *(1762, 1663, 1570, 1482, 1399, 1320, 1246, 1176, 1110, 1048, 989, 933),
+        *(881, 832, 785, 741, 699, 660, 623, 588, 555, 524, 494, 467),
+        *(441, 416, 392, 370, 350, 330, 312, 294, 278, 262, 247, 233),
+        *(220, 208, 196, 185, 175, 165, 156, 147, 139, 131, 123, 117),
+    ),
+    -3: (  # per_3
+        *(3500, 3304, 3118, 2943, 2778, 2622, 2475, 2336, 2205, 2081, 1964, 1854),
+        *(1750, 1652, 1559, 1472, 1389, 1311, 1237, 1168, 1102, 1041, 982, 927),
+        *(875, 826, 779, 736, 694, 655, 619, 584, 551, 520, 491, 463),
+        *(437, 413, 390, 368, 347, 328, 309, 292, 276, 260, 245, 232),
+        *(219, 206, 195, 184, 174, 164, 155, 146, 138, 130, 123, 116),
+    ),
+    -2: (  # per_2
+        *(3472, 3277, 3093, 2920, 2756, 2601, 2455, 2317, 2187, 2064, 1949, 1839),
+        *(1736, 1639, 1547, 1460, 1378, 1301, 1228, 1159, 1094, 1032, 974, 920),
+        *(868, 820, 774, 730, 689, 651, 614, 580, 547, 516, 487, 460),
+        *(434, 410, 387, 365, 345, 325, 307, 290, 274, 258, 244, 230),
+        *(217, 205, 193, 183, 172, 163, 154, 145, 137, 129, 122, 115),
+    ),
+    -1: (  # per_1
+        *(3448, 3254, 3072, 2899, 2737, 2583, 2438, 2301, 2172, 2050, 1935, 1827),
+        *(1724, 1627, 1536, 1450, 1368, 1292, 1219, 1151, 1086, 1025, 968, 913),
+        *(862, 814, 768, 725, 684, 646, 610, 575, 543, 513, 484, 457),
+        *(431, 407, 384, 363, 342, 323, 305, 288, 272, 256, 242, 228),
+        *(216, 203, 192, 181, 171, 161, 152, 144, 136, 128, 121, 114),
+    ),
+    0: (  # per0
+        *(3424, 3232, 3048, 2880, 2712, 2560, 2416, 2280, 2152, 2032, 1920, 1812),
+        *(1712, 1616, 1524, 1440, 1356, 1280, 1208, 1140, 1076, 1016, 960, 906),
+        *(856, 808, 762, 720, 678, 640, 604, 570, 538, 508, 480, 453),
+        *(428, 404, 381, 360, 339, 320, 302, 285, 269, 254, 240, 226),
+        *(214, 202, 190, 180, 170, 160, 151, 143, 135, 127, 120, 113),
+    ),
+    1: (  # per1
+        *(3400, 3209, 3029, 2859, 2699, 2547, 2404, 2269, 2142, 2022, 1908, 1801),
+        *(1700, 1605, 1515, 1430, 1349, 1274, 1202, 1135, 1071, 1011, 954, 901),
+        *(850, 802, 757, 715, 674, 637, 601, 567, 535, 505, 477, 450),
+        *(425, 401, 379, 357, 337, 318, 300, 284, 268, 253, 239, 225),
+        *(213, 201, 189, 179, 169, 159, 150, 142, 134, 126, 119, 113),
+    ),
+    2: (  # per2
+        *(3376, 3187, 3008, 2839, 2680, 2529, 2387, 2253, 2127, 2007, 1895, 1788),
+        *(1688, 1593, 1504, 1419, 1340, 1265, 1194, 1127, 1063, 1004, 947, 894),
+        *(844, 796, 752, 709, 670, 632, 597, 563, 532, 502, 474, 447),
+        *(422, 398, 376, 355, 335, 316, 298, 282, 266, 251, 237, 224),
+        *(211, 199, 188, 177, 167, 158, 149, 141, 133, 125, 118, 112),
+    ),
+    3: (  # per3
+        *(3352, 3164, 2986, 2819, 2660, 2511, 2370, 2237, 2112, 1993, 1881, 1776),
+        *(1676, 1582, 1493, 1409, 1330, 1256, 1185, 1119, 1056, 997, 941, 888),
+        *(838, 791, 746, 704, 665, 628, 592, 559, 528, 498, 470, 444),
+        *(419, 395, 373, 352, 332, 314, 296, 280, 264, 249, 235, 222),
+        *(209, 198, 187, 176, 166, 157, 148, 140, 132, 125, 118, 111),
+    ),
+    4: (  # per4
+        *(3328, 3141, 2965, 2799, 2641, 2493, 2353, 2221, 2097, 1979, 1868, 1763),
+        *(1664, 1571, 1482, 1399, 1321, 1247, 1177, 1111, 1048, 989, 934, 881),
+        *(832, 785, 741, 699, 660, 623, 588, 555, 524, 495, 467, 441),
+        *(416, 392, 370, 350, 330, 312, 294, 278, 262, 247, 233, 220),
+        *(208, 196, 185, 175, 165, 156, 147, 139, 131, 124, 117, 110),
+    ),
+    5: (  # per5
+        *(3304, 3119, 2944, 2778, 2622, 2475, 2336, 2205, 2081, 1965, 1854, 1750),
+        *(1652, 1559, 1472, 1389, 1311, 1238, 1168, 1103, 1041, 982, 927, 875),
+        *(826, 779, 736, 694, 655, 619, 584, 551, 520, 491, 463, 437),
+        *(413, 390, 368, 347, 328, 309, 292, 276, 260, 245, 232, 219),
+        *(206, 195, 184, 174, 164, 155, 146, 138, 130, 123, 116, 109),
+    ),
+    6: (  # per6
+        *(3280, 3096, 2922, 2758, 2603, 2457, 2319, 2189, 2066, 1950, 1841, 1738),
+        *(1640, 1548, 1461, 1379, 1302, 1229, 1160, 1095, 1033, 975, 920, 869),
+        *(820, 774, 730, 689, 651, 614, 580, 547, 516, 487, 460, 434),
+        *(410, 387, 365, 345, 325, 307, 290, 274, 258, 244, 230, 217),
+        *(205, 193, 183, 172, 163, 154, 145, 137, 129, 122, 115, 109),
+    ),
+    7: (  # per7
+        *(3256, 3073, 2901, 2738, 2584, 2439, 2302, 2173, 2051, 1936, 1827, 1725),
+        *(1628, 1537, 1450, 1369, 1292, 1220, 1151, 1087, 1026, 968, 914, 862),
+        *(814, 768, 725, 684, 646, 610, 575, 543, 513, 484, 457, 431),
+        *(407, 384, 363, 342, 323, 305, 288, 272, 256, 242, 228, 216),
+        *(204, 192, 181, 171, 161, 152, 144, 136, 128, 121, 114, 108),
+    ),
+}
 
 
-def note_period(note: int, finetune: int) -> int: ...  # the period table
+def full_table(finetune: int) -> tuple[int, ...]:
+    """96 periods: 24 synth-only, 3 octaves, then the top octave 3 times
+    more. Notes above the third octave do not rise."""
+    periods = PERIODS[finetune]
+    return periods + periods[-12:] * 3
 
 
-def synth_period(note: int, finetune: int) -> int: ...  # two octaves lower
+def period_table(finetune: int) -> tuple[int, ...]:
+    """_periodtable: a sample's table, by finetune."""
+    return full_table(finetune)[24:]
 
 
-def table_period(voice: Voice, note: int) -> int: ...  # trk_periodtbl
+def synth_table(finetune: int) -> tuple[int, ...]:
+    """A synth's table starts 48 bytes earlier: two octaves lower."""
+    return full_table(finetune)
 
 
-def current_rows(module: Module) -> list[Row]: ...  # one row per track
+def fold_octaves(note: int) -> int:
+    """An octave up until the note is 0 or more; one octave down if it is
+    above 62. Only once: a note above 74 stays too high."""
+    while note < 0:
+        note += 12
+    return note - 12 if note > 62 else note
 
 
-def fx_rows(module: Module) -> list[Row]: ...  # the row the commands came from
+def current_rows(module: Module) -> list[Row]:
+    pattern = module.score.patterns[module.pattern]
+    return [track[module.row] for track in pattern.tracks]
 
 
-def pattern_length(module: Module) -> int: ...
+def fx_rows(module: Module) -> list[Row]:
+    """The row just played: its commands run on every tick of it."""
+    pattern = module.score.patterns[module.fx_pattern]
+    return [track[module.fx_row] for track in pattern.tracks]
 
 
-def command_pages(module: Module) -> int: ...
+def pattern_length(module: Module) -> int:
+    return len(module.score.patterns[module.pattern].tracks[0])
+
+
+def command_pages(module: Module) -> int:
+    return module.score.patterns[module.fx_pattern].pages
 
 
 def section_list(module: Module) -> int:

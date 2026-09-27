@@ -19,6 +19,7 @@ labels:
   plr_skipseq: NextPlaySeq
   1028: NextSection
   f_16: CmdLoop
+  f_03: SetPortamento
   isfxff: CmdNoteOff
   plr_chkhold: ExtendHold
   inmem: AddTransposes

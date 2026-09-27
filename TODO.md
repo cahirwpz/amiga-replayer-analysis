@@ -42,8 +42,6 @@ the first card on it, with `specs/med.py`.
       user.
 - [ ] Migrate the other cards the same way. Paula mechanics go to
       `hardware/paula.py`.
-- [ ] `specs/med.py` stubs `CmdLoop` and the pattern effects. Fill them if a
-      card needs them.
 - [ ] After the last card: drop template 1 from `tools/cards.py`, its tests and
       fixtures. Drop the glossary's control levels, generator, role, write modes
       and the DMA output.

@@ -1486,7 +1486,20 @@ def detuned(period: int, detune: int) -> int:
     return period * (256 + detune) >> 8 if detune else period
 
 
-def note_period(note: int) -> int: ...  # nottab
+TOP_OCTAVE = (214, 202, 191, 180, 170, 160, 151, 143, 135, 127, 120, 113)
+PERIODS = (  # nottab: 64 notes; only four octaves differ
+    *(1710, 1614, 1524, 1438, 1357, 1281, 1209, 1141, 1077, 1017, 960, 908),
+    *(856, 810, 764, 720, 680, 642, 606, 571, 539, 509, 480, 454),
+    *(428, 404, 381, 360, 340, 320, 303, 286, 270, 254, 240, 227),
+    *TOP_OCTAVE,
+    *TOP_OCTAVE,  # notes 48-63 repeat the top octave: no higher notes
+    *TOP_OCTAVE[:4],
+)
+
+
+def note_period(note: int) -> int:
+    """nottab. The top two entries, 120 and 113, are below paula.MIN_PERIOD."""
+    return PERIODS[note & NOTE_MASK]
 
 
 def towards(last: int, byte: int, limit: int) -> int:
