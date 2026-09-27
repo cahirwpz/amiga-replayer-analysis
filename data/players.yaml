@@ -24,9 +24,9 @@
 #   links             first-hand pages, e.g. by the author.
 
 AbyssHighestExperience:
-  source: ext/ahx2play
-  note: C port of the AHX 2.3d-sp3 replayer
-  provenance: port
+  provenance: ira
+  ports: [ext/ahx2play]
+  note: embeds AHX-BinaryPlayer 2.3d-sp3
 
 ArtOfNoise-4V:
   source: uade/artofnoise

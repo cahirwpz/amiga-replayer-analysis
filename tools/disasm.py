@@ -91,6 +91,7 @@ DATA_TAGS = {
     "DTP_StackSize",
     "DTP_MsgPort",
     "DTP_ModuleName",
+    "DTP_NewSubSongRange",
     "DTP_FormatName",
     "DTP_AuthorName",
     "EP_Flags",

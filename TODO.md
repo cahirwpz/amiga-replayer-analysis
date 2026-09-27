@@ -29,8 +29,6 @@ All twelve pilot cards exist.
 
 ### Fix the current cards
 
-- [ ] Re-check the `AbyssHighestExperience` card against a disassembly. See the
-      disassembly queue.
 - [ ] Decide whether player-prefixed detail filenames need a rule and checker.
 
 ### Card template 2
@@ -42,13 +40,16 @@ the first card on it, with `specs/med.py`.
       `hardware/paula.py`. The table lists the cards still on template 1.
 - [ ] Fold each migrated card's `details/` page into its spec's docstrings.
 
-| Card                     | Blocked by      |
-| ------------------------ | --------------- |
-| `AbyssHighestExperience` | Its disassembly |
-| `MIDI-Loriciel`          | —               |
-| `SonicArranger`          | —               |
-| `SoundPlayer`            | —               |
+| Card                     | Blocked by     |
+| ------------------------ | -------------- |
+| `AbyssHighestExperience` | Decision below |
+| `MIDI-Loriciel`          | —              |
+| `SonicArranger`          | —              |
+| `SoundPlayer`            | —              |
 
+- [ ] `AbyssHighestExperience` has only an IRA config, no source, so it has no
+      `data/annot/` file. Its spec classes then have no `types:` to name them.
+      Ask the user: a types-only annotation file, or another place?
 - [ ] After the last card: decide on `specs/controls.py`. `CommandList` and
       `TableWalker` share logic. `StateMachine` and `Program` are tags that no
       tool reads: drop them, or check them in `tools/specs.py`.
@@ -108,13 +109,28 @@ the first card on it, with `specs/med.py`.
 A port is not evidence (see [`AGENTS.md`](AGENTS.md#evidence)). These players
 need 68k code first.
 
-| Player                   | Why                                                     | Map                              |
-| ------------------------ | ------------------------------------------------------- | -------------------------------- |
-| `AbyssHighestExperience` | Card rests on a port; re-check it                       | `ext/ahx2play`                   |
-| `RobHubbard`             | `PGA_Tour_Golf.lha` available; needs raw-binary support | `ext/c-flod/neoart/flod/hubbard` |
-| `BenDaglish-SID`         | Replay code is in the module; needs a module            | —                                |
-| `JankoMrsicFlogel`       | Replay code is in the module; needs a module            | —                                |
-| `Special-FX`             | Replay code is in the module; needs a module            | —                                |
+| Player             | Why                                                     | Map                              |
+| ------------------ | ------------------------------------------------------- | -------------------------------- |
+| `RobHubbard`       | `PGA_Tour_Golf.lha` available; needs raw-binary support | `ext/c-flod/neoart/flod/hubbard` |
+| `BenDaglish-SID`   | Replay code is in the module; needs a module            | —                                |
+| `JankoMrsicFlogel` | Replay code is in the module; needs a module            | —                                |
+| `Special-FX`       | Replay code is in the module; needs a module            | —                                |
+
+## AHX spec notes
+
+Reading notes for the AHX spec, still to write. Labels are in
+`data/disasm/AbyssHighestExperience.cnf`.
+
+- Tick order: `PlayTick` writes Paula for each voice first, then reads a row,
+  then runs `VoiceFrame`. So Paula gets the values of the previous tick.
+- `LoadWaveCache`: the file `ENV:EaglePlayer/ahx` names a file of all generated
+  waves. If it loads in full, `MakeWaves` is skipped.
+- `MakeFilters` runs each filter once per wave. It takes the filter's start
+  state from `FilterStartStates`, 31 filters × 45 waves. The port runs three
+  warm-up passes instead.
+- `SetTickRate` picks 50, 100, 150 or 200 Hz from `TickRates`.
+- The port's `ProcessStep`, `ProcessFrame`, `pListCommandParse` and `SetAudio`
+  match `ReadRow`, `VoiceFrame`, `PerformanceCommand` and `WriteVoice`.
 
 ## Disassembly notes
 
@@ -135,5 +151,7 @@ objects; `listing` checks that vasm rebuilds the input. Workflow:
   by hand.
 - IRA 2.11 refuses `-preproc` over an existing `.cnf`. So `seed` runs once per
   tag entry and merges the areas.
+- IRA may read a slot of a `bra.w` jump table as data. Example: the `$2C0` slot
+  of `JumpTable` in `AbyssHighestExperience`. Its replay code was added by hand.
 - Many binary-only players are 1–3 kB. Some may be wrappers (guess). Check each
   one when its config is made.
