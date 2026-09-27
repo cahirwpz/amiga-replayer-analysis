@@ -41,6 +41,7 @@ FIELDS = {
     "ports": list,
     "related": list,
     "links": list,
+    "spec": str,
 }
 REPLAY = {"uade", "module", "check", "port", "ext", "disasm", "source"}
 
@@ -95,6 +96,9 @@ def validate(data=None):
                 err(player, f"evidence `{link['evidence']}` not in {sorted(evidence)}")
             if "player" in link and link["player"] not in binaries_:
                 err(player, f"`{link['player']}` is not a binary")
+        spec = str(facts.get("spec", ""))
+        if spec and not (spec.startswith("specs/") and (ROOT / spec).is_file()):
+            err(player, f"spec `{spec}` is not a file under specs/")
         for port in facts.get("ports") or []:
             if not str(port).startswith("ext/") or not (ROOT / str(port)).exists():
                 err(player, f"port `{port}` is not a path under ext/")

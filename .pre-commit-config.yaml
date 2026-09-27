@@ -88,6 +88,13 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: specs                    # specs/ type-check; names are labels
+        name: specs
+        entry: .venv/bin/python3 tools/specs.py
+        language: system
+        pass_filenames: false
+        always_run: true             # annotations and players.yaml matter too
+
       - id: players                  # data/players.yaml is valid
         name: players
         entry: .venv/bin/python3 tools/players.py --check

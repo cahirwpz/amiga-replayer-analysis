@@ -38,6 +38,42 @@ labels:
   _IntHandler: PlayTick
   _SetTempo: SetTempo
   _ChannelOff: ChannelOff
+  _PlayNote: PlayNote
+  synth_getvolcmd: ReadVolumeList
+  synth_getwfcmd: ReadWaveList
+  syv_f0: VolSpeed
+  syv_f1: VolWait
+  syv_f2: VolSlideDown
+  syv_f3: VolSlideUp
+  syv_f6: VolEnvOff
+  syv_fe: VolJump
+  syw_f0: WaveSpeed
+  syw_f1: WaveWait
+  syw_f2: PitchSlideDown
+  syw_f3: PitchSlideUp
+  syw_f4: VibratoDepth
+  syw_f5: VibratoSpeed
+  syw_f6: PitchReset
+  syw_fe: WaveJump
+
+# Classes in specs/med.py: each word occurs in the source or in refs.
+refs:
+  - ext/uade/amigasrc/players/uade/med/common/medtrkdata.i
+  - ext/uade/amigasrc/players/uade/med/MMD_FileFormat.doc
+
+types:
+  Command: [BlockCmdPageTable]
+  Row: [trk_currnote, trk_previnstr]
+  Pattern: [MMD0Block, MMD1Block]
+  Sample: [InstrHdr]
+  SynthSound: [SynthInstr]
+  Kind: [trk_synthtype]
+  Instrument: [MMD0sample, InstrExt]
+  Score: [MMD0song]
+  Vibrato: [trk_synvibdep, trk_synviboffs]
+  Portamento: [trk_porttrgper]
+  Voice: [trk_prevper, trk_noteoffcnt]
+  Module: [MMD0, mmd_pline]
 
 comments:
   689: first the synth volume scales the note volume

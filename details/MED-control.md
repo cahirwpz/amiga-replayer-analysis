@@ -29,7 +29,7 @@ the card. `:VolumeOpcodes`, `:WaveOpcodes`, `:VolEnvelopeStep`.
 The volume list runs before the wave list. Each has both an execution counter
 and a wait counter. Waits count list activations, not raw ticks. Speed commands
 change the reload value; the current execution counter has already been loaded.
-`:SynthTick`, `:syv_f0`, `:syv_f1`, `:syw_f0`, `:syw_f1`.
+`:SynthTick`, `:VolSpeed`, `:VolWait`, `:WaveSpeed`, `:WaveWait`.
 
 Slides and envelope playback run before the wait check. End commands retain the
 list position while these processes continue. Arpeggio and vibrato also keep
@@ -69,7 +69,7 @@ active. Pattern vibrato still adds its correction afterwards. `:PortamentoTick`,
 
 On a volume activation, the slide runs first. An active envelope then overwrites
 its result. A direct volume-list value can overwrite the envelope result again.
-`:SynthTick`, `:VolEnvelopeStep`, `:synth_getvolcmd`.
+`:SynthTick`, `:VolEnvelopeStep`, `:ReadVolumeList`.
 
 The resulting synth volume scales the track's current note volume; track/master
 scaling follows. `:WaveListTick`, `:UpdatePerVol`.

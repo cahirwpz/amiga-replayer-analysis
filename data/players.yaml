@@ -36,6 +36,7 @@ ArtOfNoise-8V:
 
 MED:
   provenance: original
+  spec: specs/med.py
   author: Teijo Kinnunen
   links:
     - https://archive.org/details/OctaMED_Professional_v3.00_1992_RBF_Software_CU_Amiga

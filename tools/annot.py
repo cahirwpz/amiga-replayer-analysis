@@ -15,6 +15,14 @@ in ext/, which stays read-only:
     185: vibrato step, shared by all voices
   banners:               # source line: block comment above that line
     622: Synth walkers, once per tick.
+  refs:                  # more files that types: may name, e.g. format notes
+    - ext/uade/amigasrc/players/uade/soundmon/format.txt
+  types:                 # spec class: words in the source or refs
+    Voice: [trk_prevper]
+
+`types` anchor the CamelCase classes of specs/<player>.py; see
+tools/specs.py. Each word must occur as a whole word. Citations may name
+types like labels.
 
 Line numbers are those of the pinned source. Renames change whole
 identifiers outside `;` comments. New labels get a line of their own; the
@@ -37,7 +45,7 @@ ROOT = Path(__file__).resolve().parent.parent
 ANNOT = ROOT / "data" / "annot"
 OUT = ROOT / "build" / "annot"
 
-FIELDS = {"source", "sha1", "labels", "comments", "banners"}
+FIELDS = {"source", "sha1", "labels", "comments", "banners", "refs", "types"}
 IDENT = r"[A-Za-z_][\w.]*"
 
 
@@ -113,6 +121,31 @@ def check(spec, lines, sha1):
                 except UnicodeEncodeError:
                     yield f"{field}: line {num} is not Latin-1"
 
+    yield from check_types(spec, lines, set(labels.values()))
+
+
+def check_types(spec, lines, labels):
+    """Yield problems with `refs` and `types`."""
+    texts = ["\n".join(lines)]
+    for ref in spec.get("refs") or []:
+        path = ROOT / str(ref)
+        if not path.is_file():
+            yield f"refs: {ref} does not exist"
+        else:
+            texts.append(path.read_bytes().decode("latin-1"))
+    for name, words in (spec.get("types") or {}).items():
+        if not re.fullmatch(r"[A-Z]\w*", str(name)):
+            yield f"types: {name} is not a CamelCase name"
+        if name in labels:
+            yield f"types: {name} is also a label"
+        if not isinstance(words, list) or not words:
+            yield f"types: {name} needs a list of words"
+            continue
+        for word in words:
+            pattern = re.compile(rf"(?<![\w.]){re.escape(str(word))}(?!\w)")
+            if not any(pattern.search(t) for t in texts):
+                yield f"types: {name}: {word} is in neither the source nor refs"
+
 
 def render(spec, lines):
     """The annotated source, as a list of lines."""
@@ -147,11 +180,12 @@ def source_lines(spec):
 
 
 def listing_labels(path):
-    """Every label in the rendered listing; for citations."""
+    """Every label in the rendered listing, and every type; for citations."""
     spec = load(path)
     labels = spec.get("labels") or {}
     renamed = {k for k in labels if isinstance(k, str)}
-    return (defined(source_lines(spec)[1]) - renamed) | set(labels.values())
+    listing = defined(source_lines(spec)[1]) - renamed
+    return listing | set(labels.values()) | set(spec.get("types") or {})
 
 
 def cited_labels(path, cache={}):

@@ -38,12 +38,8 @@ All twelve pilot cards exist.
 The template is in [`docs/card-template.md`](docs/card-template.md). `MED` is
 the first card on it.
 
-- [ ] Move card code into Python files, proposed 2026-09-27: `specs/paula.py`
-      (abstract Paula), `specs/controls.py` (controller kinds), `specs/med.py`.
-      Cards show excerpts that `tools/cards.py --write` generates. Labels become
-      checked decorators.
-- [ ] Ask the user: depth level 2 (control flow runs, leaf math stubbed)?
-      Generate Sound tables from the code?
+- [ ] Next session: follow [`FOLLOWUP.md`](FOLLOWUP.md): specs as the executable
+      model, cards as prose.
 - [ ] Review the MED card with the user. Adjust the template from the review.
 - [ ] Migrate TFMX Pro, then Tim Follin; review each. Their items below fold in.
 - [ ] Migrate the other cards. Move each State table to `details/`, and Paula
