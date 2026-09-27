@@ -63,6 +63,10 @@ class Clock(unittest.TestCase):
         self.assertIsNone(m.step())
         self.assertEqual(m.now, 90)
 
+    def test_now_is_read_only(self):
+        with self.assertRaises(AttributeError):
+            Amiga().now = 5  # type: ignore[misc]
+
     def test_rejects_an_event_in_the_past(self):
         m = Amiga()
         m.run(100)
@@ -148,6 +152,27 @@ class Paula_(unittest.TestCase):
         self.m.schedule(181, Priority.CPU, lambda: self.channel.queue(Sample(b"L" * 4)))
         self.m.run(3000)
         self.assertEqual(self.events[0][1], b"L")
+
+    def test_dma_on_before_idle_does_not_restart(self):
+        # N is 4 words: its start reload at 14, words at 241, 695, 1149.
+        self.channel.play(Sample(b"N" * 8))
+        self.m.run(700)
+        self.channel.disable()
+        self.channel.play(Sample(b"R" * 8))  # at once: the word still plays
+        self.m.run(1500)
+        # A restart would reload R at the next slot, 922. Instead R waits
+        # for N's own reload, with its last word at 1149.
+        self.assertEqual(self.events[1:], [(1149, b"R")])
+
+    def test_dma_on_after_idle_restarts(self):
+        self.channel.play(Sample(b"N" * 8))
+        self.m.run(1000)
+        self.channel.disable()
+        self.m.run(1000 + 2 * self.channel.period + 2 * LINE_CCK)
+        start = self.m.now
+        self.channel.play(Sample(b"R" * 8))
+        self.m.run(start + LINE_CCK)
+        self.assertEqual(self.events[-1][1], b"R")
 
     def test_disable_stops_the_channel(self):
         self.channel.play(Sample(b"N" * 8))

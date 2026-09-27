@@ -26,17 +26,22 @@ class Priority(IntEnum):
 
 @dataclass
 class Amiga:
-    now: int = 0  # CCK since start
+    _now: int = field(default=0, init=False)  # CCK since start
     queue: sched.scheduler = field(init=False)
     paula: Paula = field(init=False)
     timer: CiaTimer = field(init=False)  # e.g. CIA-B timer A
     vblank: VerticalBlank = field(init=False)
 
     def __post_init__(self) -> None:
-        self.queue = sched.scheduler(lambda: self.now, no_waiting)
+        self.queue = sched.scheduler(lambda: self._now, no_waiting)
         self.paula = Paula(self)
         self.timer = CiaTimer(self)
         self.vblank = VerticalBlank(self)
+
+    @property
+    def now(self) -> int:
+        """Read-only: only step() and run() move time."""
+        return self._now
 
     def schedule(
         self, time: int, priority: Priority, action: Callable[[], None]
@@ -62,7 +67,7 @@ class Amiga:
         or None if nothing is scheduled."""
         if self.queue.empty():
             return None
-        self.now = int(self.queue.queue[0].time)
+        self._now = int(self.queue.queue[0].time)
         self.queue.run(blocking=False)
         return self.now
 
@@ -71,8 +76,8 @@ class Amiga:
         while (delay := self.queue.run(blocking=False)) is not None:
             if self.now + delay > until:
                 break
-            self.now += int(delay)  # the next event; none is skipped
-        self.now = until
+            self._now += int(delay)  # the next event; none is skipped
+        self._now = until
 
 
 def no_waiting(delay: float) -> None:

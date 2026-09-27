@@ -14,10 +14,15 @@ period and a volume. `hardware/paula.py:Channel`
   the last word.
 - The audio interrupt comes at DMA start and at each reload. All four channels
   share one CPU interrupt; its handler tests which channel asked.
+- After DMA off, a channel finishes its word, up to two periods. DMA on before
+  then does not restart the note.
 - DMA start takes up to a scanline. A pointer written before then replaces the
   start, and the note plays from its loop point.
 - Stereo is fixed: channels 0 and 3 left, 1 and 2 right. There is no panning.
 - Volume writes are cheap. Replayers run envelopes and tremolo in software.
+
+So replayers wait twice: before DMA on, and before they write the loop. ptplayer
+6.4 waits 576 CIA counts each time, with a one-shot CIA timer.
 
 ## Tricks
 

@@ -58,6 +58,9 @@ def next_slot(number: int, earliest: int) -> int:
 class Channel:
     """One audio channel: registers, counters, DMA state machine, interrupt.
 
+    Source for the state machine: Minimig-AGA_MiSTer 3ab91cd,
+    rtl/paula_audio_channel.v. Grain: one word, not one byte.
+
     `location` and `length` are the queued registers AUDxLC and AUDxLEN.
     `playing`, `pointer` and `count` are the live pointer and counter. The
     channel always wraps: there is no loop register and no one-shot mode.
@@ -80,6 +83,7 @@ class Channel:
     volume: int = 0  # AUDxVOL, after set_volume
     dma: bool = False  # this channel's DMACON bit
     armed: bool = False  # DMA enabled; the start reload is pending
+    idle: bool = True  # no word is playing; only now can DMA on restart
     irq_enabled: bool = False  # this channel's INTENA bit
     irq_requested: bool = False  # this channel's INTREQ bit; the CPU clears it
     on_interrupt: "Callable[[Channel], None] | None" = None  # see on_irq
@@ -94,19 +98,30 @@ class Channel:
         self.length = len(sample.data) // 2
 
     def enable(self) -> None:
-        """Set this channel's DMACON bit. It only arms the reload; the next
-        slot takes AUDxLC. Setting a bit that is already set does nothing."""
+        """Set this channel's DMACON bit.
+
+        From idle, it arms the start reload; the next slot takes AUDxLC.
+        Before the channel is idle, it plays on with no restart, so
+        replayers wait after DMA off. Setting a set bit does nothing.
+        """
         if self.dma:
             return
-        self.dma = self.armed = True
-        self.fetch_at(self.clock.now)
+        self.dma = True
+        if self.idle:
+            self.idle, self.armed = False, True
+            self.fetch_at(self.clock.now)
 
     def play(self, sample: Sample) -> None:
         self.queue(sample)
         self.enable()
 
     def disable(self) -> None:
-        """Clear this channel's DMACON bit."""
+        """Clear this channel's DMACON bit. The channel finishes its word,
+        up to 2 × period CCK, then goes idle.
+
+        Left out: with its INTREQ bit clear, the channel plays one more
+        word and requests an interrupt first.
+        """
         self.dma = self.armed = False
 
     def set_volume(self, value: int) -> None:
@@ -126,6 +141,7 @@ class Channel:
     def fetch(self) -> None:
         """One DMA slot: the start reload, or one word."""
         if not self.dma:
+            self.idle = True  # the word is done and DMA is off
             return
         if self.armed:
             # The start reload: this first word only reloads the pointer and

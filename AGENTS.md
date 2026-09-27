@@ -41,7 +41,7 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
   it. A version with a distinct idea gets its own card.
 - Prefer a table over prose when comparing things.
 - A player's model is its spec, `specs/<player>.py`. Its card is
-  [prose](docs/card-template.md).
+  [prose](docs/card-template.md). Chips: `hardware/`.
 
 ## Writing
 
@@ -86,7 +86,7 @@ glossary and each label against its code.
 ## Repo hygiene
 
 - Never edit submodules in `ext/` or update their pins unasked.
-- For a pin update, diff the output of `tools/inventory.py` before and after.
+- For a pin update, diff `tools/inventory.py` output before and after.
 - Link each player name to its card, if any.
 - Run `source ./activate` once per shell.
 - Before each commit, stage and run `pre-commit run --all-files`. Stage again

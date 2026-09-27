@@ -34,8 +34,9 @@ SOUNDTRACKER_LATCHES = (  # sttempo: tempos 1..10
     *(2417, 4833, 7250, 9666, 12083),
     *(14500, 16916, 19332, 21436, 24163),
 )
-STOP_WAIT_CCK = 161  # _Wait1line before DMA on: 161 steps of the beam, synth build
-LOOP_WAIT_CCK = 81  # _Wait1line before the loop write
+POLL_CCK = 25  # one _Wait1line poll on a 68000: about 50 CPU cycles (estimate)
+STOP_WAIT_CCK = 161 * POLL_CCK  # before DMA on: 161 polls, synth build
+LOOP_WAIT_CCK = 81 * POLL_CCK  # before the loop write: 81 polls
 
 
 # --- What the composer edits -------------------------------------------
@@ -375,10 +376,12 @@ def DoFX(module: Module) -> None:
 def StartDMA(module: Module) -> None:
     """After each tick: wait, set the DMACON bits, wait, write the loops.
 
-    The waits count beam positions, in CCK. A start can take up to a line,
-    227 CCK, so after LOOP_WAIT_CCK the start reload may still be pending.
-    The loop write then replaces the start, and the note plays from its
-    loop point. (Guess from hardware/paula.py; not heard.)
+    Each wait polls the beam position until it changes, a set number of
+    times. The first lets stopped channels finish their word and go idle,
+    so DMA on restarts them. The second lets the start reload pass before
+    the loop write. On a 68000 both last far longer than the one line a
+    start takes. A faster CPU polls faster, so the waits shrink. The
+    replay's own comment says "sometimes double wait time is required".
     """
     starting = [voice for voice in module.voices if voice.start]
 
