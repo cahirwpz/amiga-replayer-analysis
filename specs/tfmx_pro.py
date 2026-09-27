@@ -1103,7 +1103,13 @@ def ImsFilter(module: Module, voice: Voice, s: Statement) -> bool:
 
 def ImsOff(module: Module, voice: Voice, s: Statement) -> bool:
     """$29. Byte 1 > 0 also clears the steps, swings and filter; byte 3
-    then sets the mirror."""
+    then sets the mirror.
+
+    The mirror's negated copy plays only if the next voice plays its own
+    buffer. Paula puts channels 0 and 3 left, 1 and 2 right, so voice 0
+    mirrors to the other side and voice 1 to the same side. The source
+    names the field after Dolby: a surround decoder sends left minus
+    right to the rear speakers (inference)."""
     ims = voice.ims
     ims.length = 0
     if s[1]:
@@ -1279,6 +1285,15 @@ def ImsTick(module: Module, voice: Voice) -> None:
     sync. The step sets how much of the source fits in one pass; the
     step change bends it within the pass. A delta limits how far each
     output byte moves from the last, like a slew-rate filter.
+
+    The model on test sources, a 32-byte buffer from a 64-byte source:
+    a sine at step 1.5 gives 3/4 of a cycle, then a jump to the
+    start; a step change shortens the cycle along the buffer; a square
+    at step 2, limit 40, turns each edge into a ramp of five bytes.
+
+    Four voices build up to 1024 bytes per tick. Voice 3's mirror writes
+    past the four buffers, into the sample file (guess: the editor keeps
+    that space free).
     """
     ims = voice.ims
     if not ims.length:

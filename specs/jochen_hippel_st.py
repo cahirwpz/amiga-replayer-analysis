@@ -16,10 +16,11 @@ SetPer, SetTwo) are left out.
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from functools import partial
+from math import log2
 
 from hardware import paula
 from hardware.amiga import Amiga, Priority
-from hardware.clock import LINE_CCK
+from hardware.clock import CCK_HZ, LINE_CCK
 from specs.controls import CommandList, StateMachine
 
 CHIP_VOICES = 3
@@ -76,6 +77,7 @@ OCTAVE_NOTE = 48  # OctaveVibrato: below this note, the offset doubles per octav
 # Emulator
 VOLUME_TABLE = (0, 1, 2, 3, 4, 6, 8, 10, 13, 16, 20, 24, 30, 38, 48, 64, 32)
 TONE_FACTOR = 7  # Paula period = chip period × 7 + 1
+ST_CHIP_HZ = 2_000_000  # the chip's clock: a known ST fact, not in this code
 NOISE_PERIODS = tuple(0x280 - 16 * n for n in range(32))  # by noise register
 SILENT_PERIOD = 0x100
 LEVELS = (0x80, 0x93, 0xA7, 0xBF, 0xCF, 0xDF, 0xEF, 0xFF)  # Bit8Table, signed
@@ -972,10 +974,13 @@ def EmuTick(module: Module, then: Then) -> None:
 def EmuChannel(
     module: Module, n: int, period: int, level: int, enabled: int, then: Then
 ) -> None:
-    """Tone wins over noise. A volume register with bit 4, the chip's
-    envelope, gives a fixed 32; the model clamps higher values, which
-    read past the table. With neither on, the channel restarts an empty
-    sample every tick."""
+    """Tone wins over noise: a channel with both loses its noise. A
+    volume register with bit 4, the chip's envelope, gives a fixed 32;
+    the model clamps higher values, which read past the table. With
+    neither on, the channel restarts an empty sample every tick.
+
+    VOLUME_TABLE rises by 1.6 to 3.5 dB per step, 6 dB at the bottom.
+    Comparing it with the chip's curve needs the chip's datasheet."""
     state = module.emu[n]
     state.volume = VOLUME_TABLE[min(level, ENVELOPE_MODE)]
     state.period = period * TONE_FACTOR + 1
@@ -994,8 +999,13 @@ def EmuChannel(
 
 
 def EmuTone(module: Module, n: int, then: Then) -> None:
-    """A 4-byte square, looped. It restarts only when the channel was not
-    playing a tone, so a new pitch keeps the phase."""
+    """A 4-byte square, looped: two bytes low, two high, as on the chip.
+    It restarts only when the channel was not playing a tone, so a new
+    pitch keeps the phase.
+
+    The period factor is 7; the exact one is 7.09, so most tones play
+    sharp: see tone_error_cents. Chip periods below 18 give Paula periods
+    below 124, Paula's usual minimum: tones above 6.9 kHz."""
     state = module.emu[n]
 
     def written() -> None:
@@ -1012,7 +1022,8 @@ def EmuTone(module: Module, n: int, then: Then) -> None:
 def EmuNoise(module: Module, n: int, then: Then) -> None:
     """The 1024-byte noise sample, looped. The period comes from the noise
     register: 640 - 16 × value. So a higher register gives a higher
-    pitch, the opposite of the chip."""
+    pitch, the opposite of the chip. Periods 144 to 640 repeat the
+    sample 24 to 5 times per second."""
     state = module.emu[n]
     register = module.registers.values[NOISE_PERIOD] & 0x1F
 
@@ -1027,6 +1038,16 @@ def EmuNoise(module: Module, n: int, then: Then) -> None:
     state.playing = 2
     noise = module.noise_sample
     NotePlay(module, PAULA_OF_CHIP[n], noise, noise, written)
+
+
+def tone_error_cents(chip_period: int) -> float:
+    """How far a tone plays from the chip's pitch. The chip plays
+    ST_CHIP_HZ / (16 × period); Paula plays a 4-byte square at
+    TONE_FACTOR × period + 1. From -1.5 cents at period 10 to +23 at
+    4095; +18 already at period 50."""
+    chip = ST_CHIP_HZ / (16 * chip_period)
+    amiga = CCK_HZ / (4 * (TONE_FACTOR * chip_period + 1))
+    return 1200 * log2(amiga / chip)
 
 
 def WriteChannel(module: Module, n: int) -> None:

@@ -29,8 +29,7 @@ settings.
 - A tone is a looped 4-byte square wave. It restarts only when the channel
   starts a tone. `:EmuTone`
   - Enables: a new pitch keeps the wave's phase.
-  - Costs: most tones play up to 23 cents sharp; see
-    [accuracy](../details/Jochen_Hippel_ST-accuracy.md).
+  - Costs: most tones play up to 23 cents sharp.
 - Noise is a looped 1024-byte random sample at one of 32 periods. `:EmuNoise`
   - Costs: the noise pitch moves the wrong way.
 - A table maps 16 log volume steps to Paula volume. `:EmuChannel`

@@ -17,7 +17,7 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
 
 `TODO.md` never keeps:
 
-- finished results: they go to `players/`, `specs/`, `ideas/` or `details/`
+- finished results: they go to `players/`, `specs/` or `ideas/`
 - rules and conventions: they go here
 - reasons behind finished work: they go to `docs/`
 - done items: delete them, git keeps the history
@@ -34,7 +34,7 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
 ## Depth
 
 - Write at executive-summary level by default.
-- Go deeper only when the user asks. Put deep dives in `details/`.
+- Go deeper only when the user asks. Put deep dives in spec docstrings.
 - One idea per page. One lineage per card; see `family` in
   [`data/players.yaml`](data/players.yaml).
 - A card covers a lineage's latest version. If it is binary-only, disassemble

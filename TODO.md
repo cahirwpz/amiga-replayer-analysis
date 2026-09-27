@@ -40,33 +40,38 @@ the first card on it, with `specs/med.py`.
 
 - [ ] Migrate the other cards the same way. Paula mechanics go to
       `hardware/paula.py`. The table lists the cards still on template 1.
+- [ ] Fold each migrated card's `details/` page into its spec's docstrings.
 
 | Card                     | Blocked by      |
 | ------------------------ | --------------- |
 | `AbyssHighestExperience` | Its disassembly |
 | `MIDI-Loriciel`          | —               |
-| `MugicianII`             | —               |
-| `Oktalyzer`              | —               |
 | `SonicArranger`          | —               |
 | `SonixMusicDriver`       | —               |
-| `SoundMon2.2`            | —               |
 | `SoundPlayer`            | —               |
 | `SynthDream`             | —               |
 
+- [ ] After the last card: decide on `specs/controls.py`. `CommandList` and
+      `TableWalker` share logic. `StateMachine` and `Program` are tags that no
+      tool reads: drop them, or check them in `tools/specs.py`.
 - [ ] After the last card: drop template 1 from `tools/cards.py`, its tests and
-      fixtures. Drop the glossary's control levels, generator, role, write modes
-      and the DMA output.
+      fixtures. Delete `details/` and drop it from `.pre-commit-config.yaml`,
+      `tools/cogload.py` and `tools/links.py`. Drop the glossary's control
+      levels, generator, role, write modes and the DMA output.
 - [ ] Composer's view for MED rests on the format notes. Ask the user for an
       OctaMED manual that covers synth sounds.
 
 ### Hardware model
 
-- [ ] `POLL_CCK` is an estimate from 68000 instruction timings in
-      `specs/med.py:StartDMA` (25), `specs/digital_sonix_chrome.py:WaitAudioIrq`
-      (20) and `specs/jochen_hippel_st.py:NotePlay` (15). Measure or cite one
-      poll of each.
-- [ ] `specs/jochen_hippel_st.py` runs Interrupt by a 50 Hz timer. Check
-      DeliTracker's default rate for a player without `DTP_Timer`.
+- [ ] `POLL_CCK` is an estimate from 68000 instruction timings. It is 25 in
+      `specs/med.py:StartDMA`, 20 in
+      `specs/digital_sonix_chrome.py:WaitAudioIrq`, 15 in
+      `specs/jochen_hippel_st.py:NotePlay` and 10 in
+      `specs/oktalyzer.py:QueueBuffers`. Measure or cite one poll of each.
+- [ ] `specs/soundmon_22.py:PlayRow` waits 640 CCK, an estimate of 128 `dbra`
+      loops. Does a note with a period above 320 miss its restart?
+- [ ] `specs/jochen_hippel_st.py` and `specs/soundmon_22.py` run by a 50 Hz
+      timer. Check DeliTracker's default rate for a player without `DTP_Timer`.
 
 ### Then
 

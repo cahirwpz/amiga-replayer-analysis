@@ -45,8 +45,8 @@ An instrument is a program that runs once per tick and shapes one note.
   `:RiffEcho`
   - Enables: generative melody from a few bytes.
   - Costs: every offset plays for the same number of ticks.
-- [IMS](../details/TFMX-Pro-IMS.md) rebuilds a voice's wave every tick, as a
-  hard sync with a slew limiter. `:ImsTick`
+- IMS rebuilds a voice's wave every tick, as a hard sync with a slew limiter.
+  `:ImsTick`
   - Enables: sync and filter sweeps from one short sample.
   - Costs: CPU high: up to 256 bytes per voice per tick.
 - Programs rewrite programs. `:CopyToMacro` `:AddToMacro`
