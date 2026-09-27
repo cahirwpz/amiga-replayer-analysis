@@ -177,6 +177,7 @@ SonixMusicDriver:
   author: Mark Riley
 
 SynthDream:
+  spec: specs/synth_dream.py
   provenance: disassembly
   author: Laurens Tummers and John Tonnard
   year: 1991

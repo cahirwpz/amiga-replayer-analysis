@@ -49,7 +49,6 @@ the first card on it, with `specs/med.py`.
 | `SonicArranger`          | —               |
 | `SonixMusicDriver`       | —               |
 | `SoundPlayer`            | —               |
-| `SynthDream`             | —               |
 
 - [ ] After the last card: decide on `specs/controls.py`. `CommandList` and
       `TableWalker` share logic. `StateMachine` and `Program` are tags that no

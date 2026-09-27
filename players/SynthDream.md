@@ -1,78 +1,69 @@
 ---
 player: SynthDream
-control: { sequencer: commands, instrument: tables }
-themes: [synthesis]
+template: 2
 ideas: [pulse-width-table, soft-edge-pulse, run-length-tables, glide-to-fit]
-streams: { voice: 6 }
 ---
 
 # Synth Dream
 
-A 16-byte pulse wave gets finer width steps from a soft edge sample.
+A 16-byte pulse wave gets finer width steps from a soft edge byte.
+
+## Context
+
+| Fact      | Value                                                           |
+| --------- | --------------------------------------------------------------- |
+| Player    | `SynthDream`                                                    |
+| Author    | Laurens Tummers and John Tonnard                                |
+| Year      | 1991                                                            |
+| Code read | disassembly: `ext/uade/amigasrc/players/wanted_team/SynthDream` |
+| Spec      | [specs/synth_dream.py](../specs/synth_dream.py)                 |
 
 ## Key ideas
 
-- A table picks the pulse width in sixteenths.
-  `data/annot/SynthDream.yaml:PulseWalker`
-- The edge sample takes an in-between value, for finer steps. `:PulseWalker`
-- Tables are runs: count, repeat, then values. `:VolumeWalker`
-- A glide can fit its slide rate to the note length. `:GlideToFit`
+- The pulse table picks the width in sixteenths. It also lowers the first high
+  byte by an amount, for widths in between. `:PulseWalker`
+  - Enables: smooth pulse-width sweeps from one 16-byte wave.
+  - Costs: the wave is rebuilt every tick.
+- Each table is runs: a count, a repeat number, then the values. `:Runs`
+  - Enables: long envelopes from a few bytes.
+  - Costs: every note restarts all four tables.
+- Events carry their own length in ticks. Each voice reads its own positions.
+  `:ReadEvent` `:NoteEvent`
+  - Enables: no rows and no speed; voices loop at their own lengths.
+- A glide can fit its rate to the note. The rate is the interval divided by the
+  ticks after its delay. `:GlideToFit`
+  - Enables: a glide that ends as the note ends.
+- The fine table, the glide and the instrument's shift scale the period. Their
+  ratios step by about 1/4 cent. `:FineWalker` `:Glide` `:ShiftPitch`
+  - Enables: detune and slides that sound the same in every octave.
 - A position can swap one instrument for another. `:LoadInstrument`
+  - Enables: one pattern with other sounds.
 
-## Streams
+## Composer's view
 
-| Stream     | Scope | Role       | Carries                                  | Control   | Rate        |
-| ---------- | ----- | ---------- | ---------------------------------------- | --------- | ----------- |
-| Positions  | voice | sequencer  | pattern, transpose, repeat, swap, volume | loop, end | pattern end |
-| Pattern    | voice | sequencer  | note, length, volume, instrument, glide  | end       | note end    |
-| Volume     | voice | instrument | volume; runs                             | loop      | tick        |
-| Pitch      | voice | instrument | note offset; runs                        | loop      | tick        |
-| Pitch fine | voice | instrument | pitch factor; runs                       | loop      | tick        |
-| Wave       | voice | instrument | pulse width, edge amount; runs           | loop      | tick        |
+The composer writes, for each voice, positions and patterns of events. An
+instrument names four tables, or a sample.
 
-## Sequencer
+| Aspect   | Answer                                                                   | Source          |
+| -------- | ------------------------------------------------------------------------ | --------------- |
+| Notation | An event: a word opcode, then length, note, volume, instrument or glide. | `:NoteEvent`    |
+| Notation | A position: pattern, transpose, repeats, instrument swap, volume offset. | `:ReadPosition` |
+| Notation | An instrument: fixed note, pitch shift, four tables, or a sample.        | `:Instrument`   |
+| Cost     | An event without a length repeats the last length.                       | `:NoteEvent`    |
+| Cost     | Volume offsets are subtracted from the volume table's value.             | `:VolumeWalker` |
+| Cost     | A note is silent on its last tick, unless legato is on.                  | `:WriteChannel` |
+| Cost     | A rest stops all four tables.                                            | `:VoiceTick`    |
 
-| Aspect   | Value           | Label                            |
-| -------- | --------------- | -------------------------------- |
-| Time     | lengths         | `:ReadEvent`                     |
-| Unit     | tick            | `:VoiceTick`                     |
-| Note end | length          | `:VoiceTick`                     |
-| Routing  | fixed           | `:VoiceTick`                     |
-| Reuse    | patterns, loops | `:ReadPosition` `:RepeatPattern` |
-| Tempo    | none            | `:EventTable`                    |
+## What is unique
 
-## Generators
-
-| Generator | Scope | States       | Writes | Rate | Set by  | Note-on |
-| --------- | ----- | ------------ | ------ | ---- | ------- | ------- |
-| Glide     | voice | delay, glide | period | tick | Pattern | restart |
-
-## Channel outputs
-
-| Output    | Writers, in tick order                                          |
-| --------- | --------------------------------------------------------------- |
-| Volume    | Volume (set), Pattern (add), Positions (add)                    |
-| Period    | Pattern (note), Pitch (note), Pitch fine (scale), Glide (scale) |
-| Wave data | Wave (edit)                                                     |
-| Sample    | Pattern (set)                                                   |
-| DMA       | Pattern (on), Pattern (off)                                     |
-
-## Interactions
-
-| From    | To         | Event                                               |
-| ------- | ---------- | --------------------------------------------------- |
-| Pattern | Volume     | Switches its table after N ticks `:SwitchVolTable`  |
-| Pattern | Pitch fine | Switches its table after N ticks `:SwitchFineTable` |
-
-- Legato keeps the channel running between notes. `:LegatoOn`
-
-## State
-
-| Scope      | Fields                                                             |
-| ---------- | ------------------------------------------------------------------ |
-| Voice      | position, repeats, event, ticks left, table positions, runs, glide |
-| Instrument | four tables, or a sample                                           |
-| Global     | none                                                               |
+- A switched table plays, then returns to the instrument's own table at its end.
+  `:SwitchTables`
+- A glide has no target. It multiplies the pitch ratio every tick until the
+  event ends. `:Glide`
+- A note's first tick writes the sample, the second its loop. There is no
+  busy-wait. `:WriteChannel`
+- Each voice ends on its own: `$fe` loops its positions, `$ff` stops it.
+  `:NextPosition`
 
 ## Open questions
 

@@ -24,9 +24,29 @@ labels:
   lbC000F32: RestEvent
   # data
   lbL000FB6: Periods
-  lbL0013F6: PitchUp
-  lbL0010D6: PitchDown
+  lbL0013F6: PitchDownRatios
+  lbL0010D6: PitchUpRatios
   lbL001716: PulseWaves
+
+  # added for specs/synth_dream.py
+  Play: Play
+  lbC000868: InitSong
+  lbC000CDC: NoteEvent
+  lbC0000F2: Modifier
+  lbC00012E: SwitchTables
+  lbC0003EC: ShiftPitch
+  lbC00041E: WriteChannel
+  # readable labels that specs cite
+  ChangeVolume: ChangeVolume
+  SetVol: SetVol
+  SetAll: SetAll
+  SongEnd: SongEnd
+  # new names that specs cite
+  lbL000494: VoiceData
+  lbL000016: SongPtr
+  lbL0007CE: InstrumentTable
+  lbL0007D2: VolumeTables
+  lbL0007D6: FineTables
 
 comments:
   729: "$fe: loop this voice's positions; $ff: stop the voice"
@@ -60,3 +80,11 @@ banners:
     and instrument. $24-$2e: legato on/off, table switches, slides.
   2378: |
     PulseWaves: 16 pulse waves of 16 bytes; wave W has W low samples.
+
+# Classes in specs/synth_dream.py: each word occurs in the source.
+types:
+  Instrument: [lbL0007CE]
+  Score: [lbL000016]
+  Runs: [lbC000172]
+  Voice: [lbL000494]
+  Module: [lbL000562]
