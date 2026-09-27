@@ -3,6 +3,7 @@
 Run: python3 -m unittest discover -s tests
 """
 
+import importlib.util
 import subprocess
 import sys
 import tempfile
@@ -218,10 +219,13 @@ class Cards(unittest.TestCase):
 
 class Specs(unittest.TestCase):
     def setUp(self):
+        # By path: the name `specs` also names the specs/ package.
         sys.path.insert(0, str(ROOT / "tools"))
-        import specs
-
-        self.specs = specs
+        spec = importlib.util.spec_from_file_location(
+            "specs_tool", ROOT / "tools/specs.py"
+        )
+        self.specs = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.specs)
 
     def test_accepts_the_repo_specs(self):
         code, _, out = run("specs.py")

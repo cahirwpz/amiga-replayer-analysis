@@ -8,7 +8,7 @@ Checks:
   - no link names a line, e.g. `x.asm#L60` or a GitHub URL with `#L60`
   - `file:Label` citations name a label in that file, as
     annot.cited_labels() finds it
-    Paths starting with a repo folder, e.g. ext/, data/ or specs/, are
+    Paths starting with a repo folder, e.g. ext/, data/ or hardware/, are
     relative to the repo root. In
     player cards (front matter has `player`), other paths are relative to
     the player's source, as tools/inventory.py finds it. A bare `:Label`
@@ -69,6 +69,7 @@ REPO_DIRS = (
     "ext/",
     "ideas/",
     "players/",
+    "hardware/",
     "specs/",
     "tests/",
     "tools/",

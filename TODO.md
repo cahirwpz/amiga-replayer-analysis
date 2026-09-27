@@ -43,7 +43,7 @@ the first card on it, with `specs/med.py`.
 - [ ] Migrate TFMX Pro, then Tim Follin, to a spec and a prose card; review
       each. Their items below fold in.
 - [ ] Migrate the other cards the same way. Paula mechanics go to
-      `specs/paula.py`.
+      `hardware/paula.py`.
 - [ ] `specs/med.py` stubs `CmdLoop`, `SetTempo` and the pattern effects. Fill
       them if a card needs them.
 - [ ] After the last card: drop template 1 from `tools/cards.py`, its tests and

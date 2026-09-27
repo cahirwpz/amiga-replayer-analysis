@@ -86,8 +86,8 @@ Composer's view.
 ## Rules
 
 - Paula mechanics go to [`paula.md`](paula.md) and
-  [`specs/paula.py`](../specs/paula.py). When a Paula feature is the idea, keep
-  a key idea and link there.
+  [`hardware/paula.py`](../hardware/paula.py). When a Paula feature is the idea,
+  keep a key idea and link there.
 - Game sound effects appear only as a distinct key idea.
 - Skip Open questions when there is nothing to say.
 - Tables skip the card's word limit.

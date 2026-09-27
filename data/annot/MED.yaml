@@ -39,6 +39,7 @@ labels:
   _SetTempo: SetTempo
   _ChannelOff: ChannelOff
   _PlayNote: PlayNote
+  _StartDMA: StartDMA
   synth_getvolcmd: ReadVolumeList
   synth_getwfcmd: ReadWaveList
   syv_f0: VolSpeed

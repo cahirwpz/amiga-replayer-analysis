@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Check the executable specs in specs/.
+"""Check the player specs in specs/ and the hardware model in hardware/.
 
 Usage: specs.py [DIR]
 
-DIR defaults to specs/. Checks:
-  - `mypy --strict` passes on DIR; a body of `...` is a stub, so
-    empty-body is off. Ruff runs as its own pre-commit hook.
+DIR defaults to specs/, checked with hardware/. Checks:
+  - `mypy --strict` passes; a body of `...` is a stub, so empty-body is
+    off. Ruff runs as its own pre-commit hook.
   - each spec is named by a player's `spec` in data/players.yaml, except
     the shared ones in SHARED
   - each top-level CamelCase function in a player's spec is a label, and
@@ -28,7 +28,8 @@ from mypy import api as mypy_api
 
 ROOT = Path(__file__).resolve().parent.parent
 SPECS = ROOT / "specs"
-SHARED = {"__init__.py", "paula.py", "controls.py"}
+HARDWARE = ROOT / "hardware"
+SHARED = {"__init__.py", "controls.py"}
 CAMEL = re.compile(r"[A-Z][A-Za-z0-9]*[a-z][A-Za-z0-9]*")
 MYPY_LINE = re.compile(r"^(.+?):(\d+): error: (.*)$")
 
@@ -62,10 +63,10 @@ def check_names(path, player):
             yield node.lineno, "label", f"{node.name} is not a label of {player}"
 
 
-def check_types(root):
+def check_types(*roots):
     args = ["--strict", "--disable-error-code", "empty-body"]
     args += ["--no-error-summary", "--hide-error-context"]
-    args += ["--cache-dir", str(ROOT / "build" / "mypy"), str(root)]
+    args += ["--cache-dir", str(ROOT / "build" / "mypy"), *map(str, roots)]
     out, _, _ = mypy_api.run(args)
     for line in out.splitlines():
         if m := MYPY_LINE.match(line):
@@ -81,7 +82,7 @@ def spec_players(data=None):
 def main(argv):
     root = Path(argv[0]) if argv else SPECS
     owners = spec_players()
-    errors = list(check_types(root))
+    errors = list(check_types(root, HARDWARE) if root == SPECS else check_types(root))
     for path in sorted(root.glob("*.py")):
         rel = path.resolve().relative_to(ROOT).as_posix()
         if path.name in SHARED:

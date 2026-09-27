@@ -9,7 +9,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum, auto
 
-from specs import paula
+from hardware import paula
+from hardware.amiga import Amiga, Priority
 from specs.controls import CommandList, Mode, StateMachine, TableWalker
 
 NEVER = -1  # hold_left: the key is never released
@@ -27,6 +28,14 @@ CMD_MISC = 0x0F  # argument 0xFF: note-off
 CMD_LOOP = 0x16
 NOTE_OFF = 0xFF
 TRACK_VOLUME_BITS = 8  # track_volume is a fixed-point factor
+TIMER_DIV = 470000  # timerdiv, PAL: latch = TIMER_DIV / tempo
+BPM_DIV = 3546895 // 2  # bpmdiv, PAL
+SOUNDTRACKER_LATCHES = (  # sttempo: tempos 1..10
+    *(2417, 4833, 7250, 9666, 12083),
+    *(14500, 16916, 19332, 21436, 24163),
+)
+STOP_WAIT_CCK = 161  # _Wait1line before DMA on: 161 steps of the beam, synth build
+LOOP_WAIT_CCK = 81  # _Wait1line before the loop write
 
 
 # --- What the composer edits -------------------------------------------
@@ -94,7 +103,9 @@ class Score:  # MMD0song
     sections: list[int]  # position-list numbers; may repeat
     play_transpose: int  # shifts every note
     ticks_per_row: int  # tempo2
-    tempo: int
+    tempo: int  # deftempo
+    bpm_mode: bool  # flags2 bit 5
+    lines_per_beat: int  # flags2 bits 0-4, plus 1
     track_volumes: list[int]
     instruments: list[Instrument]
 
@@ -143,12 +154,15 @@ class Voice:  # track data; track n plays on channel n
     pattern_portamento: Portamento = field(default_factory=Portamento)
     pattern_vibrato: int = 0  # trk_vibradjust; command 13 too
     pattern_arpeggio: int = 0  # trk_arpadjust
+    start: bool = False  # this channel's bit in dmaonmsk
+    loop: paula.Sample | None = None  # trk_sampleptr, trk_samplelen
 
 
 @dataclass
 class Module:  # MMD0: the playback position lives in the module
     score: Score
     voices: list[Voice]
+    amiga: Amiga  # MED plays by the CIA timer it got from the CIA resource
     counter: int = 0  # mmd_counter: ticks into the row
     section: int = 0  # mmd_psecnum
     position: int = 0  # mmd_pseqnum
@@ -174,6 +188,7 @@ def PlayTick(module: Module) -> None:
         PlayRowNotes(module, rows)
         AdvSngPtr(module)
     DoFX(module)
+    StartDMA(module)
 
 
 def read_row(voice: Voice, row: Row, score: Score) -> None:
@@ -200,7 +215,7 @@ def PlayRowNotes(module: Module, rows: list[Row]) -> None:
 def PlayNote(voice: Voice, note: int, instrument: Instrument, score: Score) -> None:
     note = AddTransposes(note, instrument, score)
     if not KeepSynthChannel(voice, instrument):
-        voice.channel.stop()
+        voice.channel.disable()
     voice.fade_speed = 0
     sound = instrument.sound
     if isinstance(sound, SynthSound):
@@ -208,7 +223,7 @@ def PlayNote(voice: Voice, note: int, instrument: Instrument, score: Score) -> N
     else:
         voice.kind = Kind.SAMPLE
         voice.period = note_period(fold_octaves(note), instrument.finetune)
-        play_sample(voice.channel, sound)
+        queue_sample(voice, sound)
 
 
 def AddTransposes(note: int, instrument: Instrument, score: Score) -> int:
@@ -229,10 +244,11 @@ def StartSynthNote(
     if sound.hybrid:
         voice.kind = Kind.HYBRID
         voice.period = note_period(fold_octaves(note), instrument.finetune)
-        voice.channel.play(sound.waves[0])
+        queue_sample(voice, sound.waves[0])
     else:
         voice.kind = Kind.SYNTH
         voice.period = synth_period(note, instrument.finetune)
+        voice.start = True  # the wave list queues the first waveform
     voice.synth_arpeggio.mode = Mode.OFF
     voice.volume_list = CommandList(speed=sound.volume_speed)
     wave_pos = voice.wave_list.pos if voice.command_e else 0
@@ -310,13 +326,38 @@ def CmdNoteOff(voice: Voice) -> None:
 
 def ChannelOff(voice: Voice) -> None:
     voice.kind = Kind.NONE
-    voice.channel.stop()
+    voice.channel.disable()
 
 
 def CmdLoop(module: Module, count: int) -> None: ...  # 0: set loop row; n: repeat
 
 
-def SetTempo(module: Module, tempo: int) -> None: ...  # CIA timer rate
+def SetTempo(module: Module, tempo: int) -> None:
+    """Sets the timer latch. While the timer runs, the new tempo takes
+    effect at the next underflow."""
+    module.amiga.timer.set_latch(tempo_latch(module.score, tempo))
+
+
+def start_timer(module: Module) -> None:
+    """PlayModule: set the default tempo, then start the timer."""
+    SetTempo(module, module.score.tempo)
+    module.amiga.timer.start()
+
+
+def new_module(score: Score, amiga: Amiga) -> Module:
+    """Track n plays on channel n; the CIA timer runs PlayTick."""
+    voices = [Voice(channel) for channel in amiga.paula.channels]
+    module = Module(score, voices, amiga)
+    amiga.timer.on_underflow = lambda: PlayTick(module)
+    return module
+
+
+def tempo_latch(score: Score, tempo: int) -> int:
+    if score.bpm_mode:
+        return BPM_DIV // (tempo * score.lines_per_beat)
+    if tempo <= len(SOUNDTRACKER_LATCHES):
+        return SOUNDTRACKER_LATCHES[tempo - 1]  # SoundTracker tempos
+    return TIMER_DIV // tempo
 
 
 def DoFX(module: Module) -> None:
@@ -329,6 +370,31 @@ def DoFX(module: Module) -> None:
                 ChannelFX(voice, row.commands[page], module.counter)
     for voice in module.voices:
         UpdatePerVol(voice)
+
+
+def StartDMA(module: Module) -> None:
+    """After each tick: wait, set the DMACON bits, wait, write the loops.
+
+    The waits count beam positions, in CCK. A start can take up to a line,
+    227 CCK, so after LOOP_WAIT_CCK the start reload may still be pending.
+    The loop write then replaces the start, and the note plays from its
+    loop point. (Guess from hardware/paula.py; not heard.)
+    """
+    starting = [voice for voice in module.voices if voice.start]
+
+    def dma_on() -> None:
+        for voice in starting:
+            voice.start = False
+            voice.channel.enable()
+        module.amiga.after(LOOP_WAIT_CCK, Priority.CPU, write_loops)
+
+    def write_loops() -> None:
+        for voice in starting:
+            if voice.loop is not None:
+                voice.channel.queue(voice.loop)
+
+    if starting:
+        module.amiga.after(STOP_WAIT_CCK, Priority.CPU, dma_on)
 
 
 def ChannelFX(voice: Voice, command: Command, tick: int) -> None:
@@ -375,7 +441,7 @@ def SynthRelease(voice: Voice) -> None:
     elif voice.decay:
         voice.fade_speed = voice.decay
     else:
-        voice.channel.stop()
+        voice.channel.disable()
 
 
 # --- Output ------------------------------------------------------------
@@ -393,7 +459,7 @@ def UpdatePerVol(voice: Voice) -> None:
     if voice.output_volume is not None:
         volume = voice.output_volume
     voice.output_volume = None
-    voice.channel.volume = volume * voice.track_volume >> TRACK_VOLUME_BITS
+    voice.channel.set_volume(volume * voice.track_volume >> TRACK_VOLUME_BITS)
 
 
 def SynthTick(voice: Voice) -> int:
@@ -560,7 +626,7 @@ def ReadWaveList(voice: Voice, sound: SynthSound) -> None:
     while True:
         byte = sound.wave_list[cursor.pos]
         if byte < FIRST_OPCODE:
-            voice.channel.repeat(sound.waves[byte])  # in place, at the next wrap
+            voice.channel.queue(sound.waves[byte])  # in place, at the next reload
             cursor.pos += 1
             return
         arg = sound.wave_list[cursor.pos + 1]
@@ -702,9 +768,13 @@ def synth_sound(voice: Voice) -> SynthSound:
     return sound
 
 
-def play_sample(channel: paula.Channel, sample: Sample) -> None:
-    channel.play(sample)
-    channel.repeat(paula.Sample(sample.data[sample.repeat.start : sample.repeat.stop]))
+def queue_sample(voice: Voice, sample: paula.Sample) -> None:
+    """Writes AUDxLC and AUDxLEN; StartDMA starts the channel later."""
+    voice.channel.queue(sample)
+    voice.loop = None
+    if isinstance(sample, Sample):
+        voice.loop = paula.Sample(sample.data[sample.repeat.start : sample.repeat.stop])
+    voice.start = True
 
 
 def fold_octaves(note: int) -> int: ...  # octave up or down into 0..62

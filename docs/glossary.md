@@ -13,7 +13,7 @@ One line per term. Every acronym used in this repo must appear here.
 | **attach mode**     | One channel's samples set the next channel's volume or period; the first stays silent.    |
 | **audio filter**    | Amiga's low-pass filter on all channels. Software can switch it on or off.                |
 | **audio interrupt** | Paula's signal to the CPU that a channel started a new pass over its sample.              |
-| **AUDxLC**          | Channel x sample start address. Reloaded into the pointer at each wrap.                   |
+| **AUDxLC**          | Channel x sample start address. Copied to the live pointer at each reload.                |
 | **AUDxLEN**         | Channel x sample length, in words.                                                        |
 | **AUDxPER**         | Channel x period: clock divider that sets pitch.                                          |
 | **AUDxVOL**         | Channel x volume, 0 to 64.                                                                |

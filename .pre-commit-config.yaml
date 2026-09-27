@@ -102,8 +102,8 @@ repos:
         pass_filenames: false
         always_run: true
 
-      - id: tool-tests               # Self-tests for the checkers above
-        name: tool-tests
+      - id: tests                    # Checker self-tests and spec tests
+        name: tests
         entry: .venv/bin/python3 -m unittest discover -s tests
         language: system
         pass_filenames: false
