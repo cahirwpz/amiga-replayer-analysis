@@ -44,13 +44,22 @@ the first card on it, with `specs/med.py`.
       each. Their items below fold in.
 - [ ] Migrate the other cards the same way. Paula mechanics go to
       `hardware/paula.py`.
-- [ ] `specs/med.py` stubs `CmdLoop`, `SetTempo` and the pattern effects. Fill
-      them if a card needs them.
+- [ ] `specs/med.py` stubs `CmdLoop` and the pattern effects. Fill them if a
+      card needs them.
 - [ ] After the last card: drop template 1 from `tools/cards.py`, its tests and
       fixtures. Drop the glossary's control levels, generator, role, write modes
       and the DMA output.
 - [ ] Composer's view for MED rests on the format notes. Ask the user for an
       OctaMED manual that covers synth sounds.
+
+### Hardware model
+
+- [ ] `POLL_CCK = 25` in `specs/med.py:StartDMA` is an estimate from 68000
+      instruction timings. Measure or cite one `_Wait1line` poll.
+- [ ] `hardware/paula.py:Channel` leaves out one case of DMA off. With its
+      INTREQ bit clear, a channel plays one more word and requests an interrupt.
+      Source: `AUDIO_STATE_4` in Minimig's `rtl/paula_audio_channel.v`.
+- [ ] Model that case if a replayer depends on it.
 
 ### Tim Follin card
 
