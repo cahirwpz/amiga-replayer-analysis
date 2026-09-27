@@ -159,7 +159,7 @@ Code patterns we cite from replayer source.
 | ---------------- | ------------------------------------------------------------------------------------------- |
 | **AHX**          | Abyss Highest eXperience: Amiga chiptune tracker, 1990s.                                    |
 | **MED**          | Music editor by Teijo Kinnunen, later OctaMED. Tracker with synth sounds.                   |
-| **TFMX**         | The Final Musicsystem eXtended, by Chris Hülsbeck. Instruments are macro programs.          |
+| **TFMX**         | The Final Musicsystem eXtended, by Chris Hülsbeck. Each instrument is a program of opcodes. |
 | **IMS**          | TFMX's interference modulation synthesis: a wave rebuilt each tick from a resampled source. |
 | **SMUS**         | Simple Music Score: note score format from Electronic Arts.                                 |
 | **YAML**         | Plain-text data format. Our hand-written data files use it.                                 |
@@ -260,6 +260,7 @@ can still appear as `code`.
 | song step       | position                  |
 | step list       | positions                 |
 | subtune         | subsong                   |
+| macro           | instrument program        |
 | sound number    | instrument number         |
 | sound record    | instrument                |
 | sound transpose | instrument transpose      |

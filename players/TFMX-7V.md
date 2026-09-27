@@ -23,7 +23,7 @@ ideas: [voice-mixing]
 ## Key ideas
 
 - Voices 4–7 write register sets in RAM, not Paula. `:FakeChannel`
-  - Enables: seven voices with an unchanged macro engine.
+  - Enables: seven voices with unchanged instrument program code.
   - Costs: voice 3 cannot play while the mix plays.
 - The mixer sums voices 4–7 into one tick's buffer for channel 3. `:MixTick`
   `:MixLoop`

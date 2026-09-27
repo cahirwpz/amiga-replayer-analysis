@@ -38,8 +38,7 @@ All twelve pilot cards exist.
 The template is in [`docs/card-template.md`](docs/card-template.md). `MED` is
 the first card on it, with `specs/med.py`.
 
-- [ ] Review the TFMX Pro, TFMX 7V and Tim Follin cards and their specs with the
-      user.
+- [ ] Review the TFMX 7V and Tim Follin cards and their specs with the user.
 - [ ] Migrate the other cards the same way. Paula mechanics go to
       `hardware/paula.py`.
 - [ ] After the last card: drop template 1 from `tools/cards.py`, its tests and
@@ -68,8 +67,9 @@ the first card on it, with `specs/med.py`.
 
 ### Needs outside material
 
-- Modules: which songs use a feature? MED list jumps, TFMX Pro riffs and byte
-  checks, SoundPlayer `DD` and modulation in Lemmings. TFMX 7V notes to voice 3.
+- Modules: which songs use a feature? MED list jumps, TFMX Pro offset loops and
+  byte checks, SoundPlayer `DD` and modulation in Lemmings. TFMX 7V notes to
+  voice 3.
 - Releases: did a game or demo ship Oktalyzer's replay 1? Which games used
   MaxTrax?
 - Docs or credits: Sonic Arranger's `AMF` name. Other games with Digital Sonix &

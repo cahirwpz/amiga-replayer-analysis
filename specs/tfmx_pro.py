@@ -748,8 +748,9 @@ def SetLength(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def MacroWait(module: Module, voice: Voice, s: Statement) -> bool:
-    """$04. Waits `word` ticks. With byte 1 bit 0, it waits for a riff
-    step whose bit 7 is set instead."""
+    """$04. Waits `word` ticks. With byte 1 bit 0, it is a sync point
+    with the riff instead: the first pass sets the trigger and reads on;
+    a later pass waits until a riff byte with bit 7 clears it."""
     if s[1] & 1:
         if voice.riff.trigger:
             return False  # retried next tick
