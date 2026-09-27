@@ -199,6 +199,7 @@ MIDI-Loriciel:
 
 TimFollin:
   provenance: disassembly
+  spec: specs/tim_follin.py
   author: Tim Follin / Mike D.
   note: Follin Player II, adapted by Andy Silva
 

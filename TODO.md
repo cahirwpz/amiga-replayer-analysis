@@ -38,9 +38,8 @@ All twelve pilot cards exist.
 The template is in [`docs/card-template.md`](docs/card-template.md). `MED` is
 the first card on it, with `specs/med.py`.
 
-- [ ] Review the TFMX Pro and TFMX 7V cards and their specs with the user.
-- [ ] Migrate Tim Follin to a spec and a prose card; review it. Its items below
-      fold in.
+- [ ] Review the TFMX Pro, TFMX 7V and Tim Follin cards and their specs with the
+      user.
 - [ ] Migrate the other cards the same way. Paula mechanics go to
       `hardware/paula.py`.
 - [ ] `specs/med.py` stubs `CmdLoop` and the pattern effects. Fill them if a
@@ -59,22 +58,6 @@ the first card on it, with `specs/med.py`.
       INTREQ bit clear, a channel plays one more word and requests an interrupt.
       Source: `AUDIO_STATE_4` in Minimig's `rtl/paula_audio_channel.v`.
 - [ ] Model that case if a replayer depends on it.
-
-### Tim Follin card
-
-- [ ] Revise output composition using
-      [the control review](details/TimFollin-control.md). Track note-on resets
-      envelope state after its output write.
-- [ ] Explain track-configured state machines, lookups, fixed timing and both
-      note-length encodings. `data/annot/TimFollin.yaml:VoiceTick`,
-      `:NoteTimer`, `:CmdFixedLength`.
-- [ ] Distinguish track arpeggios from trill. `:PlayNote`, `:CmdTrill`.
-- [ ] Explain gate timing, continuous playback and deferred sample chaining.
-      `:StartSample`, `:GateOff`, `:ChainTick`, `:ChainSample`.
-- [ ] Explain zero-time commands, four return slots and one loop slot.
-      `:ReadTrack`, `:CallStacks`.
-- [ ] Investigate the inactive special subsong and the pulse reset offset.
-      `:_init`, `:ResetPulse`.
 
 ### Then
 

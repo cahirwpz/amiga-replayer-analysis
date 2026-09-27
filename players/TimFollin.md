@@ -1,7 +1,6 @@
 ---
 player: TimFollin
-control: { sequencer: program, instrument: none }
-themes: [synthesis, tricks]
+template: 2
 ideas:
   [
     bare-instruments,
@@ -10,88 +9,77 @@ ideas:
     semitone-glide,
     sample-chaining,
   ]
-streams: { voice: 1 }
 ---
 
 # Tim Follin
 
-There is no instrument program: each voice's track sets modal parameters for
-seven small generators.
+There is no instrument program: each voice's track sets the parameters of small
+state machines.
+
+## Context
+
+| Fact      | Value                                                    |
+| --------- | -------------------------------------------------------- |
+| Player    | `TimFollin`                                              |
+| Author    | Tim Follin / Mike D.                                     |
+| Code read | disassembly: `ext/uade/amigasrc/players/other/timfollin` |
+| Spec      | [specs/tim_follin.py](../specs/tim_follin.py)            |
 
 ## Key ideas
 
-- An instrument is only a sample. Parameters stay set until the track changes
-  them. `data/annot/TimFollin.yaml:StartSample`
-  [All commands](../details/TimFollin-commands.md).
-- Tracks call, return, jump and loop. `:CmdCall` `:CmdLoop`
-- Instruments 0–3 are pulse waves. A sweep step rewrites one sample.
+- An instrument is only a sample. The track sets parameters that stay until it
+  changes them. `:CmdInstrument` `:ReadTrack`
+  - Enables: one command changes the sound of all later notes.
+  - Costs: every sound change takes track bytes.
+- Commands take no time. A note carries its length, or a fixed length applies.
+  `:ReadTrack` `:CmdFixedLength`
+  - Enables: a run of equal notes takes one byte per note.
+  - Costs: voices line up only by counting ticks.
+- Pulse waves are swept in place: every N ticks, one sample byte changes.
   `:PulseSweep`
-- Portamento walks the note table: semitone steps. `:Portamento`
-- A second sample follows one tick after note start. `:ChainSample`
+  - Enables: a moving pulse width with no extra memory.
+  - Costs: voices on one pulse instrument share the wave.
+- Flag bit 7 stops the channel one tick before the note ends. Without it, the
+  next sample waits for the loop's end. `:GateOff` `:StartSample`
+  - Enables: legato or a clean restart, chosen per voice.
+  - Costs: a clean restart loses the note's last tick.
+- A second sample follows one tick after the note starts. The first plays once;
+  the second loops. `:ChainSample`
+  - Enables: an attack sample with its own loop.
+  - Costs: the second sample must be in the subsong's list.
 
-## Streams
+## Composer's view
 
-| Stream | Scope | Role      | Carries                                   | Control               | Rate     |
-| ------ | ----- | --------- | ----------------------------------------- | --------------------- | -------- |
-| Track  | voice | sequencer | note, length, instrument, generator setup | loop, jump, call, end | note end |
+The composer writes one track per voice, with commands between the notes. There
+are no patterns. Each subsong has its own instrument list.
 
-## Sequencer
+| Aspect   | Answer                                                 | Source                     |
+| -------- | ------------------------------------------------------ | -------------------------- |
+| Notation | A note byte, then a length byte.                       | `:PlayNote`                |
+| Notation | Commands between notes set parameters for later notes. | `:ReadTrack`               |
+| Cost     | After a fixed length, a note is one byte.              | `:CmdFixedLength`          |
+| Cost     | An arpeggio is written as short notes.                 | `:PlayNote`                |
+| Cost     | A trill is one command with three arguments.           | `:CmdTrill`                |
+| Cost     | A repeat is two commands, one level deep.              | `:CmdLoopStart` `:CmdLoop` |
 
-| Aspect   | Value        | Label                 |
-| -------- | ------------ | --------------------- |
-| Time     | lengths      | `:PlayNote`           |
-| Unit     | tick         | `:NoteTimer`          |
-| Note end | length       | `:NoteTimer`          |
-| Routing  | fixed        | `:ReadTrack`          |
-| Reuse    | calls, loops | `:CmdCall` `:CmdLoop` |
-| Tempo    | none         | `:Tick`               |
+## What is unique
 
-## Generators
-
-| Generator   | Scope | States              | Writes    | Rate          | Set by | Note-on |
-| ----------- | ----- | ------------------- | --------- | ------------- | ------ | ------- |
-| Pulse sweep | voice | widen, narrow       | wave data | every N ticks | Track  | keep    |
-| Envelope    | voice | attack, decay, hold | volume    | every N ticks | Track  | flag    |
-| Vibrato     | voice | delay, swing        | period    | tick          | Track  | restart |
-| Trill       | voice | lower, upper        | note      | every N ticks | Track  | restart |
-| Portamento  | voice | move, rest          | note      | tick          | Track  | keep    |
-| Chain       | voice | wait, done          | sample    | note-on       | Track  | restart |
-| Gate        | voice | open, closed        | DMA       | note end      | Track  | restart |
-
-## Channel outputs
-
-| Output    | Writers, in tick order                                       |
-| --------- | ------------------------------------------------------------ |
-| Volume    | Envelope (set), Track (set)                                  |
-| Period    | Vibrato (add), Trill (note), Portamento (note), Track (note) |
-| Sample    | Chain (set), Track (set)                                     |
-| Wave data | Pulse sweep (edit)                                           |
-| DMA       | Chain (on), Gate (off), Track (on), Track (off)              |
-
-## Interactions
-
-| From        | To          | Event                                                            |
-| ----------- | ----------- | ---------------------------------------------------------------- |
-| Vibrato     | Trill       | With vibrato on, trill runs only during its delay `:Vibrato`     |
-| Trill       | Portamento  | A trill step skips portamento for that tick `:Trill`             |
-| Portamento  | Vibrato     | Each step resets the period from the table `:Portamento`         |
-| Track       | Envelope    | Note-on restarts it only with the restart flag `:PlayNote`       |
-| Pulse sweep | other voice | Voices on one pulse instrument edit the same bytes `:PulseSweep` |
-
-- Without the gate flag, the channel keeps running at note-on: legato.
-  `:GateOff`
-
-## State
-
-| Scope      | Fields                                                |
-| ---------- | ----------------------------------------------------- |
-| Voice      | track, call stack, loop, ticks left, note, generators |
-| Instrument | sample; pulse of instruments 0–3 changes at runtime   |
-| Global     | subsong, voice count                                  |
+- Portamento moves the note index, so the glide steps by semitones.
+  `:Portamento`
+- A trill changes the note itself. It shares its direction bit with vibrato.
+  `:TrillTick`
+- After a note, vibrato waits a delay; the trill runs during it. `:VibratoTick`
+- Attack ends only at exactly volume 63. `:EnvelopeTick`
+- A note restarts the envelope after the tick's volume write. The change is
+  heard one tick later. `:PlayNote`
+- Calls have four return slots; loops have one slot and do not nest. `:CmdCall`
+  `:CmdLoopStart`
 
 ## Open questions
 
-- `ResetPulse` writes at offset 2; playback starts at `$32`. Why? `:ResetPulse`
-- Which game is this from? It has 15 fixed subsongs.
-- A volume cap and a subsong 13 case read data that nothing here sets. Game
-  leftovers? (guess) `:SetVolume`
+- Which game is this from? Subsong 14 plays nothing, and subsong 13 has an
+  unused volume override. `:StartSubsong` `:SetVolume`
+- A fade would restart subsong 0, but nothing starts it (guess: a game
+  leftover). `:Tick`
+- `ResetPulse` writes at +2, but the wave plays from +$32 (guess: a typo).
+  `:ResetPulse`

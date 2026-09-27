@@ -10,14 +10,15 @@ labels:
   L_DE2: SetVolume
   L_E1E: VoiceTick
   348: PulseSweep
-  L_E86: Envelope
-  L_F1C: Vibrato
-  L_F5E: Trill
+  L_E86: EnvelopeTick
+  L_F1C: VibratoTick
+  L_F5E: TrillTick
   L_F98: Portamento
   L_FEC: NoteTimer
   L_1006: GateOff
   L_101A: ReadTrack
   bratab: CommandTable
+  _init: StartSubsong
   L_103E: PlayNote
   L_1226: ResetPulse
   L_12a2: CallStacks
@@ -73,3 +74,13 @@ banners:
     ChainTick: runs before Tick. One tick after a note starts, a
     flagged voice points Paula at a second sample. Paula finishes the
     first sample, then loops the second.
+
+# Classes in specs/tim_follin.py: offsets from tmp+$80 name the fields.
+types:
+  Subsong: [L_12E6, L_12EA]
+  Envelope: [$0060, $0064]
+  Vibrato: [$0074, $0078]
+  Trill: [$007C, -$0068]
+  Pulse: [$005C, $0058]
+  Voice: [tmp]
+  Module: [tmp, L_12ED]
