@@ -120,6 +120,7 @@ Mugician:
       link: https://proofofconcept.nl/portfolio/sidmon/
 
 MugicianII:
+  spec: specs/mugician_ii.py
   ports: [ext/c-flod/neoart/flod/digitalmugician]
   provenance: disassembly
   author: Reinier van Vliet
@@ -155,6 +156,7 @@ SoundMon2.0:
   family: SoundMon
 
 SoundMon2.2:
+  spec: specs/soundmon_22.py
   ports: [ext/c-flod/neoart/flod/soundmon]
   provenance: original
   author: Brian Postma
@@ -163,7 +165,7 @@ SoundMon2.2:
     player: SoundMon2.0
     evidence: code
     why: 2.2 adds the MOD walker and wave effects
-    cite: data/annot/SoundMon2.2.yaml:Effect1
+    cite: data/annot/SoundMon2.2.yaml:SmoothWave
   head: true
 
 SonicArranger:
@@ -234,6 +236,7 @@ TFMX-7V:
       evidence: docs
 
 Oktalyzer:
+  spec: specs/oktalyzer.py
   source: ext/oktalyzer/src
   replay: ext
   note: tracker disassembly; the UADE binary is OKPlay2, adapted by DEFECT

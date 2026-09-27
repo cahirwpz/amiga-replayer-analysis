@@ -101,6 +101,7 @@ sections:
       instrument: 'What a note plays: sample or waveform, plus settings.'
       instrument transpose: Offset added to every instrument number of a track.
       sound effect: A sound the game starts, outside the music.
+      command: A code in a row that acts on playback, with an argument, e.g. a slide.
 
   - key: midi
     title: MIDI and sequencers
@@ -260,6 +261,7 @@ sections:
       sound record: instrument
       sound transpose: instrument transpose
       hybrid: synth sound with a sample
+      option: command
 
   - key: control
     title: Control vocabulary

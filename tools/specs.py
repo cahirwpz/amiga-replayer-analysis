@@ -45,8 +45,8 @@ GENERATED = re.compile(r"L_[0-9A-Fa-f]+|lb[A-Z][0-9A-F]+")  # disassembler names
 # Source labels that are also English words in our prose.
 PLAIN_WORDS = {
     "copy", "custom", "envelope", "flags", "loop", "patterns", "period",
-    "priority", "random", "repeat", "return", "song", "speed", "tracks",
-    "transpose", "volume",
+    "priority", "random", "repeat", "return", "samples", "song", "speed",
+    "start", "tables", "tracks", "transpose", "volume",
 }  # fmt: skip
 
 

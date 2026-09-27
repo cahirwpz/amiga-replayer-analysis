@@ -90,19 +90,20 @@ What an operation does to a sound. The "(inference)" notes use these words.
 
 ## Tracker terms
 
-| Term                     | Meaning                                                         |
-| ------------------------ | --------------------------------------------------------------- |
-| **tick**                 | One run of the replayer, usually once per frame.                |
-| **row**                  | One line of a pattern. It lasts `speed` ticks.                  |
-| **speed**                | Ticks per row.                                                  |
-| **track**                | One column of note data, often one per voice.                   |
-| **pattern**              | A block of rows, played by one or more tracks.                  |
-| **position**             | One entry of the song's play order: patterns to play.           |
-| **section**              | One entry of a higher play order. It names a list of positions. |
-| **subsong**              | A separate tune inside one module.                              |
-| **instrument**           | What a note plays: sample or waveform, plus settings.           |
-| **instrument transpose** | Offset added to every instrument number of a track.             |
-| **sound effect**         | A sound the game starts, outside the music.                     |
+| Term                     | Meaning                                                                |
+| ------------------------ | ---------------------------------------------------------------------- |
+| **tick**                 | One run of the replayer, usually once per frame.                       |
+| **row**                  | One line of a pattern. It lasts `speed` ticks.                         |
+| **speed**                | Ticks per row.                                                         |
+| **track**                | One column of note data, often one per voice.                          |
+| **pattern**              | A block of rows, played by one or more tracks.                         |
+| **position**             | One entry of the song's play order: patterns to play.                  |
+| **section**              | One entry of a higher play order. It names a list of positions.        |
+| **subsong**              | A separate tune inside one module.                                     |
+| **instrument**           | What a note plays: sample or waveform, plus settings.                  |
+| **instrument transpose** | Offset added to every instrument number of a track.                    |
+| **sound effect**         | A sound the game starts, outside the music.                            |
+| **command**              | A code in a row that acts on playback, with an argument, e.g. a slide. |
 
 ## MIDI and sequencers
 
@@ -269,6 +270,7 @@ can still appear as `code`.
 | sound record       | instrument                |
 | sound transpose    | instrument transpose      |
 | hybrid             | synth sound with a sample |
+| option             | command                   |
 
 ## Control vocabulary
 

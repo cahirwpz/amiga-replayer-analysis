@@ -13,21 +13,21 @@ labels:
   lbC01039A: VolumeFromWave
   lbC0104E6: NoEffect
   lbL0104E8: EffectTable
-  lbC010838: Effect1
-  lbC01070C: Effect2
-  lbC0107F2: Effect3
-  lbC010802: Effect4
-  lbC0106B2: Effect5
-  lbC01069C: Effect6
-  lbC010798: Effect7
-  lbC0106CC: Effect8
-  lbC01076A: Effect9
-  lbC010850: Effect10
-  lbC010568: Effect11
-  lbC010602: Effect12
-  lbC010876: Effect13
-  lbC0107BC: Effect14
-  lbC010816: Effect15
+  lbC010838: SmoothForward
+  lbC01070C: PhaseWithB
+  lbC0107F2: RotateLeft
+  lbC010802: RotateRight
+  lbC0106B2: OctaveUp
+  lbC01069C: OctaveDown
+  lbC010798: NegateSweep
+  lbC0106CC: AddRamp
+  lbC01076A: AddWaveB
+  lbC010850: SmoothWeighted
+  lbC010568: CrossfadeSlow
+  lbC010602: CrossfadeFast
+  lbC010876: SmoothNeighbours
+  lbC0107BC: NegatePair
+  lbC010816: SmoothThenOctave
   lbC010982: MixVoices
   lbC010B32: BuildMixTables
   lbC010896: StartSample
@@ -37,8 +37,75 @@ labels:
   lbC0103C6: ArpeggioStep
   lbC010246: CmdSpeed
 
+  # added for specs/mugician_ii.py
+  lbC00F7D6: LoadModule
+  lbC00F8C2: InitSong
+  Interrupt: Interrupt
+  Play: Play
+  lbC010902: WriteLoops
+  lbC00FC10: NextTick
+  lbC0100FC: StartWave
+  lbC0101AA: RestartLists
+  lbC0101E4: RowCommands
+  lbC01022C: CmdPatternLength
+  lbC01026A: CmdSwing
+  lbC010B00: MixStep
+  Return: CheckSampleEnds
+  # readable labels that specs cite
+  ChangeVolume: ChangeVolume
+  SetVol: SetVol
+  SetAdr: SetAdr
+  SetLen: SetLen
+  PATINFO: PATINFO
+  PeriodsTable: PeriodsTable
+  InitData: InitData
+  Tables: Tables
+  ModulePtr: ModulePtr
+  CurrentPos: CurrentPos
+  MixLength: MixLength
+  SongEnd: SongEnd
+  # new names that specs cite
+  lbL010E40: Voices
+  lbW010E2C: TickCounter
+  lbW010E2E: NewPosition
+  lbW010E30: NewRow
+  lbW010E34: RowIndex
+  lbW010E38: SubsongNumber
+  lbW010E3A: SpeedPair
+  lbW010E3E: PatternLength
+  lbL010F94: SubsongHeader
+  lbL010F9C: InstrumentTable
+  lbL010FA0: ArpeggioTable
+  lbL010FA4: WaveTable
+  lbL010FA8: PatternTable
+  lbL010FAC: SampleTable
+  lbL010FB0: SampleData
+  lbL0113C2: NotePeriods
+  lbL00FF7A: FakeRegisters
+  lbL010296: EffectDoneList
+  lbL010AD0: MixPointers
+  lbL010AE0: MixEnds
+  lbL010AF0: MixLoopLengths
+  lbW010AC8: MixStopped
+  lbL010BC2: MixSteps
+  lbW010BD2: MixPeriod
+  lbL01097A: PlayBuffer
+  lbL01097E: NextBuffer
+  lbL011FB6: VolumeTables
+  lbL010E24: EmptySample
+
 comments:
   1407: this adaptation mixes into channel 0
   2257: "the original's skip flag, a constant 0: effects always run"
   2930: only a sample start sets a mixed voice's pointer
   3038: the original mixes into channel 3
+
+# Classes in specs/mugician_ii.py: each word occurs in the source.
+types:
+  Subsong: [lbL010F94]
+  Instrument: [lbL010F9C]
+  SampleHeader: [lbL010FAC]
+  Score: [ModulePtr]
+  Voice: [lbL010E40]
+  MixedVoice: [lbL010AD0, lbW010AC8]
+  Module: [lbW010E2C]

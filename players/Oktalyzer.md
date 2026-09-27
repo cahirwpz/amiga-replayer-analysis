@@ -1,88 +1,76 @@
 ---
 player: Oktalyzer
-control: { sequencer: commands, instrument: none }
-themes: [mixing, tricks]
+template: 2
 ideas: [voice-mixing]
-streams: { song: 1, voice: 1 }
 ---
 
 # Oktalyzer
 
-Up to eight sample voices: each channel plays one voice or a mixed pair.
+Up to eight sample tracks: each channel plays one track or a mixed pair.
+
+## Context
+
+| Fact      | Value                                                |
+| --------- | ---------------------------------------------------- |
+| Player    | `Oktalyzer`                                          |
+| Author    | Armin Sander                                         |
+| Code read | disassembly: `ext/oktalyzer/src`                     |
+| Spec      | [specs/oktalyzer.py](../specs/oktalyzer.py)          |
+| Links     | [github.com](https://github.com/hitchhikr/oktalyzer) |
 
 ## Key ideas
 
-- The song marks each channel as single or mixed. Mixed tracks need samples
-  stored at 7 bits, so two sum within 8 bits.
-  `data/annot/Oktalyzer.yaml:HalveSample` `:SkipFullSample`
-- A mixed pair shares its channel's volume. `:TrackToChannel`
-- Mixed voices change pitch in semitone steps only. `:MixPair`
-- Replay 1 writes one resampler per note at start: 36 straight-line routines,
-  313 bytes each. Repeated source bytes become neighbour means.
-  `:BuildResamplers` `:ResampleTemplates`
-- Replay 1 adds four bytes per add.l; carries spill into the next byte.
-  `:AddPacked`
-- Replay 2 plays the buffer at the higher note's period. That voice is added
-  unchanged; only the lower one is resampled. `:PickHigher` `:MixPair`
-- Replay 2's buffer length follows the note. A channel that ran ahead gets one
-  word more. `:DriftFix` `:OK_AudInt`
+- The song marks each channel single or mixed. A mixed channel plays two tracks
+  from a buffer the CPU fills each tick. `:MixChannel` `:Play1`
+  - Enables: 5 to 8 tracks.
+  - Costs: a pair shares one channel volume.
+- Samples for mixed tracks are stored at 7 bits, so two sum within 8 bits.
+  `:SampleEntry`
+  - Enables: mixing without clipping or volume tables.
+  - Enables: such samples may lie outside chip memory.
+- Replay 2 plays a buffer at the higher note's period. It adds that track
+  unchanged and resamples only the lower one. `:PickHigher` `:MixPair`
+  - Enables: one track of each pair keeps full quality.
+  - Costs: the lower track repeats bytes, with no interpolation.
+- Replay 2 fills one frame per note, from a table. A channel that runs ahead
+  gets one word more. `:DriftFix` `:QueueBuffers`
+  - Enables: buffers at any rate follow the frame tick.
+  - Costs: a busy-wait when a channel runs late.
+- Replay 1 writes one resampler per note: 36 routines of straight code. Repeated
+  source bytes become means. `:BuildResamplers` `:RunResampler`
+  - Enables: no step arithmetic while mixing.
+  - Costs: about 43 kB of code, and all mixed channels at 15.6 kHz.
 
-| Replay | Rate                 | Pitch of mixed voices        | UADE |
-| ------ | -------------------- | ---------------------------- | ---- |
-| 1      | 15.6 kHz, fixed, PAL | generated code per note      | no   |
-| 2      | higher note's period | lower voice resampled at run | yes  |
+## Composer's view
 
-UADE's binary is OKPlay2. The author's objects `okplay1.o` and `okplay2.o` hold
-the same code as the tracker.
+The composer marks channels single or mixed and writes patterns and samples. A
+row holds a cell per track: note, sample, command and argument. The tracker
+shows commands as `0`–`9` and `A`–`Z`.
 
-## Streams
+| Aspect   | Answer                                                         | Source           |
+| -------- | -------------------------------------------------------------- | ---------------- |
+| Notation | A row has 4 to 8 cells, one per track.                         | `:NewRow`        |
+| Notation | A sample's mode: mixed tracks, single tracks, or both.         | `:SampleEntry`   |
+| Cost     | A mixed track ignores the sample's loop and volume.            | `:GetMixedNotes` |
+| Cost     | Volume on a mixed track sets both tracks of its channel.       | `:SetVolume`     |
+| Cost     | A mixed track has no portamento. Its pitch moves in semitones. | `:TrackEffects`  |
+| Cost     | In replay 2, notes above A-3 on mixed tracks play as A-3.      | `:ClampNote`     |
+| Cost     | The position jump's argument is decimal.                       | `:PositionJump`  |
 
-| Stream    | Scope | Role      | Carries              | Control | Rate        |
-| --------- | ----- | --------- | -------------------- | ------- | ----------- |
-| Positions | song  | sequencer | pattern number       | loop    | pattern end |
-| Pattern   | voice | sequencer | note, sample, effect | jump    | row         |
+## What is unique
 
-## Sequencer
-
-| Aspect   | Value     | Label                |
-| -------- | --------- | -------------------- |
-| Time     | rows      | `:OK_ReplayHandler`  |
-| Unit     | row       | `:OK_ReplayHandler`  |
-| Note end | next note | `:OK_GetPatternData` |
-| Routing  | fixed     | `:TrackToChannel`    |
-| Reuse    | patterns  | `:OK_GetPPatt`       |
-| Tempo    | speed     | `:OK_CSpeed`         |
-
-## Generators
-
-| Generator | Scope | States | Writes    | Rate | Set by  | Note-on |
-| --------- | ----- | ------ | --------- | ---- | ------- | ------- |
-| Mixer     | song  | mix    | wave data | tick | Pattern | keep    |
-
-## Channel outputs
-
-| Output    | Writers, in tick order |
-| --------- | ---------------------- |
-| Wave data | Mixer (edit)           |
-| Sample    | Mixer (set)            |
-| Period    | Mixer (set)            |
-| Volume    | Pattern (set)          |
-
-## Interactions
-
-| From    | To          | Event                                            |
-| ------- | ----------- | ------------------------------------------------ |
-| Pattern | other voice | A volume effect sets the whole pair `:OK_Volume` |
-
-## State
-
-| Scope      | Fields                                                    |
-| ---------- | --------------------------------------------------------- |
-| Voice      | sample pointer, bytes left, note, base note               |
-| Instrument | none; samples carry length, loop, volume, bit depth       |
-| Global     | position, row, speed, channel modes, two buffers per pair |
+- A single channel is silent for one tick before each note. DMA goes off at the
+  row and on at the next tick. `:SetHardware` `:TurnDmaOn`
+- A mixed track stops at the tick when fewer bytes are left than it needs. The
+  rest never plays. `:ResampleTrack` `:MixPair`
+- Adds of 4 bytes at once let a carry spill into the byte before. `:AddPacked`
+  `:AddHigher`
+- Three arpeggio commands cycle in different orders. Command `A` starts below
+  the note. `:ChannelEffects`
 
 ## Open questions
 
 - Did a game or demo ship replay 1? The tracker offers both; songs do not
   choose.
+- Replay 1 writes 313 bytes per tick and never syncs with the channel. Does the
+  write position drift into the half that plays (guess)? `:Play1`

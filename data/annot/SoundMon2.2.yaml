@@ -9,7 +9,7 @@ labels:
   initloop: SamplePtrLoop
   # every tick
   bpmusic: PlayTick
-  bploop1: TickVoiceLoop
+  bploop1: TickVoice
   bpnovibr: NoVibrato
   bpvibr: WriteVoice
   bpdoarp: Arpeggio
@@ -20,10 +20,10 @@ labels:
   # every row
   bpskip1: PlayRow
   bpxx: DmaWait
-  bploopel: RestoreWaveLoop
+  bploopel: RestoreWaves
   bploop2: StartNoteLoop
   bpnext: ReadRow
-  bploop3: ReadRowVoiceLoop
+  bploop3: ReadVoiceRow
   bpskip4: NewNote
   bp_do1: AddNoteTranspose
   bp_not1: SetNotePeriod
@@ -63,13 +63,14 @@ labels:
   bpislow: EgShrink
   bpishigh: EgGrow
   bpnexteg: EgStep
-  bpendeg: Effect1
+  799: WaveEffect
+  bpendeg: SmoothWave
   avloop: AverageLoop
-  bpnofilter: Effect2
-  bpnotthis: Effect3
-  bpnotthis2: Effect4
-  bpnotthis3: Effect5
-  bpnotthis4: Effect6
+  bpnofilter: MorphToMirror
+  bpnotthis: MorphToSaved
+  bpnotthis2: MorphToNext
+  bpnotthis3: MorphToSavedCopy
+  bpnotthis4: CopyNextTable
   bpopt6loop: CopyNextTableLoop
   bpnotthis5: ModWalker
   bpnomod: WalkersDone
@@ -197,3 +198,14 @@ banners:
       27 synth flag       28 current EG value
       29 EG, 30 LFO, 31 ADSR, 32 MOD: control
       34 vibrato depth    35 effect
+
+# Classes in specs/soundmon_22.py: each word occurs in the source.
+types:
+  Score: [bpsong]
+  Instrument: [samples]
+  SynthInstrument: [bpplaysynthetic]
+  WalkerSetup: [bpplaysynthetic]
+  Walker: [bpsynth]
+  SavedWave: [bpbuffer]
+  Voice: [bpcurrent]
+  Module: [bpstep, bpdelay, arpcount]

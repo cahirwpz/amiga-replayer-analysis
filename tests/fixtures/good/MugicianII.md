@@ -15,8 +15,8 @@ The 128-byte waveform serves as played wave, volume envelope and vibrato table.
 - Envelopes and vibrato read other waveforms as tables.
   `data/annot/MugicianII.yaml:VolumeFromWave`
 - Effects rewrite the waveform in place, e.g. crossfade two waves, smooth, shift
-  by one sample. `:EffectTable`
-  [All 15 effects](../../../details/MugicianII-effects.md).
+  by one sample. `:RunEffect`
+  [All 15 effects](../../../specs/mugician_ii.py).
 - Row length alternates between two speeds (swing). `:SwingSpeeds`
 - Voices 4–7 are mixed into one channel. They play samples only. `:MixVoices`
   `:StartSample`

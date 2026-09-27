@@ -1,82 +1,72 @@
 ---
 player: MugicianII
-control: { sequencer: commands, instrument: tables }
-themes: [synthesis, mixing]
+template: 2
 ideas: [waveform-as-table, in-place-waveform-effects, swing, voice-mixing]
-streams: { song: 1, voice: 4, instrument: 1 }
 ---
 
 # Mugician II
 
-The 128-byte waveform serves as played wave, volume envelope and vibrato table.
+A 128-byte wave is a sound, a volume curve or a vibrato curve. Effects rewrite
+it while it plays.
+
+## Context
+
+| Fact      | Value                                                              |
+| --------- | ------------------------------------------------------------------ |
+| Player    | `MugicianII`                                                       |
+| Author    | Reinier van Vliet                                                  |
+| Family    | Digital Mugician                                                   |
+| Grew from | `Mugician`                                                         |
+| Code read | disassembly: `ext/uade/amigasrc/players/wanted_team/MugicianII`    |
+| Spec      | [specs/mugician_ii.py](../specs/mugician_ii.py)                    |
+| Links     | [proofofconcept.nl](https://proofofconcept.nl/portfolio/mugician/) |
 
 ## Key ideas
 
-- Envelopes and vibrato read other waveforms as tables.
-  `data/annot/MugicianII.yaml:VolumeFromWave`
-- Effects rewrite the waveform in place, e.g. crossfade two waves, smooth, shift
-  by one sample. `:EffectTable`
-  [All 15 effects](../details/MugicianII-effects.md).
-- Row length alternates between two speeds (swing). `:SwingSpeeds`
-- Voices 4–7 are mixed into one channel. They play samples only. `:MixVoices`
-  `:StartSample`
+- The volume curve and the vibrato read other waves as tables. `:VolumeFromWave`
+  `:VibratoFromWave`
+  - Enables: one pool of waves holds sounds and curves.
+  - Costs: each curve takes 128 bytes.
+- An effect rewrites the played wave, e.g. smooths, rotates or crossfades it.
+  `:RunEffect`
+  - Enables: a timbre that changes during the note.
+  - Costs: voices that play one instrument share its wave and effect.
+- Rows alternate between two speeds, one per nibble. `:SwingSpeeds`
+  - Enables: swing without extra rows.
+- Voices 3 to 6 are mixed into channel 0. `:MixVoices`
+  - Enables: seven voices.
+  - Costs: they play samples only.
+  - Costs: CPU is high. At 16 kHz, the mix takes about half of a 68000.
 
-## Streams
+## Composer's view
 
-| Stream      | Scope      | Role       | Carries                             | Control    | Rate          |
-| ----------- | ---------- | ---------- | ----------------------------------- | ---------- | ------------- |
-| Positions   | song       | sequencer  | track and transpose per voice       | loop       | pattern end   |
-| Track       | voice      | sequencer  | note, instrument, command           | none       | row           |
-| Volume      | voice      | instrument | volume, read from a waveform        | mode       | every N ticks |
-| Arpeggio    | voice      | instrument | note offset, instrument table       | loop       | tick          |
-| Vibrato     | voice      | instrument | period offset, read from a waveform | wait, loop | tick          |
-| Wave effect | instrument | instrument | new waveform                        | loop       | every N ticks |
+The composer writes subsongs, patterns, instruments and waves. A row carries a
+note, an instrument, a command byte and an argument.
 
-## Sequencer
+| Aspect   | Answer                                                                    | Source            |
+| -------- | ------------------------------------------------------------------------- | ----------------- |
+| Notation | A position: a pattern and a transpose per voice.                          | `:ReadRow`        |
+| Notation | A 7-voice song takes two subsongs. Voices 3 to 6 play the second one.     | `:Play`           |
+| Notation | An instrument: waves to play, for volume and vibrato, and for its effect. | `:Instrument`     |
+| Cost     | A command byte below `$40` is a slide target note.                        | `:ReadRow`        |
+| Cost     | A command comes only with a note. It lasts until the next note.           | `:RowCommands`    |
+| Cost     | A loud volume needs wave bytes near -128.                                 | `:VolumeFromWave` |
+| Cost     | Command 10 changes the wave without a restart.                            | `:StartWave`      |
+| Cost     | Command 11 changes the instrument's arpeggio, for all voices.             | `:ReadRow`        |
 
-| Aspect   | Value     | Label          |
-| -------- | --------- | -------------- |
-| Time     | rows      | `:SwingSpeeds` |
-| Unit     | row       | `:SwingSpeeds` |
-| Note end | next note | `:ReadRow`     |
-| Routing  | fixed     | `:Play`        |
-| Reuse    | patterns  | `:ReadRow`     |
-| Tempo    | speed     | `:CmdSpeed`    |
+## What is unique
 
-## Generators
-
-| Generator  | Scope | States      | Writes    | Rate | Set by | Note-on |
-| ---------- | ----- | ----------- | --------- | ---- | ------ | ------- |
-| Portamento | voice | glide, done | period    | tick | Track  | restart |
-| Mixer      | song  | mix         | wave data | tick | Track  | keep    |
-
-## Channel outputs
-
-| Output    | Writers, in tick order                                         |
-| --------- | -------------------------------------------------------------- |
-| Volume    | Volume (set)                                                   |
-| Period    | Track (note), Arpeggio (note), Portamento (add), Vibrato (add) |
-| Sample    | Track (set)                                                    |
-| Wave data | Track (edit), Wave effect (edit), Mixer (edit)                 |
-| DMA       | Track (on)                                                     |
-
-## Interactions
-
-| From        | To          | Event                                                                          |
-| ----------- | ----------- | ------------------------------------------------------------------------------ |
-| Track       | Wave effect | Note-on copies a source wave over the played one `:CopyWaveA`                  |
-| Wave effect | other voice | Voices on one instrument share it; it steps once per tick `:EffectOncePerTick` |
-
-- Command 9 toggles the audio filter every tick. `:VoiceTick`
-
-## State
-
-| Scope      | Fields                                                                               |
-| ---------- | ------------------------------------------------------------------------------------ |
-| Voice      | stream positions, delays, period, slide target, volume                               |
-| Instrument | wave, length, table indices, effect number, its waves, speeds; effect step (runtime) |
-| Global     | speed pair, row, position, pattern length                                            |
+- The volume curve reads its wave upside down: -128 is loudest, +127 silent.
+  `:VolumeFromWave`
+- An effect runs once per tick per instrument, paced by the first voice that
+  plays it. `:EffectOncePerTick`
+- A slide overshoots its target for one tick, then stays on it. `:Portamento`
+- Channel 0's audio interrupt runs the replay, so the mixer sets the tick.
+  `:Interrupt`
+- The mixer checks sample ends once per tick. Within a tick, a voice reads past
+  its end. `:CheckSampleEnds`
 
 ## Open questions
 
-- None left.
+- In the last subsong, voices 3 to 6 have no next subsong. What do they play?
+  `:Play`

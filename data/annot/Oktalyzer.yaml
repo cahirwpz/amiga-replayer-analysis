@@ -27,6 +27,49 @@ labels:
   lbC0241D0: CopySingle
   8228: DriftFix
 
+  # added for specs/oktalyzer.py
+  OK_ReplayHandler: ReplayHandler
+  OK_NewRow: NewRow
+  OK_GetPatternData: GetMixedNotes
+  OK_SetHWRegs: SetHardware
+  OK_TurnDMAOn: TurnDmaOn
+  OK_Set: StartNotes
+  OK_HandleEffects_TicksX: ChannelEffects
+  6598: TrackEffects
+  OK_SetArp: SetNotePeriod
+  OK_PosJmp: PositionJump
+  OK_CSpeed: SetSpeed
+  OK_Volume: SetVolume
+  OK_ActVolume: VolumeSlide
+  OK_Release: OldVolume
+  lbC0237AC: InitSong
+  OK_Play_1: Play1
+  lbC0239F8: ResampleTrack
+  lbC023E28: Replay2Init
+  OK_Play_2: Play2
+  OK_MixBuffers: MixChannel
+  OK_SetPeriods: SetPeriods
+  OK_AudInt: QueueBuffers
+  lbC023F8C: ClampNote
+  # new names that specs cite
+  OK_ActCyc: TickInRow
+  OK_ActSpeed: RowSpeed
+  OK_PattY: RowIndex
+  OK_PtPtr: PositionIndex
+  OK_NextPt: JumpTarget
+  OK_PattLineBuff: RowCells
+  OK_ChannelsData: TrackData
+  OK_PBuffs: ChannelBuffers
+  OK_FullPeriodTab: NotePeriods
+  OK_PALTable: WordsPerFrame
+  OK_Samples: SampleInfo
+  OK_ChannelsModes: ChannelModes
+  OK_Dmacon: PendingDma
+  OK_Volume2: ChannelVolumes
+  lbL023E20: ResamplerCode
+  lbL023E24: SourceBytes
+  OK_EmptyWaveForm: EmptyWave
+
 comments:
   5548: mixed-track samples are stored as 7 bits
   6670: after the last position, start again at 0
@@ -52,3 +95,12 @@ banners:
     OK_MixBuffers: two voices on one channel. Paula plays the buffer at
     the higher note's period. The lower voice is resampled into the
     buffer, the higher one added unchanged. One voice alone is copied.
+
+# Classes in specs/oktalyzer.py: each word occurs in the source.
+types:
+  SampleEntry: [OK_Samples]
+  Score: [OK_PatternList]
+  Track: [OK_ChannelsData]
+  ChannelBuffer: [OK_PBuffs]
+  Module: [OK_ActCyc]
+  Op: [lbC023CC0]
