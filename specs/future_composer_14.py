@@ -1,7 +1,7 @@
 """Future Composer 1.4's replay: FC1.4.s, by SuperSero of the Superions.
 
 Card: players/FutureComposer1.4.md. Level 2: the control flow runs. Each
-CamelCase function is a label in data/annot/FutureComposer1.4.yaml; each
+CamelCase function is a new name in data/annot/FutureComposer1.4.yaml; each
 CamelCase class is in its `types:`. Comments name the voice fields by
 their offsets in Voice1Data.
 

@@ -1,7 +1,7 @@
 """MaxTrax, the Music-X playback driver: max.asm and shared.asm.
 
 Card: players/MaxTrax.md. Level 2: the control flow runs. Each CamelCase
-function is a label in data/annot/MaxTrax.yaml (max.asm) or
+function is a new name in data/annot/MaxTrax.yaml (max.asm) or
 data/annot/MaxTrax-shared.yaml (shared.asm); each CamelCase class is in
 their `types:`. This build has no modulation and no microtonal tuning.
 

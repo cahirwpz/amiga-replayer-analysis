@@ -1,7 +1,7 @@
 """MED four-channel replay, version 7.0: common/proplayer.a.
 
 Card: players/MED.md. Level 2: the control flow runs; leaf math is a stub.
-Each CamelCase function is a label in data/annot/MED.yaml; each CamelCase
+Each CamelCase function is a new name in data/annot/MED.yaml; each CamelCase
 class is in its `types:`. Comments name the replay's `trk_` fields.
 """
 

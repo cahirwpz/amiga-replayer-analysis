@@ -2,7 +2,7 @@
 emulator. Jochen Hippel ST_v4.asm, Wanted Team's adaptation (V1.3, 2008).
 
 Card: players/Jochen_Hippel_ST.md. Level 2: the control flow runs.
-Each CamelCase function is a label in data/annot/Jochen_Hippel_ST.yaml;
+Each CamelCase function is a new name in data/annot/Jochen_Hippel_ST.yaml;
 each CamelCase class is in its `types:`. Comments name the voice fields
 by their offsets in VoiceA.
 

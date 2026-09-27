@@ -247,6 +247,15 @@ class Specs(unittest.TestCase):
             [(2, "label"), (5, "type")], [(n, rule) for n, rule, _ in found]
         )
 
+    def test_reports_a_docstring_without_card_or_annotations(self):
+        with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
+            spec = Path(tmp) / "med.py"
+            spec.write_text('"""Card: players/MED.md."""\n', encoding="utf-8")
+            found = list(self.specs.check_docstring(spec, "MED"))
+        self.assertEqual(
+            ["does not name data/annot/MED.yaml"], [d for _, _, d in found]
+        )
+
     def test_reports_old_labels_in_prose(self):
         code = '"""Reads mmd_pline; see PlayRow."""\n'
         code += "row = 0  # a loop over _Wait1line\n"

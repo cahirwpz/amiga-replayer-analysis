@@ -2,7 +2,7 @@
 
 Card: players/TFMX-7V.md, a delta card on TFMX Pro. Level 2: the control
 flow runs. Only the mixer is modelled; the rest is specs/tfmx_pro.py.
-Each CamelCase function is a label in data/annot/TFMX-7V.yaml; each
+Each CamelCase function is a new name in data/annot/TFMX-7V.yaml; each
 CamelCase class is in its `types:`.
 """
 

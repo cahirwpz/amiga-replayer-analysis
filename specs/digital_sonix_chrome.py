@@ -2,7 +2,7 @@
 Digital Sonix & Chrome_v1.asm, Wanted Team's adaptation.
 
 Card: players/DigitalSonixChrome.md. Level 2: the control flow runs.
-Each CamelCase function is a label in data/annot/DigitalSonixChrome.yaml;
+Each CamelCase function is a new name in data/annot/DigitalSonixChrome.yaml;
 each CamelCase class is in its `types:`.
 
 There is no instrument program and no effect command. A row names one

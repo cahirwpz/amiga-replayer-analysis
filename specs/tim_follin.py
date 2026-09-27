@@ -1,7 +1,7 @@
 """Tim Follin's replay, Follin Player II: DP_TimFollin.asm.
 
 Card: players/TimFollin.md. Level 2: the control flow runs; leaf math is a
-stub. Each CamelCase function is a label in data/annot/TimFollin.yaml;
+stub. Each CamelCase function is a new name in data/annot/TimFollin.yaml;
 each CamelCase class is in its `types:`. Comments name the replay's
 fields as offsets from PlayerState+$80: bytes per voice, then words and longs.
 

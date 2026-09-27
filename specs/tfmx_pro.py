@@ -1,7 +1,7 @@
 """TFMX Pro four-voice replay: TFMX Pro_v5.asm.
 
 Card: players/TFMX-Pro.md. Level 2: the control flow runs; leaf math is a
-stub. Each CamelCase function is a label in data/annot/TFMX-Pro.yaml; each
+stub. Each CamelCase function is a new name in data/annot/TFMX-Pro.yaml; each
 CamelCase class is in its `types:`. Comments name the replay's fields.
 
 The source is Wanted Team's EaglePlayer adaptation. It adds a "DMA wait"

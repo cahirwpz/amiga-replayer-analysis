@@ -17,6 +17,8 @@ DIR defaults to specs/, checked with hardware/. Checks:
     and types: no label it defines, and no disassembler name it uses;
     words in PLAIN_WORDS are read as English
   - snake_case helpers need no label
+  - the module docstring names the card, `Card: players/<player>.md`,
+    and each data/annot/ file of the player
 
 Prints `file:line: rule: detail` for each problem; exits 1 if any.
 """
@@ -81,6 +83,19 @@ def old_labels(player):
     return old - labels - types - PLAIN_WORDS
 
 
+def check_docstring(path, player):
+    """Yield (line, rule, detail) for what the module docstring leaves out."""
+    doc = ast.get_docstring(ast.parse(path.read_text(encoding="utf-8"))) or ""
+    card = f"players/{player}.md"
+    wanted = [f"Card: {card}"]
+    wanted += [p.relative_to(ROOT).as_posix() for p in annot_files(player)]
+    for text in wanted:
+        if text not in " ".join(doc.split()):
+            yield 1, "docstring", f"does not name {text}"
+    if not (ROOT / card).is_file():
+        yield 1, "docstring", f"{card} does not exist"
+
+
 def check_prose(path, player):
     """Yield (line, rule, detail) for old labels in comments and strings."""
     old = old_labels(player)
@@ -137,7 +152,8 @@ def main(argv):
         if player is None:
             errors.append(f"{rel}:1: owner: no player in data/players.yaml has it")
             continue
-        for n, rule, detail in [*check_names(path, player), *check_prose(path, player)]:
+        checks = [check_names, check_docstring, check_prose]
+        for n, rule, detail in [x for check in checks for x in check(path, player)]:
             errors.append(f"{rel}:{n}: {rule}: {detail}")
     for e in errors:
         print(e)
