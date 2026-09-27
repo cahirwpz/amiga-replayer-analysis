@@ -75,6 +75,7 @@ FutureComposer1.3:
 
 FutureComposer1.4:
   ports: [ext/c-flod/neoart/flod/futurecomposer]
+  spec: specs/future_composer_14.py
   source: defect/fc14
   provenance: original
   provenance_guess: true

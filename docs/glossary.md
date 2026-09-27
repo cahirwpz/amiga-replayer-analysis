@@ -54,6 +54,7 @@ One line per term. Every acronym used in this repo must appear here.
 | **envelope**     | A curve that changes volume, or another value, during a note.                       |
 | **volume list**  | A command list whose values set a voice's volume.                                   |
 | **wave list**    | A command list whose values pick a voice's waveform.                                |
+| **pitch list**   | A command list whose values set a voice's pitch, often also its waveform.           |
 | **modulation**   | One signal changing a setting of another, e.g. volume or pitch.                     |
 | **pulse width**  | The share of a square-like wave's cycle spent high.                                 |
 | **mixing**       | Adding several voices into one channel's sample data, in software.                  |
@@ -253,20 +254,21 @@ using it, e.g. "Pitch" for "Pitch list".
 Other names for terms above. Checked outside code quotes, so a format's own term
 can still appear as `code`.
 
-| Avoid           | Use                       |
-| --------------- | ------------------------- |
-| sequence        | positions                 |
-| order list      | positions                 |
-| block           | pattern                   |
-| song entry      | position                  |
-| song step       | position                  |
-| step list       | positions                 |
-| subtune         | subsong                   |
-| macro           | instrument program        |
-| sound number    | instrument number         |
-| sound record    | instrument                |
-| sound transpose | instrument transpose      |
-| hybrid          | synth sound with a sample |
+| Avoid              | Use                       |
+| ------------------ | ------------------------- |
+| sequence           | positions                 |
+| order list         | positions                 |
+| block              | pattern                   |
+| song entry         | position                  |
+| song step          | position                  |
+| step list          | positions                 |
+| subtune            | subsong                   |
+| macro              | instrument program        |
+| frequency sequence | pitch list                |
+| sound number       | instrument number         |
+| sound record       | instrument                |
+| sound transpose    | instrument transpose      |
+| hybrid             | synth sound with a sample |
 
 ## Control vocabulary
 

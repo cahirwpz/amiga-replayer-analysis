@@ -8,3 +8,47 @@ labels:
   519: AddInstrTranspose
   585: RestartVolList
   789: DoSlide
+  # added for specs/future_composer_14.py
+  INIT_MUSIC: LoadModule
+  221: InitMusic
+  PLAY: Play
+  chan1: WriteLoops
+  new_note: NewRow
+  patend: NextPosition
+  notend: ReadSpeed
+  samepat: ReadNote
+  noport: StartInstrument
+  effects: VoiceTick
+  testsustain: PitchListTick
+  testeffects: ReadPitchList
+  transpose: ReadTranspose
+  testnewsound: SetWave
+  testE4: ChangeWave
+  testE9: SampleFromPack
+  testpatjmp: PitchListJump
+  testnewsustain: PitchWait
+  VOLUfx: VolumeListTick
+  volu_cmd: ReadVolume
+  testVOLloop: VolumeLoop
+  do_VOLbend: VolumeBend
+  calcperiod: CalcPeriod
+  lockednote: LockedNote
+  vibrator: VibratoTick
+  pitchbend: PitchBend
+  addporta: ClampPeriod
+
+comments:
+  333: "clears the DMA bits that rows set: only $e2 and $e9 turn DMA on"
+  776: "the offset doubles for each octave below note index 48"
+
+# Classes in specs/future_composer_14.py: each word occurs in the source.
+types:
+  Sound: [SOUNDINFO]
+  Position: [SEQpoint]
+  Score: [PATpoint]
+  PitchList: [FRQpoint]
+  VolumeList: [VOLpoint]
+  Bend: [pitchbend]
+  Vibrato: [vibrator]
+  Voice: [V1data]
+  Module: [audtemp, spdtemp]
