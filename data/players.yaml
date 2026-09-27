@@ -170,6 +170,7 @@ SoundMon2.2:
   head: true
 
 SonicArranger:
+  spec: specs/sonic_arranger.py
   provenance: disassembly
   author: Carsten Schlote, Branko Mikiç and Carsten Herbst
 

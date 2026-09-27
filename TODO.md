@@ -43,7 +43,6 @@ the first card on it, with `specs/med.py`.
 | Card            | Blocked by |
 | --------------- | ---------- |
 | `MIDI-Loriciel` | —          |
-| `SonicArranger` | —          |
 | `SoundPlayer`   | —          |
 
 - [ ] After the last card: decide on `specs/controls.py`. `CommandList` and
@@ -58,6 +57,9 @@ the first card on it, with `specs/med.py`.
 
 ### Hardware model
 
+- [ ] `hardware/paula.py:Sample` holds `bytes`. Make it an array of 16-bit
+      words, as DMA fetches them. It must show writes made while it plays:
+      `specs/sonic_arranger.py:StartSynthWave` casts a `bytearray` for now.
 - [ ] `POLL_CCK` is an estimate from 68000 instruction timings. It is 25 in
       `specs/med.py:StartDMA`, 20 in
       `specs/digital_sonix_chrome.py:WaitAudioIrq`, 15 in

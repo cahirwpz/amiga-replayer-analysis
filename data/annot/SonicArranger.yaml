@@ -31,9 +31,9 @@ labels:
   lbC000EDC: Arpeggio
   lbC000F5E: Portamento
   lbC000FAA: Vibrato
-  lbC000FF2: AmfWalker
+  lbC000FF2: PitchWalker
   lbC001042: SetPitch
-  lbC00106C: AdsrWalker
+  lbC00106C: VolumeWalker
   2211: AdsrSustain
   lbC0010FE: AdsrStep
   # wave effects
@@ -61,6 +61,33 @@ labels:
   # data
   lbW001716: Periods
   lbL0017F2: VibratoTable
+
+  # added for specs/sonic_arranger.py
+  InitSong: InitSong
+  Play: Play
+  SongEnd: SongEnd
+  lbC000804: ResetVoices
+  lbC0007D6: SetTimer
+  lbC000870: WriteLoop
+  lbC0009C4: ReadPosition
+  lbC000A26: NextRow
+  lbC000A4C: ReadRows
+  lbC000CDA: StopChannel
+  lbC000DF0: RestartInstrument
+  lbC000B88: NoCommand
+  lbC000B90: CmdVolumePosition
+  lbC000BBE: CmdSync
+  lbC000BC6: CmdMasterVolume
+  lbC000BD2: CmdPortamento
+  lbC000BD8: CmdPortamentoOff
+  lbC000BDE: CmdPatternLength
+  lbC000C08: CmdVolume
+  lbC000C28: CmdPatternBreak
+  lbC000C32: CmdFilter
+  lbC000F2A: RowArpeggio
+  lbC001134: VolumeSlide
+  lbC001394: AddOtherByte
+  lbC00146E: Morph
 
 comments:
   1785: "$80: no new note, hold"
@@ -101,3 +128,13 @@ banners:
     `effect delay` ticks. Most work on bytes `start` to `end`.
     `EffectStep` moves the effect position from `start` to `end`, then
     back to `start`.
+
+# Classes in specs/sonic_arranger.py: each word occurs in the source.
+types:
+  Row: [lbL00065A]
+  Track: [lbW000642]
+  Subsong: [lbL0003FC]
+  Instrument: [lbL000408]
+  Score: [SongPtr]
+  Voice: [lbL0000BC]
+  Module: [lbW000618]
