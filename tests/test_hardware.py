@@ -167,20 +167,47 @@ class Paula_(unittest.TestCase):
     def test_dma_on_after_idle_restarts(self):
         self.channel.play(Sample(b"N" * 8))
         self.m.run(1000)
+        self.channel.irq_enabled = False  # the extra word's request stays set
         self.channel.disable()
-        self.m.run(1000 + 2 * self.channel.period + 2 * LINE_CCK)
+        self.m.run(1000 + 4 * self.channel.period + 2 * LINE_CCK)
+        self.assertTrue(self.channel.idle)
+        self.channel.irq_enabled = True
         start = self.m.now
         self.channel.play(Sample(b"R" * 8))
         self.m.run(start + LINE_CCK)
         self.assertEqual(self.events[-1][1], b"R")
 
-    def test_disable_stops_the_channel(self):
+    def test_disable_with_intreq_set_stops_the_channel(self):
         self.channel.play(Sample(b"N" * 8))
         self.m.run(300)
+        self.channel.irq_enabled = False
+        self.channel.irq_requested = True
         self.channel.disable()
-        count = len(self.events)
         self.m.run(5000)
-        self.assertEqual(len(self.events), count)
+        self.assertTrue(self.channel.idle)
+
+    def test_disable_with_intreq_clear_plays_one_more_word(self):
+        # N's words end at 241, 695, 1149; DMA goes off during the second.
+        self.channel.play(Sample(b"N" * 8))
+        self.m.run(300)
+        self.channel.irq_enabled = False
+        self.channel.irq_requested = False
+        self.channel.disable()
+        self.m.run(694)
+        self.assertFalse(self.channel.irq_requested)
+        self.m.run(695)
+        self.assertTrue(self.channel.irq_requested)
+        self.assertFalse(self.channel.idle)
+        self.m.run(695 + 2 * self.channel.period)
+        self.assertTrue(self.channel.idle)
+
+    def test_data_write_from_idle_requests_at_once(self):
+        self.channel.irq_enabled = False
+        self.channel.period = 1
+        self.channel.write_data()
+        self.assertTrue(self.channel.irq_requested)
+        self.m.run(2)
+        self.assertTrue(self.channel.idle)
 
     def test_volume_bit_6_forces_the_maximum(self):
         self.channel.set_volume(0x40 | 5)

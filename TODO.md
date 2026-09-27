@@ -48,12 +48,10 @@ the first card on it, with `specs/med.py`.
 
 ### Hardware model
 
-- [ ] `POLL_CCK = 25` in `specs/med.py:StartDMA` is an estimate from 68000
-      instruction timings. Measure or cite one `_Wait1line` poll.
-- [ ] `hardware/paula.py:Channel` leaves out one case of DMA off. With its
-      INTREQ bit clear, a channel plays one more word and requests an interrupt.
-      Source: `AUDIO_STATE_4` in Minimig's `rtl/paula_audio_channel.v`.
-- [ ] Model that case if a replayer depends on it.
+- [ ] `POLL_CCK` is an estimate from 68000 instruction timings in
+      `specs/med.py:StartDMA` (25) and
+      `specs/digital_sonix_chrome.py:WaitAudioIrq` (20). Measure or cite one
+      poll of `_Wait1line` and of `WaitAudioIrq`.
 
 ### Then
 

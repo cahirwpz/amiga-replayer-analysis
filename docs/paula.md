@@ -26,13 +26,18 @@ So replayers wait twice: before DMA on, and before they write the loop. ptplayer
 
 ## Tricks
 
-| Trick         | What it gives                            | Cost                      | Model                      |
-| ------------- | ---------------------------------------- | ------------------------- | -------------------------- |
-| Loop counting | Waits in sample passes                   | One interrupt per reload  | —                          |
-| Loop counting | Sample chaining                          | One interrupt per reload  | —                          |
-| Mixing        | More than four voices                    | CPU time per output byte  | —                          |
-| Attach modes  | One channel modulates the next one       | A whole voice             | `:Attach`                  |
-| CIA timer     | Any tick rate, so the score sets a tempo | A timer and its interrupt | `hardware/cia.py:CiaTimer` |
+| Trick         | What it gives                               | Cost                      | Model                       |
+| ------------- | ------------------------------------------- | ------------------------- | --------------------------- |
+| Loop counting | Waits in sample passes                      | One interrupt per reload  | —                           |
+| Loop counting | Sample chaining                             | One interrupt per reload  | —                           |
+| Mixing        | More than four voices                       | CPU time per output byte  | —                           |
+| Attach modes  | One channel modulates the next one          | A whole voice             | `:Attach`                   |
+| CIA timer     | Any tick rate, so the score sets a tempo    | A timer and its interrupt | `hardware/cia.py:CiaTimer`  |
+| Stop signal   | DMA on waits only until the channel is idle | A busy-wait per note      | `hardware/paula.py:Channel` |
+
+With its INTREQ bit clear, a stopped channel plays one more word and requests an
+interrupt. A write to AUDxDAT does the same from idle. The CPU can wait for that
+request, as [Digital Sonix & Chrome](../players/DigitalSonixChrome.md) does.
 
 ## Attach modes
 

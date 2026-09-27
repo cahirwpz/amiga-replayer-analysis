@@ -13,6 +13,7 @@ sections:
       audio filter: Amiga's low-pass filter on all channels. Software can switch it on or off.
       audio interrupt: Paula's signal to the CPU that a channel started a new pass over its sample.
       AUDxLC: Channel x sample start address. Copied to the live pointer at each reload.
+      AUDxDAT: Channel x data register. With DMA off, the CPU writes the next word here.
       AUDxLEN: Channel x sample length, in words.
       AUDxPER: 'Channel x period: clock divider that sets pitch.'
       AUDxVOL: Channel x volume, 0 to 64.

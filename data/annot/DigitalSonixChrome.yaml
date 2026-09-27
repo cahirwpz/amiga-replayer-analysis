@@ -3,6 +3,10 @@ source: ext/uade/amigasrc/players/wanted_team/DigitalSonixChrome/src/Digital Son
 sha1: 2158ccfdbbb442e4465b5a829f5fd4234976a2c1
 
 labels:
+  # added for specs/digital_sonix_chrome.py
+  Init: StartSubsong
+  InstallSamples: LoadModule
+  lbC005936: StartNote
   lbC0052DC: SfxClaimVoice
   lbC005400: ReadRow
   lbC0054FE: NextPosition
@@ -13,3 +17,11 @@ labels:
   1320: CountLoopPass
   lbC005A80: LoopsDone
   lbB0080AC: SfxPlaying
+
+# Classes in specs/digital_sonix_chrome.py: each word occurs in the source.
+types:
+  Position: [lbL008318]
+  Instrument: [lbL008314]
+  Score: [lbL008068]
+  Voice: [lbB0080AC, lbW00808C]
+  Module: [WT, lbL00807A]

@@ -117,12 +117,20 @@ class Channel:
 
     def disable(self) -> None:
         """Clear this channel's DMACON bit. The channel finishes its word,
-        up to 2 × period CCK, then goes idle.
-
-        Left out: with its INTREQ bit clear, the channel plays one more
-        word and requests an interrupt first.
+        up to 2 × period CCK. With its INTREQ bit set, it then goes idle.
+        With the bit clear, it plays AUDxDAT as one more word, at the
+        current period, and requests an interrupt: see fetch().
         """
         self.dma = self.armed = False
+
+    def write_data(self) -> None:
+        """Write AUDxDAT. The word's value is not modelled. From idle, with
+        DMA off and the INTREQ bit clear, the CPU starts one word: the
+        channel requests an interrupt at once and plays it at the current
+        period. Otherwise the word waits in the buffer."""
+        if self.idle and not self.dma and not self.irq_requested:
+            self.idle = False
+            self.cpu_word()
 
     def set_volume(self, value: int) -> None:
         """Volume gates the output by PWM; it does not multiply. Of the
@@ -141,7 +149,10 @@ class Channel:
     def fetch(self) -> None:
         """One DMA slot: the start reload, or one word."""
         if not self.dma:
-            self.idle = True  # the word is done and DMA is off
+            if self.irq_requested:
+                self.idle = True  # the word is done and DMA is off
+            else:
+                self.cpu_word()  # Minimig AUDIO_STATE_4: one more word
             return
         if self.armed:
             # The start reload: this first word only reloads the pointer and
@@ -162,11 +173,21 @@ class Channel:
             self.modulate(word)
         self.fetch_at(self.clock.now + 2 * self.period)
 
+    def cpu_word(self) -> None:
+        """Play AUDxDAT once, without DMA, and request an interrupt. The
+        word ends after 2 × period CCK."""
+        self.request()
+        self.clock.at(self.clock.now + 2 * self.period, self.fetch)
+
     def reload(self) -> None:
         """Copy AUDxLC and AUDxLEN to the live pointer and counter, and
         request an interrupt."""
         self.playing = self.location
         self.pointer, self.count = 0, self.length
+        self.request()
+
+    def request(self) -> None:
+        """Set this channel's INTREQ bit; with INTENA, run the handler."""
         self.irq_requested = True
         if self.irq_enabled:
             self.clock.request_interrupt(self.interrupt)

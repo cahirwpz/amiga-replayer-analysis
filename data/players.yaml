@@ -62,6 +62,7 @@ DeltaMusic2.0:
 
 DigitalSonixChrome:
   provenance: disassembly
+  spec: specs/digital_sonix_chrome.py
   author: Andrew E. Bailey and David M. Hanlon
   year: 1990
   game: Dragon's Breath
