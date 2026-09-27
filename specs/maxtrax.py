@@ -309,7 +309,7 @@ def PlaySong(module: Module, mark: int) -> None:
 
 
 def SkipMarks(module: Module, count: int) -> None:
-    """advance_song. Moves past `count` mark events; the end wraps."""
+    """Moves past `count` mark events; the end wraps."""
     events = module.scores[module.score]
     start = scan = module.current
     for _ in range(count):
@@ -769,7 +769,7 @@ def KillVoice(module: Module, voice: Voice) -> None:
 
 
 def StopAudio(voice: Voice) -> None:
-    """stop_audio: CMD_FLUSH on the unit. Before Kickstart 2, the driver
+    """StopAudio: CMD_FLUSH on the unit. Before Kickstart 2, the driver
     also writes period 1 to the channel to flush it."""
     voice.device.flush()
 
@@ -782,7 +782,7 @@ def status_of(module: Module, number: int) -> int:
 
 
 def PickVoice(module: Module, side: int, priority: int) -> Voice | None:
-    """pick_voice. The side's freer voice first, or the other side's if
+    """The side's freer voice first, or the other side's if
     ours has no free or releasing voice and it has one. A voice that a
     game sound blocks, or with a higher priority, is skipped: then the
     sibling, then the other side. MUST_HAVE_SIDE keeps the side first."""
@@ -814,7 +814,7 @@ def PickVoice(module: Module, side: int, priority: int) -> Voice | None:
 
 
 def PickSibling(module: Module, number: int) -> tuple[int, str]:
-    """pick_voice1. Of two voices on one side, the lower status wins. A
+    """Of two voices on one side, the lower status wins. A
     tie goes by the side's round-robin value."""
     key = "left" if (number - 1) & 2 else "right"
     difference = status_of(module, number) - status_of(module, number ^ 3)
@@ -897,7 +897,7 @@ def CalcVolume(module: Module, voice: Voice) -> int:
 
 
 def IncrVolume(module: Module, delta: int, time: int) -> int:
-    """calc_incrvol. The volume step per frame to cover `delta` in `time`
+    """The volume step per frame to cover `delta` in `time`
     ms. A segment shorter than a frame jumps."""
     if not time:
         return delta
@@ -1074,7 +1074,7 @@ def ExtraStop(module: Module, unique_id: int) -> None:
 
 
 def SoundPlaying(module: Module, voice: Voice) -> bool:
-    """check_sound. A finished game sound unblocks its voice, and its
+    """A finished game sound unblocks its voice, and its
     stereo link."""
     if not voice.blocked:
         return False

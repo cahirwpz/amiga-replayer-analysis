@@ -42,6 +42,13 @@ labels:
   L_11ea: CmdEnvelopeStep
   L_11f2: CmdInstrument
   L_1218: CmdPulseSpeed
+  # new names that specs cite
+  dx: Relocation
+  tmp: PlayerState
+  Periodes: Periodes
+  L_12E6: SubsongWord
+  L_12EA: SubsongByte
+  L_12ED: FadeLevel
 
 comments:
   286: bits 0-5 of the flags pick the second sample

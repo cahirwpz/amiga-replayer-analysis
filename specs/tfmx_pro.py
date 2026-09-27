@@ -32,7 +32,7 @@ FLUSH_PERIOD = 9  # the shortest period, so a stopped channel ends its word
 LOW_MEMORY = 0x80000  # byte checks address $80000 + offset, in 512 KB
 LOW_MEMORY_MASK = 0x7FFFF
 RANDOM_ADD = 0x4335
-IMS_BUFFERS = 4  # ims_doffs: voice n's buffer is at 4 + $100 × n
+IMS_BUFFERS = 4  # ImsBufferOffset: voice n's buffer is at 4 + $100 × n
 IMS_BUFFER = 0x100  # bytes per voice's IMS buffer
 
 
@@ -57,57 +57,63 @@ def long(s: Statement) -> int:
 
 
 @dataclass
-class Score:  # the module's header: database, pattnbase, macrobase
+class Score:  # the module's header: ModuleBase, PatternTable, MacroTable
     positions: list[bytes]  # 16 bytes: per track, pattern byte and transpose
     patterns: list[list[Statement]]
     macros: list[list[Statement]]  # shared by all voices; opcodes rewrite them
     samples: bytearray  # one sample file; IMS buffers live in its first KB
-    first: int  # fstep
-    last: int  # lstep
+    first: int  # FirstPosition
+    last: int  # LastPosition
     speed: int  # ticks per row, minus one
     mutes: list[bool]  # per track
 
 
 @dataclass
-class SoundEffect:  # fxbase: 8 bytes per effect
+class SoundEffect:  # EffectTable: 8 bytes per effect
     note: Statement  # its voice nibble is replaced
     voice: int
     priority: int  # bit 7: no repeat while it plays
-    ticks: int  # priocount: how long it locks the voice
+    ticks: int  # PriorityTicks: how long it locks the voice
 
 
 # --- Track and voice state ---------------------------------------------
 
 
 @dataclass
-class Track(Program):  # CHfield2: patterns, padress, pstep, pawait
+class Track(
+    Program
+):  # TrackState: patterns, PatternAddress, PatternPos, PatternWaitCount
     pattern: int = TRACK_IDLE  # the pattern byte; TRACK_IDLE and up: off
     transpose: int = 0
     statements: list[Statement] = field(default_factory=list)
-    loop_count: int = 0  # ploopcount
-    returns: tuple[list[Statement], int] | None = None  # psubadr, psubstep
+    loop_count: int = 0  # PatternLoopCount
+    returns: tuple[list[Statement], int] | None = (
+        None  # PatternReturnAddress, PatternReturnPos
+    )
 
 
 @dataclass
-class Macro(Program):  # madress, mstep, mawait
+class Macro(Program):  # MacroAddress, MacroPos, MacroWaitCount
     statements: list[Statement] = field(default_factory=list)
-    running: bool = False  # mstatus
-    loop_count: int = 0  # mloopcount; WaitNoteOff counts in it too
-    returns: tuple[list[Statement], int] | None = None  # msubadr, msubstep
-    skip_seen: bool = False  # mskipflag
-    no_yield: bool = False  # nwait clear: the next yield does not end the tick
-    loop_waits: int = 0  # irwait: sample passes to wait
+    running: bool = False  # MacroRunning
+    loop_count: int = 0  # MacroLoopCount; WaitNoteOff counts in it too
+    returns: tuple[list[Statement], int] | None = (
+        None  # MacroReturnAddress, MacroReturnPos
+    )
+    skip_seen: bool = False  # MacroSkipSeen
+    no_yield: bool = False  # NoWait clear: the next yield does not end the tick
+    loop_waits: int = 0  # LoopWaits: sample passes to wait
 
 
 @dataclass
-class Sweep(StateMachine):  # mabcount1, mabcount2, mabadd
+class Sweep(StateMachine):  # SweepCounter1, SweepCounter2, SweepStep
     left: int = 0  # 0: off
     length: int = 0
     step: int = 0  # bytes per tick; the sign flips every `length` ticks
 
 
 @dataclass
-class Swing(StateMachine):  # ims_mod1add, ims_mod1len, ims_mod1len2
+class Swing(StateMachine):  # ImsSwingStep, ImsSwingLength, ImsSwingCount
     """An add per tick whose sign turns every `length` ticks."""
 
     add: int = 0
@@ -127,22 +133,22 @@ class Swing(StateMachine):  # ims_mod1add, ims_mod1len, ims_mod1len2
 
 @dataclass
 class Ims(StateMachine):  # ims_ fields: interference modulation synthesis
-    length: int = 0  # ims_dlen: bytes to build, minus one; 0 off
-    source: int = 0  # ims_sstart: offset in the sample file
-    mask: int = 0  # ims_slen: source offsets wrap with it; 2^n - 1
-    step: int = 0  # ims_mod1: source bytes per output byte, 16.16
-    step_change: int = 0  # ims_mod2: added to the step per byte, 16.16
+    length: int = 0  # ImsBuildLength: bytes to build, minus one; 0 off
+    source: int = 0  # ImsSourceStart: offset in the sample file
+    mask: int = 0  # ImsSourceMask: source offsets wrap with it; 2^n - 1
+    step: int = 0  # ImsStep: source bytes per output byte, 16.16
+    step_change: int = 0  # ImsStepChange: added to the step per byte, 16.16
     step_swing: Swing = field(default_factory=Swing)
     change_swing: Swing = field(default_factory=Swing)
-    delta: int = 0  # ims_delta: 8.8; the high byte limits each change
-    delta_swing: Swing = field(default_factory=Swing)  # ims_fspeed, ims_flen
-    last: int = 0  # ims_deltaold: the last output byte, signed
-    mirror: bool = False  # ims_dolby: negated copy into the next buffer
-    buffer: int = 0  # ims_doffs: this voice's buffer in the sample file
+    delta: int = 0  # ImsDelta: 8.8; the high byte limits each change
+    delta_swing: Swing = field(default_factory=Swing)  # ImsDeltaSpeed, ims_flen
+    last: int = 0  # ImsLast: the last output byte, signed
+    mirror: bool = False  # ImsMirror: negated copy into the next buffer
+    buffer: int = 0  # ImsBufferOffset: this voice's buffer in the sample file
 
 
 @dataclass
-class Vibrato(StateMachine):  # vibsize1, vibsize2, vibrate, vibperiod
+class Vibrato(StateMachine):  # VibratoWidth, VibratoPos, VibratoRate, VibratoPeriod
     size: int = 0  # ticks per direction; 0 off
     left: int = 0
     rate: int = 0  # signed; added to `offset` each tick
@@ -150,7 +156,7 @@ class Vibrato(StateMachine):  # vibsize1, vibsize2, vibrate, vibperiod
 
 
 @dataclass
-class Portamento(StateMachine):  # potime, pospeed, pocount, poperiod
+class Portamento(StateMachine):  # PortaTime, PortaSpeed, PortaCounter, PortaPeriod
     rate: int = 0  # the period factor is (256 +- rate) / 256; 0 off
     speed: int = 0  # ticks per step
     count: int = 0
@@ -158,7 +164,7 @@ class Portamento(StateMachine):  # potime, pospeed, pocount, poperiod
 
 
 @dataclass
-class Envelope(StateMachine):  # envelope, envcount, envspeed, envolume
+class Envelope(StateMachine):  # envelope, EnvCounter, EnvSpeed, EnvTarget
     delay: int = 0  # ticks between steps, plus one; 0 off
     count: int = 0
     step: int = 0
@@ -166,36 +172,36 @@ class Envelope(StateMachine):  # envelope, envcount, envspeed, envolume
 
 
 @dataclass
-class Riff(StateMachine):  # riffstats, riffsteps, riffspeed, riffrandm
-    state: int = 0  # riffstats: 0 off, 1 start, -1 playing
-    macro: int = 0  # riffmacro: its bytes are the riff
-    notes: bytes = b""  # riffadres
-    step: int = 0  # riffsteps
+class Riff(StateMachine):  # RiffState, RiffSteps, RiffSpeed, RiffRandomFlag
+    state: int = 0  # RiffState: 0 off, 1 start, -1 playing
+    macro: int = 0  # RiffMacro: its bytes are the riff
+    notes: bytes = b""  # RiffNotes
+    step: int = 0  # RiffSteps
     speed: int = 0  # ticks per riff step
     count: int = 0
-    random: bool = False  # riffrandm bit 0
-    echo: bool = False  # riffrandm bit 1
-    no_rests: bool = False  # riffrandm bit 2
-    mask: int = 0  # riffAND: random steps are masked with it
-    trigger: bool = False  # rifftrigg: a riff-triggered wait is pending
+    random: bool = False  # RiffRandomFlag bit 0
+    echo: bool = False  # RiffRandomFlag bit 1
+    no_rests: bool = False  # RiffRandomFlag bit 2
+    mask: int = 0  # RiffAndMask: random steps are masked with it
+    trigger: bool = False  # RiffTrigger: a riff-triggered wait is pending
 
 
 @dataclass
 class Voice:  # Synthfield: one per Paula channel
     channel: paula.Channel
-    next: "Voice | None" = None  # channadd: riff echo and IMS mirror target
+    next: "Voice | None" = None  # NextChannel: riff echo and IMS mirror target
     macro: Macro = field(default_factory=Macro)
-    effects: int = 0  # modstatus: <0 paused, 0 wait one tick, >0 run
-    key_down: bool = False  # keyflag
-    note: int = 0  # basenote low byte
-    last_note: int = 0  # basenote high byte
-    note_volume: int = 0  # basevol: the pattern's 0..15
-    detune: int = 0  # detunes: the pattern's, signed
+    effects: int = 0  # EffectStatus: <0 paused, 0 wait one tick, >0 run
+    key_down: bool = False  # KeyDown
+    note: int = 0  # BaseNote low byte
+    last_note: int = 0  # BaseNote high byte
+    note_volume: int = 0  # BaseVolume: the pattern's 0..15
+    detune: int = 0  # Detune: the pattern's, signed
     volume: int = 0  # the voice's volume byte
-    base_period: int = 0  # baseperiod: vibrato centre, portamento target
+    base_period: int = 0  # BasePeriod: vibrato centre, portamento target
     period: int = 0  # written to Paula at the end of the tick
-    start: int = 0  # sbegin: offset in the sample file
-    length: int = 0  # samplen, in words
+    start: int = 0  # SampleStart: offset in the sample file
+    length: int = 0  # SampleLength, in words
     sweep: Sweep = field(default_factory=Sweep)
     ims: Ims = field(default_factory=Ims)
     vibrato: Vibrato = field(default_factory=Vibrato)
@@ -203,41 +209,41 @@ class Voice:  # Synthfield: one per Paula channel
     envelope: Envelope = field(default_factory=Envelope)
     riff: Riff = field(default_factory=Riff)
     priority: int = 0  # a sound effect locks the voice while nonzero
-    next_priority: int = 0  # priority2
-    priority_ticks: int = -1  # priocount: the lock's ticks left
-    effect_note: Statement | None = None  # fxnote: plays at the next tick
-    last_effect: int = -1  # oldfx
-    dma_on: bool = False  # this voice's bit in dmaconhelp
-    dma_off_next: bool = False  # this voice's bit in dmaconhelp+2
+    next_priority: int = 0  # NextPriority
+    priority_ticks: int = -1  # PriorityTicks: the lock's ticks left
+    effect_note: Statement | None = None  # EffectNote: plays at the next tick
+    last_effect: int = -1  # LastEffect
+    dma_on: bool = False  # this voice's bit in DmaOnMask
+    dma_off_next: bool = False  # this voice's bit in DmaOnMask+2
 
 
 @dataclass
-class Fade(StateMachine):  # fadevol, fadeend, fadeadd, fadecount1/2
+class Fade(StateMachine):  # FadeVolume, FadeTarget, FadeStep, FadeCounter1/2
     level: int = FULL_VOLUME
     target: int = FULL_VOLUME
     step: int = 0  # +1, -1, or 0 off
     count: int = 0
     speed: int = 0  # visits per step
-    running: bool = False  # info_fade: a new fade waits for this one
+    running: bool = False  # FadeRunning: a new fade waits for this one
 
 
 @dataclass
-class Module:  # CHfield0: song state; CHfield2: tracks
+class Module:  # SongState: song state; TrackState: tracks
     score: Score
     voices: list[Voice]
     tracks: list[Track]
     amiga: Amiga
     effects: list[SoundEffect] = field(default_factory=list)
-    playing: bool = True  # allon
-    position: int = 0  # cstep
-    position_loops: int = 0  # tloopcount: 0 first visit, -1 done
+    playing: bool = True  # MusicOn
+    position: int = 0  # CurrentPosition
+    position_loops: int = 0  # PositionLoops: 0 first visit, -1 done
     speed: int = 0
-    count: int = 0  # scount
-    new_position: bool = False  # newstep: rerun every track this row
+    count: int = 0  # SampleCount
+    new_position: bool = False  # NewPositionFlag: rerun every track this row
     custom: bool = False  # track 7 plays a game pattern; positions skip it
     fade: Fade = field(default_factory=Fade)
     random: int = 0
-    flags: list[int] = field(default_factory=lambda: [0] * 4)  # info_flags
+    flags: list[int] = field(default_factory=lambda: [0] * 4)  # InfoFlags
 
 
 # --- Tick ---------------------------------------------------------------
@@ -555,7 +561,7 @@ POSITION_COMMANDS: dict[int, Callable[[Module, bytes], bool]] = {
     0: StopSong,
     1: LoopSong,
     2: SetSpeed,
-    3: FadeSong,  # set7freq falls through to the fade
+    3: FadeSong,  # SetMixRate falls through to the fade
     4: FadeSong,
 }
 
@@ -1488,7 +1494,7 @@ def detuned(period: int, detune: int) -> int:
 
 
 TOP_OCTAVE = (214, 202, 191, 180, 170, 160, 151, 143, 135, 127, 120, 113)
-PERIODS = (  # nottab: 64 notes; only four octaves differ
+PERIODS = (  # NoteTable: 64 notes; only four octaves differ
     *(1710, 1614, 1524, 1438, 1357, 1281, 1209, 1141, 1077, 1017, 960, 908),
     *(856, 810, 764, 720, 680, 642, 606, 571, 539, 509, 480, 454),
     *(428, 404, 381, 360, 340, 320, 303, 286, 270, 254, 240, 227),
@@ -1499,7 +1505,7 @@ PERIODS = (  # nottab: 64 notes; only four octaves differ
 
 
 def note_period(note: int) -> int:
-    """nottab. The top two entries, 120 and 113, are below paula.MIN_PERIOD."""
+    """NoteTable. The top two entries, 120 and 113, are below paula.MIN_PERIOD."""
     return PERIODS[note & NOTE_MASK]
 
 

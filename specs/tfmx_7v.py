@@ -15,12 +15,12 @@ from specs import tfmx_pro
 MIXED = range(4, 8)  # voices 4-7 write FakeChannel registers
 MIX_CHANNEL = 3  # Paula channel 3 plays the mixed buffer
 SHORT_LOOP = 32  # words: shorter loops play the silent buffer
-MIN_SLOW = -32  # v7slodo: percent, at least -32
+MIN_SLOW = -32  # SlowDown: percent, at least -32
 MAX_VOLUME = 63  # a mixed voice's volume is clamped here
-MAX_BYTES = 480 + 792  # maxbyts: one buffer
+MAX_BYTES = 480 + 792  # BufferBytes: one buffer
 SILENT_WORDS = MAX_BYTES // 2 - 32  # the silent buffer's loop
 CLIP_EDGE = 384  # ClipTable: 384 × -128, a 256-byte ramp, 384 × +127
-MIX_PERIODS = (  # v7KHztable: channel 3's period for 0..28 kHz
+MIX_PERIODS = (  # MixPeriodTable: channel 3's period for 0..28 kHz
     *(3580, 3580, 1790, 1193, 895, 716, 597, 511, 447, 398, 358, 325, 298),
     *(275, 256, 239, 224, 211, 199, 188, 179, 170, 163, 156, 149, 143, 138),
     *(133, 128),
@@ -28,40 +28,40 @@ MIX_PERIODS = (  # v7KHztable: channel 3's period for 0..28 kHz
 
 
 @dataclass
-class FakeChannel(paula.Channel):  # voice1dat: registers in RAM
+class FakeChannel(paula.Channel):  # Voice1Registers: registers in RAM
     """What voices 4-7 write instead of Paula. The instrument program code
     does not see a difference. The mixer reads these fields once per tick."""
 
     restart: bool = True  # v7wset: DMA was off; the next on restarts
     loop: bytes = b""  # v7loopv, v7loopd: taken at the next wrap
     source: bytes = b""  # the bytes being read
-    position: int = 0  # v7regstore: 16.16, negative, counts up to the end
+    position: int = 0  # MixPosition: 16.16, negative, counts up to the end
     step: int = 0  # v7freq: 16.16 bytes per mixed byte
 
     def enable(self) -> None:
-        self.dma = True  # flagtab, not DMACON
+        self.dma = True  # DmaFlags, not DMACON
 
     def disable(self) -> None:
         self.dma = False
 
 
 @dataclass
-class Mixer:  # v7field, v7flag, v7mixrate, v7slodo
+class Mixer:  # MixerState, MixerOn, MixRateIndex, SlowDown
     on: bool = False
-    rate: int = 16  # v7mixrate: kHz, an index into MIX_PERIODS
-    slow: int = 0  # v7slodo: percent added to the tick's length
+    rate: int = 16  # MixRateIndex: kHz, an index into MIX_PERIODS
+    slow: int = 0  # SlowDown: percent added to the tick's length
     bytes_per_tick: int = 0
     period: int = 0  # channel 3's period for the mix rate
     buffers: list[bytearray] = field(
         default_factory=lambda: [bytearray(MAX_BYTES), bytearray(MAX_BYTES)]
-    )  # v7newbuffer, v7oldbuffer
-    silence: bytes = bytes(MAX_BYTES)  # v7buffer3, cleared by MixOff
+    )  # NewBuffer, OldBuffer
+    silence: bytes = bytes(MAX_BYTES)  # SilentBuffer, cleared by MixOff
     volume: list[bytes] = field(default_factory=list)  # VolumeTables
     clip: bytes = b""  # ClipTable
 
 
 @dataclass
-class Module7V(tfmx_pro.Module):  # CHfield0 with the v7 fields
+class Module7V(tfmx_pro.Module):  # SongState with the v7 fields
     mixer: Mixer = field(default_factory=Mixer)
 
 

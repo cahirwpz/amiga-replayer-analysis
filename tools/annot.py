@@ -10,6 +10,7 @@ in ext/, which stays read-only:
   sha1: 0123...          # `sha1sum` of the source; a pin update must fix it
   labels:                # original label, or source line: new name
     bpmusic: PlayTick
+    PlayNote: PlayNote   # a readable label keeps its name
     881: ModWrite        # a new label before line 881
   comments:              # source line: comment appended to that line
     185: vibrato step, shared by all voices
@@ -19,6 +20,10 @@ in ext/, which stays read-only:
     - ext/uade/amigasrc/players/uade/soundmon/format.txt
   types:                 # spec class: words in the source or refs
     Voice: [trk_prevper]
+
+A key may be any identifier of the code, also one used but not defined,
+e.g. an offset symbol. Specs name labels only by their new names; see
+tools/specs.py.
 
 `types` anchor the CamelCase classes of specs/<player>.py; see
 tools/specs.py. Each word must occur as a whole word. Citations may name
@@ -99,11 +104,11 @@ def check(spec, lines, sha1):
                 yield f"labels: line {old} is not in the source"
         elif not isinstance(old, str) or not isinstance(new, str):
             yield f"labels: {old}: {new} is not a pair of strings; quote it"
-        elif old not in known:
-            yield f"label {old} is not defined in the source"
+        elif old not in known and old not in used:
+            yield f"label {old} is not in the source"
         if not re.fullmatch(IDENT, str(new)):
             yield f"{new} is not an identifier"
-        elif new in used:
+        elif new in used and new != old:
             yield f"{new} already occurs in the source"
     for new in {n for n in labels.values() if list(labels.values()).count(n) > 1}:
         yield f"{new} is the new name of several labels"

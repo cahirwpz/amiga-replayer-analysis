@@ -72,10 +72,10 @@ glossary and each label against its code.
   read.
 - Record provenance in `data/players.yaml`: `original`, `disassembly` or `ira`.
   A port only shows where to look.
-- Our labels: `data/annot/<player>.yaml:<Label>` or
-  `data/disasm/<player>.cnf:<Label>`. Add missing ones.
-- Cards cite, and specs name, readable CamelCase labels. Rename raw labels
-  first. Spec classes go in `types:`.
+- Our labels: `data/annot/<player>.yaml` or `data/disasm/<player>.cnf`. Add
+  missing ones.
+- Cards and specs use only new names, comments too. `NoteOn: NoteOn` keeps a
+  name. Classes go in `types:`.
 
 ## Listings
 

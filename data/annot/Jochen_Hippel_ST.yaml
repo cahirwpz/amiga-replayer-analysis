@@ -59,6 +59,59 @@ labels:
   lbC000CF2: ToneFlags
   lbC000D1C: OctaveVibrato
   lbC000D92: PeriodSlide
+  # new names that specs cite
+  Bit8Table: Bit8Table
+  ChangeVolume: ChangeVolume
+  Compress: Compress
+  Init: Init
+  InitPlay: InitPlay
+  InitSamp: InitSamp
+  InitSound: InitSound
+  Interrupt: Interrupt
+  NotePlay: NotePlay
+  Play: Play
+  InitPlayer: InitPlayer
+  Period: Period
+  RepStart: RepStart
+  SetPer: SetPer
+  SetTwo: SetTwo
+  SetVol: SetVol
+  SID1: SID1
+  SID2: SID2
+  SID3: SID3
+  SIDword: SIDword
+  SongEnd: SongEnd
+  TypeAdr: TypeAdr
+  TypePeriod: TypePeriod
+  TypePlay: TypePlay
+  TypeSID: TypeSID
+  lbB000F6F: ScaledFlag
+  lbL0004BE: DigiStart
+  lbL000616: EmuStateA
+  lbL000622: EmuStateB
+  lbL00062E: EmuStateC
+  lbL000E64: MixerByte
+  lbL000E72: VoiceA
+  lbL000EA6: VoiceB
+  lbL000EDA: VoiceC
+  lbL000F46: PatternTable
+  lbL000F4A: PitchListTable
+  lbL000F4E: InstrumentTable
+  lbL000F52: PositionTable
+  lbL000F5A: SubsongTable
+  lbL000F66: ModuleBase
+  lbL000F6A: SampleTable
+  lbL001470: EmptyWord
+  lbW0004C4: DigiPeriod
+  lbW0004C6: DigiVolume
+  lbW0004C8: DigiMode
+  lbW000E1A: DefaultList
+  lbW000E6C: TickCounter
+  lbW000E6E: TicksPerRow
+  lbW000E70: StopFlag
+  lbW000F44: SongLength
+  lbW000F70: PeriodTable
+
 comments:
   1740: "position entry, per voice: pattern, transpose, instrument transpose, flags"
   1746: "$Fx: volume offset for this voice"

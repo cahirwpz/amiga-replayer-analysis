@@ -57,6 +57,46 @@ labels:
   syw_f5: VibratoSpeed
   syw_f6: PitchReset
   syw_fe: WaveJump
+  # new names that specs cite
+  AdvSngPtr: AdvSngPtr
+  ChannelFX: ChannelFX
+  DoFX: DoFX
+  DoPreFX: DoPreFX
+  HoldAndFade: HoldAndFade
+  UpdatePerVol: UpdatePerVol
+  bpmdiv: BpmDivisor
+  timerdiv: TimerDivisor
+  sinetable: SineTable
+  sttempo: SoundTrackerTempos
+  rptline: LoopRow
+  rptcounter: LoopCount
+  dmaonmsk: DmaOnMask
+  nextblockline: JumpRow
+  fxplineblk: FxPattern
+  mmd_counter: TickCounter
+  mmd_pblock: PlayPattern
+  mmd_pline: PlayRow
+  mmd_psecnum: PlaySection
+  mmd_pseqnum: PlayPosition
+  _periodtable: PeriodTables
+  plr_loop0: ReadRowLoop
+  _Wait1line: WaitOneLine
+  per0: Periods0
+  per1: Periods1
+  per2: Periods2
+  per3: Periods3
+  per4: Periods4
+  per5: Periods5
+  per6: Periods6
+  per7: Periods7
+  per_1: PeriodsMinus1
+  per_2: PeriodsMinus2
+  per_3: PeriodsMinus3
+  per_4: PeriodsMinus4
+  per_5: PeriodsMinus5
+  per_6: PeriodsMinus6
+  per_7: PeriodsMinus7
+  per_8: PeriodsMinus8
 
 # Classes in specs/med.py: each word occurs in the source or in refs.
 refs:

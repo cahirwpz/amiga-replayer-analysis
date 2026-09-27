@@ -28,6 +28,21 @@ labels:
   init7voice: BuildMixTables
   v7contab: ClipTable
   v7voltab: VolumeTables
+  # new names that specs cite
+  CHfield0: SongState
+  DMACON: DMACON
+  flagtab: DmaFlags
+  maxbyts: BufferBytes
+  v7buffer3: SilentBuffer
+  v7field: MixerState
+  v7flag: MixerOn
+  v7KHztable: MixPeriodTable
+  v7mixrate: MixRateIndex
+  v7newbuffer: NewBuffer
+  v7oldbuffer: OldBuffer
+  v7regstore: MixPosition
+  v7slodo: SlowDown
+  voice1dat: Voice1Registers
 
 comments:
   1266: the whole replay runs from channel 3's audio interrupt

@@ -17,6 +17,26 @@ labels:
   1320: CountLoopPass
   lbC005A80: LoopsDone
   lbB0080AC: SfxPlaying
+  # new names that specs cite
+  Audio0: Audio0
+  Empty: Empty
+  Play: Play
+  SongEnd: SongEnd
+  WT: PlayerData
+  lbB008083: RowCounter
+  lbB0080B0: SfxRequest
+  lbL008068: ModuleBase
+  lbL008072: PositionNumber
+  lbL008076: RowsPlayed
+  lbL00807A: FirstPosition
+  lbL00807E: RepeatsLeft
+  lbL008088: TempoBase
+  lbL00809C: LoopStart
+  lbW008094: LoopLength
+  lbL008314: InstrumentTable
+  lbL008318: PositionTable
+  lbL008330: RowOffset
+  lbW00808C: PassesLeft
 
 # Classes in specs/digital_sonix_chrome.py: each word occurs in the source.
 types:

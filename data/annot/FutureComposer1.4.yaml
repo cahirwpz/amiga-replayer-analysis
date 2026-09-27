@@ -36,6 +36,18 @@ labels:
   vibrator: VibratoTick
   pitchbend: PitchBend
   addporta: ClampPeriod
+  # new names that specs cite
+  audtemp: DmaStartMask
+  spdtemp: SpeedEvents
+  respcnt: TickCounter
+  repspd: TicksPerRow
+  onoff: MusicOn
+  FRQpoint: PitchListTable
+  PATpoint: PatternTable
+  SEQpoint: PositionTable
+  SOUNDINFO: SampleInfo
+  V1data: Voice1Data
+  VOLpoint: InstrumentTable
 
 comments:
   333: "clears the DMA bits that rows set: only $e2 and $e9 turn DMA on"

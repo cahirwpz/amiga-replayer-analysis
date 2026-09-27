@@ -4,7 +4,7 @@ emulator. Jochen Hippel ST_v4.asm, Wanted Team's adaptation (V1.3, 2008).
 Card: players/Jochen_Hippel_ST.md. Level 2: the control flow runs.
 Each CamelCase function is a label in data/annot/Jochen_Hippel_ST.yaml;
 each CamelCase class is in its `types:`. Comments name the voice fields
-by their offsets in lbL000E72.
+by their offsets in VoiceA.
 
 The ST replay drives three voices. It writes YM2149 registers into a copy
 in RAM. After it, EmuTick turns the three chip channels into Paula
@@ -60,7 +60,7 @@ NOISE_PERIOD, MIXER = 6, 7
 LEVEL = (8, 9, 10)
 ENVELOPE_MODE = 0x10  # a volume register bit
 
-PERIODS = (  # lbW000F70: YM2149 tone periods, 8 octaves; 32 zeros follow
+PERIODS = (  # PeriodTable: YM2149 tone periods, 8 octaves; 32 zeros follow
     *(3822, 3607, 3405, 3214, 3033, 2863, 2702, 2551, 2407, 2272, 2145, 2024),
     *(1911, 1803, 1702, 1607, 1516, 1431, 1351, 1275, 1203, 1136, 1072, 1012),
     *(955, 901, 851, 803, 758, 715, 675, 637, 601, 568, 536, 506),
@@ -91,9 +91,9 @@ DIGI_VOLUME = 0x40
 DIGI_LOOP = 0x10  # an end word of $10: a 16-byte looped wave
 DIGI_BASE_NOTE = 72  # TypePeriod: this note plays at Period
 
-DEFAULT_LIST = bytes([1, 0, 0, 0, 0, 0, 0, HOLD])  # lbW000E1A: both lists at init
+DEFAULT_LIST = bytes([1, 0, 0, 0, 0, 0, 0, HOLD])  # DefaultList: both lists at init
 SQUARE = paula.Sample(bytes([0xB2, 0xB2, 0x4D, 0x4D]))  # -78, -78, 77, 77
-EMPTY = paula.Sample(bytes(2))  # lbL001470
+EMPTY = paula.Sample(bytes(2))  # EmptyWord
 
 Then = Callable[[], None]
 
@@ -102,14 +102,14 @@ Then = Callable[[], None]
 
 
 @dataclass
-class Subsong:  # 6 bytes at lbL000F5A
+class Subsong:  # 6 bytes at SubsongTable
     first: int  # position
     last: int
     speed: int  # ticks per row; InitSound sets 0 to 4
 
 
 @dataclass
-class Instrument:  # at lbL000F4E: 5 header bytes, then the volume list
+class Instrument:  # at InstrumentTable: 5 header bytes, then the volume list
     speed: int  # +0: ticks per volume list visit
     pitch_list: int  # +1
     vibrato_speed: int  # +2
@@ -119,21 +119,21 @@ class Instrument:  # at lbL000F4E: 5 header bytes, then the volume list
 
 
 @dataclass
-class DigiSample:  # 8 bytes at lbL000F6A
+class DigiSample:  # 8 bytes at SampleTable
     start: int  # +0: offset in the sample data
     end: int  # +2: 0: the next entry's start; $10: a 16-byte loop
 
 
 @dataclass
-class Score:  # lbL000F66: a 'COSO' module after InitPlay
-    positions: bytes  # lbL000F52: rows of POSITION_SIZE
-    patterns: list[bytes]  # lbL000F46
-    pitch_lists: list[bytes]  # lbL000F4A
-    instruments: list[Instrument]  # lbL000F4E
-    subsongs: list[Subsong]  # lbL000F5A
+class Score:  # ModuleBase: a 'COSO' module after InitPlay
+    positions: bytes  # PositionTable: rows of POSITION_SIZE
+    patterns: list[bytes]  # PatternTable
+    pitch_lists: list[bytes]  # PitchListTable
+    instruments: list[Instrument]  # InstrumentTable
+    subsongs: list[Subsong]  # SubsongTable
     samples: list[DigiSample]
     sample_data: bytes
-    scaled: bool  # lbB000F6F: 'MMME' at +$20; see ScaledVibrato
+    scaled: bool  # ScaledFlag: 'MMME' at +$20; see ScaledVibrato
     all_opcodes: bool  # TypePlay: $e0-$ef are all opcodes
     digi_period: int  # Period: from the ST replay's timer data, or $248
     digi_notes: bool  # TypePeriod: StartDigi reads a note byte
@@ -164,7 +164,7 @@ class Vibrato(StateMachine):  # $27 speed, $28 depth, $29 pos, $2A delay, $2B st
 
 
 @dataclass
-class Voice:  # lbL000E72, lbL000EA6, lbL000EDA: $38 bytes each
+class Voice:  # VoiceA, VoiceB, VoiceC: $38 bytes each
     number: int
     column: int  # $2E: which 4 bytes of a position this voice reads
     position: int = 0  # $14 / 12: the next position to read
@@ -200,19 +200,19 @@ class ChipRegisters:  # RegisterShadow: registers 0-10 of the YM2149
 
 
 @dataclass
-class EmuState:  # lbL000616, lbL000622, lbL00062E: 12 bytes each
+class EmuState:  # EmuStateA, EmuStateB, EmuStateC: 12 bytes each
     volume: int = 0  # +0
     period: int = 0  # +2
     playing: int = 0  # +10: 0 silence, 1 tone, 2 noise
 
 
 @dataclass
-class DigiState:  # lbW0004C8 and its neighbours
+class DigiState:  # DigiMode and its neighbours
     state: int = 0  # 0 off, 1 start, 2 playing
-    sample: paula.Sample = field(default_factory=lambda: EMPTY)  # lbL0004BE
+    sample: paula.Sample = field(default_factory=lambda: EMPTY)  # DigiStart
     loop: paula.Sample = field(default_factory=lambda: EMPTY)  # RepStart
-    period: int = 0x240  # lbW0004C4
-    volume: int = 0x40  # lbW0004C6; negative: channel A's volume
+    period: int = 0x240  # DigiPeriod
+    volume: int = 0x40  # DigiVolume; negative: channel A's volume
 
 
 @dataclass
@@ -221,14 +221,14 @@ class Module:
     amiga: Amiga
     voices: list[Voice] = field(default_factory=list)
     registers: ChipRegisters = field(default_factory=ChipRegisters)
-    mixer: int = 0  # lbL000E64: bit n clear enables tone n, n+3 noise n
-    noise: int = 0  # lbL000E64 + 1
-    counter: int = 1  # lbW000E6C: ticks to the next row
-    speed: int = DEFAULT_SPEED  # lbW000E6E
-    stop: bool = False  # lbW000E70
-    silenced: bool = False  # lbW000E70 + 1
+    mixer: int = 0  # MixerByte: bit n clear enables tone n, n+3 noise n
+    noise: int = 0  # MixerByte + 1
+    counter: int = 1  # TickCounter: ticks to the next row
+    speed: int = DEFAULT_SPEED  # TicksPerRow
+    stop: bool = False  # StopFlag
+    silenced: bool = False  # StopFlag + 1
     first: int = 0  # the subsong's first position
-    song_length: int = 0  # lbW000F44: positions after the first
+    song_length: int = 0  # SongLength: positions after the first
     emu: list[EmuState] = field(default_factory=list)
     digi: DigiState = field(default_factory=DigiState)
     noise_sample: paula.Sample = field(default_factory=lambda: EMPTY)

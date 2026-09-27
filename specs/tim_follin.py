@@ -3,7 +3,7 @@
 Card: players/TimFollin.md. Level 2: the control flow runs; leaf math is a
 stub. Each CamelCase function is a label in data/annot/TimFollin.yaml;
 each CamelCase class is in its `types:`. Comments name the replay's
-fields as offsets from tmp+$80: bytes per voice, then words and longs.
+fields as offsets from PlayerState+$80: bytes per voice, then words and longs.
 
 There is no instrument program. Each voice's track sets parameters of
 small state machines; they stay set until the track changes them.
@@ -89,7 +89,7 @@ class Pulse(StateMachine):  # $5C index, $58 narrowing, -$18, -$1C
 
 
 @dataclass
-class Voice(Program):  # the fields at tmp+$80, per voice
+class Voice(Program):  # the fields at PlayerState+$80, per voice
     channel: paula.Channel = field(kw_only=True)
     track: bytes = b""  # the module's bytes; pos: (A6,D4)
     active: bool = False  # -$10
@@ -116,14 +116,14 @@ class Voice(Program):  # the fields at tmp+$80, per voice
 
 
 @dataclass
-class Module:  # tmp, and L_12E6, L_12EA, L_12ED
+class Module:  # PlayerState, and SubsongWord, SubsongByte, FadeLevel
     data: bytes  # the module; tracks, calls and jumps address it
-    origin: int  # the address its pointers were built for; dx undoes it
+    origin: int  # the address its pointers were built for; Relocation undoes it
     subsongs: list[Subsong]
     voices: list[Voice]
     amiga: Amiga
     subsong: int = 0
-    fade: int = 0  # L_12ED: nothing in this player sets it
+    fade: int = 0  # FadeLevel: nothing in this player sets it
 
 
 # --- Tick ---------------------------------------------------------------
@@ -145,11 +145,13 @@ def new_module(
 
 
 def StartSubsong(module: Module, number: int) -> None:
-    """_init. Subsong 14 starts with every voice inactive: it plays
+    """Subsong 14 starts with every voice inactive: it plays
     nothing. With 3 voices, voice 3 stays untouched."""
     module.subsong = number & 0x0F
     subsong = module.subsongs[module.subsong]
-    module.voices = [Voice(channel=v.channel) for v in module.voices]  # clears tmp
+    module.voices = [
+        Voice(channel=v.channel) for v in module.voices
+    ]  # clears PlayerState
     for n, voice in enumerate(module.voices[: subsong.voices]):
         voice.track, voice.pos = module.data, subsong.tracks[n]
         voice.active = module.subsong != SILENT_SUBSONG

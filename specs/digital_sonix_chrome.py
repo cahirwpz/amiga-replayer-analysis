@@ -25,7 +25,7 @@ COLUMNS = 4  # one column of row bytes per voice
 HEADER = 12  # before the positions: tempo, counts, sizes
 POSITION_SIZE = 6
 INSTRUMENT_SIZE = 18
-TEMPO_BASE = 1500  # lbL008088: speed = 1500 / tempo, rounded
+TEMPO_BASE = 1500  # TempoBase: speed = 1500 / tempo, rounded
 FLUSH_PERIOD = 1  # the extra word after DMA off lasts 2 CCK
 POLL_CCK = 20  # one WaitAudioIrq loop: about 40 68000 cycles (estimate)
 SILENCE = paula.Sample(bytes(4))  # Empty: 2 words, each handler's is_Data
@@ -35,14 +35,14 @@ SILENCE = paula.Sample(bytes(4))  # Empty: 2 words, each handler's is_Data
 
 
 @dataclass
-class Position:  # 6 bytes at lbL008318
+class Position:  # 6 bytes at PositionTable
     pattern: int  # +0: its first row's offset in each column
     repeats: int  # +4: plays of the pattern; 0 ends the subsong
     rows: int  # +5
 
 
 @dataclass
-class Instrument:  # 18 bytes at lbL008314
+class Instrument:  # 18 bytes at InstrumentTable
     period: int  # +0: every note of this instrument plays at this period
     length: int  # +2: bytes
     loop_start: int  # +6: bytes into the sample
@@ -52,7 +52,7 @@ class Instrument:  # 18 bytes at lbL008314
 
 
 @dataclass
-class Score:  # lbL008068: the module after LoadModule
+class Score:  # ModuleBase: the module after LoadModule
     speed: int  # ticks per row, from the header's tempo
     positions: list[Position]
     columns: bytes  # four columns of one byte per row
@@ -66,23 +66,23 @@ class Score:  # lbL008068: the module after LoadModule
 @dataclass
 class Voice:
     channel: paula.Channel
-    passes: int = 0  # lbW00808C: audio interrupts left before silence
-    loop: paula.Sample | None = None  # lbL00809C, lbW008094
+    passes: int = 0  # PassesLeft: audio interrupts left before silence
+    loop: paula.Sample | None = None  # LoopStart, LoopLength
     effect: int = FREE  # SfxPlaying: the playing effect's number
-    request: int = FREE  # lbB0080B0: written by the game
+    request: int = FREE  # SfxRequest: written by the game
 
 
 @dataclass
-class Module:  # WT
+class Module:  # PlayerData
     score: Score
     amiga: Amiga
     voices: list[Voice] = field(default_factory=list)
-    first: int = 0  # lbL00807A: the subsong's first position
-    position: int = 0  # lbL008072
-    row: int = 0  # lbL008330: the next row's offset in each column
-    rows_played: int = 0  # lbL008076
-    repeats_left: int = 0  # lbL00807E
-    counter: int = 1  # lbB008083: ticks to the next row
+    first: int = 0  # FirstPosition: the subsong's first position
+    position: int = 0  # PositionNumber
+    row: int = 0  # RowOffset: the next row's offset in each column
+    rows_played: int = 0  # RowsPlayed
+    repeats_left: int = 0  # RepeatsLeft
+    counter: int = 1  # RowCounter: ticks to the next row
 
 
 Then = Callable[[], None]
@@ -97,7 +97,7 @@ def new_module(score: Score, amiga: Amiga) -> Module:
 
 
 def LoadModule(data: bytes) -> Score:
-    """InstallSamples. Header: tempo word, instrument count, position
+    """Header: tempo word, instrument count, position
     count, a sample size long, bytes per column. Then positions, the four
     columns, instruments and the sample data. Speed = 1500 / tempo,
     rounded: the tempo is fixed for the whole module."""
@@ -134,7 +134,7 @@ def LoadModule(data: bytes) -> Score:
 
 
 def StartSubsong(module: Module, number: int) -> None:
-    """Init. Subsongs follow each other in the positions; a position with
+    """Subsongs follow each other in the positions; a position with
     0 repeats ends each one. No voice plays an effect."""
     positions = module.score.positions
     first = 0
@@ -252,7 +252,7 @@ def SfxClaimVoice(module: Module, then: Then) -> None:
 
 
 def StartNote(module: Module, voice: Voice, number: int, then: Then) -> None:
-    """lbC005936. $ff: the voice plays on. Else DMA off at period 1, with
+    """$ff: the voice plays on. Else DMA off at period 1, with
     INTREQ clear and a write to AUDxDAT. The channel ends its word, plays
     one more at period 1 and requests an interrupt, which it leaves
     pending, so it goes idle. WaitAudioIrq waits for that request, so

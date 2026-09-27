@@ -3,7 +3,7 @@
 Card: players/FutureComposer1.4.md. Level 2: the control flow runs. Each
 CamelCase function is a label in data/annot/FutureComposer1.4.yaml; each
 CamelCase class is in its `types:`. Comments name the voice fields by
-their offsets in V1data.
+their offsets in Voice1Data.
 
 Each instrument runs two command lists once per tick: the pitch list
 (waveform, transpose, bends, vibrato) and the volume list. A pattern note
@@ -59,7 +59,7 @@ PERIODS = (  # 128 entries: two 4-octave runs with clamped and low gaps
 
 
 @dataclass
-class Sound:  # SOUNDINFO: 10 samples, then 80 waveforms
+class Sound:  # SampleInfo: 10 samples, then 80 waveforms
     data: bytes  # from the start; a sample pack starts with "SSMP"
     length: int  # words
     repeat_start: int  # bytes
@@ -67,7 +67,7 @@ class Sound:  # SOUNDINFO: 10 samples, then 80 waveforms
 
 
 @dataclass
-class Position:  # 13 bytes at SEQpoint
+class Position:  # 13 bytes at PositionTable
     patterns: list[int]  # per voice
     transposes: list[int]  # per voice: added to notes
     instrument_transposes: list[int]  # per voice: added to instrument numbers
@@ -76,11 +76,11 @@ class Position:  # 13 bytes at SEQpoint
 
 @dataclass
 class Score:  # the module after InitMusic
-    sequence: bytes  # SEQpoint: the positions' raw bytes
+    sequence: bytes  # PositionTable: the positions' raw bytes
     positions: list[Position]
-    patterns: list[bytes]  # PATpoint: 64 bytes each
-    pitch_lists: list[bytes]  # FRQpoint: 64 bytes each
-    instruments: list[bytes]  # VOLpoint: 64 bytes each
+    patterns: list[bytes]  # PatternTable: 64 bytes each
+    pitch_lists: list[bytes]  # PitchListTable: 64 bytes each
+    instruments: list[bytes]  # InstrumentTable: 64 bytes each
     sounds: list[Sound]
 
 
@@ -115,7 +115,7 @@ class Vibrato(StateMachine):  # 27 speed, 28 depth, 29 pos, 30 delay, 46 state
 
 
 @dataclass
-class Voice:  # V1data: 74 bytes per voice
+class Voice:  # Voice1Data: 74 bytes per voice
     channel: paula.Channel
     number: int
     position: int = 1  # 6: the next position; the first is read at init
@@ -140,15 +140,15 @@ class Voice:  # V1data: 74 bytes per voice
 
 
 @dataclass
-class Module:  # audtemp, spdtemp, respcnt, repspd, onoff
+class Module:  # DmaStartMask, SpeedEvents, TickCounter, TicksPerRow, MusicOn
     score: Score
     amiga: Amiga
     voices: list[Voice] = field(default_factory=list)
-    dma_on: set[int] = field(default_factory=set)  # audtemp: voices to start
-    speed_events: int = 0  # spdtemp: pattern ends since the last speed read
-    counter: int = 1  # respcnt
-    speed: int = DEFAULT_SPEED  # repspd
-    playing: bool = False  # onoff
+    dma_on: set[int] = field(default_factory=set)  # DmaStartMask: voices to start
+    speed_events: int = 0  # SpeedEvents: pattern ends since the last speed read
+    counter: int = 1  # TickCounter
+    speed: int = DEFAULT_SPEED  # TicksPerRow
+    playing: bool = False  # MusicOn
 
 
 def signed(byte: int) -> int:
@@ -164,7 +164,7 @@ def new_module(score: Score, amiga: Amiga) -> Module:
 
 
 def InitMusic(module: Module) -> None:
-    """INIT_MUSIC. Each voice reads position 0. The speed comes from
+    """Each voice reads position 0. The speed comes from
     position 0, or 3. Samples and waveforms are set up by the loader;
     see LoadModule."""
     first = module.score.positions[0]
@@ -260,7 +260,7 @@ def Play(module: Module) -> None:
 
 
 def WriteLoops(voice: Voice) -> None:
-    """chan1-4. A tick after a wave starts, its loop goes to AUDxLC and
+    """For each channel: a tick after a wave starts, its loop goes to AUDxLC and
     AUDxLEN. No busy-wait: a tick is far longer than a DMA start."""
     before = voice.loop_countdown
     if not before:
@@ -279,7 +279,7 @@ def WriteLoops(voice: Voice) -> None:
 
 
 def NewRow(module: Module, voice: Voice) -> None:
-    """new_note. After 32 rows, or at an $49 note, the voice reads its
+    """After 32 rows, or at an $49 note, the voice reads its
     next position; each voice steps on its own."""
     pattern = module.score.patterns[voice.pattern]
     if voice.row == ROWS * ROW_SIZE or pattern[voice.row] == PATTERN_END:
@@ -288,7 +288,7 @@ def NewRow(module: Module, voice: Voice) -> None:
 
 
 def NextPosition(module: Module, voice: Voice) -> None:
-    """patend. After the last position, the song restarts at position 0."""
+    """After the last position, the song restarts at position 0."""
     voice.row = 0
     positions = module.score.positions
     if voice.position == len(positions):
@@ -302,7 +302,7 @@ def NextPosition(module: Module, voice: Voice) -> None:
 
 
 def ReadSpeed(module: Module, voice: Voice) -> None:
-    """notend. A counter over all voices' pattern ends: the first read is
+    """A counter over all voices' pattern ends: the first read is
     the fifth, then every fourth. With equal pattern lengths, voice 1
     reads each position's speed, except position 1's. Another voice
     reads the byte 3 × its number further on: in the next position."""
@@ -318,7 +318,7 @@ def ReadSpeed(module: Module, voice: Voice) -> None:
 
 
 def ReadNote(module: Module, voice: Voice) -> None:
-    """samepat. A note clears the slide. A row with info bit 7 takes its
+    """A note clears the slide. A row with info bit 7 takes its
     portamento speed from the next row's info byte; bit 6 alone, on an
     empty row, turns portamento off."""
     pattern = module.score.patterns[voice.pattern]
@@ -344,7 +344,7 @@ def SlideSpeed(module: Module, voice: Voice) -> int:
 
 
 def StartInstrument(module: Module, voice: Voice, note: int, info: int) -> None:
-    """noport. DMA off. The instrument: volume speed, pitch list number,
+    """DMA off. The instrument: volume speed, pitch list number,
     vibrato speed, depth and delay, then the volume list. Both lists and
     the vibrato restart; bends, the last transpose step, slide and
     portamento carry on."""
@@ -370,14 +370,14 @@ def AddInstrTranspose(voice: Voice, info: int) -> int:
 
 
 def VoiceTick(module: Module, voice: Voice) -> int:
-    """effects. The pitch list, the volume list, then the period."""
+    """The pitch list, the volume list, then the period."""
     PitchListTick(module, voice)
     VolumeListTick(voice)
     return CalcPeriod(voice)
 
 
 def PitchListTick(module: Module, voice: Voice) -> None:
-    """testsustain. A wait skips the list. A step is at most one command,
+    """A wait skips the list. A step is at most one command,
     then one transpose byte. $e1 ends the list; $e0 loops it once."""
     pitch = voice.pitch
     if pitch.wait:
@@ -387,7 +387,7 @@ def PitchListTick(module: Module, voice: Voice) -> None:
 
 
 def ReadPitchList(module: Module, voice: Voice) -> None:
-    """testeffects. After an $e0 loop, the new byte is not checked for
+    """After an $e0 loop, the new byte is not checked for
     $e0 or $e1 again."""
     pitch = voice.pitch
     byte = pitch.steps[pitch.pos]
@@ -434,7 +434,7 @@ def start_sound(
 
 
 def SetWave(module: Module, voice: Voice, number: int) -> None:
-    """testnewsound, $e2. DMA off; DMA on at the tick's end. The volume
+    """$e2. DMA off; DMA on at the tick's end. The volume
     list restarts."""
     voice.channel.disable()
     module.dma_on.add(voice.number)
@@ -451,7 +451,7 @@ def RestartVolList(voice: Voice) -> None:
 
 
 def ChangeWave(module: Module, voice: Voice, number: int) -> None:
-    """testE4, $e4. DMA stays on: the new wave starts at the next loop
+    """$e4. DMA stays on: the new wave starts at the next loop
     end. The volume list runs on."""
     sound = module.score.sounds[number]
     start_sound(
@@ -461,7 +461,7 @@ def ChangeWave(module: Module, voice: Voice, number: int) -> None:
 
 
 def SampleFromPack(module: Module, voice: Voice, number: int, entry: int) -> None:
-    """testE9, $e9. A sample that starts with "SSMP" holds up to 20
+    """$e9. A sample that starts with "SSMP" holds up to 20
     samples. An entry: data offset, length, repeat start, repeat length.
     DMA off and on as $e2; the volume list restarts. Without the magic,
     DMA is still switched."""
@@ -480,13 +480,13 @@ def SampleFromPack(module: Module, voice: Voice, number: int, entry: int) -> Non
 
 
 def PitchListJump(module: Module, voice: Voice, number: int) -> None:
-    """testpatjmp, $e7. Another pitch list, from its start, at once."""
+    """$e7. Another pitch list, from its start, at once."""
     voice.pitch.steps, voice.pitch.pos = module.score.pitch_lists[number], 0
     ReadPitchList(module, voice)
 
 
 def PitchWait(module: Module, voice: Voice, ticks: int) -> None:
-    """testnewsustain, $e8. The list waits; this tick counts. A wait of 0
+    """$e8. The list waits; this tick counts. A wait of 0
     reads on at once."""
     voice.pitch.wait = ticks
     voice.pitch.pos += 2
@@ -497,7 +497,7 @@ def PitchWait(module: Module, voice: Voice, ticks: int) -> None:
 
 
 def VolumeListTick(voice: Voice) -> None:
-    """VOLUfx. A wait or a running volume bend skips the list. Else it
+    """A wait or a running volume bend skips the list. Else it
     steps every `speed` ticks: $ea bends, $e8 waits, $e0 loops, $e1
     ends; any other byte is the volume."""
     vol = voice.volume_list
@@ -515,7 +515,7 @@ def VolumeListTick(voice: Voice) -> None:
 
 
 def ReadVolume(voice: Voice) -> None:
-    """volu_cmd. $e0's argument counts from the instrument's start, so 5
+    """$e0's argument counts from the instrument's start, so 5
     is subtracted."""
     vol = voice.volume_list
     while True:
@@ -541,13 +541,13 @@ def ReadVolume(voice: Voice) -> None:
 
 
 def VolumeLoop(voice: Voice) -> None:
-    """testVOLloop, $e0."""
+    """$e0."""
     vol = voice.volume_list
     vol.pos = ((vol.steps[vol.pos + 1] & 0x3F) - VOLUME_HEADER) & 0xFFFF
 
 
 def VolumeBend(voice: Voice) -> None:
-    """do_VOLbend. Every second tick, the volume moves by a signed step.
+    """Every second tick, the volume moves by a signed step.
     Past 127 it wraps negative: the volume and the bend drop to 0."""
     bend = voice.volume_bend
     bend.flip = not bend.flip
@@ -563,7 +563,7 @@ def VolumeBend(voice: Voice) -> None:
 
 
 def CalcPeriod(voice: Voice) -> int:
-    """calcperiod. Note + position transpose + pitch list transpose, or a
+    """Note + position transpose + pitch list transpose, or a
     fixed note; then vibrato, portamento and pitch bend."""
     index = LockedNote(voice)
     period = PERIODS[index] + VibratoTick(voice, index)
@@ -573,7 +573,7 @@ def CalcPeriod(voice: Voice) -> int:
 
 
 def LockedNote(voice: Voice) -> int:
-    """lockednote. A pitch list byte with bit 7 ignores both transposes
+    """A pitch list byte with bit 7 ignores both transposes
     and the note."""
     step = voice.pitch.transpose
     if step & LOCKED:
@@ -582,7 +582,7 @@ def LockedNote(voice: Voice) -> int:
 
 
 def VibratoTick(voice: Voice, index: int) -> int:
-    """vibrator. After the delay, a triangle between 0 and 2 × depth,
+    """After the delay, a triangle between 0 and 2 × depth,
     `speed` per tick, starting at depth and falling. The offset doubles
     for each octave below index 48, so its width in semitones stays
     about the same. State bit 7 would skip every second update; nothing
@@ -624,7 +624,7 @@ def DoSlide(voice: Voice) -> None:
 
 
 def PitchBend(voice: Voice) -> None:
-    """pitchbend. Every second tick, while time lasts: the slide moves by
+    """Every second tick, while time lasts: the slide moves by
     the signed step. Positive steps raise the pitch."""
     bend = voice.pitch_bend
     bend.flip = not bend.flip
@@ -635,7 +635,7 @@ def PitchBend(voice: Voice) -> None:
 
 
 def ClampPeriod(period: int) -> int:
-    """addporta. The period stays within 113..3424. The compare is
+    """The period stays within 113..3424. The compare is
     unsigned, so a negative sum gives 3424."""
     period &= 0xFFFF
     if period < HIGHEST:

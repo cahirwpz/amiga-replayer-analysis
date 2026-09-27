@@ -124,9 +124,9 @@ class Annot(unittest.TestCase):
         for text in (
             "unknown field `colour`",
             "sha1 is 0000",
-            "label nope is not defined",
+            "label nope is not in the source",
             "NextNote is the new name of several labels",
-            "label null is not defined",
+            "label null is not in the source",
             "rts already occurs",
             "line 99 is not in the source",
             "refs: tests/fixtures/annot/none.txt does not exist",
@@ -245,6 +245,18 @@ class Specs(unittest.TestCase):
             found = list(self.specs.check_names(spec, "MED"))
         self.assertEqual(
             [(2, "label"), (5, "type")], [(n, rule) for n, rule, _ in found]
+        )
+
+    def test_reports_old_labels_in_prose(self):
+        code = '"""Reads mmd_pline; see PlayRow."""\n'
+        code += "row = 0  # a loop over _Wait1line\n"
+        with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
+            spec = Path(tmp) / "med.py"
+            spec.write_text(code, encoding="utf-8")
+            found = list(self.specs.check_prose(spec, "MED"))
+        self.assertEqual(
+            [(1, "mmd_pline"), (2, "_Wait1line")],
+            [(n, detail.split()[0]) for n, _, detail in found],
         )
 
     def test_reports_type_errors_and_unowned_specs(self):

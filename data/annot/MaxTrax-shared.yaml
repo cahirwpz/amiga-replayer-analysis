@@ -16,6 +16,11 @@ labels:
   calc_incrvol: IncrVolume
   stop_audio: StopAudio
   516: EnvelopeStep
+  # new names that specs cite
+  alogtable: alogtable
+  CalcVolume: CalcVolume
+  DoOneVoice: DoOneVoice
+  IntAlg: IntAlg
 
 comments:
   413: too low for this sample? take the next one, an octave lower

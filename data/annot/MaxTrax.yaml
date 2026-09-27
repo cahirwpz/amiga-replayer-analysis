@@ -28,6 +28,32 @@ labels:
   2153: ExtraNote
   2212: ExtraSound
   2414: ExtraStop
+  # new names that specs cite
+  _channel: _channel
+  _globaldata: _globaldata
+  _patch: _patch
+  _voice: _voice
+  _xchannel: _xchannel
+  InitMusicTagList: InitMusicTagList
+  MusicServer: MusicServer
+  NoteOff: NoteOff
+  PlayNote: PlayNote
+  PlaySound: PlaySound
+  StopSound: StopSound
+  AllNotesOff: AllNotesOff
+  AllSoundsOff: AllSoundsOff
+  CalcNote: CalcNote
+  ControlCh: ControlCh
+  EnvelopeManager: EnvelopeManager
+  KillVoice: KillVoice
+  NoteOn: NoteOn
+  OpenMusic: OpenMusic
+  PitchBend: PitchBend
+  PlaySong: PlaySong
+  ProgramCh: ProgramCh
+  ResetChannel: ResetChannel
+  SetTempo: SetTempo
+  SystemReset: SystemReset
 
 comments:
   654: velocity 0 is ignored here; stop events end notes

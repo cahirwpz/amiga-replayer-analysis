@@ -8,19 +8,24 @@ DIR defaults to specs/, checked with hardware/. Checks:
     off. Ruff runs as its own pre-commit hook.
   - each spec is named by a player's `spec` in data/players.yaml, except
     the shared ones in SHARED
-  - each top-level CamelCase function in a player's spec is a label, and
-    each CamelCase class is a type, in data/annot/<player>.yaml or, for a
-    player with several sources, data/annot/<player>-*.yaml (see
-    tools/annot.py); functions may also be labels in
-    data/disasm/<player>.cnf
+  - each top-level CamelCase function in a player's spec is a new name
+    in `labels:`, and each CamelCase class is in `types:`, of
+    data/annot/<player>.yaml or, for a player with several sources,
+    data/annot/<player>-*.yaml (see tools/annot.py); functions may also
+    be labels in data/disasm/<player>.cnf
+  - comments and strings name no label of the source, only new names
+    and types: no label it defines, and no disassembler name it uses;
+    words in PLAIN_WORDS are read as English
   - snake_case helpers need no label
 
 Prints `file:line: rule: detail` for each problem; exits 1 if any.
 """
 
 import ast
+import io
 import re
 import sys
+import tokenize
 from pathlib import Path
 
 import annot
@@ -33,20 +38,59 @@ HARDWARE = ROOT / "hardware"
 SHARED = {"__init__.py", "controls.py"}
 CAMEL = re.compile(r"[A-Z][A-Za-z0-9]*[a-z][A-Za-z0-9]*")
 MYPY_LINE = re.compile(r"^(.+?):(\d+): error: (.*)$")
+WORD = re.compile(r"[A-Za-z_]\w*(?:\.\w+)*")
+GENERATED = re.compile(r"L_[0-9A-Fa-f]+|lb[A-Z][0-9A-F]+")  # disassembler names
+# Source labels that are also English words in our prose.
+PLAIN_WORDS = {
+    "copy", "custom", "envelope", "flags", "loop", "patterns", "period",
+    "priority", "random", "repeat", "return", "song", "speed", "tracks",
+    "transpose", "volume",
+}  # fmt: skip
+
+
+def annot_files(player):
+    annots = ROOT / "data/annot"
+    paths = [annots / f"{player}.yaml", *sorted(annots.glob(f"{player}-*.yaml"))]
+    return [path for path in paths if path.is_file()]
 
 
 def anchors(player):
-    """(labels, types) a player's spec may use."""
+    """(labels, types) a player's spec may use: new names and types."""
     labels, types = set(), set()
-    annots = ROOT / "data/annot"
-    for path in [annots / f"{player}.yaml", *sorted(annots.glob(f"{player}-*.yaml"))]:
-        if path.is_file():
-            labels |= annot.listing_labels(path)
-            types |= set(annot.load(path).get("types") or {})
+    for path in annot_files(player):
+        spec = annot.load(path)
+        labels |= set((spec.get("labels") or {}).values())
+        types |= set(spec.get("types") or {})
     cnf = ROOT / "data/disasm" / f"{player}.cnf"
     if cnf.is_file():
         labels |= annot.cited_labels(cnf)
     return labels - types, types
+
+
+def old_labels(player):
+    """Labels of the player's sources that a spec may not name."""
+    old = set()
+    for path in annot_files(player):
+        lines = annot.source_lines(annot.load(path))[1]
+        old |= annot.defined(lines)
+        code = (annot.code_part(line)[0] for line in lines)
+        old |= {
+            w for line in code for w in WORD.findall(line) if GENERATED.fullmatch(w)
+        }
+    labels, types = anchors(player)
+    return old - labels - types - PLAIN_WORDS
+
+
+def check_prose(path, player):
+    """Yield (line, rule, detail) for old labels in comments and strings."""
+    old = old_labels(player)
+    text = path.read_text(encoding="utf-8")
+    for token in tokenize.generate_tokens(io.StringIO(text).readline):
+        if token.type not in (tokenize.COMMENT, tokenize.STRING):
+            continue
+        for n, line in enumerate(token.string.split("\n")):
+            for word in sorted(set(WORD.findall(line)) & old):
+                yield token.start[0] + n, "old", f"{word} is not a new name"
 
 
 def defined(path):
@@ -93,7 +137,7 @@ def main(argv):
         if player is None:
             errors.append(f"{rel}:1: owner: no player in data/players.yaml has it")
             continue
-        for n, rule, detail in check_names(path, player):
+        for n, rule, detail in [*check_names(path, player), *check_prose(path, player)]:
             errors.append(f"{rel}:{n}: {rule}: {detail}")
     for e in errors:
         print(e)
