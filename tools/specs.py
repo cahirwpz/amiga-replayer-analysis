@@ -46,13 +46,16 @@ def anchors(player):
     return labels - types, types
 
 
+def defined(path):
+    """Top-level CamelCase functions and classes in a spec, as AST nodes."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    return [n for n in tree.body if CAMEL.fullmatch(getattr(n, "name", ""))]
+
+
 def check_names(path, player):
     """Yield (line, rule, detail) for CamelCase names without an anchor."""
     labels, types = anchors(player)
-    tree = ast.parse(path.read_text(encoding="utf-8"))
-    for node in tree.body:
-        if not CAMEL.fullmatch(getattr(node, "name", "")):
-            continue
+    for node in defined(path):
         if isinstance(node, ast.ClassDef) and node.name not in types:
             yield node.lineno, "type", f"{node.name} is not in types of {player}"
         elif isinstance(node, ast.FunctionDef) and node.name not in labels:

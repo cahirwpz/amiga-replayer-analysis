@@ -8,12 +8,15 @@ Checks:
   - no link names a line, e.g. `x.asm#L60` or a GitHub URL with `#L60`
   - `file:Label` citations name a label in that file, as
     annot.cited_labels() finds it
-    Paths starting with ext/ or data/ are relative to the repo root. In
+    Paths starting with a repo folder, e.g. ext/, data/ or specs/, are
+    relative to the repo root. In
     player cards (front matter has `player`), other paths are relative to
     the player's source, as tools/inventory.py finds it. A bare `:Label`
     refers to the file of the previous citation. In a player card, before
     any other citation, it refers to data/annot/<player>.yaml, else to
-    data/disasm/<player>.cnf.
+    data/disasm/<player>.cnf. If the card's player has a `spec` in
+    data/players.yaml, a label cited from that file must also be a
+    function or class in the spec.
   - no citation names a line number, e.g. `file.s:12`
   - code spans that start with a repo folder, e.g. `docs/x.md` or
     `ext/uade/y.s:12`, name a path that exists. Placeholders in angle
@@ -30,6 +33,8 @@ from urllib.parse import urlsplit
 
 import annot
 import inventory
+import players
+import specs
 from mdtools import children, read
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -37,7 +42,7 @@ SOURCES = ROOT / "ext" / "uade" / "amigasrc" / "players"
 
 
 # Files a citation may name.
-CITED = (".s", ".asm", ".a", ".i", ".c", ".h", ".cnf", ".yaml")
+CITED = (".s", ".asm", ".a", ".i", ".c", ".h", ".cnf", ".yaml", ".py")
 
 
 def citation(code):
@@ -64,6 +69,7 @@ REPO_DIRS = (
     "ext/",
     "ideas/",
     "players/",
+    "specs/",
     "tests/",
     "tools/",
 )
@@ -146,6 +152,9 @@ def check(path, known_sources):
             err(n, "link", f"{target} does not exist")
 
     last_file = default_file(str(meta["player"])) if "player" in meta else None
+    own = last_file
+    spec = players.load().get(str(meta.get("player")), {}).get("spec")
+    in_spec = {n.name for n in specs.defined(ROOT / spec)} if spec else None
     for n, child in spans(doc):
         if child.type != "code_inline":
             continue
@@ -180,6 +189,8 @@ def check(path, known_sources):
             err(n, "cite", f"{last_file.name} has no labels")
         elif label not in known:
             err(n, "cite", f"{last_file.name} has no label {label}")
+        elif in_spec is not None and last_file == own and label not in in_spec:
+            err(n, "cite", f"{label} is not a function or class in {spec}")
     return errors
 
 

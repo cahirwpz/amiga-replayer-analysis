@@ -32,7 +32,7 @@ class Channel:
     location: Sample | None = None  # AUDxLC: copied to the pointer at each wrap
     length: int = 0  # AUDxLEN, in words
     period: int = 0  # AUDxPER: clock divider
-    volume: int = 0  # AUDxVOL
+    volume: int = 0  # AUDxVOL: a cheap write, so envelopes run in software
     dma: bool = False  # DMACON bit for this channel
     on_wrap: Callable[["Channel"], None] | None = None  # audio interrupt
 

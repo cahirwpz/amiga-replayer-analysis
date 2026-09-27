@@ -1,12 +1,13 @@
 ---
 player: MED
 template: 2
-ideas: [volume-list]
+ideas:
+  [volume-list, wave-list, cross-list-jumps, waveform-as-table, release-jump]
 ---
 
-# MED fixture
+# MED
 
-A template 2 card with one row per table.
+A synth sound runs a volume list and a wave list that jump into each other.
 
 ## Context
 
@@ -15,82 +16,65 @@ A template 2 card with one row per table.
 | Player    | `MED`                                                                                            |
 | Author    | Teijo Kinnunen                                                                                   |
 | Code read | original: `ext/uade/amigasrc/players/uade/med`                                                   |
+| Spec      | [specs/med.py](../../../specs/med.py)                                                            |
 | Links     | [archive.org](https://archive.org/details/OctaMED_Professional_v3.00_1992_RBF_Software_CU_Amiga) |
 
 ## Key ideas
 
-- Each list runs at its own speed. `:SynthTick`
-  - Enables: slow envelopes beside fast waves.
-  - Costs: one counter per list; CPU low.
+- Two opcode lists per instrument, each at its own speed. `:SynthTick`
+  - Enables: a slow volume shape beside fast wave changes.
+  - Costs: 256 bytes of lists per synth sound; CPU low.
+- Each list can set the other's position. `:VolJumpWaveList` `:WaveJumpVolList`
+  - Enables: a volume phase can start a new wave phrase.
+  - Costs: jumps have no conditions; the target keeps its own clock.
 
 ## Composer's view
 
-```python
-@dataclass
-class Score:
-    instruments: list[Instrument]
-```
+The composer writes notes into patterns, one track per voice. MED calls a
+pattern a `block` and a row a `line`. Positions order the patterns; a section
+names a list of positions.
 
-| Aspect   | Answer       | Source   |
-| -------- | ------------ | -------- |
-| Notation | tracker grid | (manual) |
-| Cost     | one opcode   | `:DoFX`  |
+| Aspect   | Answer                                                    | Source           |
+| -------- | --------------------------------------------------------- | ---------------- |
+| Notation | A tracker grid: one column per track, one line per row.   | (manual)         |
+| Notation | Synth sounds: two lists of values and opcodes.            | format notes     |
+| Cost     | A synth arpeggio is one wave-list opcode.                 | `:ArpeggioStart` |
+| Cost     | A pattern arpeggio needs its command on every row.        | `:ArpeggioTick`  |
+| Cost     | A drawn envelope is one waveform and one opcode.          | `:VolEnvOnce`    |
+| Cost     | A release needs no pattern data: hold and decay start it. | `:SynthRelease`  |
 
-## Timing
+## What is unique
 
-| Stream  | Scope | Carries                   | Control         | Advances by |
-| ------- | ----- | ------------------------- | --------------- | ----------- |
-| Pattern | song  | note, instrument, command | loop, jump, end | row         |
+### Timing
 
-| Aspect  | Value    | Label          |
-| ------- | -------- | -------------- |
-| Time    | rows     | `:PlayTick` |
-| Unit    | row      | `:PlayTick` |
-| Routing | fixed    | `:PlayRowNotes`   |
-| Reuse   | patterns | `:NextPlaySeq` |
-| Tempo   | speed    | `:SetTempo`   |
+- Each list runs every N ticks. `:SynthTick`
+- A list's wait counts list visits, not ticks. `:VolWait`
+- A jump moves the other list's position but keeps its clock. `:VolJumpWaveList`
+- Hold counts ticks from the note-on. `:PlayRowNotes`
+- The next row extends hold with an instrument number and no note, or with
+  portamento. `:ExtendHold`
+- When hold runs out, a synth jumps its volume list to the release part.
+  `:SynthRelease` A note-off command is a hard stop instead. `:CmdNoteOff`
 
-```python
-def on_note(voice: Voice, instrument: Instrument) -> None:  # KeepSynthChannel
-    voice.hold_left = instrument.hold or NEVER
-```
+### Sound
 
-## Sound
+- A volume-list visit runs the volume slide, then the envelope, then the list.
+  Each overwrites the one before. `:SynthTick`
+- A new waveform starts at the channel's next loop, with no restart.
+  `:ReadWaveList`
+- Synth arpeggio replaces the period, so pattern portamento then has no effect.
+  `:SynthArpeggio`
+- Pattern vibrato and arpeggio apply last. `:UpdatePerVol`
+- A synth note after a synth note keeps the channel playing. `:KeepSynthChannel`
+- Command E sets the wave-list start for a note on the same row.
+  `:CmdWaveListPos`
 
-### Volume
+### Sequencing
 
-```python
-def volume(voice: Voice) -> int:
-    value = voice.volume_list.value()
-    return value if value is not None else voice.envelope.next()
-```
+- A pattern end starts the next position. `:NextPlaySeq`
+- After the last position, the next section starts. `:NextSection`
+- A pattern command repeats rows. `:CmdLoop`
 
-| Controller  | Kind         | Advances by   | Owner | Set by     | Label        |
-| ----------- | ------------ | ------------- | ----- | ---------- | ------------ |
-| Volume list | command list | every N ticks | voice | instrument | `:SynthTick` |
-| Envelope    | table walker | list visit    | voice | Volume list | `:VolEnvOnce` |
+## Open questions
 
-## Instrument
-
-```python
-@dataclass
-class Instrument:
-    hold: int                           # ticks the key stays down
-
-@dataclass
-class Sample:
-    data: bytes
-```
-
-| Question               | Answer          |
-| ---------------------- | --------------- |
-| Starts on note-on      | both lists      |
-| Survives the last note | nothing         |
-| Track overrides        | wave list start |
-
-## Interactions
-
-```python
-def on_command_e(voice: Voice, arg: int) -> None:  # CmdWaveListPos
-    voice.wave_list.pos = arg
-```
+- Which songs use the jumps between lists?

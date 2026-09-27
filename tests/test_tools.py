@@ -170,8 +170,7 @@ class Cards(unittest.TestCase):
         code, rules, out = run("cards.py", FIXTURES / "cards_bad_v2.md")
         self.assertEqual(code, 1)
         expected = {"front-matter", "player", "section", "context", "composer"}
-        expected |= {"timing", "sequencer", "lifecycle", "sound", "instrument"}
-        expected |= {"interactions", "cell", "label", "code", "types"}
+        expected |= {"cell", "label", "code"}
         self.assertEqual(expected, rules, out)
         for text in (
             "unknown `control`",
@@ -179,24 +178,9 @@ class Cards(unittest.TestCase):
             "order should be ['Context'",
             "out of date",
             "aspects must be ['Notation'",
-            "unknown table header",
-            "name `Sequence`",
-            "advances by `often`",
-            "aspects must be ['Time', 'Unit', 'Routing'",
-            "Timing needs a `python` block with `def on_note(`",
-            "output `Colour`",
-            "needs `python` code before its table",
-            "kind `magic`",
-            "owner `nobody`",
-            "set by `Ghost`",
-            "needs a `python` block with `class Instrument`",
-            "questions must be",
-            "write interactions as `python` code",
+            "no code on a card",
             "one fact per cell",
             "`plr_loop2` is no readable name",
-            "not Python",
-            'Name "Melody" is not defined',
-            "controller `Wobble` is not in the code",
         ):
             self.assertIn(text, out)
 

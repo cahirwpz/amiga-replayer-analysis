@@ -34,6 +34,7 @@ build/annot/<player><suffix>, never committed. With --check, nothing is
 written. Prints `file: problem` for each problem; exits 1 if any.
 """
 
+import ast
 import hashlib
 import re
 import sys
@@ -193,12 +194,16 @@ def cited_labels(path, cache={}):
 
     Assembler: identifiers in column 1. C: function names. IRA config: LABEL
     and SYMBOL. data/annot/*.yaml: the labels of the rendered listing.
+    Python, e.g. specs/: top-level functions and classes.
     """
     if path not in cache:
         text = path.read_bytes().decode("latin-1")
         suffix = path.suffix.lower()
         if suffix == ".yaml":
             cache[path] = listing_labels(path) if path.parent.name == "annot" else None
+        elif suffix == ".py":
+            tree = ast.parse(text)
+            cache[path] = {getattr(n, "name", "") for n in tree.body} - {""}
         elif suffix == ".cnf":
             found = re.finditer(r"^(?:LABEL|SYMBOL)\s+(\S+)\s", text, re.M)
             cache[path] = {m.group(1) for m in found}
