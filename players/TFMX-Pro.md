@@ -3,11 +3,11 @@ player: TFMX-Pro
 template: 2
 ideas:
   [
-    macro-instruments,
+    instrument-programs,
     tracks-not-voices,
-    self-modifying-macros,
+    self-modifying-programs,
     resampling-synthesis,
-    random-riffs,
+    random-offset-loops,
   ]
 ---
 

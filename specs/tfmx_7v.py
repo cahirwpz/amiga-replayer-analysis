@@ -29,8 +29,8 @@ MIX_PERIODS = (  # v7KHztable: channel 3's period for 0..28 kHz
 
 @dataclass
 class FakeChannel(paula.Channel):  # voice1dat: registers in RAM
-    """What voices 4-7 write instead of Paula. The macro engine does not
-    see a difference. The mixer reads these fields once per tick."""
+    """What voices 4-7 write instead of Paula. The instrument program code
+    does not see a difference. The mixer reads these fields once per tick."""
 
     restart: bool = True  # v7wset: DMA was off; the next on restarts
     loop: bytes = b""  # v7loopv, v7loopd: taken at the next wrap
@@ -197,7 +197,8 @@ def MixLoop(mixer: Mixer, channels: list[FakeChannel], buffer: bytearray) -> Non
     """Per mixed byte, each voice: read a byte, look it up in the table
     of its volume, step on. At the loop's end, the latched loop takes
     over. The four table bytes are summed and clipped, not divided: one
-    voice alone plays at full level. 254 cycles per byte."""
+    voice alone plays at full level. Wanted Team's loop takes 254 cycles
+    per byte; the original, 268."""
     for i in range(mixer.bytes_per_tick):
         total = 0
         for fake in channels:
@@ -224,3 +225,15 @@ def BuildMixTables(mixer: Mixer) -> None:
 
 def signed(byte: int) -> int:
     return byte - 256 if byte >= 0x80 else byte
+
+
+def WaitLoopsOff(module: tfmx_pro.Module, voice: tfmx_pro.Voice, s: bytes) -> bool:
+    """$1a reads on, on every voice: a program cannot wait for sample
+    passes. The handler and its interrupt are commented out. Guess: the
+    mixed voices raise no audio interrupt, and the mixer takes channel
+    3's."""
+    return tfmx_pro.MacroNext(module, voice, s)
+
+
+MACRO_OPCODES = list(tfmx_pro.MACRO_OPCODES)
+MACRO_OPCODES[0x1A] = WaitLoopsOff

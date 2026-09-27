@@ -8,6 +8,7 @@ ideas: [voice-mixing]
 # TFMX 7V
 
 [TFMX Pro](TFMX-Pro.md) with seven voices: voices 4–7 are mixed into channel 3.
+It is probably TFMX Pro's source built with its `on7voice` switch (guess).
 
 ## Context
 
@@ -28,7 +29,7 @@ ideas: [voice-mixing]
 - The mixer sums voices 4–7 into one tick's buffer for channel 3. `:MixTick`
   `:MixLoop`
   - Enables: four extra voices on one channel.
-  - Costs: CPU high. At 16 kHz, mixing takes about 57% of a 7.09 MHz 68000.
+  - Costs: CPU high. At 16 kHz, mixing takes about 60% of a 7.09 MHz 68000.
 - Channel 3's audio interrupt runs the whole replay. `:HookChannel3`
   `:TickFromMixer`
   - Enables: the tick and the buffer never drift apart.
@@ -43,16 +44,17 @@ ideas: [voice-mixing]
 
 - A note to voice 3 turns mixing off; a note to voices 4–7 turns it on.
   `:SwitchMixing`
-- DMA on restarts a mixed voice's sample. A new loop starts at the wrap.
-  `:FakeDma`
+- DMA on after DMA off restarts a mixed voice's sample. A new loop starts at the
+  wrap. `:FakeDma`
 - Loops under 32 words play silence, so short synth waves are mute on voices
   4–7. `:ShortLoopSilent`
 - While mixing, the fade sets channel 3's volume. Mixed voices stay unfaded.
   `:FadeToChannel3`
-- Wanted Team rewrote the mix loop: 254 instead of 268 cycles per byte.
-  `:MixLoop`
+- A program cannot wait for sample passes, on any voice. That opcode reads on.
+  `:WaitLoopsOff`
 
 ## Open questions
 
 - Which songs turn voice 3 back into a plain voice?
-- Where did the original patch `killf1`–`killf4`? That code is gone.
+- Did the original use the `killf1`–`killf4` wrap hooks for the sample-pass wait
+  (guess)?

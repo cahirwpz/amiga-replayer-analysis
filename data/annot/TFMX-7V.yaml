@@ -23,6 +23,7 @@ labels:
   set7freq: CmdMixSlow
   3112: SwitchMixing
   3582: FakeRegisters
+  2111: WaitLoopsOff
   3074: FadeToChannel3
   init7voice: BuildMixTables
   v7contab: ClipTable
@@ -32,6 +33,7 @@ comments:
   1266: the whole replay runs from channel 3's audio interrupt
   3074: the fade sets the Paula volume of channel 3
   3112: "a note to voice 3 stops mixing; voices 4-7 start it"
+  2111: "$1a reads on: the sample-pass wait is commented out"
   3582: voices 4-7 write these RAM blocks, not Paula
   4512: bytes per tick = rate x 20 x (100 + slow) / 100
   4636: "-128 x 384, ramp -128..127, +127 x 384: clips the sum of four"
