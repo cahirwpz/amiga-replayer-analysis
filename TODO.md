@@ -37,6 +37,9 @@ the first card on it, with `specs/med.py`.
 
 ### Hardware model
 
+- [ ] `hardware/paula.py:Channel` times each word from the last DMA slot. At
+      period 428 a word lasts 908 CCK, not 856, so every spec plays flat.
+      [Musicline](players/MusiclineEditor.md)'s 8-channel mode ticks at 28 Hz.
 - [ ] Make `hardware/paula.py:Sample` the 16-bit words that DMA fetches, each
       two 8-bit samples, high byte first. It must show writes made while it
       plays; `specs/sonic_arranger.py:StartSynthWave` casts a `bytearray` now.
@@ -57,24 +60,21 @@ the first card on it, with `specs/med.py`.
 The user's list, triaged. Nothing below is on a card yet. "Docs" means format
 notes or comments only; "skimmed" means replay code read in part.
 
-| Order | Player            | Value | Basis   | Lead                                           |
-| ----- | ----------------- | ----- | ------- | ---------------------------------------------- |
-| 1     | `MusiclineEditor` | high  | docs    | Wave effects: transform, phase, mix, resonance |
-| 2     | `MusicMaker-8V`   | high  | docs    | Eight voices mixed into four channels          |
-| 3     | `PaulRobotham`    | med   | skimmed | Packed note lengths, vibrato scaled by period  |
+| Order | Player          | Value | Basis   | Lead                                          |
+| ----- | --------------- | ----- | ------- | --------------------------------------------- |
+| 1     | `MusicMaker-8V` | high  | docs    | Eight voices mixed into four channels         |
+| 2     | `PaulRobotham`  | med   | skimmed | Packed note lengths, vibrato scaled by period |
 
 Reading notes, with original labels:
 
-| Player            | Where                                                                                   | Note                                              |
-| ----------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `MusiclineEditor` | `ext/uade/amigasrc/players/other/musicline_editor/MlEdFileFormat.doc`                   | Lists the instrument effect bits                  |
-| `MusiclineEditor` | `ext/uade/amigasrc/players/other/musicline_editor/mlineplayer102.asm`                   | The replay                                        |
-| `MusicMaker-8V`   | `ext/uade/amigasrc/players/other/music_maker/MusicMaker8.asm`                           | Mixer header comment: `FAST-VOL-MIX`              |
-| `MusicMaker-8V`   | `ideas/voice-mixing.md`                                                                 | Compare the mixer with this page                  |
-| `PaulRobotham`    | `ext/uade/amigasrc/players/wanted_team/PaulRobotham/src/Paul Robotham_v1.asm:lbC015406` | Length: 5 bits, shifted by 3 bits                 |
-| `PaulRobotham`    | `:lbC015406`                                                                            | Tempo scaling keeps the remainder                 |
-| `PaulRobotham`    | `lbC01562E`                                                                             | Commented: effect takes the voice nearest its end |
-| `PaulRobotham`    | —                                                                                       | Voices are fixed, not allocated                   |
+| Player          | Where                                                                                   | Note                                              |
+| --------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `MusicMaker-8V` | `ext/uade/amigasrc/players/other/music_maker/MusicMaker8.asm`                           | Mixer header comment: `FAST-VOL-MIX`              |
+| `MusicMaker-8V` | `ideas/voice-mixing.md`                                                                 | Compare the mixer with this page                  |
+| `PaulRobotham`  | `ext/uade/amigasrc/players/wanted_team/PaulRobotham/src/Paul Robotham_v1.asm:lbC015406` | Length: 5 bits, shifted by 3 bits                 |
+| `PaulRobotham`  | `:lbC015406`                                                                            | Tempo scaling keeps the remainder                 |
+| `PaulRobotham`  | `lbC01562E`                                                                             | Commented: effect takes the voice nearest its end |
+| `PaulRobotham`  | —                                                                                       | Voices are fixed, not allocated                   |
 
 Skip unless a new lead turns up:
 

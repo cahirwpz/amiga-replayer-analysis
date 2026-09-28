@@ -76,6 +76,8 @@ One line per term. Every acronym used in this repo must appear here.
 | **portamento** | Slide of the pitch, often towards a target note.       |
 | **vibrato**    | Periodic pitch change.                                 |
 | **trill**      | Fast alternation between a note and a note above it.   |
+| **swing**      | Beats alternate between a longer and a shorter length. |
+| **tremolo**    | Periodic volume change.                                |
 | **voice**      | One independent part of the music.                     |
 
 ## Sound changes
@@ -90,6 +92,7 @@ What an operation does to a sound. The "(inference)" notes use these words.
 | **phasing**   | A sweeping, hollow tone from mixing a sound with a shifted copy. |
 | **crossfade** | A gradual blend from one sound into another.                     |
 | **morph**     | A gradual change from one waveform into another.                 |
+| **resonance** | A peak of frequencies near a filter's cutoff.                    |
 
 ## Tracker terms
 

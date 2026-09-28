@@ -1,0 +1,79 @@
+# Annotations for the Musicline Editor replayer. Render: tools/annot.py
+source: ext/uade/amigasrc/players/other/musicline_editor/mlineplayer102.asm
+sha1: 7960f4c2f84d2b35017c12c219e18216f7a04cc2
+
+labels:
+  # tick
+  PlayMusic: PlayMusic
+  StartTimerInt: StartTimerInt
+  StartAudioInt: StartAudioInt
+  # sequencer
+  PlayTune: PlayTune
+  PlayVoice: PlayVoice
+  CheckInst: CheckInst
+  PlayPartFx: PlayPartFx
+  PlayArpg: PlayArpg
+  PlayInst: PlayInst
+  FixWaveLength: FixWaveLength
+  InstPlay: InstPlay
+  Sexit: CheckWaveSize
+  # part effects that the spec models
+  pfx_Volume: FxVolume
+  pfx_ChannelVol: FxChannelVol
+  pfx_MasterVol: FxMasterVol
+  pfx_SpeedPart: FxSpeedPart
+  pfx_GroovePart: FxGroovePart
+  pfx_SpeedAll: FxSpeedAll
+  pfx_GrooveAll: FxGrooveAll
+  pfx_ArpeggioList: FxArpeggioList
+  pfx_HoldSustain: FxHoldSustain
+  pfx_WaveSample: FxWaveSample
+  pfx_InitInstrument: FxInitInstrument
+  # every tick, per voice
+  PlayEffects: PlayEffects
+  ArpeggioPlay: ArpeggioPlay
+  VibratoPlay: VibratoPlay
+  TremoloPlay: TremoloPlay
+  ADSRPlay: AdsrPlay
+  MoveLoop: MoveLoop
+  LoopCounter: LoopCounter
+  TransformPlay: TransformPlay
+  SelectTraWave: SelectTraWave
+  PhasePlay: PhasePlay
+  MixPlay: MixPlay
+  ResonancePlay: ResonancePlay
+  FilterPlay: FilterPlay
+  Counter: Counter
+  OneWayCounter: OneWayCounter
+  # output
+  PerCalc: PerCalc
+  Per: NotePeriod
+  PerVolPlay: PerVolPlay
+  DmaPlay: DmaPlay
+  Dma1: DmaStart
+  Dma2: DmaLoop
+  Play8channels: Play8Channels
+  Play8ch: MixVoice
+  MixMove: MixMove
+  MixAdd: MixAdd
+  # tables
+  PalPitchTable: PalPitchTable
+  VolumeTables: VolumeTables
+  Sine: Sine
+  DownRamp: DownRamp
+  SawTooth: SawTooth
+  Square: Square
+  ZeroSample: ZeroSample
+
+types:
+  Channel: [ch_SIZEOF]
+  Instrument: [inst_SIZEOF]
+  Sample: [smpl_SIZEOF]
+  Tune: [tune_SIZEOF]
+  Sweep: [cnt_counter]
+  SweepSetup: [inst_PhaStart]
+  LoopSetup: [inst_LooStart]
+  LfoSetup: [inst_VibDir]
+  LoopSweep: [ch_LooCounter]
+  Lfo: [ch_VibCount]
+  Module: [LoadModule]

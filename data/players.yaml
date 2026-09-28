@@ -205,6 +205,13 @@ JasonPage:
   game: ViroCop
   note: three replays in one source; the card reads ViroCop's
 
+MusiclineEditor:
+  spec: specs/musicline.py
+  provenance: original
+  author: Conny Cyréus and John Carehag
+  year: 1995
+  note: the replay reads its tables from raw/
+
 MaxTrax:
   source: other/max_trax
   spec: specs/maxtrax.py
