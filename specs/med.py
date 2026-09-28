@@ -5,7 +5,7 @@ Each CamelCase function is a new name in data/annot/MED.yaml; each CamelCase
 class is in its `types:`. Comments name the replay's `trk_` fields.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from enum import Enum, auto
 
@@ -60,9 +60,10 @@ class Pattern:  # MED: `block`
     pages: int = 1  # command pages: BlockInfo's page table, plus 1
 
 
-@dataclass
 class Sample(paula.Sample):  # InstrHdr
-    repeat: range = range(0)  # the looped part
+    def __init__(self, memory: paula.Memory, repeat: range = range(0)):
+        super().__init__(memory)
+        self.repeat = repeat  # the looped part
 
 
 @dataclass
@@ -120,7 +121,7 @@ class Vibrato:  # trk_synvibdep, trk_synthvibspd, trk_synviboffs
     depth: int = 0  # 0: off
     speed: int = 0
     phase: int = 0  # 16 phase units per waveform byte
-    wave: bytes = b""  # trk_synvibwf: sine, or an instrument waveform
+    wave: Sequence[int] = b""  # trk_synvibwf: sine, or an instrument waveform
 
 
 @dataclass
@@ -786,7 +787,7 @@ def PitchReset(voice: Voice, sound: SynthSound, arg: int) -> bool:
 
 def VibratoWave(voice: Voice, sound: SynthSound, arg: int) -> bool:
     """A waveform becomes the vibrato shape."""
-    voice.synth_vibrato.wave = sound.waves[arg].data
+    voice.synth_vibrato.wave = sound.waves[arg]
     voice.wave_list.pos += 2
     return True
 
@@ -862,7 +863,7 @@ def signed(byte: int) -> int:
 
 
 def envelope_from(wave: paula.Sample, mode: Mode) -> TableWalker:
-    return TableWalker(wave.data[:ENVELOPE_LENGTH], 0, mode)
+    return TableWalker(wave[:ENVELOPE_LENGTH], 0, mode)
 
 
 def synth_sound(voice: Voice) -> SynthSound:
@@ -877,7 +878,7 @@ def queue_sample(voice: Voice, sample: paula.Sample) -> None:
     voice.channel.queue(sample)
     voice.loop = None
     if isinstance(sample, Sample):
-        voice.loop = paula.Sample(sample.data[sample.repeat.start : sample.repeat.stop])
+        voice.loop = paula.Sample(sample[sample.repeat.start : sample.repeat.stop])
     voice.start = True
 
 

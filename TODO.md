@@ -37,9 +37,6 @@ the first card on it, with `specs/med.py`.
 
 ### Hardware model
 
-- [ ] Make `hardware/paula.py:Sample` the 16-bit words that DMA fetches, each
-      two 8-bit samples, high byte first. It must show writes made while it
-      plays; `specs/sonic_arranger.py:StartSynthWave` casts a `bytearray` now.
 - [ ] `POLL_CCK` is an estimate from 68000 instruction timings. It is 25 in
       `specs/med.py:StartDMA`, 20 in
       `specs/digital_sonix_chrome.py:WaitAudioIrq`, 15 in

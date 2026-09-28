@@ -536,7 +536,7 @@ def PulseWalker(module: Module, voice: Voice) -> paula.Sample:
     width, amount = value >> 8, value & 0xFF
     voice.wave[:] = pulse_wave(width)
     voice.wave[width & 0x0F] = (voice.wave[width & 0x0F] - amount) & 0xFF
-    return paula.Sample(bytes(voice.wave))
+    return paula.Sample(voice.wave)
 
 
 def pulse_wave(width: int) -> bytes:

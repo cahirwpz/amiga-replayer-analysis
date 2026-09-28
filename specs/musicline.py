@@ -29,7 +29,6 @@ copy of the last wave buffer into chip memory.
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import cast
 
 from hardware import paula
 from hardware.amiga import Amiga, Priority
@@ -359,7 +358,7 @@ def StartAudioInt(module: Module) -> None:
     for n, channel in enumerate(module.amiga.paula.channels):
         channel.period = MIX_PERIOD
         channel.set_volume(64)
-        channel.play(paula.Sample(cast(bytes, module.buffers[n])))
+        channel.play(paula.Sample(module.buffers[n]))
     module.amiga.paula.channels[0].on_irq(lambda _: PlayMusic(module))
 
 
@@ -750,8 +749,7 @@ def PlayEffects(module: Module, ch: Channel) -> None:
     looping = ch.effects1 >> LOOP & 1
     if not ch.new_note and looping and not module.tune.eight:
         data, at = ch.loop
-        window = memoryview(data)[at : at + 2 * ch.loop_sweep.length]
-        ch.output.queue(paula.Sample(cast(bytes, window)))
+        ch.output.queue(paula.Sample(data, at, ch.loop_sweep.length))
         ch.loop_length = ch.loop_sweep.length
     ch.note = 0
 
@@ -1286,7 +1284,7 @@ def set_output(ch: Channel, buffer: bytearray) -> None:
 def view(wave: Wave, words: int) -> paula.Sample:
     """A live view: effects rewrite the buffer while it plays."""
     data, at = wave
-    return paula.Sample(cast(bytes, memoryview(data)[at : at + 2 * words]))
+    return paula.Sample(data, at, words)
 
 
 def clamp(value: int, low: int, high: int) -> int:

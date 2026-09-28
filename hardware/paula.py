@@ -6,9 +6,10 @@ Hardware Reference Manual. Only facts that shape replayer design are
 modelled; sample bytes are not played. Time: hardware/clock.py:Clock.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from enum import Flag, auto
+from typing import overload
 
 from hardware.clock import CCK_HZ, LINE_CCK, Clock
 
@@ -22,11 +23,44 @@ VOLUME_WORD_BITS = 7  # an attach volume word: V6-V0
 PERIOD_WORD_BITS = 16
 
 
-@dataclass
-class Sample:
-    """8-bit signed bytes, word-aligned, even length."""
+Memory = bytes | bytearray | memoryview
 
-    data: bytes
+
+class Sample(Sequence[int]):
+    """A word-aligned run of chip memory, as a sequence of bytes. The CPU
+    reads it byte by byte; DMA reads it as words, high byte first (see
+    Channel.read_word). A slice is a memoryview of the same memory.
+
+    A Sample views its memory and never copies it. So a write to the
+    memory while the channel plays it is heard at the next fetch, as on
+    the hardware. `start` is a byte offset; words start at even addresses.
+    `words` counts words, as AUDxLEN does; without it, the run ends with
+    the memory.
+    """
+
+    def __init__(self, memory: Memory, start: int = 0, words: int | None = None):
+        if start % 2:
+            raise ValueError(f"a word starts at an even address, not {start}")
+        view = memoryview(memory)[start:]
+        words = len(view) // 2 if words is None else words
+        if not 0 <= 2 * words <= len(view):
+            raise ValueError(f"{words} words run past the memory")
+        self._bytes = view[: 2 * words]
+
+    def __len__(self) -> int:
+        return len(self._bytes)
+
+    @overload
+    def __getitem__(self, index: int) -> int: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> memoryview: ...
+
+    def __getitem__(self, index: int | slice) -> int | memoryview:
+        return self._bytes[index]
+
+    def __buffer__(self, flags: int) -> memoryview:
+        return self._bytes.__buffer__(flags)
 
 
 class Attach(Flag):
@@ -101,7 +135,7 @@ class Channel:
         """Write AUDxLC and AUDxLEN. The live pointer takes them at the next
         reload, never at once."""
         self.location = sample
-        self.length = len(sample.data) // 2
+        self.length = len(sample) // 2
 
     def enable(self) -> None:
         """Set this channel's DMACON bit.
@@ -224,10 +258,11 @@ class Channel:
         self.irq_enabled = True
 
     def read_word(self) -> int:
-        if self.playing is None:
+        """The word at the pointer, high byte first. Past the end: 0."""
+        at = 2 * self.pointer
+        if self.playing is None or at >= len(self.playing):
             return 0
-        at = self.pointer * 2
-        return int.from_bytes(self.playing.data[at : at + 2], "big")
+        return self.playing[at] << 8 | self.playing[at + 1]
 
     def modulate(self, word: int) -> None:
         """One word per fetch goes to the next channel's volume or period."""

@@ -455,7 +455,7 @@ def Replay1Init(module: Module) -> None:
     module.output = [bytearray(2 * HALF_1) for _ in range(CHANNELS)]
     for channel, buffer in zip(module.amiga.paula.channels, module.output):
         channel.period = PERIOD_1
-        channel.play(paula.Sample(bytes(buffer)))
+        channel.play(paula.Sample(buffer))
 
 
 def BuildResamplers(module: Module) -> None:

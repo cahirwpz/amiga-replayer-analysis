@@ -22,7 +22,6 @@ wave runs into the next voice's buffer, which this model leaves out.
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import cast
 
 from hardware import paula
 from hardware.amiga import Amiga
@@ -346,19 +345,19 @@ def NoteOn(module: Module, voice: Voice, byte: int) -> bool:
     start_effects(voice, inst)
     if not length & LEGATO:
         start_envelope(voice, inst)
-    wave = inst.data
+    wave: paula.Memory = inst.data
     if inst.flags & PHASING:
         voice.phase_count, voice.phase_step = inst.phase_speed, inst.phase_step
         voice.phase_offset = inst.phase_min
         BuildPhasing(voice, inst)
-        wave = cast(bytes, voice.buffer)
+        wave = voice.buffer
     if inst.flags & FILTER:
         voice.filter_count, voice.filter_width = inst.filter_speed, inst.filter_from
         voice.filter_dir = 1
         BuildFilter(voice, inst)
-        wave = cast(bytes, voice.buffer)
+        wave = voice.buffer
     words = inst.loop_end if inst.looped else inst.length
-    voice.channel.queue(paula.Sample(wave[: 2 * words]))
+    voice.channel.queue(paula.Sample(wave, 0, words))
     WriteVoice(module, voice, inst)
     module.new_notes |= 1 << voice.number
     return False

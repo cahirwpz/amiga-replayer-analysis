@@ -33,8 +33,8 @@ class FakeChannel(paula.Channel):  # Voice1Registers: registers in RAM
     does not see a difference. The mixer reads these fields once per tick."""
 
     restart: bool = True  # v7wset: DMA was off; the next on restarts
-    loop: bytes = b""  # v7loopv, v7loopd: taken at the next wrap
-    source: bytes = b""  # the bytes being read
+    loop: paula.Memory = b""  # v7loopv, v7loopd: taken at the next wrap
+    source: paula.Memory = b""  # the bytes being read
     position: int = 0  # MixPosition: 16.16, negative, counts up to the end
     step: int = 0  # v7freq: 16.16 bytes per mixed byte
 
@@ -95,7 +95,7 @@ def MixOn(module: Module7V) -> None:
     channel.period = mixer.period
     channel.set_volume(0)
     # two words, so the first interrupt, and the first mix, come at once
-    channel.queue(paula.Sample(bytes(mixer.buffers[0][:4])))
+    channel.queue(paula.Sample(mixer.buffers[0], 0, 2))
     for fake in fakes(module):
         FakeDma(mixer, fake)
     mixer.on = True
@@ -185,12 +185,12 @@ def FakeDma(mixer: Mixer, fake: FakeChannel) -> None:
         fake.position = -len(fake.source) << 16
 
 
-def ShortLoopSilent(mixer: Mixer, fake: FakeChannel) -> bytes:
+def ShortLoopSilent(mixer: Mixer, fake: FakeChannel) -> paula.Memory:
     """Loops under 32 words play the silent buffer, so short synth waves
     are mute on voices 4-7."""
     if fake.length < SHORT_LOOP or fake.location is None:
         return mixer.silence[: 2 * SILENT_WORDS]
-    return fake.location.data[: 2 * (fake.length & 0x3FFF)]
+    return fake.location[: 2 * (fake.length & 0x3FFF)]
 
 
 def MixLoop(mixer: Mixer, channels: list[FakeChannel], buffer: bytearray) -> None:

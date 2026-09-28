@@ -114,7 +114,7 @@ class Cia(unittest.TestCase):
 def playing(paula, channel, events):
     """Record (time, first byte of the playing sample) at each interrupt."""
     paula.channels[channel].on_irq(
-        lambda c: events.append((paula.clock.now, c.playing.data[:1]))
+        lambda c: events.append((paula.clock.now, c.playing[:1]))
     )
 
 
@@ -224,6 +224,30 @@ class Paula_(unittest.TestCase):
         self.assertTrue(self.channel.irq_requested)
         self.m.run(2)
         self.assertTrue(self.channel.idle)
+
+    def test_a_write_while_playing_is_heard(self):
+        memory = bytearray(8)
+        self.paula.adkcon([Attach.VOLUME, Attach.NONE, Attach.NONE, Attach.NONE])
+        self.channel.play(Sample(memory))
+        memory[:] = bytes([0, 33] * 4)  # after DMA on, before the first word
+        self.m.run(2000)
+        self.assertEqual(self.paula.channels[1].volume, 33)
+
+    def test_a_sample_is_words_from_an_even_address(self):
+        memory = bytearray([1, 2, 3, 4, 5, 6])
+        sample = Sample(memory, 2)
+        self.assertEqual((len(sample), sample[1]), (4, 4))
+        self.assertEqual(sample[1:3], bytes([4, 5]))
+        view = sample[2:]
+        memory[5] = 9  # a slice sees later writes
+        self.assertEqual(view, bytes([5, 9]))
+        self.assertEqual(bytes(sample), bytes([3, 4, 5, 9]))
+        with self.assertRaises(IndexError):
+            sample[4]
+        with self.assertRaises(ValueError):
+            Sample(bytes(4), 1)
+        with self.assertRaises(ValueError):
+            Sample(bytes(4), 0, 3)
 
     def test_volume_bit_6_forces_the_maximum(self):
         self.channel.set_volume(0x40 | 5)

@@ -25,7 +25,6 @@ wave towards another.
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import cast
 
 from hardware import paula
 from hardware.amiga import Amiga
@@ -525,7 +524,7 @@ def WriteChannel(module: Module, voice: Voice) -> None:
         return
     at = (voice.start + 2 * voice.length - voice.offset) & 0xFFFFFFFF
     window = memoryview(module.samples)[at : at + 2 * voice.length]
-    voice.channel.queue(paula.Sample(cast(bytes, window)))
+    voice.channel.queue(paula.Sample(window))
     voice.channel.period = voice.period
 
 

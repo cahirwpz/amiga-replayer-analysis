@@ -212,10 +212,10 @@ def period_of(note: int) -> int:
 
 
 def sample(score: Score, at: int | None, words: int) -> paula.Sample:
-    """The channel reads memory live; the model copies the bytes."""
+    """The channel reads memory live, so synth writes are heard."""
     if at is None:
         return EMPTY
-    return paula.Sample(bytes(score.memory[at : at + 2 * words]))
+    return paula.Sample(score.memory, at, words)
 
 
 def new_module(score: Score, amiga: Amiga) -> Module:

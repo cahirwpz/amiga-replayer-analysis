@@ -21,7 +21,6 @@ as a comment: it locks a voice for some rows and plays one note there.
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import partial
-from typing import cast
 
 from hardware import paula
 from hardware.amiga import Amiga, Priority
@@ -496,8 +495,7 @@ def StartSynthWave(module: Module, voice: Voice) -> None:
     size = (((inst.length - 1) >> 3) + 1) * 16
     voice.wave[:size] = first(module, inst)[:size]
     # DMA reads the buffer as it plays, so the effects change the sound.
-    voice.channel.queue(paula.Sample(cast(bytes, voice.wave)))
-    voice.channel.length = inst.length
+    voice.channel.queue(paula.Sample(voice.wave, 0, inst.length))
     module.dma_on |= voice.bit
     voice.loop_pending = False
 

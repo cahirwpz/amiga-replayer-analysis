@@ -366,7 +366,7 @@ def StartChannels(amiga: Amiga, waves: Waves, song: Song) -> Player:
         buffer = bytearray(BUFFER_SIZE)
         channel.period = 0x88
         channel.set_volume(0)
-        channel.play(paula.Sample(bytes(buffer)))  # stands for `buffer`
+        channel.play(paula.Sample(buffer))
         player.voices.append(Voice(channel, buffer))
     half = [*SINE_QUARTER, SINE_TOP, *SINE_QUARTER[:0:-1]]
     player.sine = half + [-v for v in half]
