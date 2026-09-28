@@ -188,7 +188,8 @@ sections:
     entries:
       stream: A position in some data that the player steps through.
       scope: 'Where a stream''s position lives: song, track, voice or instrument.'
-      controller: 'Template 2: any process that writes a channel output.'
+      controller: Any process that writes a channel output.
+      write mode: How a controller changes a channel output, e.g. set or add.
       spec: 'A player''s model as typed Python in `specs/`. Its CamelCase names are replay labels.'
       lifecycle event: 'A point in a note''s life: note-on, legato, release, hard stop, program end.'
       interaction: One stream acting on another, e.g. a jump or a trigger.
@@ -220,7 +221,7 @@ sections:
 
   - key: stream_names
     title: Stream names
-    intro: The first word of each name in a card's Streams table. Add a word here before using it, e.g. "Pitch" for "Pitch list".
+    intro: The first word of a stream's name, e.g. "Pitch" in "Pitch list".
     columns: [Word, Stream]
     entries:
       Positions: The song's play order.
@@ -263,7 +264,7 @@ sections:
 
   - key: control
     title: Control vocabulary
-    intro: Words used in the Control column of player cards.
+    intro: How a stream controls its own flow.
     columns: [Word, Meaning]
     entries:
       loop: Go back to a loop point.
@@ -292,7 +293,7 @@ sections:
 
   - key: seq_time
     title: 'Sequencer: time'
-    intro: Words for the Time row of a card's Sequencer table. How the score places events in time.
+    intro: How the score places events in time.
     columns: [Word, Meaning]
     entries:
       rows: A fixed grid. Every row lasts the same time.
@@ -302,7 +303,7 @@ sections:
 
   - key: seq_unit
     title: 'Sequencer: unit'
-    intro: Words for the Unit row. The unit of lengths, deltas or times.
+    intro: The unit of lengths, deltas or times.
     columns: [Word, Meaning]
     entries:
       tick: One replayer tick.
@@ -312,7 +313,7 @@ sections:
 
   - key: seq_note_end
     title: 'Sequencer: note end'
-    intro: Words for the Note end row. What ends a note.
+    intro: What ends a note.
     columns: [Word, Meaning]
     entries:
       next note: The next note on the same voice.
@@ -323,7 +324,7 @@ sections:
 
   - key: seq_routing
     title: 'Sequencer: routing'
-    intro: Words for the Routing row. How a note finds its voice.
+    intro: How a note finds its voice.
     columns: [Word, Meaning]
     entries:
       fixed: A track always plays on the same voice.
@@ -332,7 +333,7 @@ sections:
 
   - key: seq_reuse
     title: 'Sequencer: reuse'
-    intro: Words for the Reuse row. How the score repeats material.
+    intro: How the score repeats material.
     columns: [Word, Meaning]
     entries:
       patterns: Positions play stored blocks again.
@@ -342,7 +343,7 @@ sections:
 
   - key: seq_tempo
     title: 'Sequencer: tempo'
-    intro: Words for the Tempo row. How the score sets its speed.
+    intro: How the score sets its speed.
     columns: [Word, Meaning]
     entries:
       speed: The score sets ticks per row.
@@ -352,13 +353,27 @@ sections:
 
   - key: outputs
     title: Channel outputs
-    intro: What a card's Channel outputs table lists, one row each.
+    intro: The channel settings that controllers write.
     columns: [Output, Meaning]
     entries:
       Volume: The channel volume.
       Period: The channel period.
       Sample: Sample start and length.
       Wave data: Sample bytes that code rewrites.
+      DMA: The channel's DMA on or off.
+
+  - key: write_modes
+    title: Write modes
+    intro: How a controller changes a channel output.
+    columns: [Mode, Meaning]
+    entries:
+      set: Replaces the value.
+      add: Adds to the value; may be negative.
+      scale: Multiplies the value.
+      note: Sets the note index. The period comes from the table.
+      edit: Rewrites wave data in place.
+      'on': Turns DMA on.
+      'off': Turns DMA off.
 
   - key: note_on
     title: Note-on vocabulary
@@ -372,7 +387,7 @@ sections:
 
   - key: ends
     title: Interaction ends
-    intro: From and To words in the Interactions table, beside the card's own names.
+    intro: What a stream can act on, besides the player's own streams.
     columns: [Word, Meaning]
     entries:
       game: The game code that runs the player.
@@ -381,7 +396,7 @@ sections:
 
   - key: kind
     title: Controller kinds
-    intro: Words for the Kind column in a card's Sound tables.
+    intro: The kinds of controller.
     columns: [Word, Meaning]
     entries:
       program: Opcodes with conditions or calls.
@@ -392,7 +407,7 @@ sections:
 
   - key: owner
     title: Owners
-    intro: 'Words for the Owner column in Sound: whose data a controller keeps or edits.'
+    intro: Whose data a controller keeps or edits.
     columns: [Word, Meaning]
     entries:
       voice: Each voice has its own copy.
@@ -401,7 +416,7 @@ sections:
 
   - key: lifecycle
     title: Lifecycle events
-    intro: Events the lifecycle handlers in a card's Timing section cover.
+    intro: Points in a note's life that a player handles.
     columns: [Word, Meaning]
     entries:
       note-on: A new note starts on the voice.

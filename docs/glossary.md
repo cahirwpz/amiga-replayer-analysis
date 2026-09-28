@@ -192,7 +192,8 @@ Code patterns we cite from replayer source.
 | ---------------------- | ------------------------------------------------------------------------------------ |
 | **stream**             | A position in some data that the player steps through.                               |
 | **scope**              | Where a stream's position lives: song, track, voice or instrument.                   |
-| **controller**         | Template 2: any process that writes a channel output.                                |
+| **controller**         | Any process that writes a channel output.                                            |
+| **write mode**         | How a controller changes a channel output, e.g. set or add.                          |
 | **spec**               | A player's model as typed Python in `specs/`. Its CamelCase names are replay labels. |
 | **lifecycle event**    | A point in a note's life: note-on, legato, release, hard stop, program end.          |
 | **interaction**        | One stream acting on another, e.g. a jump or a trigger.                              |
@@ -226,8 +227,7 @@ How we know that one player grew from another.
 
 ## Stream names
 
-The first word of each name in a card's Streams table. Add a word here before
-using it, e.g. "Pitch" for "Pitch list".
+The first word of a stream's name, e.g. "Pitch" in "Pitch list".
 
 | Word            | Stream                                                       |
 | --------------- | ------------------------------------------------------------ |
@@ -272,7 +272,7 @@ can still appear as `code`.
 
 ## Control vocabulary
 
-Words used in the Control column of player cards.
+How a stream controls its own flow.
 
 | Word     | Meaning                                                |
 | -------- | ------------------------------------------------------ |
@@ -303,8 +303,7 @@ What moves a stream or controller on.
 
 ## Sequencer: time
 
-Words for the Time row of a card's Sequencer table. How the score places events
-in time.
+How the score places events in time.
 
 | Word        | Meaning                                                  |
 | ----------- | -------------------------------------------------------- |
@@ -315,7 +314,7 @@ in time.
 
 ## Sequencer: unit
 
-Words for the Unit row. The unit of lengths, deltas or times.
+The unit of lengths, deltas or times.
 
 | Word      | Meaning                                          |
 | --------- | ------------------------------------------------ |
@@ -326,7 +325,7 @@ Words for the Unit row. The unit of lengths, deltas or times.
 
 ## Sequencer: note end
 
-Words for the Note end row. What ends a note.
+What ends a note.
 
 | Word           | Meaning                                        |
 | -------------- | ---------------------------------------------- |
@@ -338,7 +337,7 @@ Words for the Note end row. What ends a note.
 
 ## Sequencer: routing
 
-Words for the Routing row. How a note finds its voice.
+How a note finds its voice.
 
 | Word          | Meaning                                                    |
 | ------------- | ---------------------------------------------------------- |
@@ -348,7 +347,7 @@ Words for the Routing row. How a note finds its voice.
 
 ## Sequencer: reuse
 
-Words for the Reuse row. How the score repeats material.
+How the score repeats material.
 
 | Word         | Meaning                                                          |
 | ------------ | ---------------------------------------------------------------- |
@@ -359,7 +358,7 @@ Words for the Reuse row. How the score repeats material.
 
 ## Sequencer: tempo
 
-Words for the Tempo row. How the score sets its speed.
+How the score sets its speed.
 
 | Word       | Meaning                                                     |
 | ---------- | ----------------------------------------------------------- |
@@ -370,7 +369,7 @@ Words for the Tempo row. How the score sets its speed.
 
 ## Channel outputs
 
-What a card's Channel outputs table lists, one row each.
+The channel settings that controllers write.
 
 | Output        | Meaning                          |
 | ------------- | -------------------------------- |
@@ -378,6 +377,21 @@ What a card's Channel outputs table lists, one row each.
 | **Period**    | The channel period.              |
 | **Sample**    | Sample start and length.         |
 | **Wave data** | Sample bytes that code rewrites. |
+| **DMA**       | The channel's DMA on or off.     |
+
+## Write modes
+
+How a controller changes a channel output.
+
+| Mode      | Meaning                                               |
+| --------- | ----------------------------------------------------- |
+| **set**   | Replaces the value.                                   |
+| **add**   | Adds to the value; may be negative.                   |
+| **scale** | Multiplies the value.                                 |
+| **note**  | Sets the note index. The period comes from the table. |
+| **edit**  | Rewrites wave data in place.                          |
+| **on**    | Turns DMA on.                                         |
+| **off**   | Turns DMA off.                                        |
 
 ## Note-on vocabulary
 
@@ -392,7 +406,7 @@ What a note-on does to a controller's state.
 
 ## Interaction ends
 
-From and To words in the Interactions table, beside the card's own names.
+What a stream can act on, besides the player's own streams.
 
 | Word            | Meaning                               |
 | --------------- | ------------------------------------- |
@@ -402,7 +416,7 @@ From and To words in the Interactions table, beside the card's own names.
 
 ## Controller kinds
 
-Words for the Kind column in a card's Sound tables.
+The kinds of controller.
 
 | Word              | Meaning                                                    |
 | ----------------- | ---------------------------------------------------------- |
@@ -414,7 +428,7 @@ Words for the Kind column in a card's Sound tables.
 
 ## Owners
 
-Words for the Owner column in Sound: whose data a controller keeps or edits.
+Whose data a controller keeps or edits.
 
 | Word           | Meaning                                       |
 | -------------- | --------------------------------------------- |
@@ -424,7 +438,7 @@ Words for the Owner column in Sound: whose data a controller keeps or edits.
 
 ## Lifecycle events
 
-Events the lifecycle handlers in a card's Timing section cover.
+Points in a note's life that a player handles.
 
 | Word            | Meaning                                             |
 | --------------- | --------------------------------------------------- |
