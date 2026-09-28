@@ -75,6 +75,7 @@ sections:
       portamento: Slide of the pitch, often towards a target note.
       vibrato: Periodic pitch change.
       trill: Fast alternation between a note and a note above it.
+      tie: A note that joins the note before it. The sound goes on.
       swing: Beats alternate between a longer and a shorter length.
       tremolo: Periodic volume change.
       voice: One independent part of the music.

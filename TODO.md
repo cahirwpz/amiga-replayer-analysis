@@ -60,21 +60,16 @@ the first card on it, with `specs/med.py`.
 The user's list, triaged. Nothing below is on a card yet. "Docs" means format
 notes or comments only; "skimmed" means replay code read in part.
 
-| Order | Player          | Value | Basis   | Lead                                          |
-| ----- | --------------- | ----- | ------- | --------------------------------------------- |
-| 1     | `MusicMaker-8V` | high  | docs    | Eight voices mixed into four channels         |
-| 2     | `PaulRobotham`  | med   | skimmed | Packed note lengths, vibrato scaled by period |
+| Order | Player          | Value | Basis | Lead                                  |
+| ----- | --------------- | ----- | ----- | ------------------------------------- |
+| 1     | `MusicMaker-8V` | high  | docs  | Eight voices mixed into four channels |
 
 Reading notes, with original labels:
 
-| Player          | Where                                                                                   | Note                                              |
-| --------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `MusicMaker-8V` | `ext/uade/amigasrc/players/other/music_maker/MusicMaker8.asm`                           | Mixer header comment: `FAST-VOL-MIX`              |
-| `MusicMaker-8V` | `ideas/voice-mixing.md`                                                                 | Compare the mixer with this page                  |
-| `PaulRobotham`  | `ext/uade/amigasrc/players/wanted_team/PaulRobotham/src/Paul Robotham_v1.asm:lbC015406` | Length: 5 bits, shifted by 3 bits                 |
-| `PaulRobotham`  | `:lbC015406`                                                                            | Tempo scaling keeps the remainder                 |
-| `PaulRobotham`  | `lbC01562E`                                                                             | Commented: effect takes the voice nearest its end |
-| `PaulRobotham`  | —                                                                                       | Voices are fixed, not allocated                   |
+| Player          | Where                                                         | Note                                 |
+| --------------- | ------------------------------------------------------------- | ------------------------------------ |
+| `MusicMaker-8V` | `ext/uade/amigasrc/players/other/music_maker/MusicMaker8.asm` | Mixer header comment: `FAST-VOL-MIX` |
+| `MusicMaker-8V` | `ideas/voice-mixing.md`                                       | Compare the mixer with this page     |
 
 Skip unless a new lead turns up:
 
@@ -97,6 +92,7 @@ Skip unless a new lead turns up:
   voice 3.
 - Modules for new cards: [SoundFactory](players/SoundFactory.md) sync opcodes.
   [Jason Page](players/JasonPage.md) branch markers and save slots.
+  [Paul Robotham](players/PaulRobotham.md) pulses per quarter note.
 - Modules the user can find: FredMonitor (`Fred`), `SIDMon1.0` and
   `DavidWhittaker`. Their replay code ships inside each module.
 - Releases: did a game or demo ship Oktalyzer's replay 1? Which games used

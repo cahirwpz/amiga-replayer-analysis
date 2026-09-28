@@ -205,6 +205,14 @@ JasonPage:
   game: ViroCop
   note: three replays in one source; the card reads ViroCop's
 
+PaulRobotham:
+  spec: specs/paul_robotham.py
+  provenance: disassembly
+  author: Paul Robotham
+  year: 1994
+  game: Starlord
+  note: two commands come from the replay of Dawn Patrol
+
 MusiclineEditor:
   spec: specs/musicline.py
   provenance: original

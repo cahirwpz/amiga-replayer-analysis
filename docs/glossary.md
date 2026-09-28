@@ -68,17 +68,18 @@ One line per term. Every acronym used in this repo must appear here.
 
 ## Music theory
 
-| Term           | Meaning                                                |
-| -------------- | ------------------------------------------------------ |
-| **note**       | A pitch with a duration.                               |
-| **transpose**  | Shift all pitches by the same interval.                |
-| **arpeggio**   | Fast cycle of note offsets, making a chord-like sound. |
-| **portamento** | Slide of the pitch, often towards a target note.       |
-| **vibrato**    | Periodic pitch change.                                 |
-| **trill**      | Fast alternation between a note and a note above it.   |
-| **swing**      | Beats alternate between a longer and a shorter length. |
-| **tremolo**    | Periodic volume change.                                |
-| **voice**      | One independent part of the music.                     |
+| Term           | Meaning                                                  |
+| -------------- | -------------------------------------------------------- |
+| **note**       | A pitch with a duration.                                 |
+| **transpose**  | Shift all pitches by the same interval.                  |
+| **arpeggio**   | Fast cycle of note offsets, making a chord-like sound.   |
+| **portamento** | Slide of the pitch, often towards a target note.         |
+| **vibrato**    | Periodic pitch change.                                   |
+| **trill**      | Fast alternation between a note and a note above it.     |
+| **tie**        | A note that joins the note before it. The sound goes on. |
+| **swing**      | Beats alternate between a longer and a shorter length.   |
+| **tremolo**    | Periodic volume change.                                  |
+| **voice**      | One independent part of the music.                       |
 
 ## Sound changes
 

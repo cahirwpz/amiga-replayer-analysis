@@ -1,0 +1,92 @@
+# Annotations for the Paul Robotham replayer. Render: tools/annot.py
+# The replay is from Starlord (1994); two commands come from Dawn Patrol.
+source: ext/uade/amigasrc/players/wanted_team/PaulRobotham/src/Paul Robotham_v1.asm
+sha1: 7edc1ed67f58320dc8707257e96e60fb2720b089
+
+labels:
+  # start
+  lbC014CC2: InitModule
+  lbC014D22: InitSong
+  # every tick
+  Play: Play
+  lbC014E80: StepVoice
+  lbC014E9A: ReadStream
+  lbC0151FC: RunCommand
+  lbC014ED0: NoteOn
+  lbC014F3E: LegatoNote
+  lbC014FB4: SwapInstrument
+  lbC015034: ReadLength
+  lbC01509A: StartDma
+  lbC0150DE: Portamento
+  lbC015110: Vibrato
+  lbC015162: EnvelopeTick
+  lbC0151D8: VoiceEnd
+  lbC01523E: MasterFade
+  # sound effects
+  lbC015292: MutedVoice
+  lbC01556C: EffectTick
+  1268: StartEffect
+  # commands, in table order
+  lbL015CE4: CommandTable
+  Error: BadCommand
+  lbC0156C0: LoopStart
+  lbC0156D4: LoopEnd
+  lbC0156E8: SetVibratoDepth
+  lbC01570A: SetVibratoSpeed
+  lbC015710: SetPortamento
+  lbC01572E: SetVibratoTable
+  lbC015742: SetEnvelope
+  lbC015786: VoiceVolume
+  lbC01578E: SetPulseLength
+  lbC015756: SetInstrument
+  lbC0157A6: SetMode
+  lbC0157B8: EffectVoices
+  lbC0157C6: SetMarker
+  lbC0157D0: FadeMaster
+  lbC015812: FadeOut
+  lbC015820: FadeStep
+  lbC009AD2: FilterOn
+  lbC009AC0: FilterOff
+  # data
+  lbL015828: VoiceTable
+  lbL0159E8: EffectTable
+  lbL015D84: LoopStacks
+  lbL015D94: VibratoTables
+  lbL015D98: EnvelopeTables
+  lbL015CD0: Instruments
+  lbW015DA0: EndedVoices
+  lbW015DA2: VoiceCount
+  lbB015DA8: LoopPending
+  lbB015DA9: DmaPending
+  lbB015DAA: EffectLoop
+  lbB015DAB: EffectDma
+  lbB015DAC: EffectStart
+  lbB015DAD: Marker
+  lbB015DAE: VolumeOn
+  lbW015DB2: PulseLength
+  lbW015DB4: PulseDivisor
+  lbW015DBC: EffectVoiceCount
+  lbW015DBE: MasterVolume
+  lbW015DC0: MasterTarget
+  lbW015DC2: MasterStep
+  lbW015DC4: MasterCounter
+  lbW015DC6: MasterSpeed
+  lbW015DCC: PeriodTable
+  lbL015E58: VoiceMask
+  lbW015E5C: StopEffects
+  lbL023E4E: EmptyLoop
+
+banners:
+  1268: |-
+    The game's effect call, commented out by Wanted Team. It takes the
+    voice whose effect has the fewest ticks left.
+
+comments:
+  1210: the original's long write also sets AUDxPER
+  1231: the original's long write also sets AUDxPER to the effect's period
+
+types:
+  Module: [ModulePtr]
+  Voice: [lbL015828]
+  Effect: [lbL0159E8]
+  Instrument: [lbL015CD0]
