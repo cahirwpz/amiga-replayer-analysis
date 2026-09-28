@@ -37,9 +37,6 @@ the first card on it, with `specs/med.py`.
 
 ### Hardware model
 
-- [ ] `hardware/paula.py:Channel` times each word from the last DMA slot. At
-      period 428 a word lasts 908 CCK, not 856, so every spec plays flat.
-      [Musicline](players/MusiclineEditor.md)'s 8-channel mode ticks at 28 Hz.
 - [ ] Make `hardware/paula.py:Sample` the 16-bit words that DMA fetches, each
       two 8-bit samples, high byte first. It must show writes made while it
       plays; `specs/sonic_arranger.py:StartSynthWave` casts a `bytearray` now.

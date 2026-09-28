@@ -61,6 +61,11 @@ class Channel:
     Source for the state machine: Minimig-AGA_MiSTer 3ab91cd,
     rtl/paula_audio_channel.v. Grain: one word, not one byte.
 
+    The period counter times the output: a word ends 2 × period CCK after
+    it starts. At each word end Paula asks for DMA, and Agnus refills a
+    one-word buffer at the channel's next slot. So DMA latency never
+    stretches a word, and pitch does not depend on the line length.
+
     `location` and `length` are the queued registers AUDxLC and AUDxLEN.
     `playing`, `pointer` and `count` are the live pointer and counter. The
     channel always wraps: there is no loop register and no one-shot mode.
@@ -84,6 +89,7 @@ class Channel:
     dma: bool = False  # this channel's DMACON bit
     armed: bool = False  # DMA enabled; the start reload is pending
     idle: bool = True  # no word is playing; only now can DMA on restart
+    counting: bool = False  # the period counter runs: a word is playing
     irq_enabled: bool = False  # this channel's INTENA bit
     irq_requested: bool = False  # this channel's INTREQ bit; the CPU clears it
     on_interrupt: "Callable[[Channel], None] | None" = None  # see on_irq
@@ -147,12 +153,10 @@ class Channel:
         self.clock.at(slot, self.fetch)
 
     def fetch(self) -> None:
-        """One DMA slot: the start reload, or one word."""
+        """One DMA slot: the start reload, or one word into the buffer.
+        With DMA off, Agnus serves no request."""
         if not self.dma:
-            if self.irq_requested:
-                self.idle = True  # the word is done and DMA is off
-            else:
-                self.cpu_word()  # Minimig AUDIO_STATE_4: one more word
+            self.idle = self.idle or not self.counting  # DMA off before output
             return
         if self.armed:
             # The start reload: this first word only reloads the pointer and
@@ -171,13 +175,27 @@ class Channel:
             self.count -= 1
         if self.modulates is not None:
             self.modulate(word)
-        self.fetch_at(self.clock.now + 2 * self.period)
+        if not self.counting:
+            self.counting = True
+            self.clock.at(self.clock.now + 2 * self.period, self.word_end)
+
+    def word_end(self) -> None:
+        """The period counter ends a word. With DMA on, the buffered word
+        plays next and Paula asks for another one."""
+        if self.dma:
+            self.fetch_at(self.clock.now)
+            self.clock.at(self.clock.now + 2 * self.period, self.word_end)
+        elif self.irq_requested:
+            self.idle, self.counting = True, False  # the word is done, DMA off
+        else:
+            self.cpu_word()  # Minimig AUDIO_STATE_4: one more word
 
     def cpu_word(self) -> None:
         """Play AUDxDAT once, without DMA, and request an interrupt. The
         word ends after 2 × period CCK."""
         self.request()
-        self.clock.at(self.clock.now + 2 * self.period, self.fetch)
+        self.counting = True
+        self.clock.at(self.clock.now + 2 * self.period, self.word_end)
 
     def reload(self) -> None:
         """Copy AUDxLC and AUDxLEN to the live pointer and counter, and

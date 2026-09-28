@@ -177,6 +177,22 @@ class Paula_(unittest.TestCase):
         self.m.run(start + LINE_CCK)
         self.assertEqual(self.events[-1][1], b"R")
 
+    def test_period_times_each_word_not_the_dma_slot(self):
+        # At period 428 a word lasts 856 CCK: 3.77 lines, not 4.
+        self.channel.period = 428
+        self.channel.play(Sample(b"N" * 4))  # two words: a reload per 1712 CCK
+        self.m.run(100 * 1712)
+        times = [t for t, _ in self.events][1:]
+        per_reload = (times[-1] - times[0]) / (len(times) - 1)
+        self.assertAlmostEqual(per_reload, 1712, delta=3)
+
+    def test_dma_off_before_output_goes_idle(self):
+        self.channel.play(Sample(b"N" * 8))
+        self.m.run(SLOT_CCK[0])  # the start reload only
+        self.channel.disable()
+        self.m.run(1000)
+        self.assertTrue(self.channel.idle)
+
     def test_disable_with_intreq_set_stops_the_channel(self):
         self.channel.play(Sample(b"N" * 8))
         self.m.run(300)
@@ -187,18 +203,18 @@ class Paula_(unittest.TestCase):
         self.assertTrue(self.channel.idle)
 
     def test_disable_with_intreq_clear_plays_one_more_word(self):
-        # N's words end at 241, 695, 1149; DMA goes off during the second.
+        # N's first word plays from 241 to 641; DMA goes off during it.
         self.channel.play(Sample(b"N" * 8))
         self.m.run(300)
         self.channel.irq_enabled = False
         self.channel.irq_requested = False
         self.channel.disable()
-        self.m.run(694)
+        self.m.run(640)
         self.assertFalse(self.channel.irq_requested)
-        self.m.run(695)
+        self.m.run(641)
         self.assertTrue(self.channel.irq_requested)
         self.assertFalse(self.channel.idle)
-        self.m.run(695 + 2 * self.channel.period)
+        self.m.run(641 + 2 * self.channel.period)
         self.assertTrue(self.channel.idle)
 
     def test_data_write_from_idle_requests_at_once(self):
