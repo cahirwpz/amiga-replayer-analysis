@@ -65,7 +65,6 @@ def citation(code):
 # Code spans starting with these name repo paths, relative to the root.
 REPO_DIRS = (
     "data/",
-    "details/",
     "docs/",
     "ext/",
     "ideas/",

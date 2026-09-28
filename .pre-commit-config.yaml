@@ -56,7 +56,7 @@ repos:
         types: [markdown]
         # Glossary changes can break any file, so always check all of them.
         pass_filenames: false
-        args: [ README.md, AGENTS.md, TODO.md, ext/README.md, docs/, players/, ideas/, details/ ]
+        args: [ README.md, AGENTS.md, TODO.md, ext/README.md, docs/, players/, ideas/ ]
 
       - id: links                    # Links and source citations resolve
         name: links
@@ -64,7 +64,7 @@ repos:
         language: system
         types: [markdown]
         pass_filenames: false
-        args: [ README.md, AGENTS.md, TODO.md, ext/README.md, docs/, players/, ideas/, details/ ]
+        args: [ README.md, AGENTS.md, TODO.md, ext/README.md, docs/, players/, ideas/ ]
 
       - id: cards                    # Player card structure, see docs/card-template.md
         name: cards

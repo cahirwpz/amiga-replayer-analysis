@@ -28,7 +28,7 @@ def run(tool, *files):
 
 class GoodCard(unittest.TestCase):
     def test_all_checkers_accept_a_good_card(self):
-        for card in ("MugicianII.md", "MED.md"):
+        for card in ("MED.md", "Jochen_Hippel_ST.md"):
             good = FIXTURES / "good" / card
             for tool in ("cogload.py", "links.py", "cards.py"):
                 with self.subTest(card=card, tool=tool):
@@ -166,40 +166,6 @@ class Cards(unittest.TestCase):
     def test_reports_each_rule(self):
         code, rules, out = run("cards.py", FIXTURES / "cards_bad.md")
         self.assertEqual(code, 1)
-        expected = {"front-matter", "player", "section", "streams", "base"}
-        expected |= {"generators", "outputs", "interactions", "sequencer"}
-        self.assertEqual(expected, rules, out)
-        for text in (
-            "`control` must map",
-            "`themes` must be",
-            "omit `track`",
-            "missing `## State`",
-            "order should be",
-            "control `teleport`",
-            "rate `sometimes`",
-            "file name should be",
-            "name `Sequence` not in the glossary",
-            "unknown `evidence`",
-            "role `conductor`",
-            "scope `galaxy`",
-            "rate `often`",
-            "set by `Ghost`",
-            "note-on `maybe`",
-            "output `Colour`",
-            "writer `Track` must be",
-            "writer `Nobody` is not on the card",
-            "mode `twist`",
-            "`nowhere` is not on the card",
-            "aspects must be",
-            "time `grid`",
-            "routing `magic`",
-            "`Nowhere` is no other card",
-        ):
-            self.assertIn(text, out)
-
-    def test_reports_each_template_2_rule(self):
-        code, rules, out = run("cards.py", FIXTURES / "cards_bad_v2.md")
-        self.assertEqual(code, 1)
         expected = {"front-matter", "player", "section", "context", "composer"}
         expected |= {"cell", "label", "code", "unique"}
         self.assertEqual(expected, rules, out)
@@ -229,6 +195,15 @@ class Cards(unittest.TestCase):
             self.assertEqual(card.read_text(encoding="utf-8"), good)
             run("cards.py", "--write", card)
             self.assertEqual(card.read_text(encoding="utf-8"), good)
+
+    def test_rejects_a_card_without_template_2(self):
+        good = (FIXTURES / "good" / "MED.md").read_text(encoding="utf-8")
+        with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
+            card = Path(tmp) / "MED.md"
+            card.write_text(good.replace("template: 2\n", ""), encoding="utf-8")
+            code, _, out = run("cards.py", card)
+            self.assertEqual(code, 1)
+            self.assertIn("`template` must be 2", out)
 
     def test_accepts_a_delta_card(self):
         delta = FIXTURES / "good" / "Jochen_Hippel_ST.md"

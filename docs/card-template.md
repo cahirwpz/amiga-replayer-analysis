@@ -84,8 +84,3 @@ Composer's view.
 - Skip Open questions when there is nothing to say.
 - Tables skip the card's word limit.
 - One fact per table cell, never `;`. Repeat the first column for more.
-
-## Template 1
-
-Cards without `template: 2` follow the old template until they are migrated. Git
-history has its text; `tools/cards.py` still checks it.

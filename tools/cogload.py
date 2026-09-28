@@ -40,18 +40,6 @@ PROFILES = [
     # Tables are lookups; only prose counts.
     ("players/", {"file_words": 400, "count_tables": False}),
     ("ideas/", {"file_words": 300}),
-    (
-        "details/",
-        {
-            "sentence_words": 20,
-            "block_sentences": 5,
-            "list_items": 10,
-            "list_depth": 3,
-            "file_words": 1000,
-            "cell_words": 25,
-            "fk_grade": 14.0,
-        },
-    ),
 ]
 
 # Files exempt from the acronym check.

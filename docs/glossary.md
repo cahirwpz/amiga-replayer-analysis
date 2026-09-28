@@ -192,19 +192,13 @@ Code patterns we cite from replayer source.
 | ---------------------- | ------------------------------------------------------------------------------------ |
 | **stream**             | A position in some data that the player steps through.                               |
 | **scope**              | Where a stream's position lives: song, track, voice or instrument.                   |
-| **generator**          | Template 1: stateful process that is not a stream, e.g. a vibrato state machine.     |
 | **controller**         | Template 2: any process that writes a channel output.                                |
 | **spec**               | A player's model as typed Python in `specs/`. Its CamelCase names are replay labels. |
 | **lifecycle event**    | A point in a note's life: note-on, legato, release, hard stop, program end.          |
 | **interaction**        | One stream acting on another, e.g. a jump or a trigger.                              |
 | **sequencer**          | The streams that decide which note plays and when.                                   |
 | **instrument program** | A stream that a note-on starts or restarts. It shapes that note.                     |
-| **write mode**         | How a writer changes a channel output, e.g. set or add.                              |
 | **table walker**       | A stream that steps through a table: off, once or looping.                           |
-| **tables**             | Template 1 control level: data walked in order, no opcodes.                          |
-| **commands**           | Template 1 control level: data with opcodes, but no conditions.                      |
-| **program**            | Template 1 control level: opcodes with conditions or calls.                          |
-| **none**               | Template 1 control level: no stream in this role.                                    |
 | **module**             | Replay code ships inside the music file.                                             |
 | **delta card**         | A card with `base`. It shows only what differs from the base card.                   |
 
@@ -293,7 +287,7 @@ Words used in the Control column of player cards.
 
 ## Advances by vocabulary
 
-What moves a stream or controller on. Template 1 calls this column Rate.
+What moves a stream or controller on.
 
 | Word              | Meaning                                              |
 | ----------------- | ---------------------------------------------------- |
@@ -374,15 +368,6 @@ Words for the Tempo row. How the score sets its speed.
 | **scaled** | Each tick adds a tempo-dependent amount to the score clock. |
 | **none**   | The score cannot change its speed.                          |
 
-## Role vocabulary
-
-Words used in the Role column of a card's Streams table.
-
-| Word           | Meaning                                           |
-| -------------- | ------------------------------------------------- |
-| **sequencer**  | Decides which note plays and when.                |
-| **instrument** | Shapes one note. A note-on starts or restarts it. |
-
 ## Channel outputs
 
 What a card's Channel outputs table lists, one row each.
@@ -393,25 +378,10 @@ What a card's Channel outputs table lists, one row each.
 | **Period**    | The channel period.              |
 | **Sample**    | Sample start and length.         |
 | **Wave data** | Sample bytes that code rewrites. |
-| **DMA**       | The channel's DMA on or off.     |
-
-## Write modes
-
-How a writer in the Channel outputs table changes its output.
-
-| Mode      | Meaning                                               |
-| --------- | ----------------------------------------------------- |
-| **set**   | Replaces the value.                                   |
-| **add**   | Adds to the value; may be negative.                   |
-| **scale** | Multiplies the value.                                 |
-| **note**  | Sets the note index. The period comes from the table. |
-| **edit**  | Rewrites wave data in place.                          |
-| **on**    | Turns DMA on.                                         |
-| **off**   | Turns DMA off.                                        |
 
 ## Note-on vocabulary
 
-What a note-on does to a generator. Used in the Generators table.
+What a note-on does to a controller's state.
 
 | Word        | Meaning                                     |
 | ----------- | ------------------------------------------- |

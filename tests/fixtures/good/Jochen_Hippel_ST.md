@@ -1,38 +1,28 @@
 ---
 player: Jochen_Hippel_ST
-base: MugicianII
-control: { sequencer: commands, instrument: tables }
-themes: [mixing]
+template: 2
+base: MED
 ideas: []
-streams: {}
 ---
 
 # Delta card fixture
 
-It names streams and generators of its base card, `MugicianII.md`.
+A delta card names its base card, `MED.md`, and may skip Composer's view.
+
+## Context
+
+| Fact      | Value                                                                 |
+| --------- | --------------------------------------------------------------------- |
+| Player    | `Jochen_Hippel_ST`                                                    |
+| Author    | Jochen Hippel                                                         |
+| Family    | Jochen Hippel                                                         |
+| Code read | disassembly: `ext/uade/amigasrc/players/wanted_team/Jochen_Hippel_ST` |
+| Spec      | [specs/jochen_hippel_st.py](../../../specs/jochen_hippel_st.py)       |
 
 ## Key ideas
 
-- A delta card may skip Streams, Sequencer and State.
+- A delta card shows only what differs from its base card.
 
-## Generators
+## What is unique
 
-| Generator | Scope | States | Writes    | Rate | Set by | Note-on |
-| --------- | ----- | ------ | --------- | ---- | ------ | ------- |
-| Echo      | song  | on     | wave data | tick | Track  | keep    |
-
-## Channel outputs
-
-| Output    | Writers, in tick order     |
-| --------- | -------------------------- |
-| Wave data | Mixer (edit), Echo (edit)  |
-
-## Interactions
-
-| From | To          | Event          |
-| ---- | ----------- | -------------- |
-| Echo | Portamento  | none, a test   |
-
-## Open questions
-
-- None.
+- Nothing, as a test.

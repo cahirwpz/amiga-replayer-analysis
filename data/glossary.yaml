@@ -188,19 +188,13 @@ sections:
     entries:
       stream: A position in some data that the player steps through.
       scope: 'Where a stream''s position lives: song, track, voice or instrument.'
-      generator: 'Template 1: stateful process that is not a stream, e.g. a vibrato state machine.'
       controller: 'Template 2: any process that writes a channel output.'
       spec: 'A player''s model as typed Python in `specs/`. Its CamelCase names are replay labels.'
       lifecycle event: 'A point in a note''s life: note-on, legato, release, hard stop, program end.'
       interaction: One stream acting on another, e.g. a jump or a trigger.
       sequencer: The streams that decide which note plays and when.
       instrument program: A stream that a note-on starts or restarts. It shapes that note.
-      write mode: How a writer changes a channel output, e.g. set or add.
       table walker: 'A stream that steps through a table: off, once or looping.'
-      tables: 'Template 1 control level: data walked in order, no opcodes.'
-      commands: 'Template 1 control level: data with opcodes, but no conditions.'
-      program: 'Template 1 control level: opcodes with conditions or calls.'
-      none: 'Template 1 control level: no stream in this role.'
       module: Replay code ships inside the music file.
       delta card: A card with `base`. It shows only what differs from the base card.
 
@@ -283,7 +277,7 @@ sections:
 
   - key: rate
     title: Advances by vocabulary
-    intro: What moves a stream or controller on. Template 1 calls this column Rate.
+    intro: What moves a stream or controller on.
     columns: [Word, Meaning]
     entries:
       tick: Steps every tick.
@@ -356,14 +350,6 @@ sections:
       scaled: Each tick adds a tempo-dependent amount to the score clock.
       none: The score cannot change its speed.
 
-  - key: roles
-    title: Role vocabulary
-    intro: Words used in the Role column of a card's Streams table.
-    columns: [Word, Meaning]
-    entries:
-      sequencer: Decides which note plays and when.
-      instrument: Shapes one note. A note-on starts or restarts it.
-
   - key: outputs
     title: Channel outputs
     intro: What a card's Channel outputs table lists, one row each.
@@ -373,24 +359,10 @@ sections:
       Period: The channel period.
       Sample: Sample start and length.
       Wave data: Sample bytes that code rewrites.
-      DMA: The channel's DMA on or off.
-
-  - key: write_modes
-    title: Write modes
-    intro: How a writer in the Channel outputs table changes its output.
-    columns: [Mode, Meaning]
-    entries:
-      set: Replaces the value.
-      add: Adds to the value; may be negative.
-      scale: Multiplies the value.
-      note: Sets the note index. The period comes from the table.
-      edit: Rewrites wave data in place.
-      'on': Turns DMA on.
-      'off': Turns DMA off.
 
   - key: note_on
     title: Note-on vocabulary
-    intro: What a note-on does to a generator. Used in the Generators table.
+    intro: What a note-on does to a controller's state.
     columns: [Word, Meaning]
     entries:
       restart: The state starts again.
