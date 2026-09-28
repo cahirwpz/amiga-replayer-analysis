@@ -51,15 +51,41 @@ the first card on it, with `specs/med.py`.
 
 ### New cards
 
-The user's list, triaged. All leads are on cards now.
+The user's list is on cards now. Next: players whose only code is a
+NostalgicPlayer port, triaged from the port. A port is a map, so every lead
+needs its UADE binary disassembled first.
 
-- [ ] Triage the players with only a NostalgicPlayer port, by theme. A lead
-      needs its UADE binary disassembled. Players: `Synth`,
-      `VoodooSupremeSynthesizer`, `InStereo`, `InStereo2.0`, `ActionAmics`,
-      `FaceTheMusic` and `QuadraComposer`.
+| Order | Player                     | Value | Binary | Lead                                                    |
+| ----- | -------------------------- | ----- | ------ | ------------------------------------------------------- |
+| 1     | `VoodooSupremeSynthesizer` | high  | 6 kB   | Audio interrupt plays a long sample in table-set chunks |
+| 2     | `FaceTheMusic`             | high  | 14 kB  | Event-driven scripts that read and drive other tracks   |
+| 3     | `Synth`                    | med   | 10 kB  | Double-buffered waves; an envelope sets a negated span  |
+| 4     | `ActionAmics`              | low   | 5 kB   | One-byte sweep, run once per tick per shared sample     |
+
+- [ ] Disassemble `VoodooSupremeSynthesizer`, then `FaceTheMusic`.
+
+Reading notes, paths under `ext/nostalgicplayer/`:
+
+| Player                     | Where                                                                                                         | Note                                                      |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `VoodooSupremeSynthesizer` | `Format_Descriptions/Voodoo Supreme Synthesizer.txt`                                                          | Stream commands: call, return, loop                       |
+| `VoodooSupremeSynthesizer` | `Source/Agents/Players/VoodooSupremeSynthesizer/VoodooSupremeSynthesizerWorker.Player.cs`, `AudioInterrupt()` | Per-voice interrupt moves the sample offset               |
+| `VoodooSupremeSynthesizer` | `DoFrequencyMapped()`                                                                                         | A table sets chunk starts; step can scale with period     |
+| `VoodooSupremeSynthesizer` | `DoRingModulation()`, `DoXorRingModulation()`, `DoMorphing()`                                                 | Two 32-byte waves into a double buffer each tick          |
+| `FaceTheMusic`             | `Source/Agents/Players/FaceTheMusic/FaceTheMusicWorker.cs`                                                    | Script commands start near `case SoundEffect.Wait`        |
+| `FaceTheMusic`             | `RunSelWorkOnTrack()`                                                                                         | A script switches the track it drives                     |
+| `FaceTheMusic`             | `Containers/LfoTarget.cs`                                                                                     | Four LFOs; one can drive another's speed or depth         |
+| `Synth`                    | `Source/Agents/Players/Synthesis/SynthesisWorker.cs`, `DoEnvelopeGeneratorCounter()`                          | Copies the wave to the idle buffer, negates N bytes       |
+| `Synth`                    | `DoSynthEffects()`                                                                                            | 16 wave effects; compare with Sonic Arranger's 17         |
+| `ActionAmics`              | `Source/Agents/Players/Actionamics/ActionamicsWorker.cs`                                                      | Byte flip near `AlreadyTaken`; compare `byte-write-sweep` |
 
 Skip unless a new lead turns up:
 
+- `InStereo`: the same file layout as `Synth`, without the wave effects. Guess:
+  `Synth` grew from it. Check the two binaries before a family link.
+- `InStereo2.0`: two waves per instrument, an LFO and an envelope. Close to
+  Sonic Arranger (inference from the port).
+- `QuadraComposer`: `ProTracker`-like effects.
 - `DeltaMusic2.0` and `SIDMon2.0`: only C and C# ports. They show tables close
   to Future Composer, SoundMon and Sonic Arranger.
 - `DavidWhittaker`: only C and C# ports. Its pitch and volume lists look like

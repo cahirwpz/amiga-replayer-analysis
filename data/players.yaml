@@ -357,7 +357,7 @@ FaceTheMusic:
 
 QuadraComposer:
   source: ext/nostalgicplayer/Source/Agents/Players/QuadraComposer
-  note: C# port in NostalgicPlayer
+  note: C# port in NostalgicPlayer; ProTracker-like, out of scope
   provenance: port
 
 # Guess: NostalgicPlayer's Activision Pro is Martin Walker's format.
