@@ -357,6 +357,7 @@ FaceTheMusic:
   provenance: ira
   author: J. Schmidt
   year: 1991
+  spec: specs/face_the_music.py
 
 QuadraComposer:
   source: ext/nostalgicplayer/Source/Agents/Players/QuadraComposer

@@ -53,21 +53,6 @@ the first card on it, with `specs/med.py`.
 
 ### New cards
 
-- [ ] Write the `FaceTheMusic` card and spec. Reading notes below.
-
-Face The Music reading notes, read in 68k code:
-
-| Where                                   | Note                                                       |
-| --------------------------------------- | ---------------------------------------------------------- |
-| `data/disasm/FaceTheMusic.cnf:MixPairs` | Eight tracks in pairs; each audio interrupt mixes a pair   |
-| `:MixPairs`                             | The higher-pitched track sets Paula's period (guess: `30`) |
-| `:MixPairs`                             | The louder track sets Paula's volume; the other is scaled  |
-| `:MixPair`                              | Dominant bytes copied; the other added through a table     |
-| `:MixPair`                              | The other track only skips bytes: never above the period   |
-| `:ScriptTable`                          | 62 script ops; the port names them, the 68k not yet        |
-| `:PatternEvent`                         | `$C000` and `$D000` events can start a script handler      |
-| `:Lfos`                                 | Four parts; read before naming the targets                 |
-
 Skip unless a new lead turns up:
 
 - `Synth`: an envelope sets how many bytes of a wave are negated. Its wave

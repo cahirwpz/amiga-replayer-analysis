@@ -205,6 +205,7 @@ Code patterns we cite from replayer source.
 | **interaction**        | One stream acting on another, e.g. a jump or a trigger.                              |
 | **sequencer**          | The streams that decide which note plays and when.                                   |
 | **instrument program** | A stream that a note-on starts or restarts. It shapes that note.                     |
+| **track program**      | A stream that runs on a track beside its notes.                                      |
 | **table walker**       | A stream that steps through a table: off, once or looping.                           |
 | **module**             | Replay code ships inside the music file.                                             |
 | **delta card**         | A card with `base`. It shows only what differs from the base card.                   |

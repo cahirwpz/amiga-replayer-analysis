@@ -1,0 +1,12 @@
+# Types for specs/face_the_music.py. The IRA config holds the labels; it
+# reads the UADE player binary.
+source: data/disasm/FaceTheMusic.cnf
+
+# Classes in the spec: each word is a label of the config.
+types:
+  Module: [TrackMask, SongLine]
+  Track: [Track0]
+  Sample: [Instruments]
+  Lfo: [Lfos]
+  Flow: [ScriptRun]
+  Scaled: [MixPair]

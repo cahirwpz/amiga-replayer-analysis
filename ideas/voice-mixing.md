@@ -1,7 +1,7 @@
 # Voice mixing
 
 Software mixing adds voices beyond Paula's four channels. Each player below
-fills a buffer once per tick, and a channel plays it.
+fills buffers that a channel plays.
 
 | Player                                         | Mixed voices     | Volume per voice   | Sum           | Mix rate          | Pitch                          |
 | ---------------------------------------------- | ---------------- | ------------------ | ------------- | ----------------- | ------------------------------ |
@@ -10,6 +10,7 @@ fills a buffer once per tick, and a channel plays it.
 | [Oktalyzer](../players/Oktalyzer.md), replay 1 | 2 per channel    | none; shared       | 7-bit samples | fixed, 15.6 kHz   | generated code per note        |
 | [Oktalyzer](../players/Oktalyzer.md), replay 2 | 2 per channel    | none; shared       | 7-bit samples | higher note's own | lower voice only               |
 | [MusicMaker 8V](../players/MusicMaker-8V.md)   | 2 per channel    | quieter voice only | 7-bit samples | higher note's own | generated code per period pair |
+| [Face The Music](../players/FaceTheMusic.md)   | 2 per channel    | quieter voice only | wraps         | higher note's own | lower voice only               |
 
 ## Three schemes
 
