@@ -1,7 +1,31 @@
 #!/bin/bash
 # This file must be used with "source ./activate" in the repository root.
 
+# A shallow, partial and sparse submodule: only the commit we pin, only the
+# given folders, and only the files in them. Git keeps sparse settings per
+# clone, so this runs before `git submodule update`, which then finds the
+# submodule at its pin.
+function replayer_analysis_sparse {
+  local dir=$1
+  shift
+  [ -e "$dir/.git" ] && return 0
+  local url sha
+  url=$(git config -f .gitmodules "submodule.$dir.url") || return 1
+  sha=$(git rev-parse ":$dir") || return 1
+  git init -q "$dir" &&
+    git -C "$dir" remote add origin "$url" &&
+    git -C "$dir" sparse-checkout set "$@" &&
+    git -C "$dir" fetch -q --depth 1 --filter=blob:none origin "$sha" &&
+    git -C "$dir" checkout -q "$sha" &&
+    git submodule init -- "$dir" &&
+    git submodule absorbgitdirs -- "$dir"
+}
+
 function replayer_analysis_activate {
+  # NostalgicPlayer: 162 MB in full; we read only its replayer ports and
+  # its format notes.
+  replayer_analysis_sparse ext/nostalgicplayer \
+    Source/Agents/Players Format_Descriptions || return 1
   git submodule update --init || return 1
   python3 -m venv .venv || return 1
   # shellcheck source=/dev/null

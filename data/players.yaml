@@ -46,17 +46,20 @@ DavidWhittaker:
   source: ext/c-flod/neoart/flod/whittaker
   note: C port of Flod 4.1 DWPlayer
   provenance: port
+  ports: [ext/nostalgicplayer/Source/Agents/Players/DavidWhittaker]
 
 DeltaMusic1.3:
   source: ext/c-flod/neoart/flod/deltamusic
   note: C port of Flod 4.1 D1Player
   provenance: port
+  ports: [ext/nostalgicplayer/Source/Agents/Players/DeltaMusic10]
   family: Delta Music
 
 DeltaMusic2.0:
   source: ext/c-flod/neoart/flod/deltamusic
   note: C port of Flod 4.1 D2Player
   provenance: port
+  ports: [ext/nostalgicplayer/Source/Agents/Players/DeltaMusic20]
   family: Delta Music
   after: { player: DeltaMusic1.3, evidence: name }
   head: true
@@ -134,7 +137,9 @@ MugicianII:
   links: [https://proofofconcept.nl/portfolio/mugician/]
 
 SIDMon1.0:
-  ports: [ext/c-flod/neoart/flod/sidmon]
+  ports:
+    - ext/c-flod/neoart/flod/sidmon
+    - ext/nostalgicplayer/Source/Agents/Players/SidMon10
   family: SIDMon
   author: Reinier van Vliet
   year: 1989
@@ -148,6 +153,7 @@ SIDMon2.0:
   source: ext/c-flod/neoart/flod/sidmon
   note: C port of Flod 4.1 S2Player
   provenance: port
+  ports: [ext/nostalgicplayer/Source/Agents/Players/SidMon20]
   family: SIDMon
   after: { player: SIDMon1.0, evidence: name }
   head: true
@@ -299,7 +305,7 @@ TFMX-Pro-TFHD:
   note: same format as TFMX-Pro (has source)
 
 Fred:
-  ports: [ext/c-flod/neoart/flod/fred]
+  ports: [ext/c-flod/neoart/flod/fred, ext/nostalgicplayer/Source/Agents/Players/Fred]
 
 RobHubbard:
   ports: [ext/c-flod/neoart/flod/hubbard]
@@ -318,9 +324,50 @@ Andrew_Parton:
   provenance_guess: true
   note: raw MIDI stream; MIDI channel AND 3 picks the Paula channel
 
+# No 68k code yet: NostalgicPlayer's C# ports show where to look.
+Synth:
+  source: ext/nostalgicplayer/Source/Agents/Players/Synthesis
+  note: C# port in NostalgicPlayer
+  provenance: port
+
+VoodooSupremeSynthesizer:
+  source: ext/nostalgicplayer/Source/Agents/Players/VoodooSupremeSynthesizer
+  note: C# port in NostalgicPlayer
+  provenance: port
+
+InStereo:
+  source: ext/nostalgicplayer/Source/Agents/Players/InStereo10
+  note: C# port in NostalgicPlayer
+  provenance: port
+
+InStereo2.0:
+  source: ext/nostalgicplayer/Source/Agents/Players/InStereo20
+  note: C# port in NostalgicPlayer
+  provenance: port
+
+ActionAmics:
+  source: ext/nostalgicplayer/Source/Agents/Players/Actionamics
+  note: C# port in NostalgicPlayer
+  provenance: port
+
+FaceTheMusic:
+  source: ext/nostalgicplayer/Source/Agents/Players/FaceTheMusic
+  note: C# port in NostalgicPlayer
+  provenance: port
+
+QuadraComposer:
+  source: ext/nostalgicplayer/Source/Agents/Players/QuadraComposer
+  note: C# port in NostalgicPlayer
+  provenance: port
+
+# Guess: NostalgicPlayer's Activision Pro is Martin Walker's format.
+MartinWalker:
+  ports: [ext/nostalgicplayer/Source/Agents/Players/ActivisionPro]
+
 # Read to settle `check` in tools/inventory.py.
 BenDaglish:
   replay: module
+  ports: [ext/nostalgicplayer/Source/Agents/Players/BenDaglish]
 
 BladePacker:
   replay: uade

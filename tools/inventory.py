@@ -45,8 +45,8 @@ SOURCES = UADE / "amigasrc" / "players"
 CONF = UADE / "eagleplayer.conf"
 
 SOURCE_EXT = {".s", ".asm", ".a", ".i"}
-# Sources outside UADE, e.g. ports, live under ext/ and may be in C.
-EXT_SOURCE_EXT = SOURCE_EXT | {".c", ".h"}
+# Sources outside UADE, e.g. ports, live under ext/ and may be in C or C#.
+EXT_SOURCE_EXT = SOURCE_EXT | {".c", ".h", ".cs"}
 HUNK_HEADER = bytes.fromhex("000003f3")  # AmigaOS executable
 
 DISASM = ROOT / "data" / "disasm"

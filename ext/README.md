@@ -46,3 +46,16 @@ changes since 2019.
 - Which player uses which port: `ports` and `source` in
   [`data/players.yaml`](../data/players.yaml).
 - `trackers` and `fasttracker` hold `ProTracker`-like players: out of scope.
+
+## `nostalgicplayer`
+
+NostalgicPlayer by Thomas Neumann, a music player in C#, from
+[GitHub](https://github.com/neumatho/NostalgicPlayer). Licence: `MIT`.
+
+- Replayers: `ext/nostalgicplayer/Source/Agents/Players/<folder>`. Each names
+  the original player's author.
+- `Format_Descriptions`: the author's notes on 23 module formats.
+- A sparse, partial and shallow clone of only those two folders: about 9 of 162
+  megabytes. `activate` sets it up; a plain `git submodule update` would not.
+- Which player uses which port: `ports` and `source` in
+  [`data/players.yaml`](../data/players.yaml).

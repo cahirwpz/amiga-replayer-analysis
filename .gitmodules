@@ -10,3 +10,7 @@
 [submodule "ext/oktalyzer"]
 	path = ext/oktalyzer
 	url = https://github.com/hitchhikr/oktalyzer
+[submodule "ext/nostalgicplayer"]
+	path = ext/nostalgicplayer
+	url = https://github.com/neumatho/NostalgicPlayer.git
+	shallow = true

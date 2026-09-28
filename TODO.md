@@ -53,12 +53,17 @@ the first card on it, with `specs/med.py`.
 
 The user's list, triaged. All leads are on cards now.
 
+- [ ] Triage the players with only a NostalgicPlayer port, by theme. A lead
+      needs its UADE binary disassembled. Players: `Synth`,
+      `VoodooSupremeSynthesizer`, `InStereo`, `InStereo2.0`, `ActionAmics`,
+      `FaceTheMusic` and `QuadraComposer`.
+
 Skip unless a new lead turns up:
 
-- `DeltaMusic2.0` and `SIDMon2.0`: only C ports. They show tables close to
-  Future Composer, SoundMon and Sonic Arranger.
-- `DavidWhittaker`: only a C port. Its pitch and volume lists look like Hippel
-  ST and Future Composer (inference from the port).
+- `DeltaMusic2.0` and `SIDMon2.0`: only C and C# ports. They show tables close
+  to Future Composer, SoundMon and Sonic Arranger.
+- `DavidWhittaker`: only C and C# ports. Its pitch and volume lists look like
+  Hippel ST and Future Composer (inference from the port).
 
 ### Then
 
