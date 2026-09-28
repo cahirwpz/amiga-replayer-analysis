@@ -195,8 +195,8 @@ def QueueLoop(module: Module, voice: Voice) -> None:
         voice.channel.queue(SILENT)
     elif instrument.loop > 0:
         start = instrument.start + instrument.loop
-        end = instrument.start + 2 * instrument.length
-        voice.channel.queue(paula.Sample(bytes(module.data[start:end])))
+        words = instrument.length - instrument.loop // 2
+        voice.channel.queue(chip(module, start, words))
 
 
 def CountDown(module: Module, voice: Voice) -> bool:
@@ -279,8 +279,7 @@ def NoteOn(module: Module, voice: Voice, length: int) -> None:
     instrument = voice.instrument
     voice.sweep_pos = instrument.low
     voice.vibrato_pos = voice.vibrato_start
-    start, words = instrument.start, instrument.length
-    voice.channel.queue(paula.Sample(bytes(module.data[start : start + 2 * words])))
+    voice.channel.queue(chip(module, instrument.start, instrument.length))
     voice.channel.set_volume(instrument.volume)
     table = word(module.data, module.period_table + 2 * voice.note)
     voice.period = table * instrument.tune >> TUNE_SHIFT
@@ -345,6 +344,12 @@ def write_sweep(module: Module, voice: Voice, value: int) -> None:
 
 
 # --- Helpers -----------------------------------------------------------
+
+
+def chip(module: Module, start: int, words: int) -> paula.Sample:
+    """A live view: Sweep writes into the wave while Paula plays it.
+    Paula ignores bit 0 of an address."""
+    return paula.Sample(module.data, start & ~1, words)
 
 
 def read_instrument(data: bytearray, at: int) -> Instrument:

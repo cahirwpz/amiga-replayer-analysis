@@ -186,6 +186,12 @@ class Paula_(unittest.TestCase):
         per_reload = (times[-1] - times[0]) / (len(times) - 1)
         self.assertAlmostEqual(per_reload, 1712, delta=3)
 
+    def test_period_0_counts_a_full_wrap(self):
+        self.channel.period = 0
+        self.channel.play(Sample(b"N" * 4))
+        self.m.run(4 * (1 << 17))
+        self.assertGreater(len(self.events), 1)
+
     def test_dma_off_before_output_goes_idle(self):
         self.channel.play(Sample(b"N" * 8))
         self.m.run(SLOT_CCK[0])  # the start reload only

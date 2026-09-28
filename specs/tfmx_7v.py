@@ -141,10 +141,9 @@ def FadeToChannel3(module: Module7V, voice: tfmx_pro.Voice) -> None:
 
 def MixTick(module: Module7V) -> None:
     """Channel 3 has just started the buffer mixed last tick. The mixer
-    fills the other one, queues it for the next pass, then runs the
-    replay's tick. The real code writes AUDxLC first; Paula takes it only
-    at the next reload, after the mix. The model's Paula copies, so it
-    queues after the mix."""
+    queues the other one for the next pass, fills it, then runs the
+    replay's tick. Paula takes the queued buffer only at the next
+    reload, after the mix."""
     mixer = module.mixer
     for fake in fakes(module):
         VolumeAndStep(mixer, fake)
@@ -152,9 +151,9 @@ def MixTick(module: Module7V) -> None:
         FakeDma(mixer, fake)
     mixer.buffers.reverse()
     buffer = mixer.buffers[0]
-    MixLoop(mixer, fakes(module), buffer)
     channel = module.amiga.paula.channels[MIX_CHANNEL]
-    channel.queue(paula.Sample(bytes(buffer[: mixer.bytes_per_tick])))
+    channel.queue(paula.Sample(buffer, 0, mixer.bytes_per_tick // 2))
+    MixLoop(mixer, fakes(module), buffer)
     TickFromMixer(module)
 
 

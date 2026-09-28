@@ -15,6 +15,7 @@ from hardware.clock import CCK_HZ, LINE_CCK, Clock
 
 MIN_PERIOD = 124  # CCK: one word per line limits a channel to about 28.6 kHz
 MAX_VOLUME = 64
+PERIOD_WRAP = 1 << 16  # a period of 0, see Channel.word_cck
 CHANNELS = 4
 LEFT = (0, 3)  # fixed stereo: channels 0 and 3 left, 1 and 2 right
 RIGHT = (1, 2)
@@ -177,6 +178,12 @@ class Channel:
         register's 7 bits, bit 6 forces the maximum."""
         self.volume = MAX_VOLUME if value & 0x40 else value & 0x3F
 
+    def word_cck(self) -> int:
+        """CCK per word: two bytes, a period each. The period counter
+        counts down, so 0 wraps and counts PERIOD_WRAP (guess: recalled
+        from Minimig's counter, not checked)."""
+        return 2 * (self.period or PERIOD_WRAP)
+
     def rate(self) -> int:
         """Bytes per second. Below MIN_PERIOD, DMA cannot keep up."""
         return CCK_HZ // self.period if self.period else 0
@@ -211,14 +218,14 @@ class Channel:
             self.modulate(word)
         if not self.counting:
             self.counting = True
-            self.clock.at(self.clock.now + 2 * self.period, self.word_end)
+            self.clock.at(self.clock.now + self.word_cck(), self.word_end)
 
     def word_end(self) -> None:
         """The period counter ends a word. With DMA on, the buffered word
         plays next and Paula asks for another one."""
         if self.dma:
             self.fetch_at(self.clock.now)
-            self.clock.at(self.clock.now + 2 * self.period, self.word_end)
+            self.clock.at(self.clock.now + self.word_cck(), self.word_end)
         elif self.irq_requested:
             self.idle, self.counting = True, False  # the word is done, DMA off
         else:
@@ -229,7 +236,7 @@ class Channel:
         word ends after 2 × period CCK."""
         self.request()
         self.counting = True
-        self.clock.at(self.clock.now + 2 * self.period, self.word_end)
+        self.clock.at(self.clock.now + self.word_cck(), self.word_end)
 
     def reload(self) -> None:
         """Copy AUDxLC and AUDxLEN to the live pointer and counter, and

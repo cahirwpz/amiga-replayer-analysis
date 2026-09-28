@@ -212,7 +212,7 @@ def new_module(score: Score, amiga: Amiga, subsong: int = 0) -> Module:
     InitSong(module)
     mix = channels[MIX_CHANNEL]
     mix.on_irq(lambda channel: Interrupt(module))
-    mix.play(paula.Sample(bytes(module.buffers[0][: module.mix_bytes])))
+    mix.play(paula.Sample(module.buffers[0], 0, module.mix_bytes // 2))
     return module
 
 
@@ -308,7 +308,7 @@ def Play(module: Module) -> None:
         VoiceTick(module, voice)
     buffer = MixVoices(module)
     mix = module.amiga.paula.channels[MIX_CHANNEL]
-    mix.queue(paula.Sample(bytes(buffer)))
+    mix.queue(paula.Sample(buffer, 0, module.mix_bytes // 2))
     NextTick(module)
     mix_cck = module.mix_bytes * MIX_CYCLES // 2
 
@@ -418,9 +418,10 @@ def StartWave(module: Module, voice: Voice, inst: Instrument) -> None:
     effect restarts. A mixed voice writes FakeRegisters: its sample plays
     on."""
     if voice.channel is not None:
-        at = wave_at(inst.wave)
-        data = module.score.waves[at : at + 2 * inst.length]
-        voice.channel.queue(paula.Sample(bytes(data)))
+        # A live view: the wave effects rewrite it while it plays.
+        voice.channel.queue(
+            paula.Sample(module.score.waves, wave_at(inst.wave), inst.length)
+        )
         if voice.command != LEGATO:
             voice.channel.disable()
     if inst.effect and voice.command not in (KEEP_EFFECT, KEEP_BOTH):
@@ -804,7 +805,7 @@ EFFECTS: list[Callable[[bytearray, Instrument], None]] = [  # by effect number
 # --- Mixer --------------------------------------------------------------
 
 
-def MixVoices(module: Module) -> bytes:
+def MixVoices(module: Module) -> bytearray:
     """Voices 3-6 into one buffer, at the mix period. Per voice, a step
     from its period, only when the period changes. A period of 0 stops
     the voice. Per byte, each voice's byte goes through the table of its
@@ -831,7 +832,7 @@ def MixVoices(module: Module) -> bytes:
             fractions[v] &= 0xFF
         buffer[n] = module.clip[total]
     CheckSampleEnds(module)
-    return bytes(buffer)
+    return buffer
 
 
 def MixStep(mix_period: int, period: int) -> int:
