@@ -205,6 +205,17 @@ JasonPage:
   game: ViroCop
   note: three replays in one source; the card reads ViroCop's
 
+MusicMaker-4V:
+  family: MusicMaker
+
+MusicMaker-8V:
+  spec: specs/music_maker_8v.py
+  provenance: original
+  author: Thomas Winischhofer
+  family: MusicMaker
+  distinct: eight voices, mixed in pairs
+  note: the mixer is Dire Cracks' Multi-Channel Player V1.9
+
 PaulRobotham:
   spec: specs/paul_robotham.py
   provenance: disassembly

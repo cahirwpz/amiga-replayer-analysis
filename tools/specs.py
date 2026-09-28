@@ -44,9 +44,10 @@ WORD = re.compile(r"[A-Za-z_]\w*(?:\.\w+)*")
 GENERATED = re.compile(r"L_[0-9A-Fa-f]+|lb[A-Z][0-9A-F]+")  # disassembler names
 # Source labels that are also English words in our prose.
 PLAIN_WORDS = {
-    "copy", "custom", "envelope", "flags", "loop", "patterns", "period",
-    "priority", "random", "repeat", "return", "samples", "song", "speed",
-    "start", "tables", "tracks", "transpose", "volume",
+    "at", "copy", "custom", "envelope", "even", "flags", "loop", "mixer",
+    "new", "old", "patterns", "period", "priority", "random", "repeat",
+    "return", "samples", "song", "speed", "start", "tables", "tracks",
+    "transpose", "volume",
 }  # fmt: skip
 
 

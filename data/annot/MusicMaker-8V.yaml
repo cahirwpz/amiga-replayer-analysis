@@ -1,0 +1,82 @@
+# Annotations for MusicMaker V8, the 8-voice player. Render: tools/annot.py
+# The mixer is Dire Cracks' Multi-Channel Player V1.9 (PCS 1.2), linked in.
+source: ext/uade/amigasrc/players/other/music_maker/MusicMaker8.asm
+sha1: acbd6af657f7236508f4906ccf8d45b31facc9c8
+
+labels:
+  # load and start
+  decompress: DeltaDecode
+  calculateinstruments: HalveSamples
+  _maketables: MakeTables
+  _generalsndreset: ResetSong
+  melodystrtup: InitVoices
+  _soundon: SoundOn
+  # every tick: the audio interrupt
+  _generalplay: AudioInterrupt
+  waitforallchannels: WaitAllChannels
+  calccorr: CorrectDrift
+  playsnd: PlaySound
+  setallchanneldata: StepVoices
+  nosetfade2: FadeTick
+  fadedone: VolumeSlide
+  2310: HullVolume
+  nuHULL: Loudness
+  2362: PeriodSlide
+  2372: HullStep
+  getalegalvolume: ClampVolume
+  getalegalperiod: ClampPeriod
+  # the sequencer
+  handle_channel: HandleVoice
+  normalplay: ReadEvent
+  2537: LoudnessSwitch
+  noloudness: SetSpeed
+  2571: CallGame
+  nocustomprg: VoiceFade
+  nofade: FadeState
+  nosetfadestate: InstrumentBank
+  isbelow151: Modulation
+  noWARP2play: SetHull
+  nocontrolbyte: NoteEvent
+  2704: BreakNote
+  modulate: SoftModulation
+  nonovolume: StartNote
+  setCONTFROMBREAK: ResumeBreak
+  addcounthandle: NextEvent
+  getnewmacro: NextPattern
+  # the mixer
+  MIXER: MixChannels
+  mixmainloop: MixPair
+  3013: BufferLength
+  startofenoughstuff: MixSpan
+  temporaryA: WrapSample
+  absmixloopsend: SwapBuffers
+  returnmixer: PickMixer
+  tabledepack: PrepareMixer
+  calcperiodtable: BuildStepPattern
+  make_dbra_mixer: DbraStep
+  depackvolume: VolumeTable
+  # data
+  notetable: NoteTable
+  loudnesstable: LoudnessTable
+  strtvolus: VolumeSteps
+  hightable: HighTable
+  hi: MixLimit
+  speed: TickLength
+  mixertype: MixerType
+  pattlen: PauseLength
+  lfoinstptrs: HullTables
+  mixlooptable: MixerCache
+  volumebuffertable: VolumeCache
+
+banners:
+  2845: |-
+    Mixes voice pairs 7+6, 5+4, 3+2 and 1+0 into channels 3 to 0. The
+    channel plays at the higher voice's period; the other voice is
+    resampled. The louder voice sets the channel volume; the quieter one
+    is scaled by a table.
+
+types:
+  Module: [mystructure]
+  Voice: [channel0struc]
+  MixChannel: [hwchannel0]
+  Instrument: [myinstrlens]

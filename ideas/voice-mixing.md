@@ -3,14 +3,15 @@
 Software mixing adds voices beyond Paula's four channels. Each player below
 fills a buffer once per tick, and a channel plays it.
 
-| Player                                         | Mixed voices     | Volume per voice | Sum           | Mix rate          | Pitch                   |
-| ---------------------------------------------- | ---------------- | ---------------- | ------------- | ----------------- | ----------------------- |
-| [Mugician II](../players/MugicianII.md)        | 4 into 1 channel | 64 tables        | clipped       | fixed             | step per byte           |
-| [TFMX 7V](../players/TFMX-7V.md)               | 4 into 1 channel | 64 tables        | clipped       | fixed             | step per byte           |
-| [Oktalyzer](../players/Oktalyzer.md), replay 1 | 2 per channel    | none; shared     | 7-bit samples | fixed, 15.6 kHz   | generated code per note |
-| [Oktalyzer](../players/Oktalyzer.md), replay 2 | 2 per channel    | none; shared     | 7-bit samples | higher note's own | lower voice only        |
+| Player                                         | Mixed voices     | Volume per voice   | Sum           | Mix rate          | Pitch                          |
+| ---------------------------------------------- | ---------------- | ------------------ | ------------- | ----------------- | ------------------------------ |
+| [Mugician II](../players/MugicianII.md)        | 4 into 1 channel | 64 tables          | clipped       | fixed             | step per byte                  |
+| [TFMX 7V](../players/TFMX-7V.md)               | 4 into 1 channel | 64 tables          | clipped       | fixed             | step per byte                  |
+| [Oktalyzer](../players/Oktalyzer.md), replay 1 | 2 per channel    | none; shared       | 7-bit samples | fixed, 15.6 kHz   | generated code per note        |
+| [Oktalyzer](../players/Oktalyzer.md), replay 2 | 2 per channel    | none; shared       | 7-bit samples | higher note's own | lower voice only               |
+| [MusicMaker 8V](../players/MusicMaker-8V.md)   | 2 per channel    | quieter voice only | 7-bit samples | higher note's own | generated code per period pair |
 
-## Two schemes
+## Three schemes
 
 - Tables: one read applies a voice's volume; a second read clips the sum.
   Mugician II: `data/annot/MugicianII.yaml:BuildMixTables`. TFMX 7V:
@@ -18,6 +19,9 @@ fills a buffer once per tick, and a channel plays it.
 - Plain add: Oktalyzer halves the samples when it loads them. The sum then fits
   8 bits, and voices lose their own volume.
   `data/annot/Oktalyzer.yaml:HalveSample`
+- Ratio: MusicMaker 8V halves the samples too. The louder voice sets the channel
+  volume, and a table scales the quieter one.
+  `data/annot/MusicMaker-8V.yaml:VolumeTable`
 
 ## Tricks
 
@@ -25,6 +29,9 @@ fills a buffer once per tick, and a channel plays it.
   quality. `data/annot/Oktalyzer.yaml:PickHigher`
 - Oktalyzer's replay 1 turns pitch into code: no step arithmetic at run time.
   `data/annot/Oktalyzer.yaml:BuildResamplers`
+- MusicMaker 8V gives each channel its own rate. Each buffer's length makes it
+  last one tick, and the four audio interrupts run the replay.
+  `data/annot/MusicMaker-8V.yaml:BufferLength`
 - TFMX 7V gives mixed voices RAM register sets, so the instrument program code
   needs no change. `data/annot/TFMX-7V.yaml:FakeRegisters`
 
