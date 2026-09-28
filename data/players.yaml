@@ -309,7 +309,6 @@ RobHubbard:
   author: Rob Hubbard
   year: 1990
   game: PGA Tour Golf
-  related: [DavidWhittaker]
 
 Sound-FX:
   ports: [ext/c-flod/neoart/flod/soundfx]

@@ -27,6 +27,7 @@ width of a short wave.
   of code follow. `:Play` `:InitSong`
   - Enables: each game gets the replay its music was written for.
   - Costs: every module has its own copy. The two PGA Tour Golf modules differ.
+    See [What is unique](#what-is-unique).
 - A sweep writes one byte per tick into a 16-byte wave. So an edge moves between
   two bounds. `:Sweep` `:SweepDown`
   - Enables: a pulse-width sweep, as on the C64, for one byte write per tick.
@@ -57,10 +58,13 @@ The composer writes a position list per voice and patterns of bytes.
 
 - The sweep turns one byte past its upper bound. In `rh.GMUSIC` it writes into
   the first song's unused first byte. `:Sweep`
+- `rh.GMUSIC` clears the song number, so it always plays song 0. `rh.FLYMUS`
+  plays the song it is given. `:InitSong`
+- `rh.GMUSIC` sets up 11 samples; `rh.FLYMUS` sets up 6. The rest of the code is
+  the same. `:InitSamples`
 - In PGA Tour Golf, only the three built-in waves use vibrato or the sweep. The
   samples use neither. `:InitWaves`
 
 ## Open questions
 
 - Do other Rob Hubbard modules sweep samples, not only waves?
-- How does the code of `rh.FLYMUS` differ from `rh.GMUSIC`?

@@ -59,12 +59,12 @@ the first card on it, with `specs/med.py`.
 
 The user's list, triaged. All leads are on cards now.
 
-- [ ] Diff the code of `rh.FLYMUS`, from the same game, against `rh.GMUSIC`.
-
 Skip unless a new lead turns up:
 
 - `DeltaMusic2.0` and `SIDMon2.0`: only C ports. They show tables close to
   Future Composer, SoundMon and Sonic Arranger.
+- `DavidWhittaker`: only a C port. Its pitch and volume lists look like Hippel
+  ST and Future Composer (inference from the port).
 
 ### Then
 
@@ -85,8 +85,8 @@ Skip unless a new lead turns up:
   - [Jason Page](players/JasonPage.md): branch markers and save slots.
   - [Paul Robotham](players/PaulRobotham.md): pulses per quarter note.
   - [MusicMaker 8V](players/MusicMaker-8V.md): quarter tones.
-- Modules the user can find: FredMonitor (`Fred`), `SIDMon1.0` and
-  `DavidWhittaker`. Their replay code ships inside each module.
+- Modules the user can find: FredMonitor (`Fred`) and `SIDMon1.0`. Their replay
+  code ships inside each module.
 - Releases: did a game or demo ship Oktalyzer's replay 1? Which games used
   MaxTrax?
 - Docs or credits: Sonic Arranger's `AMF` name. Other games with Digital Sonix &
@@ -109,14 +109,13 @@ Skip unless a new lead turns up:
 A port is not evidence (see [`AGENTS.md`](AGENTS.md#evidence)). These players
 need 68k code first.
 
-| Player             | Why                                                    | Map                                |
-| ------------------ | ------------------------------------------------------ | ---------------------------------- |
-| `BenDaglish-SID`   | Replay code is in the module; needs a module           | —                                  |
-| `JankoMrsicFlogel` | Replay code is in the module; needs a module           | —                                  |
-| `Special-FX`       | Replay code is in the module; needs a module           | —                                  |
-| `Fred`             | Replay code is in the module; needs a module           | `ext/c-flod/neoart/flod/fred`      |
-| `SIDMon1.0`        | Replay code is in the module; needs a module           | `ext/c-flod/neoart/flod/sidmon`    |
-| `DavidWhittaker`   | Port reads the module's code (guess: replay in module) | `ext/c-flod/neoart/flod/whittaker` |
+| Player             | Why                                          | Map                             |
+| ------------------ | -------------------------------------------- | ------------------------------- |
+| `BenDaglish-SID`   | Replay code is in the module; needs a module | —                               |
+| `JankoMrsicFlogel` | Replay code is in the module; needs a module | —                               |
+| `Special-FX`       | Replay code is in the module; needs a module | —                               |
+| `Fred`             | Replay code is in the module; needs a module | `ext/c-flod/neoart/flod/fred`   |
+| `SIDMon1.0`        | Replay code is in the module; needs a module | `ext/c-flod/neoart/flod/sidmon` |
 
 ## Disassembly notes
 
