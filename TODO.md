@@ -55,6 +55,47 @@ the first card on it, with `specs/med.py`.
 - [ ] `specs/jochen_hippel_st.py` and `specs/soundmon_22.py` run by a 50 Hz
       timer. Check DeliTracker's default rate for a player without `DTP_Timer`.
 
+### New cards
+
+The user's list, triaged. Nothing below is on a card yet. "Docs" means format
+notes or comments only; "skimmed" means replay code read in part.
+
+| Order | Player            | Value | Basis   | Lead                                            |
+| ----- | ----------------- | ----- | ------- | ----------------------------------------------- |
+| 1     | `MusiclineEditor` | high  | docs    | Wave effects: transform, phase, mix, resonance  |
+| 2     | `MusicMaker-8V`   | high  | docs    | Eight voices mixed into four channels           |
+| 3     | `SoundFactory`    | high  | skimmed | One command stream per voice, synced by counter |
+| 4     | `JasonPage`       | high  | skimmed | Game-driven jumps, saved positions, priorities  |
+| 5     | `PaulRobotham`    | med   | skimmed | Packed note lengths, vibrato scaled by period   |
+
+Reading notes, with original labels:
+
+| Player            | Where                                                                                   | Note                                              |
+| ----------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `MusiclineEditor` | `ext/uade/amigasrc/players/other/musicline_editor/MlEdFileFormat.doc`                   | Lists the instrument effect bits                  |
+| `MusiclineEditor` | `ext/uade/amigasrc/players/other/musicline_editor/mlineplayer102.asm`                   | The replay                                        |
+| `MusicMaker-8V`   | `ext/uade/amigasrc/players/other/music_maker/MusicMaker8.asm`                           | Mixer header comment: `FAST-VOL-MIX`              |
+| `MusicMaker-8V`   | `ideas/voice-mixing.md`                                                                 | Compare the mixer with this page                  |
+| `SoundFactory`    | `ext/uade/amigasrc/players/wanted_team/Soundfactory/src/Soundfactory_v2.asm:lbC0006C6`  | Counts up a shared counter                        |
+| `SoundFactory`    | `:lbC0006CC`                                                                            | Waits until the counter matches                   |
+| `SoundFactory`    | `:lbC000756`, `:lbC000778`                                                              | Call and return                                   |
+| `SoundFactory`    | `:lbC0006E8`                                                                            | Defines an instrument inside the stream           |
+| `JasonPage`       | `ext/uade/amigasrc/players/wanted_team/JasonPage/src/Jason Page_v5.s`                   | Holds three formats                               |
+| `JasonPage`       | —                                                                                       | Pick the latest format for the card               |
+| `JasonPage`       | `lbC00075E`                                                                             | Markers `$FC`, `$FD` take a game's jump           |
+| `JasonPage`       | `lbC000562`, `lbC000512`                                                                | Save and restore the voices' positions            |
+| `JasonPage`       | `lbC000678`                                                                             | Compares sound effect priorities                  |
+| `JasonPage`       | `lbL00098A`                                                                             | Table of 24 instrument opcodes                    |
+| `PaulRobotham`    | `ext/uade/amigasrc/players/wanted_team/PaulRobotham/src/Paul Robotham_v1.asm:lbC015406` | Length: 5 bits, shifted by 3 bits                 |
+| `PaulRobotham`    | `:lbC015406`                                                                            | Tempo scaling keeps the remainder                 |
+| `PaulRobotham`    | `lbC01562E`                                                                             | Commented: effect takes the voice nearest its end |
+| `PaulRobotham`    | —                                                                                       | Voices are fixed, not allocated                   |
+
+Skip unless a new lead turns up:
+
+- `DeltaMusic2.0` and `SIDMon2.0`: only C ports. They show tables close to
+  Future Composer, SoundMon and Sonic Arranger.
+
 ### Then
 
 - [ ] Review the cards with the user.
@@ -69,6 +110,8 @@ the first card on it, with `specs/med.py`.
 - Modules: which songs use a feature? MED list jumps, TFMX Pro offset loops and
   byte checks, SoundPlayer `DD` and modulation in Lemmings. TFMX 7V notes to
   voice 3.
+- Modules the user can find: FredMonitor (`Fred`), `SIDMon1.0` and
+  `DavidWhittaker`. Their replay code ships inside each module.
 - Releases: did a game or demo ship Oktalyzer's replay 1? Which games used
   MaxTrax?
 - Docs or credits: Sonic Arranger's `AMF` name. Other games with Digital Sonix &
@@ -92,12 +135,15 @@ the first card on it, with `specs/med.py`.
 A port is not evidence (see [`AGENTS.md`](AGENTS.md#evidence)). These players
 need 68k code first.
 
-| Player             | Why                                                     | Map                              |
-| ------------------ | ------------------------------------------------------- | -------------------------------- |
-| `RobHubbard`       | `PGA_Tour_Golf.lha` available; needs raw-binary support | `ext/c-flod/neoart/flod/hubbard` |
-| `BenDaglish-SID`   | Replay code is in the module; needs a module            | —                                |
-| `JankoMrsicFlogel` | Replay code is in the module; needs a module            | —                                |
-| `Special-FX`       | Replay code is in the module; needs a module            | —                                |
+| Player             | Why                                                     | Map                                |
+| ------------------ | ------------------------------------------------------- | ---------------------------------- |
+| `RobHubbard`       | `PGA_Tour_Golf.lha` available; needs raw-binary support | `ext/c-flod/neoart/flod/hubbard`   |
+| `BenDaglish-SID`   | Replay code is in the module; needs a module            | —                                  |
+| `JankoMrsicFlogel` | Replay code is in the module; needs a module            | —                                  |
+| `Special-FX`       | Replay code is in the module; needs a module            | —                                  |
+| `Fred`             | Replay code is in the module; needs a module            | `ext/c-flod/neoart/flod/fred`      |
+| `SIDMon1.0`        | Replay code is in the module; needs a module            | `ext/c-flod/neoart/flod/sidmon`    |
+| `DavidWhittaker`   | Port reads the module's code (guess: replay in module)  | `ext/c-flod/neoart/flod/whittaker` |
 
 ## Disassembly notes
 
