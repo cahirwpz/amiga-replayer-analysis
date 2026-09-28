@@ -1,0 +1,76 @@
+# Annotations for the Soundfactory replayer. Render: tools/annot.py
+source: ext/uade/amigasrc/players/wanted_team/Soundfactory/src/Soundfactory_v2.asm
+sha1: 46f1b6a52b4eeaec6a5927c41753873a3f5f1dc2
+
+labels:
+  # game entry points
+  InitSong: InitSong
+  Play: Play
+  End: StopSong
+  lbC000728: FadeOut
+  # every tick
+  lbC0003F0: Fade
+  lbC000502: PlayVoice
+  1105: EarlyStop
+  lbC000558: ReadStream
+  lbW000582: OpcodeTable
+  lbC000938: NoteOn
+  lbC000E2E: NotePeriod
+  lbC000A84: VoiceEffects
+  lbC000AD4: Tremolo
+  lbC000B06: Portamento
+  lbC000B4A: OctaveFlip
+  lbC000B62: Vibrato
+  lbC000BBA: EnvelopeTick
+  1702: Release
+  lbC000BF8: AutoRelease
+  lbC000C42: Decay
+  lbC000C84: Attack
+  lbC000CD0: WaveEffects
+  lbC000D5A: WriteVoice
+  lbC000DD2: BuildPhasing
+  lbC000EEC: BuildFilter
+  # opcodes, in table order
+  lbC000654: OpWait
+  lbC000674: OpVolume
+  lbC0006A4: OpDetune
+  lbC0006AE: OpInstrument
+  lbC0006E8: OpDefineInstrument
+  lbC000778: OpReturn
+  lbC000756: OpCall
+  lbC000740: OpJump
+  lbC000782: OpLoopStart
+  lbC000794: OpLoopEnd
+  lbC000724: OpFadeOut
+  lbC0006BC: OpNop
+  lbC0006C6: OpSignal
+  lbC0006BE: OpRestart
+  lbC00070A: OpStop
+  lbC0008E4: OpFadeIn
+  lbC0007B2: OpAdsr
+  lbC0007EC: OpOneShotOn
+  lbC0007F4: OpOneShotOff
+  lbC0007FC: OpVibrato
+  lbC0008C4: OpOctaveFlip
+  lbC000834: OpPhasing
+  lbC00089C: OpPortamento
+  lbC00086C: OpTremolo
+  lbC000908: OpFilter
+  lbC00065E: OpRest
+  lbC000688: OpAudioFilter
+  lbC0006CC: OpWaitSignal
+  lbC00067E: OpTranspose
+  # data
+  lbW000066: State
+  lbW0000E8: InstrumentTable
+  lbW000168: Stacks
+  lbW0002A8: DefaultInstrument
+  lbW000EBC: SampleRatios
+  lbW000ED4: WavePeriods
+  lbW000FCA: WaveBuffers
+  lbW000E2C: EmptyWord
+
+types:
+  Instrument: [lbC0006E8]
+  Voice: [lbC000502]
+  Module: [lbW000066]

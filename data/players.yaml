@@ -192,6 +192,19 @@ SoundPlayer:
   year: 1991
   game: Lemmings
 
+SoundFactory:
+  spec: specs/sound_factory.py
+  provenance: disassembly
+  note: Profiteam-Soundfactory V1.0
+
+JasonPage:
+  spec: specs/jason_page.py
+  provenance: disassembly
+  author: Jason Page
+  year: 1995
+  game: ViroCop
+  note: three replays in one source; the card reads ViroCop's
+
 MaxTrax:
   source: other/max_trax
   spec: specs/maxtrax.py

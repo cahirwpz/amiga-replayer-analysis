@@ -57,13 +57,11 @@ the first card on it, with `specs/med.py`.
 The user's list, triaged. Nothing below is on a card yet. "Docs" means format
 notes or comments only; "skimmed" means replay code read in part.
 
-| Order | Player            | Value | Basis   | Lead                                            |
-| ----- | ----------------- | ----- | ------- | ----------------------------------------------- |
-| 1     | `MusiclineEditor` | high  | docs    | Wave effects: transform, phase, mix, resonance  |
-| 2     | `MusicMaker-8V`   | high  | docs    | Eight voices mixed into four channels           |
-| 3     | `SoundFactory`    | high  | skimmed | One command stream per voice, synced by counter |
-| 4     | `JasonPage`       | high  | skimmed | Game-driven jumps, saved positions, priorities  |
-| 5     | `PaulRobotham`    | med   | skimmed | Packed note lengths, vibrato scaled by period   |
+| Order | Player            | Value | Basis   | Lead                                           |
+| ----- | ----------------- | ----- | ------- | ---------------------------------------------- |
+| 1     | `MusiclineEditor` | high  | docs    | Wave effects: transform, phase, mix, resonance |
+| 2     | `MusicMaker-8V`   | high  | docs    | Eight voices mixed into four channels          |
+| 3     | `PaulRobotham`    | med   | skimmed | Packed note lengths, vibrato scaled by period  |
 
 Reading notes, with original labels:
 
@@ -73,16 +71,6 @@ Reading notes, with original labels:
 | `MusiclineEditor` | `ext/uade/amigasrc/players/other/musicline_editor/mlineplayer102.asm`                   | The replay                                        |
 | `MusicMaker-8V`   | `ext/uade/amigasrc/players/other/music_maker/MusicMaker8.asm`                           | Mixer header comment: `FAST-VOL-MIX`              |
 | `MusicMaker-8V`   | `ideas/voice-mixing.md`                                                                 | Compare the mixer with this page                  |
-| `SoundFactory`    | `ext/uade/amigasrc/players/wanted_team/Soundfactory/src/Soundfactory_v2.asm:lbC0006C6`  | Counts up a shared counter                        |
-| `SoundFactory`    | `:lbC0006CC`                                                                            | Waits until the counter matches                   |
-| `SoundFactory`    | `:lbC000756`, `:lbC000778`                                                              | Call and return                                   |
-| `SoundFactory`    | `:lbC0006E8`                                                                            | Defines an instrument inside the stream           |
-| `JasonPage`       | `ext/uade/amigasrc/players/wanted_team/JasonPage/src/Jason Page_v5.s`                   | Holds three formats                               |
-| `JasonPage`       | —                                                                                       | Pick the latest format for the card               |
-| `JasonPage`       | `lbC00075E`                                                                             | Markers `$FC`, `$FD` take a game's jump           |
-| `JasonPage`       | `lbC000562`, `lbC000512`                                                                | Save and restore the voices' positions            |
-| `JasonPage`       | `lbC000678`                                                                             | Compares sound effect priorities                  |
-| `JasonPage`       | `lbL00098A`                                                                             | Table of 24 instrument opcodes                    |
 | `PaulRobotham`    | `ext/uade/amigasrc/players/wanted_team/PaulRobotham/src/Paul Robotham_v1.asm:lbC015406` | Length: 5 bits, shifted by 3 bits                 |
 | `PaulRobotham`    | `:lbC015406`                                                                            | Tempo scaling keeps the remainder                 |
 | `PaulRobotham`    | `lbC01562E`                                                                             | Commented: effect takes the voice nearest its end |
@@ -107,6 +95,8 @@ Skip unless a new lead turns up:
 - Modules: which songs use a feature? MED list jumps, TFMX Pro offset loops and
   byte checks, SoundPlayer `DD` and modulation in Lemmings. TFMX 7V notes to
   voice 3.
+- Modules for new cards: [SoundFactory](players/SoundFactory.md) sync opcodes.
+  [Jason Page](players/JasonPage.md) branch markers and save slots.
 - Modules the user can find: FredMonitor (`Fred`), `SIDMon1.0` and
   `DavidWhittaker`. Their replay code ships inside each module.
 - Releases: did a game or demo ship Oktalyzer's replay 1? Which games used

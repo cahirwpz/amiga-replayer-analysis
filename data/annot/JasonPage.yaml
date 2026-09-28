@@ -1,0 +1,83 @@
+# Annotations for the Jason Page replayer. Render: tools/annot.py
+# The source holds three replays. Only the ViroCop one, the latest, is
+# annotated: from Play_2's data to its idle program.
+source: ext/uade/amigasrc/players/wanted_team/JasonPage/src/Jason Page_v5.s
+sha1: 446b465f0bfe320a129dca19754b0dc504f92cc4
+
+labels:
+  # game entry points
+  Initialize_2_1: InitModule
+  lbC0014A0: FindSamples
+  Initialize_2_2: StartSong
+  lbC001548: SetSong
+  lbC0015C6: RestoreSong
+  lbC00161C: SaveSong
+  lbC00165C: ResetChannels
+  End_2: StopSong
+  Initialize_2_3: FadeTo
+  lbC00174E: RequestProgram
+  # every tick
+  Play_2: Play
+  lbC001824: Sequencer
+  lbC00185E: ReadPosition
+  lbC00189C: BranchLoop
+  lbC0018B6: BranchPass
+  lbC0018EE: ReadPattern
+  lbC001912: NotePeriod
+  lbC00193E: NoteSlide
+  lbC0019FA: TickVoices
+  lbC00178A: PendingProgram
+  lbC0017A2: StartProgram
+  lbC001A48: RunProgram
+  lbC001C0C: VibratoSlide
+  lbC001B8E: EnvelopeTick
+  lbC001AFA: WriteChannel
+  lbC001B4E: Silence
+  # program opcodes, in table order
+  lbL001A96: ProgramOpcodes
+  lbC001D7E: OpEnd
+  lbC001D36: OpYield
+  lbC001CFA: OpSample
+  lbC001D12: OpLength
+  lbC001D22: OpLengthLong
+  lbC001D32: OpWait
+  lbC001D3A: OpLoopStart
+  lbC001D58: OpLoopEnd
+  lbC001D9A: OpMoveStart
+  lbC001DA2: OpAddLength
+  lbC001DAC: OpAddOffset
+  lbC001DB4: OpAddPeriod
+  lbC001DBC: OpAddVolume
+  lbC001DC4: OpVibrato
+  lbC001C84: OpPeriod
+  lbC001C92: OpVolume
+  lbC001CAE: OpDmaOn
+  lbC001CC8: OpStop
+  lbC001C98: OpAdsr
+  lbC001C58: OpNote
+  lbC001C70: OpNoteOffset
+  lbC001DDE: OpCopyWave
+  lbC001E3A: OpMorph
+  lbC001C8A: OpCeiling
+  # data
+  lbL001000: ModuleBase
+  lbL00108A: SampleTable
+  lbL0012B4: SamplePointers
+  lbW00107A: GameJump
+  lbW00107C: JumpNow
+  lbW00107E: VoicePrograms
+  lbW001086: SongNumber
+  lbB001089: MasterVolume
+  lbB00108E: FadeStep
+  lbB00108F: FadeTarget
+  lbW001090: RowCounter
+  lbW001092: Speed
+  lbL001094: SaveSlots
+  lbW0010A4: VoiceTable
+  lbW001334: PeriodTable
+  lbL001E68: IdleProgram
+
+types:
+  Module: [lbL001000]
+  Voice: [lbW0010A4]
+  SaveSlot: [lbL001094]

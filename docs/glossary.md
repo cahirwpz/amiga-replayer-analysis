@@ -106,6 +106,7 @@ What an operation does to a sound. The "(inference)" notes use these words.
 | **instrument**           | What a note plays: sample or waveform, plus settings.                  |
 | **instrument transpose** | Offset added to every instrument number of a track.                    |
 | **sound effect**         | A sound the game starts, outside the music.                            |
+| **priority**             | A number that decides whether a new sound may take a busy voice.       |
 | **command**              | A code in a row that acts on playback, with an argument, e.g. a slide. |
 
 ## MIDI and sequencers
