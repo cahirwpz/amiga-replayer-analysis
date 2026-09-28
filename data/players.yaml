@@ -303,6 +303,8 @@ Fred:
 
 RobHubbard:
   ports: [ext/c-flod/neoart/flod/hubbard]
+  module: data/module/RobHubbard/rh.GMUSIC
+  provenance: ira
 
 Sound-FX:
   ports: [ext/c-flod/neoart/flod/soundfx]

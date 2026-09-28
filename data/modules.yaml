@@ -1,0 +1,26 @@
+# Music files that we read code from, e.g. replays that ship inside the module.
+# The files live in data/module/<CREATOR>/<FILE> and are stored with Git LFS:
+# they are copyrighted game music, so they stay out of the plain git history.
+# Run `git lfs pull` after a clone. CI keeps them as pointers; no hook reads
+# them. tools/disasm.py checks each file's sha1 before it reads it.
+#
+# Keys are paths from the repo root. Fields:
+#   sha1     `sha1sum` of the file
+#   player   binary name in ext/uade/players
+#   game     the game or demo the music is from
+#   archive  the archive the file came in
+#   source   where the archive came from
+
+data/module/RobHubbard/rh.GMUSIC:
+  sha1: 583fa4e8b9924f4a9418a8c424245bc6bb304883
+  player: RobHubbard
+  game: PGA Tour Golf
+  archive: PGA_Tour_Golf.lha
+  source: Modland / Exotica
+
+data/module/RobHubbard/rh.FLYMUS:
+  sha1: c0aff3d37011352fbda617aaec75ce13dad3b8c7
+  player: RobHubbard
+  game: PGA Tour Golf
+  archive: PGA_Tour_Golf.lha
+  source: Modland / Exotica

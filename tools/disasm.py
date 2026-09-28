@@ -16,6 +16,10 @@ under ext/ to an executable or an object file; NAME is its stem, e.g.
 ext/oktalyzer/original/sources/okplay2.o gives okplay2. `listing` takes the
 same argument as `seed`.
 
+A player whose replay ships inside the module has `module` in
+data/players.yaml. PLAYER then reads that module, NAME is still the player.
+The module must be in data/modules.yaml with its sha1; Git LFS stores it.
+
 Players are EaglePlayer binaries. Their code is reached only through a tag
 list of function pointers, which IRA does not follow. `seed` reads that list,
 runs `ira -preproc` once from each code tag, and merges the CODE areas. Every
@@ -25,6 +29,10 @@ Object files (HUNK_UNIT) call even their own routines through external
 references, which IRA leaves unresolved. So vlink links them first. Other
 executables go to IRA as they are. For both, HUNK_SYMBOL names become
 LABELs; entries are offset 0 and every symbol in a code hunk.
+
+Raw code, e.g. a module, has no hunk header. vasm wraps it into one code
+hunk at address 0, so offsets are file offsets. Entries are offset 0 and
+the targets of a leading table of `bra.w`, labelled Jump0, Jump1 and on.
 
 `seed` drops an entry whose code would run past the end of its hunk: it is
 data. It prints each entry and whether it was kept. A data symbol whose
@@ -36,13 +44,10 @@ bytes and relocations. It does not prove the split into code and data.
 The config is the committed artefact. Add CODE ranges IRA missed and rename
 labels by hand; cards cite them as `data/disasm/PLAYER.cnf:Label`. Listings
 are generated, never committed. With a config, `tools/inventory.py` lists
-the player as `replay: disasm`. If the
-replay code turns out to be in the module, delete the config and set the
-player to `replay: module` in data/players.yaml.
-
-Only binary-only players are in scope; `replay: module` players are deferred.
+a player without source as `replay: disasm`.
 """
 
+import hashlib
 import io
 import re
 import shutil
@@ -53,6 +58,8 @@ import tarfile
 import tempfile
 import urllib.request
 from pathlib import Path
+
+import players
 
 ROOT = Path(__file__).resolve().parent.parent
 PLAYERS = ROOT / "ext" / "uade" / "players"
@@ -112,6 +119,8 @@ HUNK_HEADER, HUNK_UNIT = 0x3F3, 0x3E7
 HUNK_CODE, HUNK_DATA, HUNK_BSS = 0x3E9, 0x3EA, 0x3EB
 HUNK_RELOC32, HUNK_RELOC32SHORT, HUNK_DREL32 = 0x3EC, 0x3FC, 0x3F7
 HUNK_SYMBOL, HUNK_DEBUG, HUNK_END, HUNK_NAME = 0x3F0, 0x3F1, 0x3F2, 0x3E8
+BRA_W = b"\x60\x00"  # bra.w with a 16-bit displacement
+LFS_POINTER = b"version https://git-lfs"
 
 
 def tag_names():
@@ -251,10 +260,23 @@ def merge(areas):
     return out
 
 
+def module_file(path):
+    """Exit unless the module is fetched and matches data/modules.yaml."""
+    rel = path.relative_to(ROOT).as_posix()
+    data = path.read_bytes()
+    if data.startswith(LFS_POINTER):
+        sys.exit(f"{rel} is a Git LFS pointer; run: git lfs pull")
+    want = players.modules()[rel]["sha1"]
+    if hashlib.sha1(data).hexdigest() != want:
+        sys.exit(f"{rel}: sha1 differs from data/modules.yaml")
+    return path
+
+
 def resolve(arg):
     """(config name, input path) for a player name or a file under ext/."""
     if "/" not in arg and (PLAYERS / arg).is_file():
-        return arg, PLAYERS / arg
+        module = players.load().get(arg, {}).get("module")
+        return arg, module_file(ROOT / module) if module else PLAYERS / arg
     path = (ROOT / arg).resolve()
     if not path.is_file() or not path.is_relative_to(ROOT / "ext"):
         sys.exit(f"{arg} is neither a player in ext/uade/players nor a file under ext/")
@@ -263,9 +285,31 @@ def resolve(arg):
     return path.stem, path
 
 
+def jump_table(raw):
+    """Targets of the `bra.w` table at the start of raw code."""
+    out, off = [], 0
+    while raw[off : off + 2] == BRA_W:
+        (disp,) = struct.unpack(">h", raw[off + 2 : off + 4])
+        out.append(off + 2 + disp)
+        off += 4
+    return out
+
+
+def wrap(path):
+    """Raw code as an executable with one code hunk at address 0."""
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "w.s").write_text(f'\tsection code,code\n\tincbin "{path}"\n')
+        run(VASM, "-Fhunkexe", "-no-opt", "-quiet", "-o", "exe", "w.s", cwd=tmp)
+        return (Path(tmp) / "exe").read_bytes()
+
+
 def load(path):
     """(executable bytes, labels [(name, address)], entry addresses)."""
     data = path.read_bytes()
+    if data[:4] not in (HUNK_HEADER.to_bytes(4, "big"), HUNK_UNIT.to_bytes(4, "big")):
+        targets = jump_table(data)
+        labels = [(f"Jump{n}", addr) for n, addr in enumerate(targets)]
+        return wrap(path.resolve()), labels, sorted({0, *targets})
     if path.parent == PLAYERS:
         found = tags(path)
         return data, found, sorted({a for n, a in found if n not in DATA_TAGS})

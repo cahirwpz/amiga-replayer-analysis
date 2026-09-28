@@ -59,6 +59,11 @@ the first card on it, with `specs/med.py`.
 
 The user's list, triaged. All leads are on cards now.
 
+- [ ] `RobHubbard`: write the card from `data/disasm/RobHubbard.cnf`, which
+      reads `rh.GMUSIC`. The replay is `$0`–`$33E`; tables follow. Map:
+      `ext/c-flod/neoart/flod/hubbard`.
+- [ ] Diff the code of `rh.FLYMUS`, from the same game, against `rh.GMUSIC`.
+
 Skip unless a new lead turns up:
 
 - `DeltaMusic2.0` and `SIDMon2.0`: only C ports. They show tables close to
@@ -101,22 +106,20 @@ Skip unless a new lead turns up:
 - [ ] Pick the first binary-only player to disassemble. Filter by scope first.
 - [ ] Before disassembling a player, look for a port of it outside UADE. Use it
       as a map, not as evidence.
-- [ ] Module inputs: decide provenance and storage; add IRA raw-binary support.
 
 ## Disassembly queue
 
 A port is not evidence (see [`AGENTS.md`](AGENTS.md#evidence)). These players
 need 68k code first.
 
-| Player             | Why                                                     | Map                                |
-| ------------------ | ------------------------------------------------------- | ---------------------------------- |
-| `RobHubbard`       | `PGA_Tour_Golf.lha` available; needs raw-binary support | `ext/c-flod/neoart/flod/hubbard`   |
-| `BenDaglish-SID`   | Replay code is in the module; needs a module            | —                                  |
-| `JankoMrsicFlogel` | Replay code is in the module; needs a module            | —                                  |
-| `Special-FX`       | Replay code is in the module; needs a module            | —                                  |
-| `Fred`             | Replay code is in the module; needs a module            | `ext/c-flod/neoart/flod/fred`      |
-| `SIDMon1.0`        | Replay code is in the module; needs a module            | `ext/c-flod/neoart/flod/sidmon`    |
-| `DavidWhittaker`   | Port reads the module's code (guess: replay in module)  | `ext/c-flod/neoart/flod/whittaker` |
+| Player             | Why                                                    | Map                                |
+| ------------------ | ------------------------------------------------------ | ---------------------------------- |
+| `BenDaglish-SID`   | Replay code is in the module; needs a module           | —                                  |
+| `JankoMrsicFlogel` | Replay code is in the module; needs a module           | —                                  |
+| `Special-FX`       | Replay code is in the module; needs a module           | —                                  |
+| `Fred`             | Replay code is in the module; needs a module           | `ext/c-flod/neoart/flod/fred`      |
+| `SIDMon1.0`        | Replay code is in the module; needs a module           | `ext/c-flod/neoart/flod/sidmon`    |
+| `DavidWhittaker`   | Port reads the module's code (guess: replay in module) | `ext/c-flod/neoart/flod/whittaker` |
 
 ## Disassembly notes
 

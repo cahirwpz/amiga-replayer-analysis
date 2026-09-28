@@ -374,6 +374,24 @@ class Disasm(unittest.TestCase):
         self.assertIn(names["OK_Play"], entries)  # a code symbol
         self.assertNotIn(names["PBuff"], entries)  # in a BSS hunk
 
+    # bra.w $8; bra.w $a; rts; rts: raw code with a jump table
+    RAW = bytes.fromhex("60000006 60000004 4e75 4e75")
+
+    def test_reads_a_jump_table(self):
+        self.assertEqual(self.disasm.jump_table(self.RAW), [0x8, 0xA])
+
+    def test_wraps_raw_code_at_address_0(self):
+        if not self.disasm.VASM.exists():
+            self.skipTest("vasm missing; run: disasm.py install")
+        with tempfile.TemporaryDirectory() as tmp:
+            raw = Path(tmp) / "raw"
+            raw.write_bytes(self.RAW)
+            exe, labels, entries = self.disasm.load(raw)
+        ((base, body, relocs),) = self.disasm.hunks(exe)
+        self.assertEqual((base, body.rstrip(b"\0"), relocs), (0, self.RAW, {}))
+        self.assertEqual(labels, [("Jump0", 0x8), ("Jump1", 0xA)])
+        self.assertEqual(entries, [0, 0x8, 0xA])
+
     def test_every_player_has_a_code_tag(self):
         for binary in sorted(self.disasm.PLAYERS.iterdir()):
             if binary.is_file():

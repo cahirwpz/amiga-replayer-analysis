@@ -18,6 +18,9 @@ jobs:
         with:
           # links and cards read the sources in ext/.
           submodules: true
+          # No hook reads data/module/; disasm.py runs locally. So the Git LFS
+          # files stay pointers here.
+          lfs: false
       - name: Cache hook environments
         uses: actions/cache@v6
         with:

@@ -7,6 +7,7 @@ Usage: players.py --check
 
 Other tools import this module:
   load()        {player: facts}, as written in data/players.yaml
+  modules()     {path: facts}, as written in data/modules.yaml
   binaries()    names of the player binaries in ext/uade/players
   validate()    problems in the file, as text; takes other data for tests
 """
@@ -21,6 +22,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "data" / "players.yaml"
+MODULES = ROOT / "data" / "modules.yaml"
 BINARIES = ROOT / "ext" / "uade" / "players"
 SOURCES = ROOT / "ext" / "uade" / "amigasrc" / "players"
 
@@ -42,6 +44,7 @@ FIELDS = {
     "related": list,
     "links": list,
     "spec": str,
+    "module": str,
 }
 REPLAY = {"uade", "module", "check", "port", "ext", "disasm", "source"}
 
@@ -49,6 +52,11 @@ REPLAY = {"uade", "module", "check", "port", "ext", "disasm", "source"}
 @cache
 def load():
     return yaml.safe_load(SOURCE.read_text(encoding="utf-8")) or {}
+
+
+@cache
+def modules():
+    return yaml.safe_load(MODULES.read_text(encoding="utf-8")) or {}
 
 
 def binaries():
@@ -99,6 +107,11 @@ def validate(data=None):
         spec = str(facts.get("spec", ""))
         if spec and not (spec.startswith("specs/") and (ROOT / spec).is_file()):
             err(player, f"spec `{spec}` is not a file under specs/")
+        module = str(facts.get("module", ""))
+        if module and module not in modules():
+            err(player, f"module `{module}` is not in data/modules.yaml")
+        elif module and not (ROOT / module).is_file():
+            err(player, f"module `{module}` does not exist")
         for port in facts.get("ports") or []:
             if not str(port).startswith("ext/") or not (ROOT / str(port)).exists():
                 err(player, f"port `{port}` is not a path under ext/")
