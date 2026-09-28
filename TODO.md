@@ -51,9 +51,8 @@ the first card on it, with `specs/med.py`.
 
 ### New cards
 
-The user's list is on cards now. Next: players whose only code is a
-NostalgicPlayer port, triaged from the port. A port is a map, so every lead
-needs its UADE binary disassembled first.
+Players whose only code is a NostalgicPlayer port, triaged from it. Each lead
+needs its UADE binary disassembled.
 
 | Order | Player                     | Value | Binary | Lead                                                    |
 | ----- | -------------------------- | ----- | ------ | ------------------------------------------------------- |
@@ -62,22 +61,30 @@ needs its UADE binary disassembled first.
 | 3     | `Synth`                    | med   | 10 kB  | Double-buffered waves; an envelope sets a negated span  |
 | 4     | `ActionAmics`              | low   | 5 kB   | One-byte sweep, run once per tick per shared sample     |
 
-- [ ] Disassemble `VoodooSupremeSynthesizer`, then `FaceTheMusic`.
+- [ ] Write the `VoodooSupremeSynthesizer` card and spec. Reading notes below.
+- [ ] Disassemble `FaceTheMusic`.
 
 Reading notes, paths under `ext/nostalgicplayer/`:
 
-| Player                     | Where                                                                                                         | Note                                                      |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `VoodooSupremeSynthesizer` | `Format_Descriptions/Voodoo Supreme Synthesizer.txt`                                                          | Stream commands: call, return, loop                       |
-| `VoodooSupremeSynthesizer` | `Source/Agents/Players/VoodooSupremeSynthesizer/VoodooSupremeSynthesizerWorker.Player.cs`, `AudioInterrupt()` | Per-voice interrupt moves the sample offset               |
-| `VoodooSupremeSynthesizer` | `DoFrequencyMapped()`                                                                                         | A table sets chunk starts; step can scale with period     |
-| `VoodooSupremeSynthesizer` | `DoRingModulation()`, `DoXorRingModulation()`, `DoMorphing()`                                                 | Two 32-byte waves into a double buffer each tick          |
-| `FaceTheMusic`             | `Source/Agents/Players/FaceTheMusic/FaceTheMusicWorker.cs`                                                    | Script commands start near `case SoundEffect.Wait`        |
-| `FaceTheMusic`             | `RunSelWorkOnTrack()`                                                                                         | A script switches the track it drives                     |
-| `FaceTheMusic`             | `Containers/LfoTarget.cs`                                                                                     | Four LFOs; one can drive another's speed or depth         |
-| `Synth`                    | `Source/Agents/Players/Synthesis/SynthesisWorker.cs`, `DoEnvelopeGeneratorCounter()`                          | Copies the wave to the idle buffer, negates N bytes       |
-| `Synth`                    | `DoSynthEffects()`                                                                                            | 16 wave effects; compare with Sonic Arranger's 17         |
-| `ActionAmics`              | `Source/Agents/Players/Actionamics/ActionamicsWorker.cs`                                                      | Byte flip near `AlreadyTaken`; compare `byte-write-sweep` |
+| Player         | Where                                                      | Note                                               |
+| -------------- | ---------------------------------------------------------- | -------------------------------------------------- |
+| `FaceTheMusic` | `Source/Agents/Players/FaceTheMusic/FaceTheMusicWorker.cs` | Script commands start near `case SoundEffect.Wait` |
+| `FaceTheMusic` | `RunSelWorkOnTrack()`                                      | A script switches the track it drives              |
+| `FaceTheMusic` | `Containers/LfoTarget.cs`                                  | Four LFOs; one can drive another's speed or depth  |
+
+Voodoo reading notes, read in 68k code:
+
+| Where                                                   | Note                                                     |
+| ------------------------------------------------------- | -------------------------------------------------------- |
+| `data/disasm/VoodooSupremeSynthesizer.cnf:CmdWaveTable` | Mode bits: 5 chunks, 6 exclusive or, 7 morph; none: mix  |
+| `:CmdWaveTable`                                         | Chunks are 64 words; wave modes play 16 words            |
+| `:NextChunk`                                            | Audio interrupt: next chunk start, then step the pointer |
+| `:ChunkStep`                                            | Step = 128 × period / base period: pitch without tempo   |
+| `:MixWaves`, `:XorWaves`, `:MorphWave`                  | Fill the idle half of a 2 × 32-byte buffer, each tick    |
+| `:Interval`                                             | Period × ratio from `Ratios`; 12 per octave, then shifts |
+| `:SetHardware`                                          | Writes last tick's period and volume: one tick late      |
+| `:CmdCall`, `:CmdLoopStart`                             | Calls and loops share one 80-byte stack per voice        |
+| `:CmdGoto`                                              | When all four voices looped, it signals song end         |
 
 Skip unless a new lead turns up:
 

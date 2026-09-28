@@ -331,9 +331,10 @@ Synth:
   provenance: port
 
 VoodooSupremeSynthesizer:
-  source: ext/nostalgicplayer/Source/Agents/Players/VoodooSupremeSynthesizer
-  note: C# port in NostalgicPlayer
-  provenance: port
+  ports: [ext/nostalgicplayer/Source/Agents/Players/VoodooSupremeSynthesizer]
+  provenance: ira
+  author: Tomas Partl
+  year: 1993
 
 InStereo:
   source: ext/nostalgicplayer/Source/Agents/Players/InStereo10
