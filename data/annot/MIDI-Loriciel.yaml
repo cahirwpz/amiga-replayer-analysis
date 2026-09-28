@@ -47,7 +47,7 @@ labels:
   lbL000B9A: VoiceStates
 
 comments:
-  443: PPQ times 10000, not tempo; tempo arrives in meta event $51
+  443: PPQ times 10000, not tempo; tempo arrives in META_TEMPO
   519: all unrecognised events skip two bytes, regardless of their real length
   727: one tick advances every active track by four pulses
   752: keep negative timing residue, but a positive delta always ends this visit

@@ -17,7 +17,7 @@ SetAll) are left out.
 from dataclasses import dataclass, field
 
 from hardware import paula
-from hardware.amiga import Amiga
+from hardware.amiga import DEFAULT_LATCH, Amiga
 
 VOICES = 4
 SUBSONG_SIZE = 16  # 4 position list offsets
@@ -31,7 +31,6 @@ FIRST_MODIFIER = 0x24  # events from here on have no length
 UNITY = 0x2000  # ratios are x / 8192
 FULL_VOLUME = 0x40
 RISING_PERIOD = 0xFD00  # GlideToFit: the period rises, so the pitch falls
-DEFAULT_LATCH = 14187  # DeliTracker's timer, 50 Hz (guess): no DTP_Timer tag
 
 # Events: a word opcode, then its arguments
 REST, SWITCH_VOLUME, LEGATO_OFF, LEGATO_ON = 0x1E, 0x24, 0x26, 0x28
@@ -126,8 +125,8 @@ class Score:  # SongPtr: the module; the samples are a second file
     data: bytes
     samples: bytes
     instruments: int  # InstrumentTable: offset
-    volume_list: int  # VolumeTables: longs, table offsets for event $24
-    fine_list: int  # FineTables: longs, for event $2e
+    volume_list: int  # VolumeTables: longs, table offsets for SWITCH_VOLUME
+    fine_list: int  # FineTables: longs, for SWITCH_FINE
 
     def word(self, at: int) -> int:
         return int.from_bytes(self.data[at : at + 2], "big")
@@ -157,7 +156,7 @@ class Score:  # SongPtr: the module; the samples are a second file
 @dataclass
 class Runs:  # a table walker: pointer 70-82, count 86-89, repeats 90-93
     """A table is runs: a count, a repeat number, then `count` values.
-    A count byte of $ff restarts the table from `base`."""
+    A count byte of TABLE_END restarts the table from `base`."""
 
     base: int = 0  # the instrument's table; 0 none
     pos: int = 0
@@ -267,7 +266,7 @@ def new_module(score: Score, amiga: Amiga) -> Module:
 
 def InitSong(module: Module, subsong: int) -> None:
     """Each voice reads its own position list, from the subsong's 4
-    offsets. A list whose first byte is $ff leaves the voice silent."""
+    offsets. A list whose first byte is STOP_VOICE leaves the voice silent."""
     score = module.score
     for voice in module.voices:
         at = score.long(12 + SUBSONG_SIZE * subsong + 4 * voice.number)
@@ -323,7 +322,7 @@ def RepeatPattern(module: Module, voice: Voice) -> bool:
 
 
 def NextPosition(module: Module, voice: Voice) -> bool:
-    """$fe loops the voice's list; $ff stops the voice. Each voice ends
+    """LOOP_POSITIONS loops the voice's list; STOP_VOICE stops the voice. Each voice ends
     on its own; the song ends when all have looped or stopped. Pending
     table switches are dropped."""
     voice.volume_switch = voice.fine_switch = 0
@@ -351,7 +350,7 @@ def ReadPosition(module: Module, voice: Voice, at: int) -> None:
 
 
 def ReadEvent(module: Module, voice: Voice) -> None:
-    """One event with a length, then any modifiers from $24 up. Every
+    """One event with a length, then any modifiers from FIRST_MODIFIER up. Every
     event but a modifier restarts the four tables."""
     score = module.score
     while score.data[voice.event] == PATTERN_END:
@@ -412,7 +411,7 @@ def RestEvent(voice: Voice) -> None:
 def GlideToFit(module: Module, voice: Voice, direction: int) -> None:
     """Words: the marker, the interval in ratio steps, the delay. The
     ratio per tick is interval / (length - delay) steps, so the glide
-    spans the interval as the note ends. $fd00 raises the period."""
+    spans the interval as the note ends. RISING_PERIOD raises the period."""
     score = module.score
     interval = score.word(voice.event)
     delay = score.word(voice.event + 2)
@@ -424,8 +423,9 @@ def GlideToFit(module: Module, voice: Voice, direction: int) -> None:
 
 
 def Modifier(module: Module, voice: Voice, opcode: int) -> None:
-    """$24 and $2e switch a table after a delay; $26 and $28 turn legato
-    off and on; $2a and $2c start a glide, after a delay, at a fixed
+    """SWITCH_VOLUME and SWITCH_FINE switch a table after a delay;
+    LEGATO_OFF and LEGATO_ON turn legato off and on; GLIDE_UP and
+    GLIDE_DOWN start a glide, after a delay, at a fixed
     ratio per tick (byte offsets into the ratio tables)."""
     score = module.score
     if opcode == LEGATO_ON:
@@ -461,7 +461,7 @@ def SwitchFineTable(voice: Voice, delay: int, table: int) -> None:
 
 def SwitchTables(voice: Voice) -> None:
     """After the delay, the walker jumps to the new table, but its base
-    stays: at the new table's $ff it returns to the instrument's own
+    stays: at the new table's TABLE_END it returns to the instrument's own
     table. The code clears only the high word of the pending offset,
     so a low word that is not 0 waits another 65536 ticks."""
     for runs, attr, delay_attr in (

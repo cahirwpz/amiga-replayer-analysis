@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 
 from hardware import paula
+from hardware.clock import CPU_PER_CCK
 from hardware.amiga import Amiga, Priority
 from specs.controls import CommandList, Mode, TableWalker
 
@@ -21,10 +22,13 @@ WAVE_COUNT = 64  # waveforms per synth sound
 ENVELOPE_LENGTH = 128  # bytes an envelope reads from a waveform
 VIBRATO_STEPS = 32  # waveform bytes synth vibrato reads
 FINETUNE = range(-8, 8)
-CMD_PORTAMENTO = 3  # pattern command that keeps a hold
+CMD_ARPEGGIO = 0x00
+CMD_PORTAMENTO = 0x03  # pattern command that keeps a hold
+CMD_VIBRATO = 0x04
 CMD_WAVE_LIST_POS = 0x0E
 CMD_MISC = 0x0F  # argument 0xFF: note-off
 CMD_LOOP = 0x16
+CMD_DETUNE_START = 0x13  # a higher pitch for 3 ticks; not modelled
 NOTE_OFF = 0xFF
 TRACK_VOLUME_BITS = 8  # track_volume is a fixed-point factor
 TIMER_DIV = 470000  # TimerDivisor, PAL: latch = TIMER_DIV / tempo
@@ -33,7 +37,9 @@ SOUNDTRACKER_LATCHES = (  # SoundTrackerTempos: tempos 1..10
     *(2417, 4833, 7250, 9666, 12083),
     *(14500, 16916, 19332, 21436, 24163),
 )
-POLL_CCK = 25  # one WaitOneLine poll on a 68000: about 50 CPU cycles (estimate)
+# One WaitOneLine poll: move.b, cmp.b, beq.s not taken, dbf taken. The beam's
+# horizontal byte changes every CCK, so the cmp.b always sees a change.
+POLL_CCK = (16 + 16 + 8 + 10) // CPU_PER_CCK
 STOP_WAIT_CCK = 161 * POLL_CCK  # before DMA on: 161 polls, synth build
 LOOP_WAIT_CCK = 81 * POLL_CCK  # before the loop write: 81 polls
 
@@ -157,7 +163,7 @@ class Voice:  # track data; track n plays on channel n
     pattern_portamento: Portamento = field(default_factory=Portamento)
     row_vibrato: Vibrato = field(default_factory=lambda: Vibrato(wave=SINE))
     # trk_vibrsz, trk_vibrspd, trk_vibroffs: 4 phase units per sine byte
-    pattern_vibrato: int = 0  # trk_vibradjust; command 13 too
+    pattern_vibrato: int = 0  # trk_vibradjust; CMD_DETUNE_START too
     pattern_arpeggio: int = 0  # trk_arpadjust
     row_note: int = 0  # trk_prevnote: the track's last note, 1-based
     periods: tuple[int, ...] = ()  # trk_periodtbl: set by the last note
@@ -340,7 +346,7 @@ def DoPreFX(module: Module, rows: list[Row]) -> None:
 
 
 def SetPortamento(module: Module, voice: Voice, row: Row, speed: int) -> None:
-    """Command 3 on a row: its note becomes the target and does not play.
+    """CMD_PORTAMENTO on a row: its note becomes the target and does not play.
     The target comes from the table of the voice's last note, with no
     octave folding. Speed 0 keeps the old speed."""
     voice.no_play = True
@@ -355,7 +361,7 @@ def SetPortamento(module: Module, voice: Voice, row: Row, speed: int) -> None:
 
 
 def CmdWaveListPos(voice: Voice, pos: int) -> None:
-    """Command E. A note on this row keeps this start; the wait stays."""
+    """A note on this row keeps this start; the wait stays."""
     voice.wave_list.pos = pos
     voice.command_e = True
 
@@ -371,7 +377,7 @@ def ChannelOff(voice: Voice) -> None:
 
 
 def CmdLoop(module: Module, count: int) -> None:
-    """Command 16. 0 marks this row. n jumps back to the mark n times,
+    """0 marks this row. n jumps back to the mark n times,
     then plays on. One loop serves the whole song, not each track."""
     if count == 0:
         module.loop_row = module.row
@@ -460,7 +466,7 @@ def ChannelFX(module: Module, voice: Voice, command: Command, tick: int) -> None
 
 
 def ArpeggioTick(module: Module, voice: Voice, arg: int, tick: int) -> None:
-    """Command 0. A 3-tick cycle: + high nibble, + low nibble, + 0. So a
+    """A 3-tick cycle: + high nibble, + low nibble, + 0. So a
     row starts on the high note, unlike ProTracker. The offset is the
     period difference from the track's last note, in its table."""
     if not arg or not voice.periods:
@@ -472,7 +478,7 @@ def ArpeggioTick(module: Module, voice: Voice, arg: int, tick: int) -> None:
 
 
 def PortamentoTick(module: Module, voice: Voice, arg: int, tick: int) -> None:
-    """Command 3. The period moves towards SetPortamento's target by
+    """The period moves towards SetPortamento's target by
     `speed` per tick and stops there. With SoundTracker slides, a row's
     first tick is skipped."""
     glide = voice.pattern_portamento
@@ -490,7 +496,7 @@ def PortamentoTick(module: Module, voice: Voice, arg: int, tick: int) -> None:
 
 
 def VibratoTick(module: Module, voice: Voice, arg: int, tick: int) -> None:
-    """Command 4. On a row's first tick, the low nibble sets the depth and
+    """On a row's first tick, the low nibble sets the depth and
     the high nibble the speed; 0 keeps the old one. Every tick, sine ×
     depth / 32 goes to the period. A note restarts the phase."""
     vibrato = voice.row_vibrato
@@ -505,9 +511,9 @@ def VibratoTick(module: Module, voice: Voice, arg: int, tick: int) -> None:
 
 
 TICK_COMMANDS: dict[int, Callable[[Module, Voice, int, int], None]] = {
-    0x00: ArpeggioTick,
-    0x03: PortamentoTick,
-    0x04: VibratoTick,
+    CMD_ARPEGGIO: ArpeggioTick,
+    CMD_PORTAMENTO: PortamentoTick,
+    CMD_VIBRATO: VibratoTick,
 }
 
 

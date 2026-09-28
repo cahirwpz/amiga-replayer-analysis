@@ -297,17 +297,15 @@ def RunCommand(module: Module, voice: Voice) -> None:
 
 
 def CmdFilterOff(module: Module, voice: Voice, arg: int) -> None:
-    """$01."""
     module.filter = False
 
 
 def CmdFilterOn(module: Module, voice: Voice, arg: int) -> None:
-    """$02."""
     module.filter = True
 
 
 def CmdVolume(module: Module, voice: Voice, arg: int) -> None:
-    """$03-$42: volume 0 to 63, at once. Ignored while a game fade runs."""
+    """Volume 0 to 63, at once. Ignored while a game fade runs."""
     if voice.locked:
         return
     voice.volume = arg
@@ -315,12 +313,12 @@ def CmdVolume(module: Module, voice: Voice, arg: int) -> None:
 
 
 def CmdStop(module: Module, voice: Voice, arg: int) -> None:
-    """$43: DMA off."""
+    """DMA off."""
     voice.output.disable()
 
 
 def CmdWait(module: Module, voice: Voice, arg: int) -> None:
-    """$57-$88: the row lasts 1 to 50 rows. A running wait is kept."""
+    """The row lasts 1 to 50 rows. A running wait is kept."""
     track = voice.track
     assert track is not None
     if not track.wait:
@@ -328,39 +326,36 @@ def CmdWait(module: Module, voice: Voice, arg: int) -> None:
 
 
 def CmdSlideUp(module: Module, voice: Voice, arg: int) -> None:
-    """$a7-$b0: one step every 1 to 10 ticks."""
+    """One step every 1 to 10 ticks."""
     voice.slide_down = False
     voice.slide_speed = voice.slide_count = arg + 1
 
 
 def CmdSlideDown(module: Module, voice: Voice, arg: int) -> None:
-    """$b1-$ba."""
     voice.slide_down = True
     voice.slide_speed = voice.slide_count = arg + 1
 
 
 def CmdSetFlag(module: Module, voice: Voice, arg: int) -> None:
-    """$bb-$ce: sets game flag 0 to 19."""
+    """Sets game flag 0 to 19."""
     module.flags[arg] = True
 
 
 def CmdHold(module: Module, voice: Voice, arg: int) -> None:
-    """$cf."""
     voice.hold = True
 
 
 def CmdRelease(module: Module, voice: Voice, arg: int) -> None:
-    """$d0: the repeat part follows when the playing part ends."""
+    """The repeat part follows when the playing part ends."""
     voice.hold = False
 
 
 def CmdClearFlags(module: Module, voice: Voice, arg: int) -> None:
-    """$d1."""
     module.flags = [False] * GAME_FLAGS
 
 
 def CmdRepeatStart(module: Module, voice: Voice, arg: int) -> None:
-    """$d2-$db: 1 to 10 repeats of the rows after this one. While a
+    """1 to 10 repeats of the rows after this one. While a
     repeat is open, it does nothing: one level, no nesting."""
     track = voice.track
     assert track is not None
@@ -369,7 +364,7 @@ def CmdRepeatStart(module: Module, voice: Voice, arg: int) -> None:
 
 
 def CmdRepeatEnd(module: Module, voice: Voice, arg: int) -> None:
-    """$dc: back to the row after the mark while repeats are left. With N
+    """Back to the row after the mark while repeats are left. With N
     repeats, the rows play N + 1 times."""
     track = voice.track
     assert track is not None
@@ -381,7 +376,7 @@ def CmdRepeatEnd(module: Module, voice: Voice, arg: int) -> None:
 
 
 def CmdStepBack(module: Module, voice: Voice, arg: int) -> None:
-    """$dd: the row plays again at every row tick, until the game starts
+    """The row plays again at every row tick, until the game starts
     another song on the voice. Its note restarts each time."""
     track = voice.track
     assert track is not None
@@ -389,35 +384,34 @@ def CmdStepBack(module: Module, voice: Voice, arg: int) -> None:
 
 
 def CmdRestart(module: Module, voice: Voice, arg: int) -> None:
-    """$de: this voice goes back to its first row; the others play on."""
+    """This voice goes back to its first row; the others play on."""
     track = voice.track
     assert track is not None
     track.pos = track.start
 
 
 def CmdVolModOn(module: Module, voice: Voice, arg: int) -> None:
-    """$df-$e1: channel 0, 1 or 2 sets the next channel's volume. Any
+    """Channel 0, 1 or 2 sets the next channel's volume. Any
     voice's row can link any pair."""
     set_attach(module, arg, paula.Attach.VOLUME, True)
 
 
 def CmdPerModOn(module: Module, voice: Voice, arg: int) -> None:
-    """$e2-$e4: channel 0, 1 or 2 sets the next channel's period."""
+    """Channel 0, 1 or 2 sets the next channel's period."""
     set_attach(module, arg, paula.Attach.PERIOD, True)
 
 
 def CmdClearFlag(module: Module, voice: Voice, arg: int) -> None:
-    """$e5-$f8: clears game flag 0 to 19."""
+    """Clears game flag 0 to 19."""
     module.flags[arg] = False
 
 
 def CmdVolModOff(module: Module, voice: Voice, arg: int) -> None:
-    """$f9-$fb."""
     set_attach(module, arg, paula.Attach.VOLUME, False)
 
 
 def CmdPerModOff(module: Module, voice: Voice, arg: int) -> None:
-    """$fc-$fd: channel 0 or 1. For channel 2, see CmdPerModOff2."""
+    """Channel 0 or 1. For channel 2, see CmdPerModOff2."""
     set_attach(module, arg, paula.Attach.PERIOD, False)
 
 

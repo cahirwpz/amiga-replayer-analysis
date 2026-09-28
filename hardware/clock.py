@@ -14,6 +14,8 @@ CCK_HZ = 3546895  # PAL colour clock
 LINE_CCK = 227  # colour clocks per scanline
 FRAME_LINES = 312  # scanlines per PAL frame
 FRAME_CCK = LINE_CCK * FRAME_LINES
+CPU_PER_CCK = 2  # 68000 cycles per CCK. Instruction times: Musashi's
+# m68k_in.c table, without waits for the chip bus, so a busy wait may be longer
 
 
 class Clock(Protocol):

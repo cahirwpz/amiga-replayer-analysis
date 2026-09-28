@@ -36,26 +36,27 @@ labels:
   lbC00106C: VolumeWalker
   2211: AdsrSustain
   lbC0010FE: AdsrStep
-  # wave effects
+  # wave effects; names from the editor, as listed in
+  # ext/nostalgicplayer/Source/Agents/Players/SonicArranger/Containers/SynthesisEffect.cs
   lbC00117A: WaveEffect
   lbW001156: EffectTable
-  lbC0011AC: Effect1
-  lbC0011BC: Effect2
-  lbC001280: Effect3
-  lbC0012CE: Effect4
-  lbC0012F0: Effect5
-  lbC00135A: Effect6
-  lbC00138E: Effect7
-  lbC0013F6: Effect8
-  lbC001452: Effect9
-  lbC001552: Effect10
-  lbC00156E: Effect11
-  lbC00160C: Effect12
-  lbC00164C: Effect13
-  lbC00169E: Effect14
-  lbC001422: Effect15
-  lbC001620: Effect16
-  lbC001524: Effect17
+  lbC0011AC: WaveNegator
+  lbC0011BC: FreeNegator
+  lbC001280: RotateVertical
+  lbC0012CE: RotateHorizontal
+  lbC0012F0: AlienVoice
+  lbC00135A: PolyNegator
+  lbC00138E: ShackWave1
+  lbC0013F6: ShackWave2
+  lbC001452: Metamorph
+  lbC001552: Laser
+  lbC00156E: WaveAlias
+  lbC00160C: NoiseGenerator1
+  lbC00164C: LowPassFilter1
+  lbC00169E: LowPassFilter2
+  lbC001422: Oszilator
+  lbC001620: NoiseGenerator2
+  lbC001524: FmDrum
   lbC001700: EffectStep
   lbC001714: NoEffect
   # data
@@ -90,14 +91,14 @@ labels:
   lbC00146E: Morph
 
 comments:
-  1785: "$80: no new note, hold"
-  1787: "$7f: note off"
+  1785: "HOLD: no new note"
+  1787: "NOTE_OFF: note off"
   1797: flag bit 2 skips the note transpose
   1804: flag bit 3 skips the instrument transpose
   1906: Paula plays the voice's own copy of the wave
   2039: one of three arpeggio tables, chosen by the pattern entry
   2124: vibrato depth divides the table value
-  2214: rows marked $80 hold the ADSR at its sustain point
+  2214: rows marked HOLD hold the ADSR at its sustain point
   2217: sustain point
   2242: ADSR ended on 0 and does not repeat; the voice falls silent
   2749: the low byte of the video beam position serves as noise
@@ -124,7 +125,7 @@ banners:
     VoiceTick: arpeggio, portamento, vibrato, AMF, then the wave effect,
     then ADSR.
   2289: |
-    Wave effects 1-17 rewrite the voice's copy of the wave, every
+    Wave effects, from WaveNegator to FmDrum, rewrite the voice's copy of the wave, every
     `effect delay` ticks. Most work on bytes `start` to `end`.
     `EffectStep` moves the effect position from `start` to `end`, then
     back to `start`.

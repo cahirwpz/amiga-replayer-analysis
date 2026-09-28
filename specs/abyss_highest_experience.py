@@ -468,7 +468,8 @@ def row_of(player: Player, track: int, row: int) -> tuple[int, int, int, int]:
 
 def ReadRow(player: Player, voice: Voice) -> None:
     """Commands act first, then the instrument, then the note. A note
-    with command 3 or 5 slides from the last note instead of playing.
+    with TONE_SLIDE or TONE_SLIDE_VOLUME slides from the last note instead
+    of playing.
 
     EDx delays the whole row by x ticks: VoiceFrame reads it again. ECx
     cuts the note after x ticks, with no release. Both need x < speed."""

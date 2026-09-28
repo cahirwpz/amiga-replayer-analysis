@@ -14,6 +14,11 @@ from hardware.cia import CiaTimer
 from hardware.paula import Paula
 from hardware.vblank import VerticalBlank
 
+# The host's CIA timer latch for a player without a DTP_Timer tag: 50 Hz
+# on PAL. DeliTracker's DeliPlayer.i promises a call "every 1/50 sec";
+# UADE stores $376b in ext/uade/amigasrc/score/score.s:cia_timer_base_value.
+DEFAULT_LATCH = 14187
+
 
 class Priority(IntEnum):
     """Order of events at the same CCK: hardware events such as DMA fetches

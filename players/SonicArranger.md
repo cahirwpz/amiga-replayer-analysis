@@ -37,9 +37,10 @@ Seventeen wave effects rewrite each voice's own copy of its wave.
   - Costs: medium CPU. Most effects touch every byte of the range, up to 128
     bytes per voice.
 - Several effects read a second wave. It serves as a morph target, a pulse width
-  table or a limit table. `:Effect2` `:Effect9` `:Effect14`
+  table or a limit table. `:FreeNegator` `:Metamorph` `:LowPassFilter2`
   - Enables: new sounds from data, with no new code.
-- Two effects take noise from the video beam position. `:Effect12` `:Effect16`
+- Two effects take noise from the video beam position. `:NoiseGenerator1`
+  `:NoiseGenerator2`
   - Enables: noise without a random number generator.
   - Costs: the noise depends on when the tick runs.
 - A synth note does not stop the channel. It copies its wave over the playing
@@ -63,11 +64,11 @@ or a synth wave with one effect. Each instrument has a pitch table (the format's
 | Notation | An instrument: wave or sample, vibrato, portamento, two tables, effect, arpeggios. | `:Instrument`   |
 | Notation | A row's flags pick one of the three arpeggios. Each row can pick another one.      | `:Arpeggio`     |
 | Notation | The subsong sets the tick rate in Hz.                                              | `:SetTimer`     |
-| Cost     | A held note needs `$80` on every row. A row without it starts the release.         | `:AdsrSustain`  |
+| Cost     | A held note needs `HOLD` on every row. A row without it starts the release.        | `:AdsrSustain`  |
 | Cost     | A slide lasts one row.                                                             | `:RowCommand`   |
 | Cost     | A larger vibrato depth gives a smaller vibrato.                                    | `:Vibrato`      |
-| Cost     | Command 4 starts the vibrato. Its argument has no effect.                          | `:CmdVibrato`   |
-| Cost     | Effect 10 takes its pitch step from the range's `start` field.                     | `:Effect10`     |
+| Cost     | `CmdVibrato` starts the vibrato. Its argument has no effect.                       | `:CmdVibrato`   |
+| Cost     | `Laser` takes its pitch step from the range's `start` field.                       | `:Laser`        |
 | Cost     | After a synth note, a sample starts only at the copy's next loop.                  | `:ReadVoiceRow` |
 
 ## What is unique
@@ -78,12 +79,12 @@ or a synth wave with one effect. Each instrument has a pitch table (the format's
   silent until the next note. `:AdsrStep`
 - Portamento glides from the previous note and turns itself off at the target.
   `:Portamento`
-- Effect 15 morphs to the second wave, then back to the first, forever.
-  `:Effect15`
-- Effect 2 builds a pulse from the wave. The second wave's bytes set the width,
-  one per run. `:Effect2`
+- `Oszilator` morphs to the second wave, then back to the first, forever.
+  `:Oszilator`
+- `FreeNegator` builds a pulse from the wave. The second wave's bytes set the
+  width, one per run. `:FreeNegator`
 
 ## Open questions
 
 - What does `AMF` stand for?
-- Is command 4's unused argument a bug of version 2.18 only?
+- Is the unused argument of `CmdVibrato` a bug of version 2.18 only?

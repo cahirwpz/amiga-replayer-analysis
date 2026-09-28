@@ -15,7 +15,7 @@ from hardware.clock import CCK_HZ, LINE_CCK, Clock
 
 MIN_PERIOD = 124  # CCK: one word per line limits a channel to about 28.6 kHz
 MAX_VOLUME = 64
-PERIOD_WRAP = 1 << 16  # a period of 0, see Channel.word_cck
+PERIOD_WRAP = 1 << 16  # CCK per byte at a period of 0, see Channel.word_cck
 CHANNELS = 4
 LEFT = (0, 3)  # fixed stereo: channels 0 and 3 left, 1 and 2 right
 RIGHT = (1, 2)
@@ -180,8 +180,10 @@ class Channel:
 
     def word_cck(self) -> int:
         """CCK per word: two bytes, a period each. The period counter
-        counts down, so 0 wraps and counts PERIOD_WRAP (guess: recalled
-        from Minimig's counter, not checked)."""
+        loads AUDxPER and counts down; a byte ends when it reaches 1. So
+        a period of 0 wraps and lasts PERIOD_WRAP CCK. Source: Minimig,
+        rtl/paula_audio_channel.v, `percnt` and `perfin`. UADE turns a
+        period of 0 into 65535: ext/uade/src/audio.c:AUDxPER."""
         return 2 * (self.period or PERIOD_WRAP)
 
     def rate(self) -> int:

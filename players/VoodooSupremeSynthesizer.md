@@ -57,24 +57,24 @@ Each audio interrupt plays the next 128-byte chunk of a long sample.
 The composer writes one stream per voice and draws tables. The format calls the
 wave walker's table a `waveform command table`.
 
-| Aspect   | Answer                                                      | Source            |
-| -------- | ----------------------------------------------------------- | ----------------- |
-| Notation | A note: a note byte, then its length in ticks.              | `:ReadStream`     |
-| Notation | `$81` calls another stream.                                 | `:CmdCall`        |
-| Notation | `$82` returns from it.                                      | `:CmdReturn`      |
-| Notation | `$83` starts a loop with a count.                           | `:CmdLoopStart`   |
-| Notation | `$84` closes the loop.                                      | `:CmdLoop`        |
-| Notation | `$8B` jumps to another stream.                              | `:CmdGoto`        |
-| Notation | `$85` picks two samples.                                    | `:CmdSamples`     |
-| Notation | `$88` picks a wave table and its mode.                      | `:CmdWaveTable`   |
-| Notation | `$89` slides between two notes, and plays as a note.        | `:CmdPortamento`  |
-| Notation | `$FF` cuts the note, then waits.                            | `:NoteCut`        |
-| Notation | A volume entry sets a level, or adds a delta for N ticks.   | `:VolumeEnvelope` |
-| Notation | A period entry shifts octaves, steps an interval or slides. | `:PeriodCommand`  |
-| Cost     | Period and volume reach Paula one tick late.                | `:SetHardware`    |
-| Cost     | Volume wraps: an envelope must stop its own delta.          | `:VolumeEnvelope` |
-| Cost     | A slide between equal notes crashes: it divides by zero.    | `:CmdPortamento`  |
-| Cost     | The song ends only when four gotos run in the same tick.    | `:Tick`           |
+| Aspect   | Answer                                                         | Source            |
+| -------- | -------------------------------------------------------------- | ----------------- |
+| Notation | A note: a note byte, then its length in ticks.                 | `:ReadStream`     |
+| Notation | `CmdCall` calls another stream.                                | `:CmdCall`        |
+| Notation | `CmdReturn` returns from it.                                   | `:CmdReturn`      |
+| Notation | `CmdLoopStart` starts a loop with a count.                     | `:CmdLoopStart`   |
+| Notation | `CmdLoop` closes the loop.                                     | `:CmdLoop`        |
+| Notation | `CmdGoto` jumps to another stream.                             | `:CmdGoto`        |
+| Notation | `CmdSamples` picks two samples.                                | `:CmdSamples`     |
+| Notation | `CmdWaveTable` picks a wave table and its mode.                | `:CmdWaveTable`   |
+| Notation | `CmdPortamento` slides between two notes, and plays as a note. | `:CmdPortamento`  |
+| Notation | `NOTE_CUT` cuts the note, then waits.                          | `:NoteCut`        |
+| Notation | A volume entry sets a level, or adds a delta for N ticks.      | `:VolumeEnvelope` |
+| Notation | A period entry shifts octaves, steps an interval or slides.    | `:PeriodCommand`  |
+| Cost     | Period and volume reach Paula one tick late.                   | `:SetHardware`    |
+| Cost     | Volume wraps: an envelope must stop its own delta.             | `:VolumeEnvelope` |
+| Cost     | A slide between equal notes crashes: it divides by zero.       | `:CmdPortamento`  |
+| Cost     | The song ends only when four gotos run in the same tick.       | `:Tick`           |
 
 ## What is unique
 

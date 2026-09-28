@@ -48,11 +48,11 @@ note, an instrument, a command byte and an argument.
 | Notation | A position: a pattern and a transpose per voice.                          | `:ReadRow`        |
 | Notation | A 7-voice song takes two subsongs. Voices 3 to 6 play the second one.     | `:Play`           |
 | Notation | An instrument: waves to play, for volume and vibrato, and for its effect. | `:Instrument`     |
-| Cost     | A command byte below `$40` is a slide target note.                        | `:ReadRow`        |
+| Cost     | A command byte below `FIRST_COMMAND` is a slide target note.              | `:ReadRow`        |
 | Cost     | A command comes only with a note. It lasts until the next note.           | `:RowCommands`    |
 | Cost     | A loud volume needs wave bytes near -128.                                 | `:VolumeFromWave` |
-| Cost     | Command 10 changes the wave without a restart.                            | `:StartWave`      |
-| Cost     | Command 11 changes the instrument's arpeggio, for all voices.             | `:ReadRow`        |
+| Cost     | `LEGATO` changes the wave without a restart.                              | `:StartWave`      |
+| Cost     | `ARPEGGIO` changes the instrument's arpeggio, for all voices.             | `:ReadRow`        |
 
 ## What is unique
 

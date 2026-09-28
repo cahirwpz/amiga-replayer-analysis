@@ -56,12 +56,12 @@ tables. Voice settings hold until a command changes them.
 | Aspect   | Answer                                                                    | Source                      |
 | -------- | ------------------------------------------------------------------------- | --------------------------- |
 | Notation | A note byte, 1 to 126, then a length byte.                                | `:ReadStream`               |
-| Notation | Byte $7F, then a length byte: a tie.                                      | `:ReadStream`               |
+| Notation | `TIE`, then a length byte.                                                | `:ReadStream`               |
 | Notation | A length byte: bits 0-4 are a value, bits 5-7 shift it left.              | `:ReadLength`               |
-| Notation | A command: a byte from $80, then 0 to 2 argument bytes.                   | `:RunCommand`               |
+| Notation | A command: a byte from `COMMAND`, then 0 to 2 argument bytes.             | `:RunCommand`               |
 | Notation | A repeat: a loop start with a count, the part, then a loop end.           | `:LoopStart` `:LoopEnd`     |
 | Notation | A mode byte per voice: legato, keep the envelope, keep the vibrato phase. | `:SetMode`                  |
-| Notation | Byte 0 ends the voice for good.                                           | `:VoiceEnd`                 |
+| Notation | `END_BYTE` ends the voice for good.                                       | `:VoiceEnd`                 |
 | Cost     | A length that rounds to 0 ticks stalls its voice for 65 536 ticks.        | `:ReadLength`               |
 | Cost     | An arpeggio is written out as notes. No command plays one.                | `:RunCommand`               |
 | Cost     | A new instrument turns legato mode off. The mode must be set again.       | `:SetInstrument`            |

@@ -50,9 +50,9 @@ The composer writes one event list per track and a set of programs.
 | Notation | A note event: pitch, sample and volume in one word.             | `:PatternEvent` |
 | Notation | A wait word holds the rows until the next event.                | `:TrackRow`     |
 | Notation | A track without wait words spaces its events evenly.            | `:TrackRow`     |
-| Notation | `$B000` starts a program on the track.                          | `:PatternEvent` |
-| Notation | `$C000` slides to a pitch over N rows.                          | `:Portamento`   |
-| Notation | `$D000` fades to silence over N rows.                           | `:Fade`         |
+| Notation | `START_SCRIPT` starts a program on the track.                   | `:PatternEvent` |
+| Notation | `PORTAMENTO` slides to a pitch over N rows.                     | `:Portamento`   |
+| Notation | `FADE` fades to silence over N rows.                            | `:Fade`         |
 | Notation | A note without a sample keeps a looping sample playing: legato. | `:PatternEvent` |
 | Cost     | A note event spans 34 semitones.                                | `:PatternEvent` |
 | Cost     | Pitch moves in steps of 1/8 semitone.                           | `:SetPitch`     |

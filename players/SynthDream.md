@@ -62,8 +62,8 @@ instrument names four tables, or a sample.
   event ends. `:Glide`
 - A note's first tick writes the sample, the second its loop. There is no
   busy-wait. `:WriteChannel`
-- Each voice ends on its own: `$fe` loops its positions, `$ff` stops it.
-  `:NextPosition`
+- Each voice ends on its own: `LOOP_POSITIONS` loops its positions, `STOP_VOICE`
+  stops it. `:NextPosition`
 
 ## Open questions
 

@@ -50,11 +50,11 @@ format calls a pattern `macro`.
 
 | Aspect   | Answer                                                                   | Source                       |
 | -------- | ------------------------------------------------------------------------ | ---------------------------- |
-| Notation | An event byte: instrument and volume, or a command from `$F4`.           | `:ReadEvent`                 |
+| Notation | An event byte: instrument and volume, or a command.                      | `:ReadEvent`                 |
 | Notation | A note byte: loop flag, filter state, note.                              | `:ReadEvent`                 |
 | Notation | A length byte: legato flag, filter flag, length.                         | `:ReadEvent`                 |
-| Notation | A position word: a pattern number. 0 waits, 999 ends the list.           | `:NextPattern`               |
-| Notation | A pattern that starts with `$F0` holds the last note on.                 | `:NextEvent`                 |
+| Notation | A position word: a pattern number, `PAUSE` or `END_OF_LIST`.             | `:NextPattern`               |
+| Notation | A pattern that starts with `CONTINUE` holds the last note on.            | `:NextEvent`                 |
 | Notation | 64 notes: quarter tones up to period 170, then semitones.                | `:StartNote`                 |
 | Cost     | Each note chooses: its sample plays once, or the attack and then a loop. | `:StartNote`                 |
 | Cost     | An event names 16 instruments. Others need a bank event before it.       | `:InstrumentBank`            |

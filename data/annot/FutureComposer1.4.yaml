@@ -50,7 +50,7 @@ labels:
   VOLpoint: InstrumentTable
 
 comments:
-  333: "clears the DMA bits that rows set: only $e2 and $e9 turn DMA on"
+  333: "clears the DMA bits that rows set: only SET_WAVE and PACK turn DMA on"
   776: "the offset doubles for each octave below note index 48"
 
 # Classes in specs/future_composer_14.py: each word occurs in the source.

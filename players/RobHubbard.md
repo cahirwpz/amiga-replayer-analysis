@@ -45,8 +45,8 @@ The composer writes a position list per voice and patterns of bytes.
 | Aspect   | Answer                                                              | Source          |
 | -------- | ------------------------------------------------------------------- | --------------- |
 | Notation | A note: a length byte up to 127, then a note byte.                  | `:NoteOn`       |
-| Notation | `$80`: instrument. `$81`: portamento step. `$82`: rest with length. | `:ReadStream`   |
-| Notation | `$84`: pattern end. `$85`: stop.                                    | `:ReadStream`   |
+| Notation | `INSTRUMENT`, `PORTAMENTO` (one step), `REST` (with a length).      | `:ReadStream`   |
+| Notation | `PATTERN_END` ends the pattern. `STOP` ends the voice.              | `:ReadStream`   |
 | Notation | A position list of pattern offsets. Offset 0 wraps to the start.    | `:NextPosition` |
 | Cost     | A length counts in units of the song's speed.                       | `:NoteOn`       |
 | Cost     | Portamento lasts one note. The next event clears it.                | `:CountDown`    |

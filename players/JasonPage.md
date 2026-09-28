@@ -58,17 +58,17 @@ decides which one gets the voice.
 The composer writes a position list per voice, patterns, and instrument
 programs.
 
-| Aspect   | Answer                                                                | Source                       |
-| -------- | --------------------------------------------------------------------- | ---------------------------- |
-| Notation | A position word: a pattern and a transpose.                           | `:ReadPosition`              |
-| Notation | A position word may be a marker and its target instead.               | `:ReadPosition`              |
-| Notation | Pattern bytes: note, row length, program number, rest, slide, cap.    | `:ReadPattern`               |
-| Notation | A program: word opcodes, most with one word argument.                 | `:RunProgram`                |
-| Cost     | A note lasts its voice's row length. A new length takes one byte.     | `:ReadPattern`               |
-| Cost     | Program number $77 slides to each note instead of starting a program. | `:NoteSlide`                 |
-| Cost     | A program must start the sound itself, with a DMA opcode.             | `:OpDmaOn`                   |
-| Cost     | The first voice that reaches its end marker ends the song.            | `:ReadPosition`              |
-| Cost     | An arpeggio is a program loop of note offsets and waits.              | `:OpNoteOffset` `:OpLoopEnd` |
+| Aspect   | Answer                                                             | Source                       |
+| -------- | ------------------------------------------------------------------ | ---------------------------- |
+| Notation | A position word: a pattern and a transpose.                        | `:ReadPosition`              |
+| Notation | A position word may be a marker and its target instead.            | `:ReadPosition`              |
+| Notation | Pattern bytes: note, row length, program number, rest, slide, cap. | `:ReadPattern`               |
+| Notation | A program: word opcodes, most with one word argument.              | `:RunProgram`                |
+| Cost     | A note lasts its voice's row length. A new length takes one byte.  | `:ReadPattern`               |
+| Cost     | `SLIDE_TO_NOTE` slides to each note instead of starting a program. | `:NoteSlide`                 |
+| Cost     | A program must start the sound itself, with a DMA opcode.          | `:OpDmaOn`                   |
+| Cost     | The first voice that reaches its end marker ends the song.         | `:ReadPosition`              |
+| Cost     | An arpeggio is a program loop of note offsets and waits.           | `:OpNoteOffset` `:OpLoopEnd` |
 
 ## What is unique
 

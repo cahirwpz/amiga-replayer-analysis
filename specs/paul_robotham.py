@@ -28,9 +28,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from hardware import paula
-from hardware.amiga import Amiga
+from hardware.amiga import DEFAULT_LATCH, Amiga
 
-DEFAULT_LATCH = 14187  # DeliTracker's timer, 50 Hz (guess): no DTP_Timer tag
 PULSE_DIVISOR = 10800  # PulseDivisor
 PULSE_LENGTH = 1000  # PulseLength at load; InitSong keeps the last value
 FULL = 0x3F  # volumes, envelope values and the master volume: 0 to 63
@@ -256,7 +255,7 @@ def advance(voice: Voice) -> None:
 
 def ReadStream(module: Module, voice: Voice, muted: bool) -> int:
     """Commands run until a note, a tie or the end byte. A note byte is
-    1 to 126; a length byte follows it. $7F holds the note on for its
+    1 to 126; a length byte follows it. TIE holds the note on for its
     length: a tie. In legato mode, a note changes only the period,
     unless SetInstrument ran since the last note."""
     while True:
@@ -318,7 +317,7 @@ def LegatoNote(module: Module, voice: Voice, note: int, muted: bool) -> None:
 def SwapInstrument(module: Module, voice: Voice, note: int, muted: bool) -> None:
     """Legato mode, after SetInstrument: the note starts the new
     instrument at its loop, with no attack. Without a loop, it plays
-    the empty loop at period $100. The muted copy also turns DMA off,
+    the empty loop at EMPTY_PERIOD. The muted copy also turns DMA off,
     so it stops the effect's sound."""
     instrument = module.instruments[voice.instrument]
     voice.channel.disable()

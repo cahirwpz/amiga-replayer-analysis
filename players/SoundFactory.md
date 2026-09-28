@@ -62,7 +62,7 @@ length in ticks. Instruments and their effects are opcodes in the streams.
 | -------- | ---------------------------------------------------------------- | --------------- |
 | Notation | A note: one byte, then a length word.                            | `:NoteOn`       |
 | Notation | Bit 15 of the length keeps the envelope running.                 | `:NoteOn`       |
-| Notation | An opcode byte from $80, then its arguments.                     | `:ReadStream`   |
+| Notation | An opcode byte from `FIRST_OPCODE`, then its arguments.          | `:ReadStream`   |
 | Notation | A song: a voice mask and four stream offsets.                    | `:InitSong`     |
 | Cost     | A loop of N plays N times. A count of 0 plays 256 times.         | `:OpLoopEnd`    |
 | Cost     | A sync takes one opcode on each side.                            | `:OpSignal`     |

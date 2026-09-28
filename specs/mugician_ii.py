@@ -37,11 +37,12 @@ PATTERN_SIZE = 256  # 64 rows of 4 bytes: note, instrument, effect, argument
 ROWS = 64
 ARPEGGIO_SIZE = 32  # 8 tables
 FIRST_SAMPLE = 0x20  # an instrument wave from $20 up is a sample
-COMMAND_BASE = 0x3E  # an effect byte from $40 up: command = byte - $3e
+FIRST_COMMAND = 0x40  # an effect byte from here up is a command; below, a note
+COMMAND_BASE = 0x3E  # command = effect byte - COMMAND_BASE
 VOLUME_LOOPS = 0x02  # instrument byte 15
 EFFECT_SLOTS = 4  # instruments EffectDoneList checks per tick
 
-# Commands, voice byte 15. Command 1: effect byte below $40, a slide target
+# Commands, voice byte 15. SLIDE: an effect byte below FIRST_COMMAND, a target
 SLIDE, KEEP_EFFECT, KEEP_VOLUME, KEEP_BOTH = 1, 2, 3, 4
 PATTERN_LENGTH, SPEED, FILTER_ON, FILTER_OFF, FILTER_FLIP = 5, 6, 7, 8, 9
 LEGATO, ARPEGGIO, PORTAMENTO, SWING = 10, 11, 12, 13
@@ -81,7 +82,7 @@ class Subsong:  # SubsongHeader: 16 bytes
 
 @dataclass
 class Instrument:  # InstrumentTable: 16 bytes; the replay writes 4 and 6
-    wave: int  # 0: a wave, or $20 + a sample number
+    wave: int  # 0: a wave, or FIRST_SAMPLE + a sample number
     length: int  # 1: words played, and the effect's range
     volume_wave: int  # 2: its bytes are the volume curve
     volume_speed: int  # 3: ticks per volume step
@@ -370,9 +371,9 @@ def ReadRow(
     module: Module, voice: Voice, positions: bytes, entry: int
 ) -> SampleHeader | None:
     """A row without a note only reruns the voice's last command. A
-    note sets the command: an effect byte below $40 is a slide target
-    note, others are byte - $3e. Command 12 keeps the note and makes the
-    row's note the target. Returns the sample a mixed voice starts."""
+    note sets the command: an effect byte below FIRST_COMMAND is a slide
+    target note, others give byte - COMMAND_BASE. PORTAMENTO keeps the note
+    and makes the row's note the target. Returns the sample a mixed voice starts."""
     if module.new_position:
         at = module.position * POSITION_SIZE + 2 * entry
         voice.pattern, voice.transpose = positions[at], signed(positions[at + 1])
@@ -389,7 +390,7 @@ def ReadRow(
         if number:
             voice.instrument = number - 1
     voice.instrument &= 0x3F
-    voice.command = effect - COMMAND_BASE if effect >= 0x40 else SLIDE
+    voice.command = effect - COMMAND_BASE if effect >= FIRST_COMMAND else SLIDE
     voice.arg = arg
     inst = instrument(module, voice)
     if voice.command == PORTAMENTO:
@@ -412,9 +413,9 @@ def ReadRow(
 
 
 def StartWave(module: Module, voice: Voice, inst: Instrument) -> None:
-    """The wave goes to AUDxLC. DMA off, except for command 10: then
+    """The wave goes to AUDxLC. DMA off, except for LEGATO: then
     the new wave follows the old one without a restart. Unless the
-    command is 2 or 4, wave A is copied over the played wave and the
+    command is KEEP_EFFECT or KEEP_BOTH, wave A is copied over the played wave and the
     effect restarts. A mixed voice writes FakeRegisters: its sample plays
     on."""
     if voice.channel is not None:
@@ -463,7 +464,8 @@ def RestartLists(module: Module, voice: Voice, inst: Instrument) -> None:
 
 
 def RowCommands(module: Module, voice: Voice) -> None:
-    """Commands 5-8 and 13 act at each row, with or without a note."""
+    """PATTERN_LENGTH to FILTER_OFF, and SWING, act at each row, with or
+    without a note."""
     if voice.command == PATTERN_LENGTH:
         CmdPatternLength(module, voice.arg)
     elif voice.command == SPEED:
@@ -499,7 +501,7 @@ def CmdSwing(module: Module, voice: Voice) -> None:
 
 
 def VoiceTick(module: Module, voice: Voice) -> None:
-    """Command 9 flips the filter every tick. Then the effect, the
+    """FILTER_FLIP flips the filter every tick. Then the effect, the
     volume curve, the arpeggio, the slide and the vibrato."""
     if voice.command == FILTER_FLIP:
         module.filter = not module.filter
@@ -624,7 +626,7 @@ def span(inst: Instrument) -> int:
 
 
 def NoEffect(waves: bytearray, inst: Instrument) -> None:
-    """Effect 0 and 16-31."""
+    """Effect numbers without a handler."""
 
 
 def SmoothForward(waves: bytearray, inst: Instrument) -> None:
@@ -772,7 +774,7 @@ def NegatePair(waves: bytearray, inst: Instrument) -> None:
 
 
 def SmoothThenOctave(waves: bytearray, inst: Instrument) -> None:
-    """Effect 15: SmoothForward each step; every `wave_b` steps, OctaveUp.
+    """SmoothForward each step; every `wave_b` steps, OctaveUp.
     Likely sound (inference): dull, then bright again."""
     SmoothForward(waves, inst)
     inst.effect_step = (inst.effect_step + 1) & 0xFF

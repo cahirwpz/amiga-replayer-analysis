@@ -405,12 +405,11 @@ def BeamBudget(module: Module) -> bool:
 def RunEvent(module: Module, event: Event) -> bool:
     """False: stop reading this frame; the event pointer is set.
 
-    $00-$7f: a note; data high nibble × 8 is its velocity, stop its
-    length. $80: tempo; data BPM, stop a slide length. $a0: special;
-    stop high byte the kind (0 mark, 1 sync, 2 begin repeat, 3 end
-    repeat), low byte a value. $b0: CC; stop is number and value. $c0:
-    program; stop low byte. $e0: pitch bend; stop, 7 bits each. $ff:
-    end. $f0 sysex and $f8 clock are declared in driver.i but skipped.
+    Below TEMPO: a note; data high nibble × 8 is its velocity, stop its
+    length. TEMPO: data BPM, stop a slide length. SPECIAL: stop high
+    byte the kind (MARK, SYNC, BEGIN_REPEAT, END_REPEAT), low byte a
+    value. CONTROL: a CC; stop is number and value. PROGRAM: stop low
+    byte. BEND: pitch bend; stop, 7 bits each. END: the end. $f0 sysex and $f8 clock are declared in driver.i but skipped.
     """
     channel = module.channels[event.data & 0x0F]
     if event.command < 0x80:

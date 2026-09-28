@@ -55,13 +55,13 @@ comments:
   330: "cap the volume at a fade level; nothing in this player sets L_12ED"
   336: "subsong 13 reads voice fields that nothing here writes"
   305: the sample data starts at +$32; the word at +0 is its length
-  363: widen the pulse by one sample, up to index $1E
+  363: widen the pulse by one sample, up to PULSE_MAX
   370: narrow the pulse by one sample, down to index 4
-  382: attack is over at volume $3F; start the decay
+  382: attack is over at ATTACK_TOP; start the decay
   393: hold when the decay reaches the sustain level
   466: ticks left for this note
   473: "flag bit 7: stop the channel one tick before the note ends"
-  489: "byte 0 does nothing; $80+n runs command n. Upper-case labels: the Cmd handlers"
+  489: "byte 0 does nothing; FIRST_COMMAND + n runs command n. Upper-case labels: the Cmd handlers"
   517: plus the transpose, unless CmdNoTranspose came before
   526: note index to period
   529: with fixed length, notes carry no length byte
@@ -76,7 +76,7 @@ banners:
     The period follows the note table, so portamento steps by semitones.
   477: |
     ReadTrack: one byte stream per voice. A byte above 0 is a note,
-    then a length byte. 0 and $80+n are commands.
+    then a length byte. 0 and FIRST_COMMAND + n are commands.
   264: |
     ChainTick: runs before Tick. One tick after a note starts, a
     flagged voice points Paula at a second sample. Paula finishes the

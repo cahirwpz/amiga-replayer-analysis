@@ -36,7 +36,7 @@ Each instrument runs two command lists: volume, and pitch with waveform.
 - A pitch list byte with bit 7 set is a fixed note. `:LockedNote`
   - Enables: drums and effects that ignore the played note.
   - Costs: a fixed note ignores all transposes.
-- `$e9` picks one sample out of a pack of up to 20. `:SampleFromPack`
+- `PACK` picks one sample out of a pack of up to 20. `:SampleFromPack`
   - Enables: many drum samples in one of the 10 sample slots.
   - Costs: the pack needs its own header.
 - Positions transpose notes and instrument numbers per voice. `:NextPosition`
@@ -57,7 +57,7 @@ volume list.
 | Notation | An instrument: volume speed, pitch list, vibrato, then volume list. | `:StartInstrument` |
 | Cost     | An arpeggio is a pitch list loop of transposes.                     | `:ReadTranspose`   |
 | Cost     | Portamento takes its speed from the next row's instrument byte.     | `:SlideSpeed`      |
-| Cost     | A pattern shorter than 32 rows ends with note `$49`.                | `:NewRow`          |
+| Cost     | A pattern shorter than 32 rows ends with the note `PATTERN_END`.    | `:NewRow`          |
 
 ## What is unique
 

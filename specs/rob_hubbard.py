@@ -23,10 +23,9 @@ Left out: the host's timer; DeliTracker calls Play once per tick.
 from dataclasses import dataclass, field
 
 from hardware import paula
-from hardware.amiga import Amiga
+from hardware.amiga import DEFAULT_LATCH, Amiga
 
 VOICES = 4
-DEFAULT_LATCH = 14187  # DeliTracker's timer, 50 Hz (guess): no DTP_Timer tag
 CLOCK = 3579545  # NTSC colour clock: the tune's dividend
 TUNE_SHIFT = 10  # period = table × tune >> 10
 SAMPLES = 11  # InitSamples: sample instruments 0-10
@@ -296,7 +295,7 @@ def Portamento(voice: Voice) -> None:
 
 def Vibrato(module: Module, voice: Voice) -> None:
     """period + period / divider × value. So the swing is a share of the
-    period: the same interval on every note. $84 restarts the table."""
+    period: the same interval on every note. VIBRATO_LOOP restarts the table."""
     divider = voice.instrument.divider
     if not divider:
         return
@@ -311,7 +310,7 @@ def Vibrato(module: Module, voice: Voice) -> None:
 
 def Sweep(module: Module, voice: Voice) -> None:
     """One byte per tick into the playing wave. Up from `low`, it writes
-    $00; past `high` it turns and writes $3C, one byte past `high`.
+    LOW; past `high` it turns and writes HIGH, one byte past `high`.
     SweepDown goes back. The edge between the two values moves: a
     pulse-width sweep. The wave is shared, so every voice on this
     instrument hears it."""
@@ -330,7 +329,7 @@ def Sweep(module: Module, voice: Voice) -> None:
 
 
 def SweepDown(module: Module, voice: Voice) -> None:
-    """Down, it writes $3C; at `low` it turns and writes $00."""
+    """Down, it writes HIGH; at `low` it turns and writes LOW."""
     voice.sweep_pos -= 1
     if voice.sweep_pos > voice.instrument.low:
         write_sweep(module, voice, HIGH)

@@ -21,17 +21,21 @@ from dataclasses import dataclass, field
 
 from hardware import paula
 from hardware.amiga import Amiga, Priority
-from hardware.clock import LINE_CCK
+from hardware.clock import CPU_PER_CCK, LINE_CCK
 
 CHANNELS = 4
 CELL = 4  # note, sample, effect, argument
 NOTES = 36  # C-1 to B-3; a note byte is 1 + its index
 MAX_VOLUME = 64
-LOWEST, HIGHEST = 856, 113  # period limits of effects 1 and 2
-POLL_CCK = 10  # one INTREQR poll: about 20 68000 cycles (estimate)
+LOWEST, HIGHEST = 856, 113  # period limits of PITCH_UP and PITCH_DOWN
+# One INTREQR poll in QueueBuffers: move.w, and.w, cmp.w, bne.b taken
+POLL_CCK = (16 + 4 + 4 + 10) // CPU_PER_CCK
 
 # Sample modes, SampleInfo byte 30
 MIXED_ONLY, SINGLE_ONLY, BOTH = 0, 1, 2
+
+# VOLUME's kinds of slide, from $41 up: 16 argument values each
+FADE_DOWN, FADE_UP, FADE_DOWN_ONCE, FADE_UP_ONCE = range(4)
 
 # Effects: the tracker shows them as 0-9, A-Z
 PITCH_UP, PITCH_DOWN = 1, 2
@@ -306,8 +310,8 @@ def StartNotes(module: Module) -> None:
 
 
 def ChannelEffects(module: Module) -> None:
-    """Single channels, every tick. Pitch effects work in periods (1, 2)
-    or in notes (the rest)."""
+    """Single channels, every tick. Pitch effects work in periods
+    (PITCH_UP, PITCH_DOWN) or in notes (the rest)."""
     score = module.score
     for number in range(CHANNELS):
         if score.mixed[number]:
@@ -356,9 +360,9 @@ def TrackEffects(module: Module, index: int, cell: bytes) -> None:
 
 
 def arpeggio(module: Module, effect: int, arg: int, note: int) -> int | None:
-    """Effect 10: down by the high nibble, base, up by the low nibble.
-    Effect 11: base, up by the low nibble, base, down by the high
-    nibble. Effect 12: up by the high nibble, up by the low nibble, base;
+    """ARPEGGIO: down by the high nibble, base, up by the low nibble.
+    ARPEGGIO2: base, up by the low nibble, base, down by the high
+    nibble. ARPEGGIO3: up by the high nibble, up by the low nibble, base;
     its first tick keeps the last note."""
     high, low, tick = arg >> 4, arg & 0x0F, module.counter
     if effect == ARPEGGIO:
@@ -415,21 +419,22 @@ def SetVolume(module: Module, channel: int, arg: int) -> None:
 
 
 def VolumeSlide(module: Module, channel: int, arg: int) -> None:
-    """$41-$50 down and $51-$60 up every tick; $61-$70 down and $71-$80 up
-    once per row. The step is the low nibble."""
+    """Above MAX_VOLUME, the argument picks a kind of slide per 16
+    values; the step is the low nibble. Kinds from FADE_DOWN_ONCE act
+    once per row."""
     arg -= MAX_VOLUME
     kind, step = divmod(arg, 16)
-    if kind > 3 or (kind >= 2 and module.counter):
+    if kind > FADE_UP_ONCE or (kind >= FADE_DOWN_ONCE and module.counter):
         return
     volume = module.volumes[channel]
-    if kind in (0, 2):
+    if kind in (FADE_DOWN, FADE_DOWN_ONCE):
         module.volumes[channel] = max(volume - step, 0)
     else:
         module.volumes[channel] = min(volume + step, MAX_VOLUME)
 
 
 def OldVolume(module: Module, index: int, arg: int) -> None:
-    """Effect 24, single channels: the volume from before this tick, so
+    """Single channels: the volume from before this tick, so
     a note keeps the last volume, not its sample's."""
     channel = channel_of(module.score, index)
     module.volumes[channel] = module.old_volumes[channel]

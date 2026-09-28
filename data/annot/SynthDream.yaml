@@ -49,8 +49,8 @@ labels:
   lbL0007D6: FineTables
 
 comments:
-  729: "$fe: loop this voice's positions; $ff: stop the voice"
-  772: events $24 and above only modify; the loop reads on
+  729: "LOOP_POSITIONS: loop this voice's positions; STOP_VOICE: stop the voice"
+  772: events from FIRST_MODIFIER only modify; the loop reads on
   795: the delay is over; switch to the other volume table
   804: the delay is over; switch to the other fine pitch table
   835: minus the note's and the position's volume offsets
@@ -71,13 +71,14 @@ banners:
   809: |
     Four table walkers, one step per tick: volume, note offset,
     fine pitch, pulse wave. A table is a list of runs:
-    count, repeat, then `count` values. $ff restarts the table.
+    count, repeat, then `count` values. TABLE_END restarts the table.
   957: |
     PulseWalker: a value picks width W of 16 and an amount A. Copy the
     16-byte pulse wave with W low samples, then lower sample W by A.
   1638: |
-    EventTable: 24 events. Opcodes $00-$22 combine length, note, volume
-    and instrument. $24-$2e: legato on/off, table switches, slides.
+    EventTable: 24 events. Opcodes below FIRST_MODIFIER combine length,
+    note, volume and instrument. From FIRST_MODIFIER: legato on/off,
+    table switches, slides.
   2378: |
     PulseWaves: 16 pulse waves of 16 bytes; wave W has W low samples.
 

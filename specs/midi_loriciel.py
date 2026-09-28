@@ -22,6 +22,7 @@ from functools import partial
 
 from hardware import paula
 from hardware.amiga import Amiga, Priority
+from hardware.clock import CPU_PER_CCK
 
 Steps = Iterator[int]  # a routine that busy-waits: each value is a wait in CCK
 
@@ -31,8 +32,9 @@ PULSES_PER_TICK = 4
 DEFAULT_PPQ = 192  # a negative division, SMPTE time, gets this instead
 DEFAULT_TEMPO = 500_000  # microseconds per quarter note: 120 BPM
 E_CLOCK = 715_909  # CIA counts per second on NTSC; PAL has 709379
-NOTE_DELAY_CCK = 513 * 7  # after DMA on or off: $200 + 1 loops of nop and
-# dbra, 14 68000 cycles each (estimate: no bus contention)
+# After DMA on or off: $200 + 1 loops of nop and dbra. A taken dbra takes 10
+# cycles, the last one 14.
+NOTE_DELAY_CCK = (513 * 4 + 512 * 10 + 14) // CPU_PER_CCK
 SILENCE = paula.Sample(bytes(16))  # the original's empty sample, 8 words;
 # the adaptation plays the bank's cleared tag, 2 words, instead
 SYSEX, META = 0xF0, 0xFF

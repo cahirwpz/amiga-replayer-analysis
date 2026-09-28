@@ -17,6 +17,7 @@ from functools import partial
 
 from hardware import paula
 from hardware.amiga import Amiga, Priority
+from hardware.clock import CPU_PER_CCK
 
 NO_NOTE = 0xFF  # a row's byte: the voice plays on
 FREE = 0xFF  # a voice's effect and request: none
@@ -27,7 +28,8 @@ POSITION_SIZE = 6
 INSTRUMENT_SIZE = 18
 TEMPO_BASE = 1500  # TempoBase: speed = 1500 / tempo, rounded
 FLUSH_PERIOD = 1  # the extra word after DMA off lasts 2 CCK
-POLL_CCK = 20  # one WaitAudioIrq loop: about 40 68000 cycles (estimate)
+# One WaitAudioIrq loop: move.w, and.w, bne.s not taken, bra.s
+POLL_CCK = (16 + 4 + 8 + 10) // CPU_PER_CCK
 SILENCE = paula.Sample(bytes(4))  # Empty: 2 words, each handler's is_Data
 
 
@@ -226,8 +228,8 @@ def NextPosition(module: Module) -> None:
 
 def SfxClaimVoice(module: Module, then: Then) -> None:
     """A request plays if its number is at most the playing effect's: a
-    lower number wins. A free voice holds $ff. A request of $80 or more
-    is ignored and stays."""
+    lower number wins. A free voice holds FREE. A request from
+    FIRST_IGNORED up is ignored and stays."""
 
     def claim(voice: Voice, then: Then) -> None:
         number = voice.request
@@ -252,7 +254,7 @@ def SfxClaimVoice(module: Module, then: Then) -> None:
 
 
 def StartNote(module: Module, voice: Voice, number: int, then: Then) -> None:
-    """$ff: the voice plays on. Else DMA off at period 1, with
+    """NO_NOTE: the voice plays on. Else DMA off at period 1, with
     INTREQ clear and a write to AUDxDAT. The channel ends its word, plays
     one more at period 1 and requests an interrupt, which it leaves
     pending, so it goes idle. WaitAudioIrq waits for that request, so

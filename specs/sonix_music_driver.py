@@ -21,7 +21,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from hardware import paula
-from hardware.amiga import Amiga, Priority
+from hardware.amiga import DEFAULT_LATCH, Amiga, Priority
 from hardware.clock import LINE_CCK
 
 VOICES = 4
@@ -29,7 +29,6 @@ TRACK_END, WAIT = 0xFFFF, 0xC000  # event words; waits count & $3fff ticks
 SET_INSTRUMENT, SET_VOLUME, SET_TEMPO, SET_BEND = 0x80, 0x81, 0x82, 0x83
 TICK_SCALE = 0x4B0000  # SetTempo: tick length = this / tempo
 DEFAULT_TEMPO = 125  # 50 Hz with DeliTracker's timer
-DELI_LATCH = 14187  # DeliTracker's 50 Hz latch (guess); Clock is 125 × it
 IN_TUNE = 0x80  # InstallSNX sets the tune; SNX events never change it
 WAVE = 128  # a synthesis wave, and each filtered copy
 FILTERS = 64
@@ -160,7 +159,7 @@ class Voice:  # a voice record: $54 bytes
     number: int
     event: int = 0  # the next event word in the track
     wait: int = 0  # ticks to the next event
-    instrument: Instrument | None = None  # the track's; $80 events set it
+    instrument: Instrument | None = None  # the track's; SET_INSTRUMENT sets it
     track_volume: int = 0xFF  # $81 events
     bend: int = 0  # $83 events: a signed byte
     request: int = 0  # 0: 0 none, 1 start, 2 release
@@ -186,7 +185,7 @@ class Module:  # the driver's globals, at Sonix
     amiga: Amiga
     voices: list[Voice] = field(default_factory=list)
     tempo: int = DEFAULT_TEMPO  # 0
-    tune: int = IN_TUNE  # 2: $80 plays in tune
+    tune: int = IN_TUNE  # 2: IN_TUNE plays in tune
     tick_length: int = 0  # $32: rates scale with it
     ticks: int = 0  # 14: since the start
     master: list[int] = field(default_factory=lambda: [0xFF00] * VOICES)  # $5a
@@ -249,7 +248,7 @@ def SetTempo(module: Module, tempo: int) -> None:
     """The timer's latch follows the tempo; the tick length is kept for
     the rates, so a faster tempo takes smaller steps per tick."""
     module.tempo = tempo
-    module.amiga.timer.set_latch(DELI_LATCH * DEFAULT_TEMPO // tempo)
+    module.amiga.timer.set_latch(DEFAULT_LATCH * DEFAULT_TEMPO // tempo)
     module.tick_length = TICK_SCALE // tempo
 
 
@@ -271,9 +270,9 @@ def ReadTracks(module: Module) -> None:
 
 
 def ReadEvent(module: Module, voice: Voice) -> bool:
-    """Words: 0 is skipped; $ffff ends the track; from $c000 a wait;
-    a high byte below $80 is a note with its velocity; $80-$83 set the
-    instrument, volume, tempo or bend. False once the track has ended."""
+    """Words: 0 is skipped; TRACK_END ends the track; from WAIT a wait;
+    a high byte below SET_INSTRUMENT is a note with its velocity;
+    SET_INSTRUMENT, SET_VOLUME, SET_TEMPO and SET_BEND act. False once the track has ended."""
     track = module.score.tracks[voice.number]
     while True:
         if voice.event + 2 > len(track):

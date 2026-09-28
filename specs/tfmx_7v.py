@@ -122,7 +122,8 @@ def SwitchMixing(module: Module7V, voice: int) -> None:
 
 
 def CmdMixSlow(module: Module7V, position: bytes) -> bool:
-    """Position command 3: word 3 sets `slow`, then mixing restarts."""
+    """The mix-rate position command: word 3 sets `slow`, then mixing
+    restarts."""
     slow = int.from_bytes(position[6:8], "big", signed=True)
     if slow >= 0:
         module.mixer.slow = slow
@@ -227,7 +228,7 @@ def signed(byte: int) -> int:
 
 
 def WaitLoopsOff(module: tfmx_pro.Module, voice: tfmx_pro.Voice, s: bytes) -> bool:
-    """$1a reads on, on every voice: a program cannot wait for sample
+    """WaitLoops reads on, on every voice: a program cannot wait for sample
     passes. The handler and its interrupt are commented out. Guess: the
     mixed voices raise no audio interrupt, and the mixer takes channel
     3's."""

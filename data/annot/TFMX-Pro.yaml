@@ -204,7 +204,7 @@ labels:
 
 comments:
   1937: "IMS: the ims macro opcodes"
-  1949: "guess: the byte check opcodes $2b-$2d"
+  1949: "guess: CheckByteTrap, SetByte and CheckByte"
   2155: "$80-$8f keep the pattern running into the new position"
   2184: "$7f-$bf: note, then wait; $c0-$ef: portamento note"
   2233: any track's end moves the whole song on

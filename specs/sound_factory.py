@@ -24,7 +24,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from hardware import paula
-from hardware.amiga import Amiga
+from hardware.amiga import DEFAULT_LATCH, Amiga
 
 VOICES = 4
 SONGS = 16
@@ -32,11 +32,11 @@ INSTRUMENTS = 32
 MASKS = 4  # header: a module size long, then one voice mask per song
 SONG_TABLE = 0x14  # four stream offsets per song, 16 bytes each
 BUFFER_SIZE = 256  # WaveBuffers: bytes per voice
-DEFAULT_LATCH = 14187  # DeliTracker's timer, 50 Hz (guess): no DTP_Timer tag
 FULL = 0x40  # envelope level for full volume
 LEGATO = 0x8000  # a note length's bit 15: no envelope restart
 EARLY_STOP_PERIOD = 0x1AD  # EarlyStop acts on this period and above
-REST = 0x80  # OpWait's byte: the next event does not stop DMA early
+FIRST_OPCODE = 0x80  # stream bytes below are notes
+WAIT = 0x80  # OpWait's byte: the next event does not stop DMA early
 EMPTY = paula.Sample(bytes(4))  # EmptyWord
 
 # Instrument flags: byte 8 of the instrument
@@ -307,9 +307,9 @@ def EarlyStop(module: Module, voice: Voice) -> None:
     if voice.last_period < EARLY_STOP_PERIOD:
         return
     byte = module.data[voice.pos]
-    if byte == REST:
+    if byte == WAIT:
         return
-    if byte < 0x80 and module.data[voice.pos + 1] & 0x80:
+    if byte < FIRST_OPCODE and module.data[voice.pos + 1] & 0x80:
         return
     voice.channel.disable()
 
@@ -319,7 +319,7 @@ def ReadStream(module: Module, voice: Voice) -> None:
     A note of length 0 sets its pitch and reads on."""
     while True:
         byte = read_byte(module, voice)
-        if byte < 0x80:
+        if byte < FIRST_OPCODE:
             if not NoteOn(module, voice, byte):
                 return
             continue
@@ -665,38 +665,35 @@ Opcode = Callable[[Module, Voice], bool]
 
 
 def OpWait(module: Module, voice: Voice) -> bool:
-    """$80: a word of ticks. The note sounds on."""
+    """A word of ticks. The note sounds on."""
     voice.duration = read_word(module, voice)
     return False
 
 
 def OpRest(module: Module, voice: Voice) -> bool:
-    """$99: a word of ticks, with DMA off."""
+    """A word of ticks, with DMA off."""
     voice.duration = read_word(module, voice)
     voice.channel.disable()
     return False
 
 
 def OpVolume(module: Module, voice: Voice) -> bool:
-    """$81."""
     voice.volume = read_byte(module, voice)
     return True
 
 
 def OpDetune(module: Module, voice: Voice) -> bool:
-    """$82."""
     voice.detune = read_byte(module, voice)
     return True
 
 
 def OpInstrument(module: Module, voice: Voice) -> bool:
-    """$83."""
     voice.instrument = read_byte(module, voice)
     return True
 
 
 def OpDefineInstrument(module: Module, voice: Voice) -> bool:
-    """$84, a number, then a word: the definition's size in words, from
+    """A number, then a word: the definition's size in words, from
     this opcode on. The stream skips the rest. Passing it again keeps
     what opcodes wrote."""
     number = read_byte(module, voice)
@@ -709,13 +706,12 @@ def OpDefineInstrument(module: Module, voice: Voice) -> bool:
 
 
 def OpReturn(module: Module, voice: Voice) -> bool:
-    """$85."""
     voice.pos = voice.stack.pop()
     return True
 
 
 def OpCall(module: Module, voice: Voice) -> bool:
-    """$86: a long offset from after itself."""
+    """A long offset from after itself."""
     offset = read_long(module, voice)
     voice.stack.append(voice.pos)
     voice.pos += offset
@@ -723,20 +719,19 @@ def OpCall(module: Module, voice: Voice) -> bool:
 
 
 def OpJump(module: Module, voice: Voice) -> bool:
-    """$87: a long offset from after itself."""
+    """A long offset from after itself."""
     voice.pos += read_long(module, voice)
     return True
 
 
 def OpLoopStart(module: Module, voice: Voice) -> bool:
-    """$88: a count; 0 means 256. Loops nest on the stack."""
+    """A count; 0 means 256. Loops nest on the stack."""
     count = read_byte(module, voice)
     voice.stack += [count, voice.pos]
     return True
 
 
 def OpLoopEnd(module: Module, voice: Voice) -> bool:
-    """$89."""
     mark, count = voice.stack.pop(), (voice.stack.pop() - 1) & 0xFF
     if count:
         voice.pos = mark
@@ -745,30 +740,29 @@ def OpLoopEnd(module: Module, voice: Voice) -> bool:
 
 
 def OpFadeOut(module: Module, voice: Voice) -> bool:
-    """$8a: a speed. At 0, the song stops."""
+    """A speed. At 0, the song stops."""
     FadeOut(module, read_byte(module, voice))
     return True
 
 
 def OpNop(module: Module, voice: Voice) -> bool:
-    """$8b."""
     return True
 
 
 def OpSignal(module: Module, voice: Voice) -> bool:
-    """$8c: counts the shared counter up."""
+    """Counts the shared counter up."""
     module.signal = (module.signal + 1) & 0xFF
     return True
 
 
 def OpRestart(module: Module, voice: Voice) -> bool:
-    """$8d: back to the stream's start."""
+    """Back to the stream's start."""
     voice.pos = voice.start
     return True
 
 
 def OpStop(module: Module, voice: Voice) -> bool:
-    """$8e: the voice ends for this song."""
+    """The voice ends for this song."""
     voice.channel.disable()
     voice.channel.set_volume(0)
     module.active &= ~(1 << voice.number)
@@ -776,7 +770,7 @@ def OpStop(module: Module, voice: Voice) -> bool:
 
 
 def OpFadeIn(module: Module, voice: Voice) -> bool:
-    """$8f: a speed."""
+    """A speed."""
     module.fade_speed = read_byte(module, voice)
     module.fade_in, module.fade_out, module.fade_frac = True, False, 0
     module.fade_level = module.fade_level or 1
@@ -784,7 +778,7 @@ def OpFadeIn(module: Module, voice: Voice) -> bool:
 
 
 def OpAdsr(module: Module, voice: Voice) -> bool:
-    """$90: attack, decay, sustain, then a byte: 0 holds; else the
+    """Attack, decay, sustain, then a byte: 0 holds; else the
     release follows."""
     inst = instrument(module, voice)
     inst.attack, inst.decay, inst.sustain = read_bytes(module, voice, 3)
@@ -797,19 +791,17 @@ def OpAdsr(module: Module, voice: Voice) -> bool:
 
 
 def OpOneShotOn(module: Module, voice: Voice) -> bool:
-    """$91."""
     instrument(module, voice).flags |= ONE_SHOT
     return True
 
 
 def OpOneShotOff(module: Module, voice: Voice) -> bool:
-    """$92."""
     instrument(module, voice).flags &= ~ONE_SHOT
     return True
 
 
 def OpVibrato(module: Module, voice: Voice) -> bool:
-    """$93: 0 turns it off; else delay, speed, step and depth."""
+    """0 turns it off; else delay, speed, step and depth."""
     inst = instrument(module, voice)
     if switch(module, voice, inst, VIBRATO):
         values = read_bytes(module, voice, 4)
@@ -819,7 +811,7 @@ def OpVibrato(module: Module, voice: Voice) -> bool:
 
 
 def OpOctaveFlip(module: Module, voice: Voice) -> bool:
-    """$94: 0 turns it off; else a speed."""
+    """0 turns it off; else a speed."""
     inst = instrument(module, voice)
     if switch(module, voice, inst, OCTAVE_FLIP):
         inst.flip_speed = read_byte(module, voice)
@@ -827,7 +819,7 @@ def OpOctaveFlip(module: Module, voice: Voice) -> bool:
 
 
 def OpPhasing(module: Module, voice: Voice) -> bool:
-    """$95: 0 turns it off; else the offset's limits, speed and step."""
+    """0 turns it off; else the offset's limits, speed and step."""
     inst = instrument(module, voice)
     if switch(module, voice, inst, PHASING):
         values = read_bytes(module, voice, 4)
@@ -837,7 +829,7 @@ def OpPhasing(module: Module, voice: Voice) -> bool:
 
 
 def OpPortamento(module: Module, voice: Voice) -> bool:
-    """$96: 0 turns it off; else a speed, then a step word."""
+    """0 turns it off; else a speed, then a step word."""
     inst = instrument(module, voice)
     if switch(module, voice, inst, PORTAMENTO):
         inst.slide_speed = read_byte(module, voice)
@@ -846,7 +838,7 @@ def OpPortamento(module: Module, voice: Voice) -> bool:
 
 
 def OpTremolo(module: Module, voice: Voice) -> bool:
-    """$97: 0 turns it off; else speed, step and limit."""
+    """0 turns it off; else speed, step and limit."""
     inst = instrument(module, voice)
     if switch(module, voice, inst, TREMOLO):
         values = read_bytes(module, voice, 3)
@@ -855,7 +847,7 @@ def OpTremolo(module: Module, voice: Voice) -> bool:
 
 
 def OpFilter(module: Module, voice: Voice) -> bool:
-    """$98: 0 turns it off; else the width's limits and speed."""
+    """0 turns it off; else the width's limits and speed."""
     inst = instrument(module, voice)
     if switch(module, voice, inst, FILTER):
         values = read_bytes(module, voice, 3)
@@ -864,13 +856,13 @@ def OpFilter(module: Module, voice: Voice) -> bool:
 
 
 def OpAudioFilter(module: Module, voice: Voice) -> bool:
-    """$9a: 0 turns Amiga's audio filter off."""
+    """0 turns Amiga's audio filter off."""
     module.audio_filter = bool(read_byte(module, voice))
     return True
 
 
 def OpWaitSignal(module: Module, voice: Voice) -> bool:
-    """$9b: a value. Until the shared counter holds it, the voice tries
+    """A value. Until the shared counter holds it, the voice tries
     again every tick."""
     if read_byte(module, voice) == module.signal:
         return True
@@ -880,18 +872,42 @@ def OpWaitSignal(module: Module, voice: Voice) -> bool:
 
 
 def OpTranspose(module: Module, voice: Voice) -> bool:
-    """$9c: added to each note byte."""
+    """Added to each note byte."""
     voice.transpose = read_byte(module, voice)
     return True
 
 
-OPCODES: tuple[Opcode, ...] = (  # OpcodeTable, from $80
-    OpWait, OpVolume, OpDetune, OpInstrument, OpDefineInstrument,
-    OpReturn, OpCall, OpJump, OpLoopStart, OpLoopEnd, OpFadeOut, OpNop,
-    OpSignal, OpRestart, OpStop, OpFadeIn, OpAdsr, OpOneShotOn,
-    OpOneShotOff, OpVibrato, OpOctaveFlip, OpPhasing, OpPortamento,
-    OpTremolo, OpFilter, OpRest, OpAudioFilter, OpWaitSignal, OpTranspose,
-)  # fmt: skip
+OPCODES: tuple[Opcode, ...] = (  # OpcodeTable, from FIRST_OPCODE
+    OpWait,  # $80
+    OpVolume,  # $81
+    OpDetune,  # $82
+    OpInstrument,  # $83
+    OpDefineInstrument,  # $84
+    OpReturn,  # $85
+    OpCall,  # $86
+    OpJump,  # $87
+    OpLoopStart,  # $88
+    OpLoopEnd,  # $89
+    OpFadeOut,  # $8a
+    OpNop,  # $8b
+    OpSignal,  # $8c
+    OpRestart,  # $8d
+    OpStop,  # $8e
+    OpFadeIn,  # $8f
+    OpAdsr,  # $90
+    OpOneShotOn,  # $91
+    OpOneShotOff,  # $92
+    OpVibrato,  # $93
+    OpOctaveFlip,  # $94
+    OpPhasing,  # $95
+    OpPortamento,  # $96
+    OpTremolo,  # $97
+    OpFilter,  # $98
+    OpRest,  # $99
+    OpAudioFilter,  # $9a
+    OpWaitSignal,  # $9b
+    OpTranspose,  # $9c
+)
 
 
 # --- Helpers -----------------------------------------------------------

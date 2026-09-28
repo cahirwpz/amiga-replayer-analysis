@@ -39,7 +39,9 @@ MIN_SPEED = 600  # SetSpeed's floor
 HULL_BYTES = 40  # sample bytes per hull entry
 END_OF_LIST, PAUSE = 999, 0  # position list words
 PATTERN_END, CONTINUE, SKIP = 0xFF, 0xF0, 0xF3
-SOFT_MODULATION = (0xF2, 0xFB)
+BREAK = 0xF1  # a note event that keeps the sample's rest
+SOFT_STEP, SOFT_STEP_DOUBLE = 0xF2, 0xFB
+SOFT_MODULATION = (SOFT_STEP, SOFT_STEP_DOUBLE)
 BANK, HULL = 0xF8, 0xFA
 
 # NoteTable: quarter tones from 856 to 170, then semitones up to 113
@@ -372,11 +374,11 @@ def HandleVoice(module: Module, voice: Voice) -> None:
 
 
 def ReadEvent(module: Module, voice: Voice) -> None:
-    """Three bytes. Byte 0: a command from $F2, else instrument (high
+    """Three bytes. Byte 0: a command, else instrument (high
     nibble) and volume (low nibble). Byte 1: bit 7 loop, bit 6 filter
     state, bits 0-5 note. Byte 2: bit 7 soft modulation, bit 6 sets the
     filter, bits 0-5 length. A command takes time too: (length + 1) × 2
-    ticks. A soft modulation event or $F8 lends the next event's
+    ticks. A soft modulation event or BANK lends the next event's
     length."""
     pattern, at = voice.pattern, voice.pos
     event = pattern[at : at + 3]
@@ -397,13 +399,13 @@ def ReadEvent(module: Module, voice: Voice) -> None:
 
 
 def NoteEvent(module: Module, voice: Voice, event: bytes, bank: int) -> None:
-    """A note clears the voice's slides. $F1 cuts the sample and keeps
+    """A note clears the voice's slides. BREAK cuts the sample and keeps
     its rest for ResumeBreak. Volume 0 is a rest."""
     voice.period_step = voice.volume_step = 0
     if event[2] & 0x40:
         module.audio_filter = bool(event[1] & 0x40)
     note = event[1] & 0x3F
-    if event[0] == 0xF1:
+    if event[0] == BREAK:
         BreakNote(voice, note)
         return
     if not event[0] & 0x0F:
@@ -413,7 +415,7 @@ def NoteEvent(module: Module, voice: Voice, event: bytes, bank: int) -> None:
 
 
 def BreakNote(voice: Voice, note: int) -> None:
-    """$F1: keeps what the sample has left to play. With note 0 it also
+    """Keeps what the sample has left to play. With note 0 it also
     silences the voice; else the sample plays on."""
     voice.saved = voice.rest
     if not note:
@@ -452,14 +454,14 @@ def ResumeBreak(voice: Voice) -> None:
 
 def SoftModulation(voice: Voice) -> None:
     """The note changes pitch and volume, and the sample plays on. A
-    following $F2 or $FB event holds two signed nibbles: volume step and
-    period step. $FB doubles the period step. The event is skipped."""
+    following SOFT_STEP or SOFT_STEP_DOUBLE event holds two signed nibbles:
+    volume step and period step. SOFT_STEP_DOUBLE doubles the period step. The event is skipped."""
     event = voice.pattern[voice.pos + 3 : voice.pos + 6]
     if event[0] not in SOFT_MODULATION:
         return
     voice.volume_step = signed_nibble(event[1] >> 4)
     period = signed_nibble(event[1] & 0x0F)
-    voice.period_step = period << 1 if event[0] == 0xFB else period
+    voice.period_step = period << 1 if event[0] == SOFT_STEP_DOUBLE else period
     voice.pos += 3
 
 
@@ -472,8 +474,8 @@ def start_hull(module: Module, voice: Voice, number: int) -> None:
 
 
 def NextEvent(module: Module, voice: Voice) -> None:
-    """A $F3 event is skipped with the 6 bytes after it. At the
-    pattern's end, the next position. If that pattern starts with $F0,
+    """A SKIP event is skipped with the 6 bytes after it. At the
+    pattern's end, the next position. If that pattern starts with CONTINUE,
     the note that ended the last one plays on for its length."""
     while True:
         voice.pos += 3
@@ -506,30 +508,30 @@ def NextPattern(module: Module, voice: Voice) -> bool:
         return wrapped
 
 
-# --- Commands: byte 0 from $F4 -----------------------------------------
+# --- Commands ----------------------------------------------------------
 
 Command = Callable[[Module, Voice, int], None]
 
 
 def LoudnessSwitch(module: Module, voice: Voice, value: int) -> None:
-    """$F4: 0 off, else on."""
+    """0 off, else on."""
     voice.loudness = bool(value)
 
 
 def SetSpeed(module: Module, voice: Voice, value: int) -> None:
-    """$FC: the song's tick length × high nibble / low nibble, at least
-    600 and at most the song's own. So a song can only speed up."""
+    """The song's tick length × high nibble / low nibble, at least
+    MIN_SPEED and at most the song's own. So a song can only speed up."""
     speed = module.base_speed * (value >> 4) // (value & 0x0F)
     module.new_speed = min(max(speed, MIN_SPEED), module.base_speed)
 
 
 def CallGame(module: Module, voice: Voice, value: int) -> None:
-    """$F5: the game's routine runs after this tick's voices."""
+    """The game's routine runs after this tick's voices."""
     module.call_game = True
 
 
 def VoiceFade(module: Module, voice: Voice, value: int) -> None:
-    """$F6: 0 stops. Positive fades out, negative fades in. Its size
+    """0 stops. Positive fades out, negative fades in. Its size
     sets the song's speed for that direction."""
     voice.fade_in = voice.fade_out = False
     if value & 0x80:
@@ -539,19 +541,19 @@ def VoiceFade(module: Module, voice: Voice, value: int) -> None:
 
 
 def FadeState(module: Module, voice: Voice, value: int) -> None:
-    """$F7: 0 sets the voice to 1/32 volume, else to full."""
+    """0 sets the voice to 1/32 volume, else to full."""
     voice.fade_divisor = FADE_NONE if value else FADE_OUT_END
 
 
 def InstrumentBank(voice: Voice, value: int) -> int:
-    """$F8: the next event is read at once. Its instrument number, or
+    """The next event is read at once. Its instrument number, or
     SetHull's, adds this value."""
     voice.pos += 3
     return value
 
 
 def Modulation(module: Module, voice: Voice, value: int) -> None:
-    """$F9: a signed step. Byte 2's top bits pick a period slide (0x), a
+    """A signed step. Byte 2's top bits pick a period slide (0x), a
     volume slide (10), or vibrato or tremolo (11) by the step's sign.
     Vibrato and tremolo share one switch: starting one clears the
     other's step."""
@@ -574,7 +576,7 @@ def Modulation(module: Module, voice: Voice, value: int) -> None:
 
 
 def SetHull(module: Module, value: int, bank: int) -> None:
-    """$FA: high nibble instrument, low nibble hull table, 1 to 15. The
+    """High nibble instrument, low nibble hull table, 1 to 15. The
     table's first word must name the same instrument; else, and for
     table 0, the instrument has no hull."""
     number = (value >> 4) + bank
@@ -583,7 +585,7 @@ def SetHull(module: Module, value: int, bank: int) -> None:
 
 
 def no_command(module: Module, voice: Voice, value: int) -> None:
-    """$FD: the event only waits. Other bytes from $F2 play as notes."""
+    """The event only waits. Other bytes without a handler play as notes."""
 
 
 COMMANDS: dict[int, Command] = {

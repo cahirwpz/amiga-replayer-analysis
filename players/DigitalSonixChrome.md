@@ -60,8 +60,8 @@ instrument number per voice per row. Nothing changes a note once it plays.
   `:LoadModule`
 - Subsongs follow each other in one position list. A position with 0 repeats
   ends each one. `:StartSubsong` `:NextPosition`
-- A lower sound effect number wins. A request of $80 or more is ignored.
-  `:SfxClaimVoice`
+- A lower sound effect number wins. A request from `FIRST_IGNORED` up is
+  ignored. `:SfxClaimVoice`
 - After the last pass, a 2-word silent loop plays. Its interrupt frees the
   voice. `:CountLoopPass` `:LoopsDone`
 

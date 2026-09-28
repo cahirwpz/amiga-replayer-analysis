@@ -280,7 +280,7 @@ def WriteLoops(voice: Voice) -> None:
 
 
 def NewRow(module: Module, voice: Voice) -> None:
-    """After 32 rows, or at an $49 note, the voice reads its
+    """After 32 rows, or at a PATTERN_END note, the voice reads its
     next position; each voice steps on its own."""
     pattern = module.score.patterns[voice.pattern]
     if voice.row == ROWS * ROW_SIZE or pattern[voice.row] == PATTERN_END:
@@ -379,7 +379,7 @@ def VoiceTick(module: Module, voice: Voice) -> int:
 
 def PitchListTick(module: Module, voice: Voice) -> None:
     """A wait skips the list. A step is at most one command,
-    then one transpose byte. $e1 ends the list; $e0 loops it once."""
+    then one transpose byte. LIST_END ends the list; LIST_LOOP loops it once."""
     pitch = voice.pitch
     if pitch.wait:
         pitch.wait -= 1
@@ -388,8 +388,8 @@ def PitchListTick(module: Module, voice: Voice) -> None:
 
 
 def ReadPitchList(module: Module, voice: Voice) -> None:
-    """After an $e0 loop, the new byte is not checked for
-    $e0 or $e1 again."""
+    """After a LIST_LOOP, the new byte is not checked for
+    LIST_LOOP or LIST_END again."""
     pitch = voice.pitch
     byte = pitch.steps[pitch.pos]
     if byte == LIST_END:
@@ -435,7 +435,7 @@ def start_sound(
 
 
 def SetWave(module: Module, voice: Voice, number: int) -> None:
-    """$e2. DMA off; DMA on at the tick's end. The volume
+    """SET_WAVE. DMA off; DMA on at the tick's end. The volume
     list restarts."""
     voice.channel.disable()
     module.dma_on.add(voice.number)
@@ -452,7 +452,7 @@ def RestartVolList(voice: Voice) -> None:
 
 
 def ChangeWave(module: Module, voice: Voice, number: int) -> None:
-    """$e4. DMA stays on: the new wave starts at the next loop
+    """CHANGE_WAVE. DMA stays on: the new wave starts at the next loop
     end. The volume list runs on."""
     sound = module.score.sounds[number]
     start_sound(
@@ -462,9 +462,9 @@ def ChangeWave(module: Module, voice: Voice, number: int) -> None:
 
 
 def SampleFromPack(module: Module, voice: Voice, number: int, entry: int) -> None:
-    """$e9. A sample that starts with "SSMP" holds up to 20
+    """PACK. A sample that starts with "SSMP" holds up to 20
     samples. An entry: data offset, length, repeat start, repeat length.
-    DMA off and on as $e2; the volume list restarts. Without the magic,
+    DMA off and on as SET_WAVE; the volume list restarts. Without the magic,
     DMA is still switched."""
     voice.channel.disable()
     module.dma_on.add(voice.number)
@@ -481,13 +481,13 @@ def SampleFromPack(module: Module, voice: Voice, number: int, entry: int) -> Non
 
 
 def PitchListJump(module: Module, voice: Voice, number: int) -> None:
-    """$e7. Another pitch list, from its start, at once."""
+    """JUMP. Another pitch list, from its start, at once."""
     voice.pitch.steps, voice.pitch.pos = module.score.pitch_lists[number], 0
     ReadPitchList(module, voice)
 
 
 def PitchWait(module: Module, voice: Voice, ticks: int) -> None:
-    """$e8. The list waits; this tick counts. A wait of 0
+    """WAIT. The list waits; this tick counts. A wait of 0
     reads on at once."""
     voice.pitch.wait = ticks
     voice.pitch.pos += 2
@@ -499,7 +499,7 @@ def PitchWait(module: Module, voice: Voice, ticks: int) -> None:
 
 def VolumeListTick(voice: Voice) -> None:
     """A wait or a running volume bend skips the list. Else it
-    steps every `speed` ticks: $ea bends, $e8 waits, $e0 loops, $e1
+    steps every `speed` ticks: BEND bends, WAIT waits, LIST_LOOP loops, LIST_END
     ends; any other byte is the volume."""
     vol = voice.volume_list
     if vol.wait:
@@ -513,7 +513,7 @@ def VolumeListTick(voice: Voice) -> None:
 
 
 def ReadVolume(voice: Voice) -> None:
-    """$e0's argument counts from the instrument's start, so 5
+    """LIST_LOOP's argument counts from the instrument's start, so 5
     is subtracted."""
     vol = voice.volume_list
     while True:
@@ -539,7 +539,7 @@ def ReadVolume(voice: Voice) -> None:
 
 
 def VolumeLoop(voice: Voice) -> None:
-    """$e0."""
+    """LIST_LOOP in a volume list."""
     vol = voice.volume_list
     vol.pos = ((vol.steps[vol.pos + 1] & 0x3F) - VOLUME_HEADER) & 0xFFFF
 
@@ -611,7 +611,8 @@ def VibratoTick(voice: Voice, index: int) -> int:
 
 
 def DoSlide(voice: Voice) -> None:
-    """Portamento, every second tick: $01-$1f slides up, $21-$3f down."""
+    """Portamento, every second tick: up to PORTA_UP_MAX slides up, above
+    it down."""
     voice.porta_flip = not voice.porta_flip
     if not voice.porta_flip or not voice.porta:
         return

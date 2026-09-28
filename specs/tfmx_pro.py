@@ -373,7 +373,7 @@ def PatternOpcode(module: Module, track: Track, s: Statement) -> bool:
 
 
 def PatternEnd(module: Module, track: Track, s: Statement) -> bool:
-    """$f0. Every track moves to the next position."""
+    """Every track moves to the next position."""
     track.pattern = 0xFF
     if module.position == module.score.last:
         module.position = module.score.first  # the song ends and loops
@@ -385,7 +385,7 @@ def PatternEnd(module: Module, track: Track, s: Statement) -> bool:
 
 
 def PatternLoop(module: Module, track: Track, s: Statement) -> bool:
-    """$f1. Byte 1 repeats; word: the step to jump to."""
+    """Byte 1 repeats; word: the step to jump to."""
     if track.loop_count == 0:
         track.loop_count = s[1]
         track.pos = word(s)
@@ -396,7 +396,7 @@ def PatternLoop(module: Module, track: Track, s: Statement) -> bool:
 
 
 def PatternGoto(module: Module, track: Track, s: Statement) -> bool:
-    """$f2. Byte 1: pattern; word: step."""
+    """Byte 1: pattern; word: step."""
     track.pattern = s[1]
     track.statements = module.score.patterns[s[1]]
     track.pos = word(s)
@@ -404,32 +404,32 @@ def PatternGoto(module: Module, track: Track, s: Statement) -> bool:
 
 
 def PatternWait(module: Module, track: Track, s: Statement) -> bool:
-    """$f3. Byte 1: rows to wait."""
+    """Byte 1: rows to wait."""
     track.wait = s[1]
     track.pos += 1
     return False
 
 
 def PatternStop(module: Module, track: Track, s: Statement) -> bool:
-    """$f4. The track reads nothing until the next position."""
+    """The track reads nothing until the next position."""
     track.pattern = 0xFF
     return False
 
 
 def EndCustomPattern(module: Module, track: Track, s: Statement) -> bool:
-    """$fe. Positions set track 7 again."""
+    """Positions set track 7 again."""
     module.custom = False
     return PatternStop(module, track, s)
 
 
 def PatternNoteOff(module: Module, track: Track, s: Statement) -> bool:
-    """$f5. Byte 1 gets the transpose, like a note; the voice's key goes up."""
+    """Byte 1 gets the transpose, like a note; the voice's key goes up."""
     changed = bytes([s[0], (s[1] + track.transpose) & 0xFF, s[2], s[3]])
     return PatternToVoice(module, track, changed)
 
 
 def PatternToVoice(module: Module, track: Track, s: Statement) -> bool:
-    """$f5 note-off, $f6 vibrato, $f7 envelope, $fc sound effect lock."""
+    """Note-off, vibrato, envelope and sound effect lock; see PATTERN_OPCODES."""
     if not module.score.mutes[module.tracks.index(track)]:
         NoteToVoice(module, s)
     track.pos += 1
@@ -437,13 +437,13 @@ def PatternToVoice(module: Module, track: Track, s: Statement) -> bool:
 
 
 def PatternCall(module: Module, track: Track, s: Statement) -> bool:
-    """$f8. Saves the return on this track."""
+    """Saves the return on this track."""
     track.returns = (track.statements, track.pos)
     return PatternGoto(module, track, s)
 
 
 def PatternReturn(module: Module, track: Track, s: Statement) -> bool:
-    """$f9. Reads the return of track 0, not of this track, and writes it
+    """Reads the return of track 0, not of this track, and writes it
     to track 0. So a call returns only on track 0."""
     first = module.tracks[0]
     assert first.returns is not None
@@ -453,14 +453,14 @@ def PatternReturn(module: Module, track: Track, s: Statement) -> bool:
 
 
 def PatternFade(module: Module, track: Track, s: Statement) -> bool:
-    """$fa. Byte 1: visits per step; byte 3: target level."""
+    """Byte 1: visits per step; byte 3: target level."""
     start_fade(module.fade, s[1], s[3])
     track.pos += 1
     return True
 
 
 def StartOtherTrack(module: Module, track: Track, s: Statement) -> bool:
-    """$fb. Byte 1: pattern; byte 2: track; byte 3: its transpose."""
+    """Byte 1: pattern; byte 2: track; byte 3: its transpose."""
     other = module.tracks[s[2] & 7]
     other.pattern, other.transpose = s[1], s[3]
     other.statements = module.score.patterns[s[1] & 0x7F]
@@ -470,7 +470,7 @@ def StartOtherTrack(module: Module, track: Track, s: Statement) -> bool:
 
 
 def PatternSendFlag(module: Module, track: Track, s: Statement) -> bool:
-    """$fd. Sets a word the game reads."""
+    """Sets a word the game reads."""
     module.flags[s[1] & 3] = word(s)
     track.pos += 1
     return True
@@ -519,7 +519,7 @@ def SetTracks(module: Module, position: bytes) -> None:
 
 
 def PositionSpecials(module: Module, position: bytes) -> bool:
-    """$effe, then a command word. True: read the next position."""
+    """POSITION_SPECIAL, then a command word. True: read the next position."""
     command = int.from_bytes(position[2:4], "big")
     handler = POSITION_COMMANDS.get(command, StopSong)
     return handler(module, position)
@@ -700,7 +700,7 @@ def EndMacroTick(voice: Voice) -> bool:
 
 
 def MacroNext(module: Module, voice: Voice, s: Statement) -> bool:
-    """$2a, and the common "read on"."""
+    """The opcode without an effect, and the common "read on"."""
     voice.macro.pos += 1
     return True
 
@@ -709,14 +709,14 @@ MacroHandler = Callable[[Module, Voice, Statement], bool]  # True: read on
 
 
 def DmaOffAndReset(module: Module, voice: Voice, s: Statement) -> bool:
-    """$00. Clears envelope, vibrato, portamento, riff and IMS, then $13."""
+    """Clears envelope, vibrato, portamento, riff and IMS, then DmaOff."""
     voice.envelope.delay = voice.vibrato.size = voice.portamento.rate = 0
     voice.riff.state = voice.ims.length = 0
     return DmaOff(module, voice, s)
 
 
 def DmaOff(module: Module, voice: Voice, s: Statement) -> bool:
-    """$13. Byte 1 = 0: off at once. Else off at the next tick's start;
+    """Byte 1 = 0: off at once. Else off at the next tick's start;
     this tick ends."""
     voice.macro.pos += 1
     if s[1] == 0:
@@ -728,7 +728,7 @@ def DmaOff(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def DmaOn(module: Module, voice: Voice, s: Statement) -> bool:
-    """$01. On at the end of the tick. Byte 1 sets the effects state:
+    """On at the end of the tick. Byte 1 sets the effects state:
     negative pauses them, 0 skips one tick. Clears a sample-pass wait."""
     voice.channel.irq_enabled = voice.channel.irq_requested = False
     voice.effects = signed(s[1])
@@ -738,7 +738,7 @@ def DmaOn(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def SetStart(module: Module, voice: Voice, s: Statement) -> bool:
-    """$02. The channel takes it at its next loop. Stops the sweep."""
+    """The channel takes it at its next loop. Stops the sweep."""
     voice.sweep.left = 0
     voice.start = long(s)
     queue_region(module, voice)
@@ -747,7 +747,7 @@ def SetStart(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def SetLength(module: Module, voice: Voice, s: Statement) -> bool:
-    """$03. In words."""
+    """In words."""
     voice.length = word(s)
     queue_region(module, voice)
     voice.macro.pos += 1
@@ -755,7 +755,7 @@ def SetLength(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def MacroWait(module: Module, voice: Voice, s: Statement) -> bool:
-    """$04. Waits `word` ticks. With byte 1 bit 0, it is a sync point
+    """Waits `word` ticks. With byte 1 bit 0, it is a sync point
     with the riff instead: the first pass sets the trigger and reads on;
     a later pass waits until a riff byte with bit 7 clears it."""
     if s[1] & 1:
@@ -769,7 +769,7 @@ def MacroWait(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def MacroLoop(module: Module, voice: Voice, s: Statement) -> bool:
-    """$05. Byte 1: repeats; word: the step to jump to."""
+    """Byte 1: repeats; word: the step to jump to."""
     macro = voice.macro
     if macro.loop_count == 0:
         macro.loop_count, macro.pos = s[1], word(s)
@@ -780,7 +780,7 @@ def MacroLoop(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def MacroGoto(module: Module, voice: Voice, s: Statement) -> bool:
-    """$06. Byte 1: macro; word: step."""
+    """Byte 1: macro; word: step."""
     macro = voice.macro
     macro.statements = module.score.macros[s[1] & 0x7F]
     macro.pos = word(s)
@@ -789,25 +789,25 @@ def MacroGoto(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def MacroStop(module: Module, voice: Voice, s: Statement) -> bool:
-    """$07. The macro stops until the next note; effects run on."""
+    """The macro stops until the next note; effects run on."""
     voice.macro.running = False
     return False
 
 
 def AddNote(module: Module, voice: Voice, s: Statement) -> bool:
-    """$08. Byte 1 is added to the note."""
+    """Byte 1 is added to the note."""
     PutNote(voice, s, voice.note)
     return not EndMacroTick(voice)
 
 
 def SetNote(module: Module, voice: Voice, s: Statement) -> bool:
-    """$09. Byte 1 is the note."""
+    """Byte 1 is the note."""
     PutNote(voice, s, 0)
     return not EndMacroTick(voice)
 
 
 def LastNote(module: Module, voice: Voice, s: Statement) -> bool:
-    """$1f. Byte 1 is added to the voice's previous note."""
+    """Byte 1 is added to the voice's previous note."""
     PutNote(voice, s, voice.last_note)
     return not EndMacroTick(voice)
 
@@ -822,7 +822,7 @@ def PutNote(voice: Voice, s: Statement, note: int) -> None:
 
 
 def ClearEffects(module: Module, voice: Voice, s: Statement) -> bool:
-    """$0a. Riff, IMS, sweep, envelope, vibrato and portamento off."""
+    """Riff, IMS, sweep, envelope, vibrato and portamento off."""
     voice.riff.state = voice.ims.length = voice.sweep.left = 0
     voice.envelope.delay = voice.vibrato.size = voice.portamento.rate = 0
     voice.macro.pos += 1
@@ -830,7 +830,7 @@ def ClearEffects(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def MacroPortamento(module: Module, voice: Voice, s: Statement) -> bool:
-    """$0b. Byte 1: ticks per step; word: rate. A later note sets the
+    """Byte 1: ticks per step; word: rate. A later note sets the
     target; the glide starts from the current period."""
     if not voice.portamento.rate:
         voice.portamento.period = voice.base_period
@@ -841,7 +841,7 @@ def MacroPortamento(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def MacroVibrato(module: Module, voice: Voice, s: Statement) -> bool:
-    """$0c. Byte 1: ticks per sweep; byte 3: rate. Without portamento, it
+    """Byte 1: ticks per sweep; byte 3: rate. Without portamento, it
     resets the period to its centre."""
     voice.vibrato.size, voice.vibrato.left = s[1], s[1] >> 1
     voice.vibrato.rate = signed(s[3])
@@ -853,7 +853,7 @@ def MacroVibrato(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def NoteVolume(module: Module, voice: Voice, s: Statement) -> bool:
-    """$0d. Volume = 3 × the pattern's note volume + byte 3. With byte 2
+    """Volume = 3 × the pattern's note volume + byte 3. With byte 2
     = $fe, it also sets the note: byte 1 added to the current one."""
     if s[2] == 0xFE:
         PutNote(voice, bytes([s[0], s[1], 0, 0]), voice.note)
@@ -863,7 +863,7 @@ def NoteVolume(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def MacroVolume(module: Module, voice: Voice, s: Statement) -> bool:
-    """$0e. Volume = byte 3. Byte 2 = $fe sets the note too, as in $0d."""
+    """Volume = byte 3. Byte 2 = $fe sets the note too, as in NoteVolume."""
     if s[2] == 0xFE:
         PutNote(voice, bytes([s[0], s[1], 0, 0]), voice.note)
     voice.volume = s[3]
@@ -872,7 +872,7 @@ def MacroVolume(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def MacroEnvelope(module: Module, voice: Voice, s: Statement) -> bool:
-    """$0f. Byte 1: step; byte 2: ticks between steps, 0 off; byte 3:
+    """Byte 1: step; byte 2: ticks between steps, 0 off; byte 3:
     target. It stops at the target: a phase per opcode."""
     voice.envelope = Envelope(s[2], s[2], s[1], s[3])
     voice.macro.pos += 1
@@ -880,7 +880,7 @@ def MacroEnvelope(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def LoopWhileKey(module: Module, voice: Voice, s: Statement) -> bool:
-    """$10. Loops like $05 while the key is down."""
+    """Loops like MacroLoop while the key is down."""
     if not voice.key_down:
         voice.macro.pos += 1
         return True
@@ -888,7 +888,7 @@ def LoopWhileKey(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def AddStart(module: Module, voice: Voice, s: Statement) -> bool:
-    """$11. Word: signed bytes added to the start. Byte 1 > 0 repeats the
+    """Word: signed bytes added to the start. Byte 1 > 0 repeats the
     add every tick, and the direction flips every byte-1 ticks."""
     voice.sweep = Sweep(s[1], s[1], signed_word(s))
     voice.start += voice.sweep.step
@@ -901,7 +901,7 @@ def AddStart(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def AddLength(module: Module, voice: Voice, s: Statement) -> bool:
-    """$12. With IMS on, it sets the source mask instead."""
+    """With IMS on, it sets the source mask instead."""
     voice.length = (voice.length + word(s)) & 0xFFFF
     if voice.ims.length:
         voice.ims.mask = voice.length
@@ -912,7 +912,7 @@ def AddLength(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def WaitNoteOff(module: Module, voice: Voice, s: Statement) -> bool:
-    """$14. Waits while the key is down, at most byte-3 ticks; 0 has no
+    """Waits while the key is down, at most byte-3 ticks; 0 has no
     limit. Effects run on."""
     macro = voice.macro
     if not voice.key_down:
@@ -929,13 +929,12 @@ def WaitNoteOff(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def MacroCall(module: Module, voice: Voice, s: Statement) -> bool:
-    """$15. One return slot."""
+    """One return slot."""
     voice.macro.returns = (voice.macro.statements, voice.macro.pos)
     return MacroGoto(module, voice, s)
 
 
 def MacroReturn(module: Module, voice: Voice, s: Statement) -> bool:
-    """$16."""
     assert voice.macro.returns is not None
     voice.macro.statements, voice.macro.pos = voice.macro.returns
     voice.macro.pos += 1
@@ -943,7 +942,7 @@ def MacroReturn(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def SetPeriod(module: Module, voice: Voice, s: Statement) -> bool:
-    """$17. The word is the period."""
+    """The word is the period."""
     voice.base_period = word(s)
     if not voice.portamento.rate:
         voice.period = voice.base_period
@@ -952,7 +951,7 @@ def SetPeriod(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def SampleLoop(module: Module, voice: Voice, s: Statement) -> bool:
-    """$18. Moves the start on by `long` bytes and shortens the length to
+    """Moves the start on by `long` bytes and shortens the length to
     match. The channel takes it after this pass: an attack, then a loop."""
     voice.start += long(s)
     voice.length -= long(s) // 2
@@ -962,7 +961,7 @@ def SampleLoop(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def SetSilence(module: Module, voice: Voice, s: Statement) -> bool:
-    """$19. One word at the sample file's start, cleared at init."""
+    """One word at the sample file's start, cleared at init."""
     voice.sweep.left = 0
     voice.start, voice.length = 0, 1
     queue_region(module, voice)
@@ -971,7 +970,7 @@ def SetSilence(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def WaitLoops(module: Module, voice: Voice, s: Statement) -> bool:
-    """$1a. Stops the macro; the channel interrupt restarts it after
+    """Stops the macro; the channel interrupt restarts it after
     word + 1 sample passes."""
     voice.macro.loop_waits = word(s)
     voice.macro.running = False
@@ -988,7 +987,7 @@ def CountLoopIrq(voice: Voice) -> None:
 
 
 def StartRiff(module: Module, voice: Voice, s: Statement) -> bool:
-    """$1b. Byte 1: the macro whose bytes are the riff; byte 2: ticks per
+    """Byte 1: the macro whose bytes are the riff; byte 2: ticks per
     step; byte 3: flags. The first step plays at once. RiffTick's exit is
     the fade code, so the fade counter moves once more."""
     voice.riff = Riff(
@@ -1009,33 +1008,33 @@ def StartRiff(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def SplitByNote(module: Module, voice: Voice, s: Statement) -> bool:
-    """$1c. Jumps to step `word` if the note is above byte 1."""
+    """Jumps to step `word` if the note is above byte 1."""
     voice.macro.pos = word(s) if voice.note > s[1] else voice.macro.pos + 1
     return True
 
 
 def SplitByVolume(module: Module, voice: Voice, s: Statement) -> bool:
-    """$1d. Jumps to step `word` if the volume is above byte 1."""
+    """Jumps to step `word` if the volume is above byte 1."""
     voice.macro.pos = word(s) if voice.volume > s[1] else voice.macro.pos + 1
     return True
 
 
 def RiffMask(module: Module, voice: Voice, s: Statement) -> bool:
-    """$1e. Random riff steps are masked with byte 1."""
+    """Random riff steps are masked with byte 1."""
     voice.riff.mask = s[1]
     voice.macro.pos += 1
     return True
 
 
 def SendFlag(module: Module, voice: Voice, s: Statement) -> bool:
-    """$20. Sets a word the game reads."""
+    """Sets a word the game reads."""
     module.flags[s[1] & 3] = word(s)
     voice.macro.pos += 1
     return True
 
 
 def PlayOtherVoice(module: Module, voice: Voice, s: Statement) -> bool:
-    """$21. Plays this voice's note on the voice in byte 2. Byte 1: macro;
+    """Plays this voice's note on the voice in byte 2. Byte 1: macro;
     byte 3: detune. This voice's note volume is ORed into byte 2."""
     note = bytes([voice.note, s[1], s[2] | voice.note_volume << 4, s[3]])
     NoteToVoice(module, note)
@@ -1044,7 +1043,7 @@ def PlayOtherVoice(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def ImsSource(module: Module, voice: Voice, s: Statement) -> bool:
-    """$22. Bytes 1-3: the source offset. The channel plays the voice's
+    """Bytes 1-3: the source offset. The channel plays the voice's
     buffer from now on. Stops the sweep."""
     voice.sweep.left = 0
     voice.ims.source = voice.start = long(s)
@@ -1054,7 +1053,7 @@ def ImsSource(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def ImsLength(module: Module, voice: Voice, s: Statement) -> bool:
-    """$23. Byte 1: bytes to build, 0 for 256; this is the loop that
+    """Byte 1: bytes to build, 0 for 256; this is the loop that
     Paula plays. Word: the source mask."""
     size = s[1] or IMS_BUFFER
     queue_ims(module, voice, size)
@@ -1065,21 +1064,21 @@ def ImsLength(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def ImsSetStep(module: Module, voice: Voice, s: Statement) -> bool:
-    """$24. Bytes 1-3: source bytes per output byte, in 16.8 bits."""
+    """Bytes 1-3: source bytes per output byte, in 16.8 bits."""
     voice.ims.step = long(s) << 8
     voice.macro.pos += 1
     return True
 
 
 def ImsSweepStep(module: Module, voice: Voice, s: Statement) -> bool:
-    """$25. Word: added to the step each tick; byte 1: ticks per turn."""
+    """Word: added to the step each tick; byte 1: ticks per turn."""
     voice.ims.step_swing = Swing(signed_word(s), s[1], s[1])
     voice.macro.pos += 1
     return True
 
 
 def ImsSetStepChange(module: Module, voice: Voice, s: Statement) -> bool:
-    """$26. Bytes 1-3: added to the step per byte, in 16.16 bits. The
+    """Bytes 1-3: added to the step per byte, in 16.16 bits. The
     wave's pitch then bends within one buffer."""
     voice.ims.step_change = long(s)
     voice.macro.pos += 1
@@ -1087,14 +1086,14 @@ def ImsSetStepChange(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def ImsSweepStepChange(module: Module, voice: Voice, s: Statement) -> bool:
-    """$27. Like $25, for the step change."""
+    """Like ImsSweepStep, for the step change."""
     voice.ims.change_swing = Swing(signed_word(s), s[1], s[1])
     voice.macro.pos += 1
     return True
 
 
 def ImsFilter(module: Module, voice: Voice, s: Statement) -> bool:
-    """$28. Byte 3: the largest change between output bytes, 0 off.
+    """Byte 3: the largest change between output bytes, 0 off.
     Byte 2: its change per tick, in 1/16. Byte 1: ticks per turn."""
     voice.ims.delta = s[3] << 8
     voice.ims.delta_swing = Swing(signed(s[2]) << 4, s[1], s[1])
@@ -1103,7 +1102,7 @@ def ImsFilter(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def ImsOff(module: Module, voice: Voice, s: Statement) -> bool:
-    """$29. Byte 1 > 0 also clears the steps, swings and filter; byte 3
+    """Byte 1 > 0 also clears the steps, swings and filter; byte 3
     then sets the mirror.
 
     The mirror's negated copy plays only if the next voice plays its own
@@ -1122,32 +1121,32 @@ def ImsOff(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def CheckByteTrap(module: Module, voice: Voice, s: Statement) -> bool:
-    """$2b. If a low-memory byte is not byte 1, it writes a random byte to
+    """If a low-memory byte is not byte 1, it writes a random byte to
     low memory (guess: against cracked copies)."""
     voice.macro.pos += 1
     return True  # memory writes are not modelled
 
 
 def SetByte(module: Module, voice: Voice, s: Statement) -> bool:
-    """$2c. Writes byte 1 to $80000 + signed word, in 512 KB."""
+    """Writes byte 1 to $80000 + signed word, in 512 KB."""
     voice.macro.pos += 1
     return True
 
 
 def CheckByte(module: Module, voice: Voice, s: Statement) -> bool:
-    """$2d. Skips the next statement if that byte equals byte 1."""
+    """Skips the next statement if that byte equals byte 1."""
     voice.macro.pos += 1
     return True  # the memory read is not modelled
 
 
 def WriteChipReg(module: Module, voice: Voice, s: Statement) -> bool:
-    """$2e. Writes the word to the custom chip register at byte 1 × 2."""
+    """Writes the word to the custom chip register at byte 1 × 2."""
     voice.macro.pos += 1
     return True
 
 
 def CopyToMacro(module: Module, voice: Voice, s: Statement) -> bool:
-    """$2f. Copies the next statement into macro byte 1 at step `word`,
+    """Copies the next statement into macro byte 1 at step `word`,
     then skips it. Every voice that plays that macro sees the change."""
     macro = voice.macro
     target = module.score.macros[s[1] & 0x7F]
@@ -1157,7 +1156,7 @@ def CopyToMacro(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def SkipFirstPass(module: Module, voice: Voice, s: Statement) -> bool:
-    """$30. Reads on the first time; later jumps to step `word`. A note
+    """Reads on the first time; later jumps to step `word`. A note
     that starts the same macro again keeps this state."""
     macro = voice.macro
     if not macro.skip_seen:
@@ -1169,21 +1168,21 @@ def SkipFirstPass(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def NoteOffOtherVoice(module: Module, voice: Voice, s: Statement) -> bool:
-    """$31. The key goes up on the voice in byte 2."""
+    """The key goes up on the voice in byte 2."""
     NoteToVoice(module, bytes([0xF5, s[1], s[2], s[3]]))
     voice.macro.pos += 1
     return True
 
 
 def AddToMacro(module: Module, voice: Voice, s: Statement) -> bool:
-    """$32. Adds the word to the macro word byte-1 words from here."""
+    """Adds the word to the macro word byte-1 words from here."""
     edit_macro(voice, s[1], lambda old: (old + word(s)) & 0xFFFF)
     voice.macro.pos += 1
     return True
 
 
 def AndToMacro(module: Module, voice: Voice, s: Statement) -> bool:
-    """$33. ANDs the word into it."""
+    """ANDs the word into it."""
     edit_macro(voice, s[1], lambda old: old & word(s))
     voice.macro.pos += 1
     return True
@@ -1191,57 +1190,57 @@ def AndToMacro(module: Module, voice: Voice, s: Statement) -> bool:
 
 MACRO_OPCODES: list[MacroHandler | None] = [
     DmaOffAndReset,  # $00
-    DmaOn,
-    SetStart,
-    SetLength,
+    DmaOn,  # $01
+    SetStart,  # $02
+    SetLength,  # $03
     MacroWait,  # $04
-    MacroLoop,
-    MacroGoto,
-    MacroStop,
+    MacroLoop,  # $05
+    MacroGoto,  # $06
+    MacroStop,  # $07
     AddNote,  # $08
-    SetNote,
-    ClearEffects,
-    MacroPortamento,
+    SetNote,  # $09
+    ClearEffects,  # $0a
+    MacroPortamento,  # $0b
     MacroVibrato,  # $0c
-    NoteVolume,
-    MacroVolume,
-    MacroEnvelope,
+    NoteVolume,  # $0d
+    MacroVolume,  # $0e
+    MacroEnvelope,  # $0f
     LoopWhileKey,  # $10
-    AddStart,
-    AddLength,
-    DmaOff,
+    AddStart,  # $11
+    AddLength,  # $12
+    DmaOff,  # $13
     WaitNoteOff,  # $14
-    MacroCall,
-    MacroReturn,
-    SetPeriod,
+    MacroCall,  # $15
+    MacroReturn,  # $16
+    SetPeriod,  # $17
     SampleLoop,  # $18
-    SetSilence,
-    WaitLoops,
-    StartRiff,
+    SetSilence,  # $19
+    WaitLoops,  # $1a
+    StartRiff,  # $1b
     SplitByNote,  # $1c
-    SplitByVolume,
-    RiffMask,
-    LastNote,
+    SplitByVolume,  # $1d
+    RiffMask,  # $1e
+    LastNote,  # $1f
     SendFlag,  # $20
-    PlayOtherVoice,
-    ImsSource,
-    ImsLength,
+    PlayOtherVoice,  # $21
+    ImsSource,  # $22
+    ImsLength,  # $23
     ImsSetStep,  # $24
-    ImsSweepStep,
-    ImsSetStepChange,
-    ImsSweepStepChange,
+    ImsSweepStep,  # $25
+    ImsSetStepChange,  # $26
+    ImsSweepStepChange,  # $27
     ImsFilter,  # $28
-    ImsOff,
-    MacroNext,
-    CheckByteTrap,
+    ImsOff,  # $29
+    MacroNext,  # $2a
+    CheckByteTrap,  # $2b
     SetByte,  # $2c
-    CheckByte,
-    WriteChipReg,
-    CopyToMacro,
+    CheckByte,  # $2d
+    WriteChipReg,  # $2e
+    CopyToMacro,  # $2f
     SkipFirstPass,  # $30
-    NoteOffOtherVoice,
-    AddToMacro,
-    AndToMacro,
+    NoteOffOtherVoice,  # $31
+    AddToMacro,  # $32
+    AndToMacro,  # $33
 ]  # MacroOpcodes; from $34 on, EndMacroTick
 
 

@@ -35,21 +35,30 @@ the first card on it, with `specs/med.py`.
 - [ ] Composer's view for MED rests on the format notes. Ask the user for an
       OctaMED manual that covers synth sounds.
 
+### Checks
+
+- [ ] Add a check against numbers that stand in for names. One helper in
+      `tools/` serves `tools/cogload.py`, `tools/specs.py:check_prose` and
+      `tools/annot.py`. Tests go in `tests/test_tools.py`.
+
+| Rule   | Case                                                       |
+| ------ | ---------------------------------------------------------- |
+| Reject | A command, effect or opcode by number, e.g. "command 4"    |
+| Reject | A `$xx` equal to a constant of the player's spec           |
+| Allow  | A constant's definition line                               |
+| Allow  | A hex comment on a table entry, e.g. `CmdCall,  # $81`     |
+| Allow  | An offset: `+$32`, "`$e8` bytes", a field comment `# $aa:` |
+| Allow  | A layout banner in an annotation file                      |
+| Limit  | A wrong name with the right value passes, e.g. `GAME_LOOP` |
+
 ### Hardware model
 
-- [ ] `POLL_CCK` is an estimate from 68000 instruction timings. It is 25 in
-      `specs/med.py:StartDMA`, 20 in
-      `specs/digital_sonix_chrome.py:WaitAudioIrq`, 15 in
-      `specs/jochen_hippel_st.py:NotePlay` and 10 in
-      `specs/oktalyzer.py:QueueBuffers`. Measure or cite one poll of each.
-- [ ] `specs/midi_loriciel.py:StartNote` waits 513 loops of `nop` and `dbra`,
-      estimated at 7 CCK each. Measure or cite one loop.
-- [ ] `specs/soundmon_22.py:PlayRow` waits 640 CCK, an estimate of 128 `dbra`
-      loops. Does a note with a period above 320 miss its restart?
-- [ ] `specs/jochen_hippel_st.py` and `specs/soundmon_22.py` run by a 50 Hz
-      timer. Check DeliTracker's default rate for a player without `DTP_Timer`.
-- [ ] `hardware/paula.py:Channel.word_cck` wraps period 0 to 65536 CCK. This is
-      a guess from memory of Minimig. Check it in Minimig's channel code.
+- [ ] `START_CCK` in `specs/soundmon_22.py:PlayRow` comes from a Musashi run of
+      the original code. The C harness and the code excerpt live only in the
+      session's scratchpad. Decide with the user: add them to `tools/`, or
+      describe the run in `docs/`.
+- [ ] Busy-wait times assume no chip-bus waits. Check one wait in WinUAE's
+      cycle-exact mode.
 
 ### New cards
 

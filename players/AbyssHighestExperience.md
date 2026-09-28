@@ -59,10 +59,10 @@ settings and its program.
 | Notation | A row: note, instrument, command and argument.                                | `:ReadRow`            |
 | Notation | A position: a track and a transpose for each voice.                           | `:ReadPosition`       |
 | Notation | A step: wave, note, fixed-note flag, two commands.                            | `:PerformanceStep`    |
-| Cost     | A note with command 3 or 5 slides from the last note.                         | `:ReadRow`            |
+| Cost     | A note with `TONE_SLIDE` or `TONE_SLIDE_VOLUME` slides from the last note.    | `:ReadRow`            |
 | Cost     | Sweep limits are for the longest wave. Shorter waves have fewer pulse widths. | `:SetInstrument`      |
 | Cost     | A note delay or note cut needs a value below the speed.                       | `:ReadRow`            |
-| Cost     | Revision 0 modules lack command 4 and program command 0.                      | `:PerformanceCommand` |
+| Cost     | Revision 0 modules lack `FILTER_SET` and `FILTER_POSITION`.                   | `:PerformanceCommand` |
 
 ## What is unique
 

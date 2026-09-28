@@ -229,7 +229,7 @@ def VoiceTick(module: Module, voice: Voice) -> None:
 
 
 def VolumeEnvelope(module: Module, voice: Voice) -> None:
-    """Entries of two bytes: $88 jumps; (level, 0) sets the volume;
+    """Entries of two bytes: TABLE_JUMP jumps; (level, 0) sets the volume;
     (delta, ticks) adds delta every tick for that many ticks. The
     volume wraps: nothing clamps it."""
     data = module.data
@@ -253,7 +253,7 @@ def VolumeLevel(voice: Voice, level: int) -> None:
 
 
 def PeriodTable(module: Module, voice: Voice) -> None:
-    """Entries of two bytes: $FF jumps; (command, ticks) runs the command
+    """Entries of two bytes: TABLE_END jumps; (command, ticks) runs the command
     every tick for that many ticks."""
     data = module.data
     voice.period_count = (voice.period_count - 1) & 0xFF
@@ -285,8 +285,8 @@ def Portamento(voice: Voice) -> None:
 
 
 def PeriodCommand(voice: Voice) -> None:
-    """$FE: an octave down. $7F: an octave up. $7E: an interval, once.
-    Below $7F: add to the period. Else: subtract bits 0-6. Each runs
+    """OCTAVE_DOWN: an octave down. OCTAVE_UP: an octave up. INTERVAL: an
+    interval, once. Below OCTAVE_UP: add to the period. Else: subtract bits 0-6. Each runs
     every tick of its entry."""
     command = voice.period_command
     if command == OCTAVE_DOWN:
@@ -367,7 +367,7 @@ def MixWaves(module: Module, voice: Voice) -> None:
 
 
 def XorWaves(module: Module, voice: Voice) -> None:
-    """Entries (step, ticks); $FF jumps. Inside a window from wave_pos,
+    """Entries (step, ticks); TABLE_END jumps. Inside a window from wave_pos,
     step & 31 bytes long, each byte of the playing half is XORed with
     sample 2 & mask into the other half. So changes add up, tick by
     tick. Step bit 7: a plain copy of sample 1."""
@@ -394,7 +394,7 @@ def XorWaves(module: Module, voice: Voice) -> None:
 
 
 def MorphWave(module: Module, voice: Voice) -> None:
-    """Entries (command, speed, ticks); $FF jumps. Inside the window,
+    """Entries (command, speed, ticks); TABLE_END jumps. Inside the window,
     each byte of the playing half moves toward the target by at most
     `speed` per tick. Command bits 6-7: 01 targets sample 1, else sample
     2; 11 keeps the window still, else it moves by its length. $80: a
@@ -435,7 +435,7 @@ def CopyWave(module: Module, voice: Voice, fill: int) -> None:
 
 
 def ChunkTable(module: Module, voice: Voice) -> None:
-    """Entries (offset high, offset low, ticks); $FF jumps. An entry
+    """Entries (offset high, offset low, ticks); TABLE_END jumps. An entry
     moves the chunk pointer into sample 2. Between entries, only the
     audio interrupt moves it."""
     data = module.data
@@ -503,7 +503,7 @@ def start_note(module: Module, voice: Voice) -> None:
 
 
 def Command(module: Module, voice: Voice, number: int) -> bool:
-    """$81-$8D through CommandTable; $FF cuts the note. True: the stream
+    """COMMANDS runs the others; NOTE_CUT cuts the note. True: the stream
     waits."""
     if number == NOTE_CUT:
         NoteCut(module, voice)
@@ -520,7 +520,7 @@ def NoteCut(module: Module, voice: Voice) -> None:
 
 
 def CmdCall(module: Module, voice: Voice) -> bool:
-    """$81 n: push the return address; go to offset n."""
+    """Argument n: push the return address; go to offset n."""
     target = arg(module, voice)
     voice.stack.append(voice.stream)
     voice.stream = AddressAt(module, target)
@@ -528,13 +528,12 @@ def CmdCall(module: Module, voice: Voice) -> bool:
 
 
 def CmdReturn(module: Module, voice: Voice) -> bool:
-    """$82."""
     voice.stream = voice.stack.pop()
     return False
 
 
 def CmdLoopStart(module: Module, voice: Voice) -> bool:
-    """$83 count, unused byte: push the loop's start, then the count."""
+    """Arguments count, unused byte: push the loop's start, then the count."""
     count = module.data[voice.stream]
     voice.stream += 2
     voice.stack += [voice.stream, count]
@@ -542,7 +541,7 @@ def CmdLoopStart(module: Module, voice: Voice) -> bool:
 
 
 def CmdLoop(module: Module, voice: Voice) -> bool:
-    """$84: back to the loop's start until the count reaches 0."""
+    """Back to the loop's start until the count reaches 0."""
     count, start = voice.stack.pop() - 1, voice.stack.pop()
     if count:
         voice.stream = start
@@ -551,28 +550,28 @@ def CmdLoop(module: Module, voice: Voice) -> bool:
 
 
 def CmdSamples(module: Module, voice: Voice) -> bool:
-    """$85 a b: samples 1 and 2 at offsets a and b."""
+    """Arguments a, b: samples 1 and 2 at offsets a and b."""
     voice.pointer = AddressAt(module, arg(module, voice))
     voice.sample2 = AddressAt(module, arg(module, voice))
     return False
 
 
 def CmdVolumeTable(module: Module, voice: Voice) -> bool:
-    """$86 n: restart the volume table at offset n."""
+    """Argument n: restart the volume table at offset n."""
     voice.volume_table = AddressAt(module, arg(module, voice))
     voice.volume_pos, voice.volume_count = 0, 1
     return False
 
 
 def CmdPeriodTable(module: Module, voice: Voice) -> bool:
-    """$87 n: restart the period table at offset n."""
+    """Argument n: restart the period table at offset n."""
     voice.period_table = AddressAt(module, arg(module, voice))
     voice.period_pos, voice.period_count = 0, 1
     return False
 
 
 def CmdWaveTable(module: Module, voice: Voice) -> bool:
-    """$88 n mode: restart the wave table at offset n. Chunk mode sets
+    """n mode: restart the wave table at offset n. Chunk mode sets
     AUDxLEN to 64 words. The wave modes take the start position from
     bits 0-4; leaving chunk mode sets 16 words on the voice's buffer."""
     voice.wave_table = AddressAt(module, arg(module, voice))
@@ -590,7 +589,7 @@ def CmdWaveTable(module: Module, voice: Voice) -> bool:
 
 
 def CmdPortamento(module: Module, voice: Voice) -> bool:
-    """$89 from to ticks: from note `from`, reach note `to` in `ticks`.
+    """Arguments from, to, ticks: from note `from`, reach note `to` in `ticks`.
     The step is the period difference / ticks, at least 1; the delay is
     ticks / difference, at least 1. It acts as a note, and `ticks` is
     also its length. Equal notes divide by zero: the 68000 traps."""
@@ -611,35 +610,45 @@ def CmdPortamento(module: Module, voice: Voice) -> bool:
 
 
 def CmdTranspose(module: Module, voice: Voice) -> bool:
-    """$8A n: added to every note."""
+    """Argument n: added to every note."""
     voice.transpose = arg(module, voice)
     return False
 
 
 def CmdGoto(module: Module, voice: Voice) -> bool:
-    """$8B n: go to offset n, and count a goto for the song end."""
+    """Argument n: go to offset n, and count a goto for the song end."""
     voice.stream = AddressAt(module, arg(module, voice))
     module.looped = (module.looped << 1 | 1) & 0xFFFF
     return False
 
 
 def CmdKeepFlags(module: Module, voice: Voice) -> bool:
-    """$8C flags: which tables a note leaves running."""
+    """Argument flags: which tables a note leaves running."""
     voice.keep = arg(module, voice)
     return False
 
 
 def CmdMask(module: Module, voice: Voice) -> bool:
-    """$8D n: the mix and exclusive-or mask, or the chunks' base note."""
+    """Argument n: the mix and exclusive-or mask, or the chunks' base note."""
     voice.mask = arg(module, voice)
     return False
 
 
 COMMANDS = (
-    CmdCall, CmdReturn, CmdLoopStart, CmdLoop, CmdSamples, CmdVolumeTable,
-    CmdPeriodTable, CmdWaveTable, CmdPortamento, CmdTranspose, CmdGoto,
-    CmdKeepFlags, CmdMask,
-)  # fmt: skip
+    CmdCall,  # $81
+    CmdReturn,  # $82
+    CmdLoopStart,  # $83
+    CmdLoop,  # $84
+    CmdSamples,  # $85
+    CmdVolumeTable,  # $86
+    CmdPeriodTable,  # $87
+    CmdWaveTable,  # $88
+    CmdPortamento,  # $89
+    CmdTranspose,  # $8a
+    CmdGoto,  # $8b
+    CmdKeepFlags,  # $8c
+    CmdMask,  # $8d
+)
 
 
 def OffsetAt(module: Module, n: int) -> int:

@@ -19,7 +19,7 @@ A script can wait, branch on pitch or volume, react to events, run four
 LFOs, and act on any other track.
 
 Left out: DeliTracker's hooks and song-end checks, the song loop events
-($E000), Chase (after a seek, the last sample and volume replay), the
+(PITCH_ONLY), Chase (after a seek, the last sample and volume replay), the
 LED filter, and the tables' exact values: the model computes them.
 PairPeriods and StepTable come within 1 of the binary's tables,
 LfoWaves within 5.
@@ -47,6 +47,8 @@ LFO_WAVE_BYTES = 192
 TEMPO_MIN = 0x1000  # SetTempo: CIA counts
 WAIT_FOREVER = 0xFFFF  # ScriptWait 0: until an event
 RELEASE = 0x23  # a note event's pitch field: the note is released
+# A pattern event's top nibble; lower values carry a volume
+START_SCRIPT, PORTAMENTO, FADE, PITCH_ONLY = 0xB000, 0xC000, 0xD000, 0xE000
 LINE_LIMIT = 100_000  # model only: a script loop without a wait hangs the 68000
 
 # EventVolumes: an event's volume nibble 1-10. Nibble 3 gives 0; the
@@ -351,26 +353,27 @@ def TrackRow(module: Module, track: Track) -> None:
 
 
 def PatternEvent(module: Module, track: Track, value: int) -> None:
-    """$B000 starts a script, $C000 a portamento, $D000 a fade to 0.
-    Below $B000: a sample in bits 6-11 and a volume in bits 12-15. Every
-    kind but $C000 then takes bits 0-5 as a pitch. Each part that is
+    """START_SCRIPT starts a script, PORTAMENTO a portamento, FADE a
+    fade to 0. PITCH_ONLY sets only the pitch. Below START_SCRIPT: a
+    sample in bits 6-11 and a volume in bits 12-15. Every kind but
+    PORTAMENTO then takes bits 0-5 as a pitch. Each part that is
     set can raise its handler; a later one replaces an earlier one."""
     kind, middle, low = value & 0xF000, (value & 0x0FC0) >> 6, value & 0x3F
     if not value:
         return
     new_sample = False
-    if kind == 0xC000:
+    if kind == PORTAMENTO:
         Portamento(module, track, middle, low)
         return
-    if kind == 0xD000:
+    if kind == FADE:
         Fade(module, track, middle)
-    elif kind == 0xB000:
+    elif kind == START_SCRIPT:
         start, end = module.scripts[middle]
         track.script, track.line, track.script_end = start, start, end
         track.script_wait = track.loop_count = track.pending = 0
         track.handlers = [0] * 6
         track.work = module.tracks.index(track)
-    elif kind != 0xE000:
+    elif kind != PITCH_ONLY:
         if middle:
             new_sample = True
             track.instrument = middle - 1
@@ -392,7 +395,7 @@ def PatternEvent(module: Module, track: Track, value: int) -> None:
 
 
 def Portamento(module: Module, track: Track, rows: int, note: int) -> None:
-    """$C000: slide to pitch field `note` over `rows` rows; 0 rows jump."""
+    """PORTAMENTO: slide to pitch field `note` over `rows` rows; 0 rows jump."""
     if not note:
         return
     track.porta_target = (note - 1) << 4
@@ -409,7 +412,7 @@ def Portamento(module: Module, track: Track, rows: int, note: int) -> None:
 
 
 def Fade(module: Module, track: Track, rows: int) -> None:
-    """$D000: the volume slides to 0 over `rows` rows; 0 rows: at once."""
+    """FADE: the volume slides to 0 over `rows` rows; 0 rows: at once."""
     if not rows:
         track.volume = 0
         return
@@ -821,7 +824,7 @@ def SetGlobalVolume(module: Module, track: Track, line: int) -> Flow:
 
 
 def SetTempo(module: Module, track: Track, line: int) -> Flow:
-    """CIA counts per tick, at least $1000: at most 173 ticks a second."""
+    """CIA counts per tick, at least TEMPO_MIN: at most 173 ticks a second."""
     module.tempo = max(line & 0xFFFF, TEMPO_MIN)
     module.amiga.timer.set_latch(module.tempo)
     return Flow.NEXT

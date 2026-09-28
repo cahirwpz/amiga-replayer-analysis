@@ -19,8 +19,8 @@ from functools import partial
 from math import log2
 
 from hardware import paula
-from hardware.amiga import Amiga, Priority
-from hardware.clock import CCK_HZ, LINE_CCK
+from hardware.amiga import DEFAULT_LATCH, Amiga, Priority
+from hardware.clock import CCK_HZ, CPU_PER_CCK, LINE_CCK
 from specs.controls import CommandList
 
 CHIP_VOICES = 3
@@ -30,7 +30,6 @@ POSITION_SIZE = 12  # 4 bytes per voice: pattern, transpose, instr. transpose, f
 SUBSONG_SIZE = 6  # first position, last position, speed
 DEFAULT_SPEED = 4  # InitSound: a subsong with speed 0
 VOLUME_HEADER = 5  # an instrument's bytes before its volume list
-DEFAULT_LATCH = 14187  # DeliTracker's timer, 50 Hz (guess): no DTP_Timer tag
 
 # Pattern bytes
 PATTERN_END, SET_LENGTH, REST = 0xFF, 0xFE, 0xFD
@@ -47,7 +46,9 @@ LOOP, HOLD, RESTART_VOLUME, VIBRATO, TONE_NOISE = 0xE0, 0xE1, 0xE2, 0xE3, 0xE4
 NOISE_ONLY, TONE_ONLY, DIGI_OFF, WAIT, SKIP = 0xE5, 0xE6, 0xE7, 0xE8, 0xE9
 DIGI_ON = 0xEA
 FIRST_NOTE = 0xEB  # without TypePlay, bytes from here on are notes
-LATER_OPCODES = 0xEF  # with TypePlay: $eb-$ef are opcodes too
+LATER_OPCODES = 0xEF  # with TypePlay: bytes up to here are opcodes too
+# With TypePlay only
+TONE_FLAGS, LATER_DIGI_ON, LATER_DIGI_OFF, SID_MODE, SID_UNUSED = range(0xEB, 0xF0)
 LOOP_MASK = 0x3F  # without TypePlay, a loop target is masked
 FIXED = 0x80  # a pitch list byte with bit 7: a fixed note
 
@@ -88,7 +89,8 @@ SID_MIN, SID_MAX = 0x10, 0xEEE  # periods outside turn the pulse off
 NOISE_SIZE = 1024
 NOISE_SEED = int.from_bytes(b"HIPP", "big")
 SLOTS_END = 0x16  # NotePlay waits until this beam position, after audio DMA
-POLL_CCK = 15  # one INTREQR poll: about 30 68000 cycles (estimate)
+# One INTREQR poll in NotePlay: move.w, and.w, cmp.w, bne.s taken
+POLL_CCK = (12 + 4 + 4 + 10) // CPU_PER_CCK
 DIGI_VOLUME = 0x40
 DIGI_LOOP = 0x10  # an end word of $10: a 16-byte looped wave
 DIGI_BASE_NOTE = 72  # TypePeriod: this note plays at Period
@@ -123,7 +125,7 @@ class Instrument:  # at InstrumentTable: 5 header bytes, then the volume list
 @dataclass
 class DigiSample:  # 8 bytes at SampleTable
     start: int  # +0: offset in the sample data
-    end: int  # +2: 0: the next entry's start; $10: a 16-byte loop
+    end: int  # +2: 0: the next entry's start; DIGI_LOOP: a 16-byte loop
 
 
 @dataclass
@@ -136,10 +138,10 @@ class Score:  # ModuleBase: a 'COSO' module after InitPlay
     samples: list[DigiSample]
     sample_data: bytes
     scaled: bool  # ScaledFlag: 'MMME' at +$20; see ScaledVibrato
-    all_opcodes: bool  # TypePlay: $e0-$ef are all opcodes
+    all_opcodes: bool  # TypePlay: LOOP to LATER_OPCODES are all opcodes
     digi_period: int  # Period: from the ST replay's timer data, or $248
     digi_notes: bool  # TypePeriod: StartDigi reads a note byte
-    sid_stub: bool  # TypeSID: an 'MMME' module with $ef; SidVoice is skipped
+    sid_stub: bool  # TypeSID: an 'MMME' module with SID_UNUSED; SidVoice is skipped
 
 
 # --- ST replay state -----------------------------------------------------
@@ -416,8 +418,8 @@ def Play(module: Module) -> None:
 
 
 def ReadPattern(module: Module, voice: Voice) -> None:
-    """A note lasts its length + 1 rows. $ff ends the pattern, $fe sets the
-    length, $fd sets it and rests."""
+    """A note lasts its length + 1 rows. PATTERN_END ends the pattern,
+    SET_LENGTH sets the length, REST sets it and rests."""
     voice.counter -= 1
     if voice.counter >= 0:
         return
@@ -469,13 +471,13 @@ def RestartSong(module: Module) -> None:
 
 
 def SetNoteLength(voice: Voice) -> None:
-    """$fe n: later notes last n + 1 rows."""
+    """Argument n: later notes last n + 1 rows."""
     voice.length = voice.counter = voice.pattern[voice.row]
     voice.row += 1
 
 
 def Rest(voice: Voice) -> None:
-    """$fd n: set the length and read no note: the last note's
+    """Argument n: set the length and read no note: the last note's
     lists run on."""
     SetNoteLength(voice)
 
@@ -545,8 +547,8 @@ def PitchList(module: Module, voice: Voice) -> tuple[int, int]:
 
 
 def PitchCommands(score: Score, byte: int) -> PitchCommand | None:
-    """The jump table. Without TypePlay, $eb-$ef are notes, and so is $ea
-    when the module has no samples."""
+    """The jump table. Without TypePlay, FIRST_NOTE to LATER_OPCODES are
+    notes, and so is DIGI_ON when the module has no samples."""
     if byte < LOOP or byte > LATER_OPCODES:
         return None
     if not score.all_opcodes:
@@ -567,14 +569,14 @@ def arg(voice: Voice, n: int = 1) -> int:
 
 
 def PitchLoop(module: Module, voice: Voice) -> bool:
-    """$e0 n: go to byte n."""
+    """Argument n: go to byte n."""
     target = arg(voice)
     voice.pitch.jump(target if module.score.all_opcodes else target & LOOP_MASK)
     return True
 
 
 def PitchHold(module: Module, voice: Voice) -> bool:
-    """$e1: stay here. With TypePlay, the byte before it is the
+    """Stay here. With TypePlay, the byte before it is the
     note offset again."""
     if module.score.all_opcodes:
         voice.pitch.step = voice.pitch.steps[voice.pitch.pos - 1]
@@ -582,7 +584,7 @@ def PitchHold(module: Module, voice: Voice) -> bool:
 
 
 def RestartVolumeList(module: Module, voice: Voice) -> bool:
-    """$e2: the volume list starts again and steps on this tick."""
+    """The volume list starts again and steps on this tick."""
     voice.volume_list.pos = 0
     voice.volume_list.counter = 1
     voice.pitch.pos += 1
@@ -590,14 +592,14 @@ def RestartVolumeList(module: Module, voice: Voice) -> bool:
 
 
 def SetVibrato(module: Module, voice: Voice) -> bool:
-    """$e3 speed depth."""
+    """Arguments: speed, depth."""
     voice.vibrato.speed, voice.vibrato.depth = arg(voice), arg(voice, 2)
     voice.pitch.pos += 3
     return True
 
 
 def ToneAndNoise(module: Module, voice: Voice) -> bool:
-    """$e4 n: tone and noise on; the noise register gets n this
+    """Argument n: tone and noise on; the noise register gets n this
     tick. The emulator plays only the tone; see EmuChannel."""
     voice.mode, voice.noise = BOTH, arg(voice)
     voice.pitch.pos += 2
@@ -605,21 +607,20 @@ def ToneAndNoise(module: Module, voice: Voice) -> bool:
 
 
 def NoiseOnly(module: Module, voice: Voice) -> bool:
-    """$e5: noise at the note's pitch; see PitchToPeriod."""
+    """Noise at the note's pitch; see PitchToPeriod."""
     voice.mode = NOISE
     voice.pitch.pos += 1
     return True
 
 
 def ToneOnly(module: Module, voice: Voice) -> bool:
-    """$e6."""
     voice.mode = TONE
     voice.pitch.pos += 1
     return True
 
 
 def PitchWait(module: Module, voice: Voice) -> bool:
-    """$e8 n: the pitch list pauses n ticks, this one included.
+    """Argument n: the pitch list pauses n ticks, this one included.
     The volume list runs on."""
     voice.pitch.wait = arg(voice)
     voice.pitch.pos += 2
@@ -627,7 +628,7 @@ def PitchWait(module: Module, voice: Voice) -> bool:
 
 
 def PitchListJump(module: Module, voice: Voice) -> bool:
-    """$e7 n with TypePlay: go on in pitch list n. The code reads
+    """With TypePlay only. Argument n: go on in pitch list n. The code reads
     the list's offset through a register left from elsewhere; the model
     shows the intent (guess)."""
     lists = module.score.pitch_lists
@@ -637,21 +638,21 @@ def PitchListJump(module: Module, voice: Voice) -> bool:
 
 
 def SkipByte(module: Module, voice: Voice) -> bool:
-    """$e9 n: no effect."""
+    """Argument n: no effect."""
     voice.pitch.pos += 2
     return True
 
 
 def StopDigi(module: Module, voice: Voice) -> bool:
-    """$e7, or $ed with TypePlay: Paula channel 1 goes silent."""
+    """DIGI_OFF, or LATER_DIGI_OFF with TypePlay: Paula channel 1 goes silent."""
     module.digi.state = 0
     voice.pitch.pos += 1
     return True
 
 
 def StartDigi(module: Module, voice: Voice) -> bool:
-    """$ea n, or $ec n with TypePlay: sample n on Paula channel 1, at
-    volume 64. An end word of $10 loops a 16-byte wave. The rate is
+    """DIGI_ON n, or LATER_DIGI_ON n with TypePlay: sample n on Paula
+    channel 1, at volume 64. An end word of DIGI_LOOP loops a 16-byte wave. The rate is
     Period. With TypePeriod a note byte follows; note 72 plays at Period,
     bit 7 makes it fixed."""
     score, digi = module.score, module.digi
@@ -684,23 +685,23 @@ def StartDigi(module: Module, voice: Voice) -> bool:
 
 
 def SlideCommand(module: Module, voice: Voice) -> bool:
-    """$ea n with TypePlay: slide by n, as flag bit 5 does."""
+    """With TypePlay only. Argument n: slide by n, as flag bit 5 does."""
     voice.flags, voice.arg = SLIDE, arg(voice)
     voice.pitch.pos += 2
     return True
 
 
 def SetToneFlags(module: Module, voice: Voice) -> bool:
-    """$eb n with TypePlay; see ToneFlags."""
+    """With TypePlay only. Argument n; see ToneFlags."""
     voice.tone_flags = arg(voice)
     voice.pitch.pos += 2
     return True
 
 
 def SidCommand(module: Module, voice: Voice) -> bool:
-    """$ee n with TypePlay: the `SID` mode; only voice A's counts.
-    $ef n stores a byte that nothing reads."""
-    if arg(voice, 0) == 0xEE:
+    """With TypePlay only. Argument n: the `SID` mode; only voice A's counts.
+    SID_UNUSED n stores a byte that nothing reads."""
+    if arg(voice, 0) == SID_MODE:
         voice.sid_mode = signed(arg(voice))
     voice.pitch.pos += 2
     return True
@@ -723,11 +724,11 @@ LATER_COMMANDS: dict[int, PitchCommand] = {
     **BASE_COMMANDS,
     DIGI_OFF: PitchListJump,
     DIGI_ON: SlideCommand,
-    0xEB: SetToneFlags,
-    0xEC: StartDigi,
-    0xED: StopDigi,
-    0xEE: SidCommand,
-    0xEF: SidCommand,
+    TONE_FLAGS: SetToneFlags,
+    LATER_DIGI_ON: StartDigi,
+    LATER_DIGI_OFF: StopDigi,
+    SID_MODE: SidCommand,
+    SID_UNUSED: SidCommand,
 }
 
 
@@ -735,8 +736,9 @@ LATER_COMMANDS: dict[int, PitchCommand] = {
 
 
 def VolumeList(module: Module, voice: Voice) -> tuple[int, int]:
-    """Every `speed` ticks: one volume byte. $e0 n loops, $e1 holds, $e8 n
-    pauses n ticks. A wait also stops the speed counter. $e2-$e7 return
+    """Every `speed` ticks: one volume byte. LOOP n loops, HOLD holds, WAIT n
+    pauses n ticks. A wait also stops the speed counter. RESTART_VOLUME to
+    DIGI_OFF return
     from PitchList at once, so Play writes junk to the registers; the
     model treats them as a hold."""
     reader = voice.volume_list
@@ -754,7 +756,7 @@ def VolumeList(module: Module, voice: Voice) -> tuple[int, int]:
 
 
 def ReadVolume(module: Module, voice: Voice) -> bool:
-    """True after $e8: VolumeList starts over."""
+    """True after WAIT: VolumeList starts over."""
     reader = voice.volume_list
     while True:
         byte = reader.steps[reader.pos]
@@ -776,7 +778,7 @@ def ReadVolume(module: Module, voice: Voice) -> bool:
 
 
 def VolumeLoop(module: Module, voice: Voice) -> None:
-    """$e0 n: n counts from the instrument's start."""
+    """Argument n: n counts from the instrument's start."""
     reader = voice.volume_list
     target = reader.steps[reader.pos + 1]
     if not module.score.all_opcodes:
@@ -785,7 +787,6 @@ def VolumeLoop(module: Module, voice: Voice) -> None:
 
 
 def VolumeWait(voice: Voice) -> None:
-    """$e8 n."""
     reader = voice.volume_list
     reader.wait = reader.steps[reader.pos + 1]
     reader.pos += 2
@@ -895,7 +896,7 @@ def PeriodSlide(voice: Voice, period: int) -> int:
 
 
 def ToneFlags(voice: Voice, period: int) -> int:
-    """Only 'MMME' modules. Bit 1 of $eb's byte zeroes the
+    """Only 'MMME' modules. Bit 1 of TONE_FLAGS's byte zeroes the
     period. Bits 2 and 3 set a value that nothing reads."""
     return 0 if voice.tone_flags & 0x02 else period
 

@@ -53,16 +53,17 @@ A synth voice runs four table walkers over one pool of 64-byte tables.
 The composer writes positions, patterns, instruments and the table pool. Each
 row carries one command and its argument byte. The source calls it `option`.
 
-| Aspect   | Answer                                                                    | Source             |
-| -------- | ------------------------------------------------------------------------- | ------------------ |
-| Notation | A row: note, instrument, command, argument.                               | `:ReadVoiceRow`    |
-| Notation | A position: pattern, instrument transpose and note transpose, per voice.  | `:ReadVoiceRow`    |
-| Notation | A synth instrument: wave, then table, length, delay and speed per walker. | `:SynthInstrument` |
-| Notation | Command 10 skips the note transpose or the instrument transpose.          | `:NewNote`         |
-| Cost     | A chord needs command 0 on every row. A row without it ends the chord.    | `:Options`         |
-| Cost     | Commands 13 to 15 change the note and keep the sound running.             | `:NewNote`         |
-| Cost     | Command 11 on a row with a note is lost: the instrument sets the effect.  | `:StartSynthNote`  |
-| Cost     | Commands 4 and 5 slide once per row. Command 8 slides every tick.         | `:Options`         |
+| Aspect   | Answer                                                                             | Source             |
+| -------- | ---------------------------------------------------------------------------------- | ------------------ |
+| Notation | A row: note, instrument, command, argument.                                        | `:ReadVoiceRow`    |
+| Notation | A position: pattern, instrument transpose and note transpose, per voice.           | `:ReadVoiceRow`    |
+| Notation | A synth instrument: wave, then table, length, delay and speed per walker.          | `:SynthInstrument` |
+| Notation | `NO_TRANSPOSE` skips the note transpose or the instrument transpose.               | `:NewNote`         |
+| Cost     | A chord needs `ARPEGGIO` on every row. A row without it ends the chord.            | `:Options`         |
+| Cost     | `LEGATO_FLIP`, `LEGATO` and `LEGATO_KEEP_ADSR` change the note and keep the sound. | `:NewNote`         |
+| Cost     | `EFFECT` on a row with a note is lost: the instrument sets the effect.             | `:StartSynthNote`  |
+| Cost     | `SLIDE_UP` and `SLIDE_DOWN` slide once per row. `AUTO_SLIDE` slides every tick.    | `:Options`         |
+| Cost     | A note with a period above 547 can start late: at the old sample's reload.         | `:PlayRow`         |
 
 ## What is unique
 
@@ -82,7 +83,5 @@ row carries one command and its argument byte. The source calls it `option`.
 
 ## Open questions
 
-- The wait before DMA on is about 640 CCK (estimate). Does a note with a period
-  above 320 then miss its restart (guess)? `:PlayRow`
-- Effects 3 and 5 run the same code. Does the editor treat them differently?
-  `:MorphToSavedCopy`
+- `MorphToSaved` and `MorphToSavedCopy` run the same code. Does the editor treat
+  them differently? `:MorphToSavedCopy`

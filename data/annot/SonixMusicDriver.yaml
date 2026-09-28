@@ -69,8 +69,8 @@ comments:
   2047: tick length, used to scale rates
   2078: "$ffff: end of track"
   2081: "$c000 and above: wait N ticks"
-  2087: "below $80: note number, then velocity"
-  2088: "$80 instrument, $81 volume, $82 tempo, $83 pitch bend"
+  2087: "below SET_INSTRUMENT: note number, then velocity"
+  2088: "SET_INSTRUMENT, SET_VOLUME, SET_TEMPO, SET_BEND"
   2199: "pitch bend for this track"
   1600: "track pitch bend: one of 64 period factors, x1.52 to x0.67"
   4748: "TINY: release the note after 3/4 of its length"

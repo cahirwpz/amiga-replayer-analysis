@@ -62,6 +62,7 @@ ARP_END, ARP_JUMP = 61, 62
 STEP = 32  # pitch units per semitone
 TOP_NOTE = 5 * 12 * STEP
 MIN_PERIOD, MAX_PERIOD = 106, 3591
+MIN_TEMPO = 0x20  # FxSpeedAll: smaller arguments set the speed
 FULL = 64 * 16  # volumes are 1/16 steps
 TEMPO_BASE = 1773448  # CIA timer latch = TEMPO_BASE / tempo; 125 gives 50 Hz
 MIX_PERIOD = 126  # 8-channel mode: each Paula channel's period
@@ -1177,22 +1178,22 @@ PartEffect = Callable[[Module, Channel, int], None]
 
 
 def FxVolume(module: Module, ch: Channel, arg: int) -> None:
-    """$10: this note's volume, 0 to 64."""
+    """This note's volume, 0 to 64."""
     ch.vol_set = arg << 4
 
 
 def FxChannelVol(module: Module, ch: Channel, arg: int) -> None:
-    """$20: the channel's volume, a second factor."""
+    """The channel's volume, a second factor."""
     ch.channel_volume = arg << 4
 
 
 def FxMasterVol(module: Module, ch: Channel, arg: int) -> None:
-    """$30: the third factor, for all channels."""
+    """The third factor, for all channels."""
     module.master = arg << 4
 
 
 def FxSpeedPart(module: Module, ch: Channel, arg: int) -> None:
-    """$40: this channel's speed, up to 31."""
+    """This channel's speed, up to 31."""
     if arg:
         ch.speed = min(arg, 0x1F)
         if not ch.groove or not ch.groove_phase:
@@ -1200,7 +1201,7 @@ def FxSpeedPart(module: Module, ch: Channel, arg: int) -> None:
 
 
 def FxGroovePart(module: Module, ch: Channel, arg: int) -> None:
-    """$41: this channel's groove: every other row lasts `groove` ticks."""
+    """This channel's groove: every other row lasts `groove` ticks."""
     if arg:
         ch.groove = min(arg, 0x1F)
         if ch.groove_phase:
@@ -1208,10 +1209,10 @@ def FxGroovePart(module: Module, ch: Channel, arg: int) -> None:
 
 
 def FxSpeedAll(module: Module, ch: Channel, arg: int) -> None:
-    """$42: below $20, the speed of all channels; from $20, the tempo."""
+    """Below MIN_TEMPO, the speed of all channels; from it, the tempo."""
     if not arg:
         return
-    if arg >= 0x20:
+    if arg >= MIN_TEMPO:
         module.amiga.timer.set_latch(TEMPO_BASE // arg)
         return
     module.speed = arg
@@ -1220,7 +1221,7 @@ def FxSpeedAll(module: Module, ch: Channel, arg: int) -> None:
 
 
 def FxGrooveAll(module: Module, ch: Channel, arg: int) -> None:
-    """$43."""
+    """The groove of all channels."""
     if arg:
         module.groove = arg & 0x1F
         for other in module.channels:
@@ -1228,25 +1229,25 @@ def FxGrooveAll(module: Module, ch: Channel, arg: int) -> None:
 
 
 def FxArpeggioList(module: Module, ch: Channel, arg: int) -> None:
-    """$44: plays another arpeggio table, until it ends or the
+    """Plays another arpeggio table, until it ends or the
     instrument changes."""
     ch.arp_list = arg
 
 
 def FxHoldSustain(module: Module, ch: Channel, arg: int) -> None:
-    """$46: 1 holds the envelope's sustain, 0 lets it go."""
+    """1 holds the envelope's sustain, 0 lets it go."""
     ch.hold_override = True
     ch.bits1 = ch.bits1 & ~1 | (1 if arg else 0)
 
 
 def FxWaveSample(module: Module, ch: Channel, arg: int) -> None:
-    """$4a: this note plays another sample or wave."""
+    """This note plays another sample or wave."""
     if arg in module.samples:
         ch.wave_override = module.samples[arg]
 
 
 def FxInitInstrument(module: Module, ch: Channel, arg: int) -> None:
-    """$4b: the wave effects start again, even on the same instrument."""
+    """The wave effects start again, even on the same instrument."""
     for sweep in (ch.phase, ch.resonance, ch.filter, ch.transform, ch.mix):
         sweep.last = -1
 

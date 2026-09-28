@@ -27,13 +27,12 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from hardware import paula
-from hardware.amiga import Amiga
+from hardware.amiga import DEFAULT_LATCH, Amiga
 
 VOICES = 4
 SLOTS = 4
 MAX_SAMPLES = 32
 WAVE_SIZE = 128  # bytes that OpCopyWave and OpMorph touch
-DEFAULT_LATCH = 14187  # DeliTracker's timer, 50 Hz (guess): no DTP_Timer tag
 NONE = 0xFFFF  # a word slot that is free or done
 FREE = 0xFF  # a byte slot that is free
 HIGHEST_NOTE = 0x54
@@ -42,6 +41,9 @@ FIRST_TIE = 0x78  # program numbers from here: the note only sets the pitch
 
 # Position markers: the high byte of a position word
 SONG_END, LOOP, GAME_LOOP, GAME_PASS = 0xFF, 0xFE, 0xFC, 0xFD
+
+# Pattern bytes: below FIRST_PROGRAM a row length, below REST a program
+FIRST_PROGRAM, REST, CEILING, SLIDE, PATTERN_END = 0x80, 0xF9, 0xFC, 0xFE, 0xFF
 
 # Header: word offsets from byte 2 on; each names a table or a base
 SAMPLES, PROGRAM_TABLE, PROGRAM_BASE, SPEEDS, PRIORITIES = range(5)
@@ -350,23 +352,23 @@ def ReadPattern(module: Module, voice: Voice, number: int) -> bool:
         if byte < 0x40:
             voice.row = (voice.row + 1 + NotePeriod(module, voice, byte, at)) & 0xFF
             return True
-        if byte < 0x80:
+        if byte < FIRST_PROGRAM:
             voice.row_length = voice.row_count = byte & 0x3F
-        elif byte < 0xF9:
+        elif byte < REST:
             voice.program = byte & 0x7F
-        elif byte == 0xFF:
+        elif byte == PATTERN_END:
             voice.row, voice.position = 0, voice.position + 1
             return False
-        elif byte == 0xFE:
+        elif byte == SLIDE:
             voice.slide = signed_word(word(data, at + voice.row + 1))
             voice.slide_target = NONE if voice.slide >= 0 else 0
             voice.row = (voice.row + 3) & 0xFF
             return True
-        elif byte == 0xFC:
+        elif byte == CEILING:
             voice.pattern_ceiling = data[at + voice.row + 1] << 8
             voice.row = (voice.row + 2) & 0xFF
             return True
-        else:  # $f9 rests; $fa, $fb and $fd do the same
+        else:  # REST, and the other bytes from it up
             voice.row = (voice.row + 1) & 0xFF
             return True
         voice.row = (voice.row + 1) & 0xFF
@@ -374,8 +376,8 @@ def ReadPattern(module: Module, voice: Voice, number: int) -> bool:
 
 def NotePeriod(module: Module, voice: Voice, note: int, at: int) -> int:
     """A note first asks for the voice's program. If the request fails,
-    the note is lost. Program $77 slides to the note instead; $78 and up
-    only set its pitch. Returns the extra bytes read."""
+    the note is lost. SLIDE_TO_NOTE slides to the note instead; from
+    FIRST_TIE up, a program only sets its pitch. Returns the extra bytes read."""
     requested = voice.program < SLIDE_TO_NOTE
     if requested and not RequestProgram(module, voice.program, voice.number):
         return 0
@@ -716,7 +718,7 @@ def OpMorph(module: Module, voice: Voice) -> bool:
 
 
 def OpCeiling(module: Module, voice: Voice) -> bool:
-    """24: the pattern's last $fc value caps the volume during
+    """24: the pattern's last CEILING value caps the volume during
     sustain."""
     voice.ceiling = voice.pattern_ceiling
     return False

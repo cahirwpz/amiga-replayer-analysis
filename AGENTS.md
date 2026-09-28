@@ -34,12 +34,12 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
 ## Depth
 
 - Write at executive-summary level by default.
-- Go deeper only when the user asks. Put deep dives in spec docstrings.
+- Go deeper only when asked; deep dives go in spec docstrings.
 - One idea per page. One lineage per card; see `family` in
   [`data/players.yaml`](data/players.yaml).
 - A card covers a lineage's latest version. If it is binary-only, disassemble
   it. A version with a distinct idea gets its own card.
-- Prefer a table over prose when comparing things.
+- Compare in tables, not prose.
 - A player's model is its spec, `specs/<player>.py`. Its card is
   [prose](docs/card-template.md). Chips: `hardware/`.
 
@@ -54,7 +54,8 @@ the same rules.
   avoided terms.
 - One claim per sentence, one fact per table cell. No filler, no hedging.
 - Put technical detail in tables or specs; they skip prose limits.
-- Name a jump's target, e.g. "jumps to its release part".
+- Name, don't number: a jump's target ("jumps to its release part"), a command's
+  constant (`HOLD`).
 - Say each thing once. Elsewhere, link to it or generate it from `data/`. Tool
   usage lives in the tool's docstring.
 

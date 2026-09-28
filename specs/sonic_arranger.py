@@ -32,6 +32,7 @@ VOICES = 4
 WAVE_SIZE = 128  # waves, pitch tables and volume tables: 128 bytes each
 ARPEGGIO_SIZE = 16  # loop start, loop length, then 14 note offsets
 HOLD, NOTE_OFF = 0x80, 0x7F  # a row's note byte
+ROW_ARPEGGIO = 0  # a row's command: with an argument, an arpeggio
 MAX_VOLUME = 64
 MIN_PERIOD = 0x71
 VIBRATO_OFF = 0xFF  # the low byte of the vibrato delay
@@ -71,7 +72,7 @@ VIBRATO = bytes.fromhex(  # VibratoTable: one sine cycle, 256 signed bytes
 
 @dataclass
 class Row:  # 4 bytes: note, instrument, control, argument
-    note: int  # 0 none, $80 hold, $7f note-off
+    note: int  # 0 none, HOLD, NOTE_OFF
     instrument: int  # 0 none; numbers start at 1
     control: int  # bits 4-5 arpeggio, bit 6 and 7 skip transposes, 0-3 command
     argument: int
@@ -171,14 +172,14 @@ class Voice:  # 206 bytes each, in chip memory
     pitch_pos: int = 0  # $a4
     pitch_wait: int = 0  # $a6
     effect_pos: int = 0  # $a8
-    effect_count: int = 0  # $aa: effects 2, 8, 10 and 17
+    effect_count: int = 0  # $aa: FreeNegator, ShackWave2, Laser and FmDrum
     effect_wait: int = 0  # $ac
     arpeggio_pos: int = 0  # $ae
     row_arpeggio: int = 0  # $b0: 0, 1, 2
     silent: bool = True  # $b5 bit 0
-    morphed: bool = False  # bit 1: effects 9 and 15 reached the target
-    pulse_done: bool = False  # bit 2: effect 2 stopped
-    morph_back: bool = False  # bit 3: effect 15 heads for the first wave
+    morphed: bool = False  # bit 1: Metamorph and Oszilator reached the target
+    pulse_done: bool = False  # bit 2: FreeNegator stopped
+    morph_back: bool = False  # bit 3: Oszilator heads for the first wave
     playing_synth: bool = False  # $ba: the note's instrument is a synth
     loop_pending: bool = False  # one byte per voice: write the loop next tick
     track: int = 0  # the row number this voice reads
@@ -360,7 +361,7 @@ def ReadRows(module: Module, then: Then) -> None:
 
 def ReadVoiceRow(module: Module, voice: Voice, then: Then) -> None:
     """A row without a note may set the instrument: its settings and
-    tables restart, the wave copy plays on. $80 holds the note; $7f
+    tables restart, the wave copy plays on. HOLD holds the note; NOTE_OFF
     ends it. A note after a synth note does not stop the channel: the
     new wave overwrites the playing copy, and a new sample starts at
     the copy's next loop. A note after a sample waits for the channel
@@ -520,7 +521,7 @@ def RowCommand(module: Module, voice: Voice) -> None:
 
 
 def NoCommand(module: Module, voice: Voice, arg: int) -> None:
-    """Command 0 is also the row arpeggio: see RowArpeggio."""
+    """ROW_ARPEGGIO also lands here: see RowArpeggio."""
 
 
 def CmdSlide(module: Module, voice: Voice, arg: int) -> None:
@@ -647,7 +648,7 @@ def Arpeggio(voice: Voice, inst: Instrument) -> tuple[int, int]:
     """The row's flags pick one of three arpeggios; the current row
     counts, so each row may pick another. An arpeggio plays its offsets
     from the first, then loops from its loop start. Without one,
-    command 0 with an argument is the row arpeggio."""
+    ROW_ARPEGGIO with an argument is the row arpeggio."""
     note, previous = voice.note, voice.previous
     table = voice.row.arpeggio
     if not table:
@@ -663,9 +664,9 @@ def Arpeggio(voice: Voice, inst: Instrument) -> tuple[int, int]:
 
 
 def RowArpeggio(voice: Voice, note: int, previous: int) -> tuple[int, int]:
-    """Command 0 xy: the note, +x, +y, one per tick."""
+    """ROW_ARPEGGIO xy: the note, +x, +y, one per tick."""
     row = voice.row
-    if row.command or not row.argument:
+    if row.command != ROW_ARPEGGIO or not row.argument:
         return note, previous
     step = voice.row_arpeggio
     voice.row_arpeggio = (step + 1) % 3
@@ -728,8 +729,8 @@ def PitchWalker(module: Module, voice: Voice, inst: Instrument, period: int) -> 
 
 
 def SetPitch(module: Module, voice: Voice, period: int) -> None:
-    """Minus the pitch offset: fine tune, slides, and effects 10 and 17.
-    At least $71. The slide adds on every tick but the row's."""
+    """Minus the pitch offset: fine tune, slides, Laser and FmDrum.
+    At least MIN_PERIOD. The slide adds on every tick but the row's."""
     period = max(word(period - voice.pitch_offset), MIN_PERIOD)
     if module.tick:
         voice.pitch_offset = word(voice.pitch_offset + voice.slide)
@@ -753,10 +754,10 @@ def VolumeWalker(module: Module, voice: Voice, inst: Instrument) -> None:
 
 
 def AdsrSustain(voice: Voice, inst: Instrument, value: int) -> None:
-    """While the rows hold the note ($80), the table stops at its
+    """While the rows hold the note (HOLD), the table stops at its
     sustain point. A sustain delay N does not stop it: the table then
     steps once every N + 1 ticks, and slower still with its own delay.
-    A row without $80 lets the table run on: the release."""
+    A row without HOLD lets the table run on: the release."""
     if voice.row.note != HOLD or voice.volume_pos < inst.sustain_point:
         AdsrStep(voice, inst, value)
         return
@@ -800,25 +801,25 @@ def WaveEffect(module: Module, voice: Voice, inst: Instrument) -> None:
     a value or a second wave (`effect_arg`), and a byte range `start`
     to `end`. The effect position walks the range: see EffectStep.
 
-    | No. | Operation                                                  |
-    | --- | ---------------------------------------------------------- |
-    | 1   | Negate the byte at the position                            |
-    | 2   | Pulse: negate the first W bytes of a fresh copy            |
-    | 3   | Add the value to every byte of the range                   |
-    | 4   | Rotate the range one byte left                             |
-    | 5   | Add the second wave to the range                           |
-    | 6   | Restore the byte at the position, negate the next one      |
-    | 7   | Add one byte of the second wave to the range               |
-    | 8   | Effect 7, and negate one byte at a moving position         |
-    | 9   | Morph the range towards the second wave, 1 per byte        |
-    | 10  | Raise the pitch by `start`, for `end` runs                 |
-    | 11  | Move each byte away from its right neighbour               |
-    | 12  | Flip bits of the byte at the position by the beam position |
-    | 13  | Low-pass: move bytes 2 towards their neighbour             |
-    | 14  | Effect 13, with limits read from the second wave           |
-    | 15  | Morph to the second wave, back to the first, forever       |
-    | 16  | Scramble the range and add the beam position               |
-    | 17  | Lower the pitch by `start` × value each run; restart       |
+    | No. | Name             | Operation                                                  |
+    | --- | ---------------- | ---------------------------------------------------------- |
+    | 1   | WaveNegator      | Negate the byte at the position                            |
+    | 2   | FreeNegator      | Pulse: negate the first W bytes of a fresh copy            |
+    | 3   | RotateVertical   | Add the value to every byte of the range                   |
+    | 4   | RotateHorizontal | Rotate the range one byte left                             |
+    | 5   | AlienVoice       | Add the second wave to the range                           |
+    | 6   | PolyNegator      | Restore the byte at the position, negate the next one      |
+    | 7   | ShackWave1       | Add one byte of the second wave to the range               |
+    | 8   | ShackWave2       | ShackWave1, and negate one byte at a moving position       |
+    | 9   | Metamorph        | Morph the range towards the second wave, 1 per byte        |
+    | 10  | Laser            | Raise the pitch by `start`, for `end` runs                 |
+    | 11  | WaveAlias        | Move each byte away from its right neighbour               |
+    | 12  | NoiseGenerator1  | Flip bits of the byte at the position by the beam position |
+    | 13  | LowPassFilter1   | Low-pass: move bytes 2 towards their neighbour             |
+    | 14  | LowPassFilter2   | LowPassFilter1, with limits read from the second wave      |
+    | 15  | Oszilator        | Morph to the second wave, back to the first, forever       |
+    | 16  | NoiseGenerator2  | Scramble the range and add the beam position               |
+    | 17  | FmDrum           | Lower the pitch by `start` × value each run; restart       |
     """
     voice.effect_wait = (voice.effect_wait - 1) & 0xFFFF
     if voice.effect_wait:
@@ -830,12 +831,13 @@ def WaveEffect(module: Module, voice: Voice, inst: Instrument) -> None:
 
 
 def NoEffect(module: Module, voice: Voice, inst: Instrument) -> None:
-    """Effect 0, and the ticks between runs."""
+    """Effect number 0, and the ticks between runs."""
 
 
 def EffectStep(voice: Voice, inst: Instrument) -> None:
     """The effect position moves one byte, from `start` to `end`, then
-    back to `start`. Effects 2, 5, 9, 15 and 16 do not move it."""
+    back to `start`. FreeNegator, AlienVoice, Metamorph, Oszilator and
+    NoiseGenerator2 do not move it."""
     voice.effect_pos += 1
     if voice.effect_pos > inst.end:
         voice.effect_pos = inst.start
@@ -865,12 +867,12 @@ def beam(module: Module) -> int:
     return module.amiga.now % LINE_CCK
 
 
-def Effect1(module: Module, voice: Voice, inst: Instrument) -> None:
+def WaveNegator(module: Module, voice: Voice, inst: Instrument) -> None:
     voice.wave[voice.effect_pos] = neg(voice.wave[voice.effect_pos])
     EffectStep(voice, inst)
 
 
-def Effect2(module: Module, voice: Voice, inst: Instrument) -> None:
+def FreeNegator(module: Module, voice: Voice, inst: Instrument) -> None:
     """The width W is the second wave's byte at the counter, 0-127.
     Bytes from W on are the first wave's; bytes before W, negated. The
     counter runs to `start` + `end`, then back to `start`. With `end`
@@ -888,26 +890,26 @@ def Effect2(module: Module, voice: Voice, inst: Instrument) -> None:
             voice.pulse_done = True
 
 
-def Effect3(module: Module, voice: Voice, inst: Instrument) -> None:
+def RotateVertical(module: Module, voice: Voice, inst: Instrument) -> None:
     for i in span(inst):
         voice.wave[i] = (voice.wave[i] + inst.effect_arg) & 0xFF
     EffectStep(voice, inst)
 
 
-def Effect4(module: Module, voice: Voice, inst: Instrument) -> None:
+def RotateHorizontal(module: Module, voice: Voice, inst: Instrument) -> None:
     """The rotation takes one byte past `end`."""
     a, b = inst.start, inst.end + 2
     voice.wave[a:b] = voice.wave[a + 1 : b] + voice.wave[a : a + 1]
     EffectStep(voice, inst)
 
 
-def Effect5(module: Module, voice: Voice, inst: Instrument) -> None:
+def AlienVoice(module: Module, voice: Voice, inst: Instrument) -> None:
     wave = other(module, inst)
     for i in span(inst):
         voice.wave[i] = (voice.wave[i] + wave[i]) & 0xFF
 
 
-def Effect6(module: Module, voice: Voice, inst: Instrument) -> None:
+def PolyNegator(module: Module, voice: Voice, inst: Instrument) -> None:
     pos = voice.effect_pos
     voice.wave[pos] = first(module, inst)[pos]
     j = (pos if pos < inst.end else inst.start - 1) + 1
@@ -915,7 +917,7 @@ def Effect6(module: Module, voice: Voice, inst: Instrument) -> None:
     EffectStep(voice, inst)
 
 
-def Effect7(module: Module, voice: Voice, inst: Instrument) -> None:
+def ShackWave1(module: Module, voice: Voice, inst: Instrument) -> None:
     AddOtherByte(module, voice, inst)
     EffectStep(voice, inst)
 
@@ -928,7 +930,7 @@ def AddOtherByte(module: Module, voice: Voice, inst: Instrument) -> None:
         voice.wave[i] = (voice.wave[i] + value) & 0xFF
 
 
-def Effect8(module: Module, voice: Voice, inst: Instrument) -> None:
+def ShackWave2(module: Module, voice: Voice, inst: Instrument) -> None:
     AddOtherByte(module, voice, inst)
     at = inst.start + voice.effect_count
     voice.wave[at] = neg(voice.wave[at])
@@ -938,13 +940,13 @@ def Effect8(module: Module, voice: Voice, inst: Instrument) -> None:
     EffectStep(voice, inst)
 
 
-def Effect9(module: Module, voice: Voice, inst: Instrument) -> None:
+def Metamorph(module: Module, voice: Voice, inst: Instrument) -> None:
     """Once the copy equals the second wave, the effect stops."""
     if not voice.morphed:
         Morph(voice, inst, other(module, inst))
 
 
-def Effect15(module: Module, voice: Voice, inst: Instrument) -> None:
+def Oszilator(module: Module, voice: Voice, inst: Instrument) -> None:
     """At each arrival the target swaps: the second wave, then the
     first, and so on."""
     if voice.morphed:
@@ -966,7 +968,7 @@ def Morph(voice: Voice, inst: Instrument, target: bytes) -> None:
         voice.morphed = True
 
 
-def Effect10(module: Module, voice: Voice, inst: Instrument) -> None:
+def Laser(module: Module, voice: Voice, inst: Instrument) -> None:
     """The step is `start`'s low byte, signed; `end` counts the runs."""
     if voice.effect_count < inst.end:
         voice.pitch_offset = word(voice.pitch_offset + signed(inst.start))
@@ -974,7 +976,7 @@ def Effect10(module: Module, voice: Voice, inst: Instrument) -> None:
     EffectStep(voice, inst)
 
 
-def Effect11(module: Module, voice: Voice, inst: Instrument) -> None:
+def WaveAlias(module: Module, voice: Voice, inst: Instrument) -> None:
     """A byte above its right neighbour loses the value; others gain
     it. The last byte compares with the one past `end`."""
     for i in span(inst):
@@ -988,17 +990,17 @@ def Effect11(module: Module, voice: Voice, inst: Instrument) -> None:
     EffectStep(voice, inst)
 
 
-def Effect12(module: Module, voice: Voice, inst: Instrument) -> None:
+def NoiseGenerator1(module: Module, voice: Voice, inst: Instrument) -> None:
     voice.wave[voice.effect_pos] ^= beam(module)
     EffectStep(voice, inst)
 
 
-def Effect13(module: Module, voice: Voice, inst: Instrument) -> None:
+def LowPassFilter1(module: Module, voice: Voice, inst: Instrument) -> None:
     smooth(voice, inst, [inst.effect_arg] * len(span(inst)))
     EffectStep(voice, inst)
 
 
-def Effect14(module: Module, voice: Voice, inst: Instrument) -> None:
+def LowPassFilter2(module: Module, voice: Voice, inst: Instrument) -> None:
     """The limits come from the second wave, from byte `end` on."""
     wave = other(module, inst)
     count = len(span(inst))
@@ -1021,7 +1023,7 @@ def smooth(voice: Voice, inst: Instrument, limits: list[int]) -> None:
             voice.wave[i] = (b + (2 if up else -2)) & 0xFF
 
 
-def Effect16(module: Module, voice: Voice, inst: Instrument) -> None:
+def NoiseGenerator2(module: Module, voice: Voice, inst: Instrument) -> None:
     """Each byte: xor 5, rotate left 2, add the beam position. The code
     reads the beam once per byte; the model reads it once."""
     noise = beam(module)
@@ -1031,7 +1033,7 @@ def Effect16(module: Module, voice: Voice, inst: Instrument) -> None:
         voice.wave[i] = (b + noise) & 0xFF
 
 
-def Effect17(module: Module, voice: Voice, inst: Instrument) -> None:
+def FmDrum(module: Module, voice: Voice, inst: Instrument) -> None:
     """Each run lowers the pitch by `start` × value more. After `end`
     runs the pitch offset returns to the fine tune word, unmasked."""
     if voice.effect_count >= inst.end:
@@ -1043,21 +1045,21 @@ def Effect17(module: Module, voice: Voice, inst: Instrument) -> None:
 
 
 EFFECTS: tuple[Callable[[Module, Voice, Instrument], None], ...] = (
-    Effect1,
-    Effect2,
-    Effect3,
-    Effect4,
-    Effect5,
-    Effect6,
-    Effect7,
-    Effect8,
-    Effect9,
-    Effect10,
-    Effect11,
-    Effect12,
-    Effect13,
-    Effect14,
-    Effect15,
-    Effect16,
-    Effect17,
+    WaveNegator,
+    FreeNegator,
+    RotateVertical,
+    RotateHorizontal,
+    AlienVoice,
+    PolyNegator,
+    ShackWave1,
+    ShackWave2,
+    Metamorph,
+    Laser,
+    WaveAlias,
+    NoiseGenerator1,
+    LowPassFilter1,
+    LowPassFilter2,
+    Oszilator,
+    NoiseGenerator2,
+    FmDrum,
 )

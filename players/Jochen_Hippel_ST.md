@@ -51,18 +51,18 @@ The composer writes positions, patterns, instruments and pitch lists. A pattern
 note carries its length. An instrument names its pitch list and holds its volume
 list.
 
-| Aspect   | Answer                                                                     | Source                   |
-| -------- | -------------------------------------------------------------------------- | ------------------------ |
-| Notation | A note: a note byte, a flags byte with the instrument, maybe a third byte. | `:ReadNote`              |
-| Notation | `$fe` sets the length of later notes in rows. `$fd` sets it and rests.     | `:ReadPattern`           |
-| Notation | A position: pattern, transpose, instrument transpose and flags, per voice. | `:NextPosition`          |
-| Notation | Position flags `$fx` set the voice's volume offset. `$ex` set the speed.   | `:NextPosition`          |
-| Notation | An instrument: volume speed, pitch list, vibrato, then the volume list.    | `:Instrument`            |
-| Cost     | A snare switches between noise and tone in its pitch list.                 | `:NoiseOnly` `:ToneOnly` |
-| Cost     | A note with bit 7 changes the pitch and keeps both lists running.          | `:ReadNote`              |
-| Cost     | A new note keeps the old volume until its volume list's first step.        | `:VolumeList`            |
-| Cost     | `$e2` in the pitch list makes the volume list step at once.                | `:RestartVolumeList`     |
-| Cost     | The patterns of all three voices must last equally long.                   | `:NextPosition`          |
+| Aspect   | Answer                                                                           | Source                   |
+| -------- | -------------------------------------------------------------------------------- | ------------------------ |
+| Notation | A note: a note byte, a flags byte with the instrument, maybe a third byte.       | `:ReadNote`              |
+| Notation | `SET_LENGTH` sets the length of later notes in rows. `REST` sets it and rests.   | `:ReadPattern`           |
+| Notation | A position: pattern, transpose, instrument transpose and flags, per voice.       | `:NextPosition`          |
+| Notation | Position flags `VOLUME_OFFSET` set the volume offset. `SET_SPEED` set the speed. | `:NextPosition`          |
+| Notation | An instrument: volume speed, pitch list, vibrato, then the volume list.          | `:Instrument`            |
+| Cost     | A snare switches between noise and tone in its pitch list.                       | `:NoiseOnly` `:ToneOnly` |
+| Cost     | A note with bit 7 changes the pitch and keeps both lists running.                | `:ReadNote`              |
+| Cost     | A new note keeps the old volume until its volume list's first step.              | `:VolumeList`            |
+| Cost     | `RESTART_VOLUME` in the pitch list makes the volume list step at once.           | `:RestartVolumeList`     |
+| Cost     | The patterns of all three voices must last equally long.                         | `:NextPosition`          |
 
 ## What is unique
 
@@ -82,5 +82,5 @@ list.
 ## Open questions
 
 - How close is the volume table to the chip's curve? `:EmuChannel`
-- Which Hippel versions need `TypePlay`? It makes `$eb`–`$ef` opcodes.
-  `:PitchCommands`
+- Which Hippel versions need `TypePlay`? It makes `FIRST_NOTE` to
+  `LATER_OPCODES` opcodes. `:PitchCommands`

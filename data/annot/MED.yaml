@@ -122,11 +122,11 @@ comments:
   221: a synth after a synth skips the channel stop
   562: "-2: hybrid, a sample played through the synth lists"
   585: cleared unless command E set the wave list position
-  638: values below $80 set the volume
+  638: values below FIRST_OPCODE set the volume
   664: jump the other list, the wave list
   667: the envelope reads a waveform as volumes
   683: "waveform pointers at instrument offset 278"
-  718: values below $80 select a waveform
+  718: values below FIRST_OPCODE select a waveform
   742: vibrato shape read from a waveform
   748: the bytes after `$fc` are arpeggio offsets, up to a negative byte
   775: jump the other list, the volume list
@@ -138,4 +138,4 @@ banners:
     SynthTick: once per tick for a synth or hybrid voice.
     Two lists per instrument, 128 bytes each: volume at offset 22,
     waveform at offset 150. Each steps every N ticks, N per list.
-    Bytes $f0-$ff are opcodes.
+    Bytes from FIRST_OPCODE are opcodes; the low nibble picks one.

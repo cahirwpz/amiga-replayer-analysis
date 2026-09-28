@@ -401,42 +401,41 @@ def arg(voice: Voice) -> int:
 
 
 def CmdNop(module: Module, voice: Voice) -> None:
-    """$00 and $80."""
+    """No effect."""
 
 
 def CmdInstrument(module: Module, voice: Voice) -> None:
-    """$81 n: from the subsong's own instrument list."""
+    """Argument n: from the subsong's own instrument list."""
     voice.instrument = arg(voice)
     voice.sample = module.subsongs[module.subsong].instruments[voice.instrument]
 
 
 def CmdCall(module: Module, voice: Voice) -> None:
-    """$82 address. Four return slots per voice; nothing checks them."""
+    """Argument: address. Four return slots per voice; nothing checks them."""
     target = address(module, voice)
     voice.returns.append(voice.pos)
     voice.pos = target
 
 
 def CmdReturn(module: Module, voice: Voice) -> None:
-    """$83."""
     voice.pos = voice.returns.pop()
 
 
 def CmdLoopStart(module: Module, voice: Voice) -> None:
-    """$84 count. One loop slot: loops do not nest."""
+    """Argument: count. One loop slot: loops do not nest."""
     voice.loop_count = arg(voice)
     voice.loop_to = voice.pos
 
 
 def CmdLoop(module: Module, voice: Voice) -> None:
-    """$85. Back to the loop start until the count runs out."""
+    """Back to the loop start until the count runs out."""
     voice.loop_count = (voice.loop_count - 1) & 0xFF
     if voice.loop_count:
         voice.pos = voice.loop_to
 
 
 def CmdEnvelope(module: Module, voice: Voice) -> None:
-    """$86: start and sustain level, 4 × a nibble each; attack and decay
+    """Start and sustain level, 4 × a nibble each; attack and decay
     ticks, a nibble each; the start phase."""
     env = voice.envelope
     levels, speeds = arg(voice), arg(voice)
@@ -446,12 +445,12 @@ def CmdEnvelope(module: Module, voice: Voice) -> None:
 
 
 def CmdPortamento(module: Module, voice: Voice) -> None:
-    """$87 semitones per tick; 0 off. Later notes become targets."""
+    """Argument: semitones per tick; 0 off. Later notes become targets."""
     voice.glide = arg(voice)
 
 
 def CmdTrill(module: Module, voice: Voice) -> None:
-    """$88 interval, upper ticks, lower ticks. A two-note trill; an
+    """Arguments: interval, upper ticks, lower ticks. A two-note trill; an
     arpeggio is written as track notes instead."""
     voice.trill.interval = arg(voice)
     voice.trill.upper_ticks = arg(voice)
@@ -459,7 +458,7 @@ def CmdTrill(module: Module, voice: Voice) -> None:
 
 
 def CmdVibrato(module: Module, voice: Voice) -> None:
-    """$89 delay, step, half cycle, first direction. It starts at the
+    """Arguments: delay, step, half cycle, first direction. It starts at the
     next note."""
     vibrato = voice.vibrato
     vibrato.delay, vibrato.step = arg(voice), arg(voice)
@@ -467,50 +466,50 @@ def CmdVibrato(module: Module, voice: Voice) -> None:
 
 
 def CmdTranspose(module: Module, voice: Voice) -> None:
-    """$8a semitones."""
+    """Argument: semitones."""
     voice.transpose = arg(voice)
 
 
 def CmdFixedLength(module: Module, voice: Voice) -> None:
-    """$8b ticks. Notes then carry no length byte; 0 turns it off."""
+    """Argument: ticks. Notes then carry no length byte; 0 turns it off."""
     voice.fixed_length = arg(voice)
 
 
 def CmdEnvelopeRestart(module: Module, voice: Voice) -> None:
-    """$8c on or off. Off: a note keeps the running envelope."""
+    """Argument: on or off. Off: a note keeps the running envelope."""
     voice.envelope.restart = bool(arg(voice))
 
 
 def CmdFlags(module: Module, voice: Voice) -> None:
-    """$8d: bits 0-5 second sample, bit 6 chain, bit 7 gate off."""
+    """Bits 0-5 second sample, bit 6 chain, bit 7 gate off."""
     voice.flags = arg(voice)
 
 
 def CmdPulseSpeed(module: Module, voice: Voice) -> None:
-    """$8e ticks per pulse step; resets the sweep."""
+    """Argument: ticks per pulse step; resets the sweep."""
     voice.pulse.speed = arg(voice)
     ResetPulse(voice)
 
 
 def CmdEnd(module: Module, voice: Voice) -> None:
-    """$8f. The voice stops: DMA off, volume 0."""
+    """The voice stops: DMA off, volume 0."""
     voice.active = False
     voice.channel.disable()
     voice.channel.set_volume(0)
 
 
 def CmdEnvelopeStep(module: Module, voice: Voice) -> None:
-    """$90 step."""
+    """Argument: step."""
     voice.envelope.step = arg(voice)
 
 
 def CmdNoTranspose(module: Module, voice: Voice) -> None:
-    """$91. The next note ignores the transpose."""
+    """The next note ignores the transpose."""
     voice.skip_transpose = True
 
 
 def CmdJump(module: Module, voice: Voice) -> None:
-    """$92 address."""
+    """Argument: address."""
     voice.pos = address(module, voice)
 
 
@@ -526,24 +525,24 @@ def ResetPulse(voice: Voice) -> None:
 
 COMMANDS: list[Command] = [
     CmdNop,  # $00 and $80
-    CmdInstrument,
-    CmdCall,
-    CmdReturn,
+    CmdInstrument,  # $81
+    CmdCall,  # $82
+    CmdReturn,  # $83
     CmdLoopStart,  # $84
-    CmdLoop,
-    CmdEnvelope,
-    CmdPortamento,
+    CmdLoop,  # $85
+    CmdEnvelope,  # $86
+    CmdPortamento,  # $87
     CmdTrill,  # $88
-    CmdVibrato,
-    CmdTranspose,
-    CmdFixedLength,
+    CmdVibrato,  # $89
+    CmdTranspose,  # $8a
+    CmdFixedLength,  # $8b
     CmdEnvelopeRestart,  # $8c
-    CmdFlags,
-    CmdPulseSpeed,
-    CmdEnd,
+    CmdFlags,  # $8d
+    CmdPulseSpeed,  # $8e
+    CmdEnd,  # $8f
     CmdEnvelopeStep,  # $90
-    CmdNoTranspose,
-    CmdJump,
+    CmdNoTranspose,  # $91
+    CmdJump,  # $92
 ]  # CommandTable
 
 

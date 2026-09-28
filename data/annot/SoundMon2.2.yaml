@@ -111,15 +111,15 @@ comments:
   268: write the saved 32 bytes back into the wave
   311: instrument transpose for this voice
   312: note transpose for this voice
-  334: "option 10: argument high nibble set -> no note transpose"
-  347: options 13-15 change the note without a restart
+  334: "NO_TRANSPOSE: argument high nibble set -> no note transpose"
+  347: the three legato commands change the note without a restart
   410: filter off
   413: filter on
   435: jump to this position after the row
   446: select the wave effect (0-6)
-  456: option 13 toggles effect 1
-  458: option 15 keeps the ADSR walker running
-  504: "$ff in the first name byte: synth instrument"
+  456: LEGATO_FLIP flips bit 0 of the effect number
+  458: LEGATO_KEEP_ADSR keeps the ADSR walker running
+  504: "SYNTH in the first name byte: synth instrument"
   564: waves and control tables share one pool
   580: ADSR table values are signed; centre them to 0..255
   589: volume scaled by the table value (0..63)
@@ -138,7 +138,7 @@ comments:
   785: saved copy, read backward
   803: saved copy, read forward
   822: next table in the pool
-  840: saved copy, same as effect 3
+  840: saved copy, same as MorphToSaved
   864: copy the next table over the wave
   881: byte 32 of the wave, outside the saved 32 bytes
   895: one 36-byte record per voice, see the banner
@@ -185,7 +185,7 @@ banners:
     EgWalker: the table value N sets how many leading samples are negated.
     It works on the difference between the old and the new N.
   757: |
-    Wave effects 1-6. Each changes the first 32 bytes of the wave.
+    Wave effects: see WaveEffect. Each changes the first 32 bytes of the wave.
   867: |
     ModWalker: write one table value into the wave.
   894: |

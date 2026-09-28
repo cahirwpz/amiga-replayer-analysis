@@ -17,7 +17,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from hardware import paula
-from hardware.amiga import Amiga, Priority
+from hardware.amiga import DEFAULT_LATCH, Amiga, Priority
+from hardware.clock import CPU_PER_CCK
 from specs.controls import Countdown, Mode, TableWalker
 
 VOICES = 4
@@ -36,13 +37,17 @@ SYNTH = 0xFF  # the first byte of a synth instrument
 USE_INSTRUMENT = 0xFF  # a voice volume that means: the instrument's volume
 DEFAULT_SPEED = 6
 ARP_STEPS = 4
-DEFAULT_LATCH = 14187  # DeliTracker's timer, 50 Hz (guess): no DTP_Timer tag
-DMA_WAIT_CCK = 128 * 5  # DmaWait: 128 dbra loops of 10 68000 cycles (estimate)
+DMA_WAIT_CCK = (127 * 10 + 14) // CPU_PER_CCK  # DmaWait: 128 dbra loops
+# From DmaWait's end to DMA on: RestoreWaves and StartNoteLoop. A Musashi run
+# of this code takes 453 CCK for one new note without a sample, the shortest
+# path, and 1302 CCK for four sample notes with a loop.
+START_CCK = 453
 
-# Options: the low nibble of a row's second byte
+# Commands: the low nibble of a row's second byte
 ARPEGGIO, VOLUME, SPEED, FILTER, SLIDE_UP, SLIDE_DOWN = 0, 1, 2, 3, 4, 5
 VIBRATO, JUMP, AUTO_SLIDE, AUTO_ARPEGGIO, NO_TRANSPOSE = 6, 7, 8, 9, 10
-EFFECT, LEGATO, KEEP_ADSR = 11, 13, 15  # 13, 14 and 15 change the note only
+EFFECT = 11
+LEGATO_FLIP, LEGATO, LEGATO_KEEP_ADSR = 13, 14, 15  # change the note only
 
 VIBRATO_TABLE = (0, 64, 128, 64, 0, -64, -128, -64)
 
@@ -97,7 +102,7 @@ class WalkerSetup:  # one walker in a synth instrument
 
 
 @dataclass
-class SynthInstrument:  # StartSynthNote: 32 bytes, byte 0 is $ff
+class SynthInstrument:  # StartSynthNote: 32 bytes, byte 0 is SYNTH
     wave: int  # table number
     wave_length: int  # words
     adsr: WalkerSetup  # volume; starts at once, no delay
@@ -160,12 +165,12 @@ class Voice:  # Voices: 36 bytes per voice
     number: int
     period: int = 0  # 0; bit 15 there is new_note
     new_note: bool = False
-    volume: int = 0  # 2; $ff: the instrument's
+    volume: int = 0  # 2; USE_INSTRUMENT: the instrument's
     instrument: int = 0  # 3
     start: int | None = None  # 4: the loop, AUDxLC every tick; None: EmptySample
     length: int = 1  # 8: words
     note: int = 0  # 10
-    arpeggio: int = 0  # 11: option 0's argument
+    arpeggio: int = 0  # 11: ARPEGGIO's argument
     auto_slide: int = 0  # 12: signed, added every tick
     auto_arpeggio: int = 0  # 13
     eg: Walker = field(default_factory=Walker)
@@ -305,7 +310,13 @@ def PlayRow(module: Module) -> None:
     """DMA off for restarted voices, a busy-wait, then the waves come
     back, the notes start and DMA goes on. A synth note on the voice's
     instrument never had DMA off, so DMA on changes nothing: the channel
-    plays on."""
+    plays on.
+
+    A stopped channel restarts only if its word ends before DMA on. That
+    takes up to 2 × period CCK. DMA off to DMA on takes at least
+    DMA_WAIT_CCK + START_CCK = 1095 CCK. So a note with a period above 547
+    can miss its restart. It then plays the old sample on, and the new
+    sample starts at the old one's next reload."""
     module.tick_count = module.speed
     ReadRow(module)
     for number in sorted(module.dma_off):
@@ -317,6 +328,9 @@ def PlayRow(module: Module) -> None:
         for voice in module.voices:
             if voice.new_note:
                 StartNote(module, voice)
+        module.amiga.after(START_CCK, Priority.CPU, dma_on)
+
+    def dma_on() -> None:
         for number in sorted(module.dma_on):
             module.voices[number].channel.enable()
 
@@ -369,10 +383,10 @@ def NewNote(
     instr_transpose: int,
     note_transpose: int,
 ) -> None:
-    """A note clears auto slide, auto arpeggio and vibrato. Option 10
+    """A note clears auto slide, auto arpeggio and vibrato. NO_TRANSPOSE
     skips the note transpose if its argument's high nibble is set, the
-    instrument transpose if its low nibble is set. Options 13-15 only
-    change the period. A sample note always restarts. A synth note
+    instrument transpose if its low nibble is set. The three legato
+    commands only change the period. A sample note always restarts. A synth note
     restarts DMA only for another instrument; it restarts the walkers
     anyway."""
     option = info & 0x0F
@@ -381,7 +395,7 @@ def NewNote(
         note = signed((note + note_transpose) & 0xFF)
     voice.note = note & 0xFF
     voice.period = period_of(note)
-    if option >= LEGATO:
+    if option >= LEGATO_FLIP:
         return
     voice.new_note = True
     voice.volume = USE_INSTRUMENT
@@ -399,11 +413,11 @@ def AddInstrTranspose(number: int, transpose: int) -> int:
 
 
 def Options(module: Module, voice: Voice, option: int, arg: int) -> None:
-    """Option 0 sets the arpeggio, so any row without another option
-    ends it. Slides 4 and 5 move the period once per row and end the
+    """ARPEGGIO sets the arpeggio, so any row with another command ends
+    it. SLIDE_UP and SLIDE_DOWN move the period once per row and end the
     arpeggio. Volume on a synth voice waits for the next note or `ADSR`
-    step. Option 11 on a row with a new note is lost: StartSynthNote sets
-    the instrument's effect. Option 12 does nothing."""
+    step. EFFECT on a row with a new note is lost: StartSynthNote sets
+    the instrument's effect. The one unnamed command does nothing."""
     if option == ARPEGGIO:
         voice.arpeggio = arg
     elif option == VOLUME:
@@ -428,17 +442,18 @@ def Options(module: Module, voice: Voice, option: int, arg: int) -> None:
         voice.auto_slide = arg
     elif option == EFFECT:
         voice.effect = arg
-    elif option == AUTO_ARPEGGIO or option >= LEGATO:
+    elif option == AUTO_ARPEGGIO or option >= LEGATO_FLIP:
         SetAutoArp(voice, option, arg)
 
 
 def SetAutoArp(voice: Voice, option: int, arg: int) -> None:
-    """Options 9 and 13-15. Option 13 flips bit 0 of the effect number.
-    All but 15 restart `ADSR`; one that had ended runs once more."""
+    """AUTO_ARPEGGIO and the legato commands. LEGATO_FLIP flips bit 0 of
+    the effect number. All but LEGATO_KEEP_ADSR restart `ADSR`; one that
+    had ended runs once more."""
     voice.auto_arpeggio = arg
-    if option == LEGATO:
+    if option == LEGATO_FLIP:
         voice.effect ^= 1
-    if option == KEEP_ADSR:
+    if option == LEGATO_KEEP_ADSR:
         return
     voice.adsr.pos = 0
     if voice.adsr.mode == Mode.OFF:
@@ -673,7 +688,7 @@ def MorphToNext(module: Module, voice: Voice, saved: SavedWave) -> None:
 
 
 def MorphToSavedCopy(module: Module, voice: Voice, saved: SavedWave) -> None:
-    """Effect 5: a second copy of MorphToSaved's code."""
+    """A second copy of MorphToSaved's code."""
     MorphToSaved(module, voice, saved)
 
 
