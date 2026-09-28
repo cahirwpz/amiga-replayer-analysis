@@ -59,9 +59,6 @@ the first card on it, with `specs/med.py`.
 
 The user's list, triaged. All leads are on cards now.
 
-- [ ] `RobHubbard`: write the card from `data/disasm/RobHubbard.cnf`, which
-      reads `rh.GMUSIC`. The replay is `$0`–`$33E`; tables follow. Map:
-      `ext/c-flod/neoart/flod/hubbard`.
 - [ ] Diff the code of `rh.FLYMUS`, from the same game, against `rh.GMUSIC`.
 
 Skip unless a new lead turns up:

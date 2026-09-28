@@ -174,6 +174,7 @@ sections:
       UADE: Unix Amiga Delitracker Emulator. Plays Amiga music on other systems.
       audio.device: AmigaOS's Paula driver. Programs queue sample requests to it.
       IFF: 'Interchange File Format by Electronic Arts. 8SVX is its sample type.'
+      PGA: 'Professional Golfers'' Association. Only in the game name PGA Tour Golf.'
       IRA: Portable 68000 reassembler. Turns a player binary into assembler source.
       vlink: Portable linker by Frank Wille. Links object files into executables.
       vasm: Portable assembler by Volker Barthelmann and Frank Wille.

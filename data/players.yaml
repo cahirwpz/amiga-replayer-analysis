@@ -305,6 +305,11 @@ RobHubbard:
   ports: [ext/c-flod/neoart/flod/hubbard]
   module: data/module/RobHubbard/rh.GMUSIC
   provenance: ira
+  spec: specs/rob_hubbard.py
+  author: Rob Hubbard
+  year: 1990
+  game: PGA Tour Golf
+  related: [DavidWhittaker]
 
 Sound-FX:
   ports: [ext/c-flod/neoart/flod/soundfx]

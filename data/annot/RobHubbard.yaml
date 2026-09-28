@@ -1,0 +1,9 @@
+# Types for specs/rob_hubbard.py. The IRA config holds the labels; it reads
+# data/module/RobHubbard/rh.GMUSIC.
+source: data/disasm/RobHubbard.cnf
+
+# Classes in the spec: each word is a label of the config.
+types:
+  Module: [Songs]
+  Instrument: [Instruments]
+  Voice: [Voices]
