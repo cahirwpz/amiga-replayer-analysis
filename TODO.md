@@ -32,9 +32,6 @@ All twelve pilot cards exist.
 The template is in [`docs/card-template.md`](docs/card-template.md). `MED` is
 the first card on it, with `specs/med.py`.
 
-- [ ] Decide on `specs/controls.py`. `CommandList` and `TableWalker` share
-      logic. `StateMachine` and `Program` are tags that no tool reads: drop
-      them, or check them in `tools/specs.py`.
 - [ ] Composer's view for MED rests on the format notes. Ask the user for an
       OctaMED manual that covers synth sounds.
 

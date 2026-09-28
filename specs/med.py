@@ -11,7 +11,7 @@ from enum import Enum, auto
 
 from hardware import paula
 from hardware.amiga import Amiga, Priority
-from specs.controls import CommandList, Mode, StateMachine, TableWalker
+from specs.controls import CommandList, Mode, TableWalker
 
 NEVER = -1  # hold_left: the key is never released
 MAX_VOLUME = 64  # volumes run 0..MAX_VOLUME
@@ -116,7 +116,7 @@ class Score:  # MMD0song
 
 
 @dataclass
-class Vibrato(StateMachine):  # trk_synvibdep, trk_synthvibspd, trk_synviboffs
+class Vibrato:  # trk_synvibdep, trk_synthvibspd, trk_synviboffs
     depth: int = 0  # 0: off
     speed: int = 0
     phase: int = 0  # 16 phase units per waveform byte
@@ -124,7 +124,7 @@ class Vibrato(StateMachine):  # trk_synvibdep, trk_synthvibspd, trk_synviboffs
 
 
 @dataclass
-class Portamento(StateMachine):  # trk_porttrgper, trk_prevportspd
+class Portamento:  # trk_porttrgper, trk_prevportspd
     target: int = 0
     speed: int = 0
 
@@ -566,13 +566,25 @@ def SynthTick(voice: Voice) -> int:
                 voice.synth_volume + voice.volume_slide, 0, MAX_VOLUME
             )
         VolEnvelopeStep(voice)
-        if not voice.volume_list.waiting():
+        if not waiting(voice.volume_list):
             ReadVolumeList(voice, sound)
     voice.output_volume = voice.synth_volume * voice.note_volume // MAX_VOLUME
     period = WaveListTick(voice, sound)
     period = SynthArpeggio(voice, period)
     period = SynthVibrato(voice, period)
     return period + voice.pitch_slide
+
+
+def waiting(commands: CommandList) -> bool:
+    """Count one visit off a wait; True while the wait lasts.
+
+    A wait counts visits, not ticks. A jump from elsewhere clears the
+    wait but not the counter, so the target acts at its next visit.
+    """
+    if commands.wait == 0:
+        return False
+    commands.wait -= 1
+    return commands.wait > 0
 
 
 def VolEnvelopeStep(voice: Voice) -> None:
@@ -586,7 +598,7 @@ def WaveListTick(voice: Voice, sound: SynthSound) -> int:
     """The pitch slide steps on each visit, even while the list waits."""
     if voice.wave_list.due():
         voice.pitch_slide += voice.pitch_slide_speed
-        if not voice.wave_list.waiting():
+        if not waiting(voice.wave_list):
             ReadWaveList(voice, sound)
     return voice.period
 

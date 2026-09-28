@@ -17,7 +17,6 @@ from dataclasses import dataclass, field
 from hardware import paula
 from hardware.amiga import Amiga
 from hardware.clock import FRAME_CCK, LINE_CCK
-from specs.controls import StateMachine
 
 VOICES, CHANNELS = 4, 16
 XCHANNEL = 16  # the game's notes play on this extra channel
@@ -197,7 +196,7 @@ class Channel:  # ChannelData: a MIDI channel
 
 
 @dataclass
-class Envelope(StateMachine):  # voice_Envelope, TicksLeft, EnvelopeLeft
+class Envelope:  # voice_Envelope, TicksLeft, EnvelopeLeft
     segments: list[Segment] = field(default_factory=list)
     index: int = 0
     left: int = 0  # segments

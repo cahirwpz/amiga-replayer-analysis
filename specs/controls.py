@@ -1,44 +1,51 @@
-"""Controller kinds, as docs/glossary.md defines them.
+"""Stream state that several player specs share.
 
-A player's spec subclasses these. The class it picks is the controller's
-Kind. Where a field lives (voice, instrument, score) is its owner.
+The glossary's controller kinds (docs/glossary.md) are words for cards.
+Only kinds with shared logic have a class here.
 """
 
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
+from typing import ClassVar
 
 
 @dataclass
-class CommandList:
-    """Opcodes with jumps and waits, but no conditions or calls.
+class Countdown:
+    """Counts ticks down and reloads from `speed`.
 
-    It runs every `speed` ticks. A wait counts visits, not ticks. A jump
-    from elsewhere moves `pos` and clears `wait`; the counter runs on, so
-    the target acts at its next visit.
+    With `BITS` set, the counter wraps like a register of that width,
+    so a speed of 0 lasts 2**BITS ticks.
     """
 
-    pos: int = 0
-    wait: int = 0  # visits left
-    counter: int = 0  # ticks to the next visit
+    BITS: ClassVar[int | None] = None
+
+    counter: int = 0  # ticks to the next step
     speed: int = 1  # counter reload
 
     def due(self) -> bool:
-        """Count one tick; True when the list visits."""
+        """Count one tick; True when the counter reloads."""
         self.counter -= 1
+        if self.BITS is not None:
+            self.counter &= (1 << self.BITS) - 1
         if self.counter > 0:
             return False
         self.counter = self.speed
         return True
 
-    def waiting(self) -> bool:
-        """Count one visit off a wait; True while the wait lasts."""
-        if self.wait == 0:
-            return False
-        self.wait -= 1
-        return self.wait > 0
+
+@dataclass
+class CommandList(Countdown):
+    """Opcodes with jumps and waits, but no conditions or calls.
+
+    What a wait counts differs per player; the spec says.
+    """
+
+    pos: int = 0
+    wait: int = 0
 
     def jump(self, pos: int) -> None:
+        """Move to `pos` and drop the wait; the counter runs on."""
         self.pos, self.wait = pos, 0
 
 
@@ -67,14 +74,3 @@ class TableWalker:
                 self.mode = Mode.OFF
             self.pos = 0
         return value
-
-
-class StateMachine:
-    """Changes its state by rules, e.g. an envelope or a vibrato."""
-
-
-# A lookup maps an input to a value and has no state: a plain function.
-
-
-class Program(CommandList):
-    """Opcodes with conditions or calls."""

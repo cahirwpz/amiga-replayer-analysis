@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 
 from hardware import paula
 from hardware.amiga import Amiga, Priority
-from specs.controls import CommandList, StateMachine
+from specs.controls import CommandList
 
 VOICES = 4
 ROWS = 32  # a pattern: 32 rows of 2 bytes
@@ -95,18 +95,19 @@ class PitchList(CommandList):  # 18 list, 50 pos, 26 wait
 
 @dataclass
 class VolumeList(CommandList):  # 10 list, 16 pos, 25 wait, 23 counter, 24 speed
+    BITS = 8
     steps: bytes = bytes([LIST_END])
 
 
 @dataclass
-class Bend(StateMachine):  # pitch: 4, 5, 42; volume: 14, 15, 38
+class Bend:  # pitch: 4, 5, 42; volume: 14, 15, 38
     step: int = 0  # signed byte
     time: int = 0  # steps left
     flip: bool = False  # it acts every second tick
 
 
 @dataclass
-class Vibrato(StateMachine):  # 27 speed, 28 depth, 29 pos, 30 delay, 46 state
+class Vibrato:  # 27 speed, 28 depth, 29 pos, 30 delay, 46 state
     speed: int = 0
     depth: int = 0
     pos: int = 0
@@ -507,11 +508,8 @@ def VolumeListTick(voice: Voice) -> None:
     if voice.volume_bend.time:
         VolumeBend(voice)
         return
-    vol.counter = (vol.counter - 1) & 0xFF
-    if vol.counter:
-        return
-    vol.counter = vol.speed
-    ReadVolume(voice)
+    if vol.due():
+        ReadVolume(voice)
 
 
 def ReadVolume(voice: Voice) -> None:

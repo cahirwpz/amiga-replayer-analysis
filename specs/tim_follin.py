@@ -14,7 +14,6 @@ from dataclasses import dataclass, field
 
 from hardware import paula
 from hardware.amiga import Amiga
-from specs.controls import Program, StateMachine
 
 PULSE_INSTRUMENTS = 4  # instruments 0-3 are pulse waves
 PULSE_MIN, PULSE_MAX, PULSE_RESET = 4, 0x1E, 7  # wave byte indexes
@@ -49,7 +48,7 @@ ATTACK, DECAY, HOLD = 0, 1, 2  # envelope phases, $60; 3 and up also hold
 
 
 @dataclass
-class Envelope(StateMachine):  # $60 phase, $64 count, -$14 volume
+class Envelope:  # $60 phase, $64 count, -$14 volume
     phase: int = ATTACK
     count: int = 0
     volume: int = 0  # the volume byte; the output
@@ -63,7 +62,7 @@ class Envelope(StateMachine):  # $60 phase, $64 count, -$14 volume
 
 
 @dataclass
-class Vibrato(StateMachine):  # $74, $78, -$78, -$6C, -$70, -$48
+class Vibrato:  # $74, $78, -$78, -$6C, -$70, -$48
     delay: int = 0  # 0: off; else ticks before it starts, from a note
     delay_left: int = 0
     step: int = 0  # period units per tick
@@ -73,7 +72,7 @@ class Vibrato(StateMachine):  # $74, $78, -$78, -$6C, -$70, -$48
 
 
 @dataclass
-class Trill(StateMachine):  # -$60, -$64, $7C, -$68
+class Trill:  # -$60, -$64, $7C, -$68
     interval: int = 0  # semitones
     upper_ticks: int = 0  # 0: off
     lower_ticks: int = 0
@@ -81,7 +80,7 @@ class Trill(StateMachine):  # -$60, -$64, $7C, -$68
 
 
 @dataclass
-class Pulse(StateMachine):  # $5C index, $58 narrowing, -$18, -$1C
+class Pulse:  # $5C index, $58 narrowing, -$18, -$1C
     index: int = PULSE_RESET
     narrowing: bool = False
     speed: int = 0  # ticks per step
@@ -89,9 +88,10 @@ class Pulse(StateMachine):  # $5C index, $58 narrowing, -$18, -$1C
 
 
 @dataclass
-class Voice(Program):  # the fields at PlayerState+$80, per voice
+class Voice:  # the fields at PlayerState+$80, per voice
     channel: paula.Channel = field(kw_only=True)
-    track: bytes = b""  # the module's bytes; pos: (A6,D4)
+    pos: int = 0  # in track: (A6,D4)
+    track: bytes = b""  # the module's bytes
     active: bool = False  # -$10
     ticks_left: int = 1  # -$4C
     fixed_length: int = 0  # -$2C: 0, notes carry a length byte

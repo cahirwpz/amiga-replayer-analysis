@@ -15,7 +15,6 @@ from dataclasses import dataclass, field
 
 from hardware import paula
 from hardware.amiga import Amiga
-from specs.controls import Program, StateMachine
 
 TRACKS = 8
 VOICES = 4
@@ -80,9 +79,9 @@ class SoundEffect:  # EffectTable: 8 bytes per effect
 
 
 @dataclass
-class Track(
-    Program
-):  # TrackState: patterns, PatternAddress, PatternPos, PatternWaitCount
+class Track:  # TrackState: patterns, PatternAddress
+    pos: int = 0  # PatternPos
+    wait: int = 0  # PatternWaitCount
     pattern: int = TRACK_IDLE  # the pattern byte; TRACK_IDLE and up: off
     transpose: int = 0
     statements: list[Statement] = field(default_factory=list)
@@ -93,7 +92,9 @@ class Track(
 
 
 @dataclass
-class Macro(Program):  # MacroAddress, MacroPos, MacroWaitCount
+class Macro:  # MacroAddress
+    pos: int = 0  # MacroPos
+    wait: int = 0  # MacroWaitCount
     statements: list[Statement] = field(default_factory=list)
     running: bool = False  # MacroRunning
     loop_count: int = 0  # MacroLoopCount; WaitNoteOff counts in it too
@@ -106,14 +107,14 @@ class Macro(Program):  # MacroAddress, MacroPos, MacroWaitCount
 
 
 @dataclass
-class Sweep(StateMachine):  # SweepCounter1, SweepCounter2, SweepStep
+class Sweep:  # SweepCounter1, SweepCounter2, SweepStep
     left: int = 0  # 0: off
     length: int = 0
     step: int = 0  # bytes per tick; the sign flips every `length` ticks
 
 
 @dataclass
-class Swing(StateMachine):  # ImsSwingStep, ImsSwingLength, ImsSwingCount
+class Swing:  # ImsSwingStep, ImsSwingLength, ImsSwingCount
     """An add per tick whose sign turns every `length` ticks."""
 
     add: int = 0
@@ -132,7 +133,7 @@ class Swing(StateMachine):  # ImsSwingStep, ImsSwingLength, ImsSwingCount
 
 
 @dataclass
-class Ims(StateMachine):  # ims_ fields: interference modulation synthesis
+class Ims:  # ims_ fields: interference modulation synthesis
     length: int = 0  # ImsBuildLength: bytes to build, minus one; 0 off
     source: int = 0  # ImsSourceStart: offset in the sample file
     mask: int = 0  # ImsSourceMask: source offsets wrap with it; 2^n - 1
@@ -148,7 +149,7 @@ class Ims(StateMachine):  # ims_ fields: interference modulation synthesis
 
 
 @dataclass
-class Vibrato(StateMachine):  # VibratoWidth, VibratoPos, VibratoRate, VibratoPeriod
+class Vibrato:  # VibratoWidth, VibratoPos, VibratoRate, VibratoPeriod
     size: int = 0  # ticks per direction; 0 off
     left: int = 0
     rate: int = 0  # signed; added to `offset` each tick
@@ -156,7 +157,7 @@ class Vibrato(StateMachine):  # VibratoWidth, VibratoPos, VibratoRate, VibratoPe
 
 
 @dataclass
-class Portamento(StateMachine):  # PortaTime, PortaSpeed, PortaCounter, PortaPeriod
+class Portamento:  # PortaTime, PortaSpeed, PortaCounter, PortaPeriod
     rate: int = 0  # the period factor is (256 +- rate) / 256; 0 off
     speed: int = 0  # ticks per step
     count: int = 0
@@ -164,7 +165,7 @@ class Portamento(StateMachine):  # PortaTime, PortaSpeed, PortaCounter, PortaPer
 
 
 @dataclass
-class Envelope(StateMachine):  # envelope, EnvCounter, EnvSpeed, EnvTarget
+class Envelope:  # envelope, EnvCounter, EnvSpeed, EnvTarget
     delay: int = 0  # ticks between steps, plus one; 0 off
     count: int = 0
     step: int = 0
@@ -172,7 +173,7 @@ class Envelope(StateMachine):  # envelope, EnvCounter, EnvSpeed, EnvTarget
 
 
 @dataclass
-class Riff(StateMachine):  # RiffState, RiffSteps, RiffSpeed, RiffRandomFlag
+class Riff:  # RiffState, RiffSteps, RiffSpeed, RiffRandomFlag
     state: int = 0  # RiffState: 0 off, 1 start, -1 playing
     macro: int = 0  # RiffMacro: its bytes are the riff
     notes: bytes = b""  # RiffNotes
@@ -218,7 +219,7 @@ class Voice:  # Synthfield: one per Paula channel
 
 
 @dataclass
-class Fade(StateMachine):  # FadeVolume, FadeTarget, FadeStep, FadeCounter1/2
+class Fade:  # FadeVolume, FadeTarget, FadeStep, FadeCounter1/2
     level: int = FULL_VOLUME
     target: int = FULL_VOLUME
     step: int = 0  # +1, -1, or 0 off

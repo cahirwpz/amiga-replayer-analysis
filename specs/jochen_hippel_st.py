@@ -21,7 +21,7 @@ from math import log2
 from hardware import paula
 from hardware.amiga import Amiga, Priority
 from hardware.clock import CCK_HZ, LINE_CCK
-from specs.controls import CommandList, StateMachine
+from specs.controls import CommandList
 
 CHIP_VOICES = 3
 PAULA_OF_CHIP = (0, 3, 2)  # EmuTick: chip channels A, B, C
@@ -157,7 +157,7 @@ class VolumeReader(CommandList):  # 4 list, $16 pos, $24 wait, $22 counter, $23 
 
 
 @dataclass
-class Vibrato(StateMachine):  # $27 speed, $28 depth, $29 pos, $2A delay, $2B state
+class Vibrato:  # $27 speed, $28 depth, $29 pos, $2A delay, $2B state
     speed: int = 0
     depth: int = 0
     pos: int = 0

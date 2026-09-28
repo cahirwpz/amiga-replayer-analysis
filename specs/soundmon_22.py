@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 
 from hardware import paula
 from hardware.amiga import Amiga, Priority
-from specs.controls import Mode, TableWalker
+from specs.controls import Countdown, Mode, TableWalker
 
 VOICES = 4
 HEADER = 512  # title, 'V.3', table count, length, 15 instruments
@@ -142,17 +142,10 @@ def synth_instrument(score: Score, number: int) -> SynthInstrument:
 
 
 @dataclass
-class Walker(TableWalker):  # RunWalkers: pos 14-20, delay 22-25, control 29-32
-    delay: int = 0  # ticks to the next step
-    speed: int = 1  # the delay's reload
-
-    def due(self) -> bool:
-        """Count one tick: a byte counter, so a speed of 0 is 256 ticks."""
-        self.delay = (self.delay - 1) & 0xFF
-        if self.delay:
-            return False
-        self.delay = self.speed
-        return True
+class Walker(
+    TableWalker, Countdown
+):  # RunWalkers: pos 14-20, counter 22-25, control 29-32
+    BITS = 8
 
 
 @dataclass
@@ -508,7 +501,9 @@ def walker(score: Score, setup: WalkerSetup, delay: int) -> Walker:
     """The table is a live view: `EG` and effects may change it."""
     at = score.table(setup.table)
     table = memoryview(score.memory)[at : at + setup.length]
-    return Walker(table, 0, mode(setup.control), delay & 0xFF, setup.speed)
+    return Walker(
+        table=table, mode=mode(setup.control), counter=delay & 0xFF, speed=setup.speed
+    )
 
 
 def StartSynthNote(module: Module, voice: Voice) -> None:
