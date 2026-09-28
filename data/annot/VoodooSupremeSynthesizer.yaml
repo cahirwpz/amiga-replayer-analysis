@@ -1,0 +1,8 @@
+# Types for specs/voodoo_supreme_synthesizer.py. The IRA config holds the
+# labels; it reads the UADE player binary.
+source: data/disasm/VoodooSupremeSynthesizer.cnf
+
+# Classes in the spec: each word is a label of the config.
+types:
+  Module: [Globals]
+  Voice: [Voice0]

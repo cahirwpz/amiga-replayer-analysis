@@ -335,6 +335,7 @@ VoodooSupremeSynthesizer:
   provenance: ira
   author: Tomas Partl
   year: 1993
+  spec: specs/voodoo_supreme_synthesizer.py
 
 InStereo:
   source: ext/nostalgicplayer/Source/Agents/Players/InStereo10

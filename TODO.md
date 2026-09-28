@@ -48,10 +48,11 @@ the first card on it, with `specs/med.py`.
       loops. Does a note with a period above 320 miss its restart?
 - [ ] `specs/jochen_hippel_st.py` and `specs/soundmon_22.py` run by a 50 Hz
       timer. Check DeliTracker's default rate for a player without `DTP_Timer`.
+- [ ] `hardware/paula.py:Channel.word_cck` wraps period 0 to 65536 CCK. This is
+      a guess from memory of Minimig. Check it in Minimig's channel code.
 
 ### New cards
 
-- [ ] Write the `VoodooSupremeSynthesizer` card and spec. Reading notes below.
 - [ ] Write the `FaceTheMusic` card and spec. Reading notes below.
 
 Face The Music reading notes, read in 68k code:
@@ -66,20 +67,6 @@ Face The Music reading notes, read in 68k code:
 | `:ScriptTable`                          | 62 script ops; the port names them, the 68k not yet        |
 | `:PatternEvent`                         | `$C000` and `$D000` events can start a script handler      |
 | `:Lfos`                                 | Four parts; read before naming the targets                 |
-
-Voodoo reading notes, read in 68k code:
-
-| Where                                                   | Note                                                     |
-| ------------------------------------------------------- | -------------------------------------------------------- |
-| `data/disasm/VoodooSupremeSynthesizer.cnf:CmdWaveTable` | Mode bits: 5 chunks, 6 exclusive or, 7 morph; none: mix  |
-| `:CmdWaveTable`                                         | Chunks are 64 words; wave modes play 16 words            |
-| `:NextChunk`                                            | Audio interrupt: next chunk start, then step the pointer |
-| `:ChunkStep`                                            | Step = 128 × period / base period: pitch without tempo   |
-| `:MixWaves`, `:XorWaves`, `:MorphWave`                  | Fill the idle half of a 2 × 32-byte buffer, each tick    |
-| `:Interval`                                             | Period × ratio from `Ratios`; 12 per octave, then shifts |
-| `:SetHardware`                                          | Writes last tick's period and volume: one tick late      |
-| `:CmdCall`, `:CmdLoopStart`                             | Calls and loops share one 80-byte stack per voice        |
-| `:CmdGoto`                                              | When all four voices looped, it signals song end         |
 
 Skip unless a new lead turns up:
 
