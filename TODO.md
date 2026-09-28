@@ -51,26 +51,21 @@ the first card on it, with `specs/med.py`.
 
 ### New cards
 
-Players whose only code is a NostalgicPlayer port, triaged from it. Each lead
-needs its UADE binary disassembled.
-
-| Order | Player                     | Value | Binary | Lead                                                    |
-| ----- | -------------------------- | ----- | ------ | ------------------------------------------------------- |
-| 1     | `VoodooSupremeSynthesizer` | high  | 6 kB   | Audio interrupt plays a long sample in table-set chunks |
-| 2     | `FaceTheMusic`             | high  | 14 kB  | Event-driven scripts that read and drive other tracks   |
-| 3     | `Synth`                    | med   | 10 kB  | Double-buffered waves; an envelope sets a negated span  |
-| 4     | `ActionAmics`              | low   | 5 kB   | One-byte sweep, run once per tick per shared sample     |
-
 - [ ] Write the `VoodooSupremeSynthesizer` card and spec. Reading notes below.
-- [ ] Disassemble `FaceTheMusic`.
+- [ ] Write the `FaceTheMusic` card and spec. Reading notes below.
 
-Reading notes, paths under `ext/nostalgicplayer/`:
+Face The Music reading notes, read in 68k code:
 
-| Player         | Where                                                      | Note                                               |
-| -------------- | ---------------------------------------------------------- | -------------------------------------------------- |
-| `FaceTheMusic` | `Source/Agents/Players/FaceTheMusic/FaceTheMusicWorker.cs` | Script commands start near `case SoundEffect.Wait` |
-| `FaceTheMusic` | `RunSelWorkOnTrack()`                                      | A script switches the track it drives              |
-| `FaceTheMusic` | `Containers/LfoTarget.cs`                                  | Four LFOs; one can drive another's speed or depth  |
+| Where                                   | Note                                                       |
+| --------------------------------------- | ---------------------------------------------------------- |
+| `data/disasm/FaceTheMusic.cnf:MixPairs` | Eight tracks in pairs; each audio interrupt mixes a pair   |
+| `:MixPairs`                             | The higher-pitched track sets Paula's period (guess: `30`) |
+| `:MixPairs`                             | The louder track sets Paula's volume; the other is scaled  |
+| `:MixPair`                              | Dominant bytes copied; the other added through a table     |
+| `:MixPair`                              | The other track only skips bytes: never above the period   |
+| `:ScriptTable`                          | 62 script ops; the port names them, the 68k not yet        |
+| `:PatternEvent`                         | `$C000` and `$D000` events can start a script handler      |
+| `:Lfos`                                 | Four parts; read before naming the targets                 |
 
 Voodoo reading notes, read in 68k code:
 
@@ -88,8 +83,11 @@ Voodoo reading notes, read in 68k code:
 
 Skip unless a new lead turns up:
 
-- `InStereo`: the same file layout as `Synth`, without the wave effects. Guess:
-  `Synth` grew from it. Check the two binaries before a family link.
+- `Synth`: an envelope sets how many bytes of a wave are negated. Its wave
+  effects overlap Sonic Arranger's (inference from the port).
+- `ActionAmics`: the one-byte sweep, once per tick per shared sample.
+- `InStereo`: `Synth`'s file layout without wave effects. Guess: `Synth` grew
+  from it.
 - `InStereo2.0`: two waves per instrument, an LFO and an envelope. Close to
   Sonic Arranger (inference from the port).
 - `QuadraComposer`: `ProTracker`-like effects.

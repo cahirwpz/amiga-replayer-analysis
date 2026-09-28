@@ -352,9 +352,10 @@ ActionAmics:
   provenance: port
 
 FaceTheMusic:
-  source: ext/nostalgicplayer/Source/Agents/Players/FaceTheMusic
-  note: C# port in NostalgicPlayer
-  provenance: port
+  ports: [ext/nostalgicplayer/Source/Agents/Players/FaceTheMusic]
+  provenance: ira
+  author: J. Schmidt
+  year: 1991
 
 QuadraComposer:
   source: ext/nostalgicplayer/Source/Agents/Players/QuadraComposer
