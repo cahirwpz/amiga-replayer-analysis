@@ -186,6 +186,7 @@ SynthDream:
   year: 1991
 
 SoundPlayer:
+  spec: specs/soundplayer.py
   provenance: disassembly
   author: Scott Johnston
   year: 1991
@@ -201,6 +202,7 @@ MaxTrax:
   note: Music-X playback driver; LGPL source, no UADE binary
 
 MIDI-Loriciel:
+  spec: specs/midi_loriciel.py
   provenance: disassembly
   author: Loriciel
   year: 1993

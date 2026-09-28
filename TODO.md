@@ -27,31 +27,20 @@ All twelve pilot cards exist.
 
 ## After the pilot
 
-### Fix the current cards
-
-- [ ] Decide whether player-prefixed detail filenames need a rule and checker.
-
 ### Card template 2
 
 The template is in [`docs/card-template.md`](docs/card-template.md). `MED` is
 the first card on it, with `specs/med.py`.
 
-- [ ] Migrate the other cards the same way. Paula mechanics go to
-      `hardware/paula.py`. The table lists the cards still on template 1.
-- [ ] Fold each migrated card's `details/` page into its spec's docstrings.
+All cards are on template 2.
 
-| Card            | Blocked by |
-| --------------- | ---------- |
-| `MIDI-Loriciel` | —          |
-| `SoundPlayer`   | —          |
-
-- [ ] After the last card: decide on `specs/controls.py`. `CommandList` and
-      `TableWalker` share logic. `StateMachine` and `Program` are tags that no
-      tool reads: drop them, or check them in `tools/specs.py`.
-- [ ] After the last card: drop template 1 from `tools/cards.py`, its tests and
-      fixtures. Delete `details/` and drop it from `.pre-commit-config.yaml`,
-      `tools/cogload.py` and `tools/links.py`. Drop the glossary's control
-      levels, generator, role, write modes and the DMA output.
+- [ ] Decide on `specs/controls.py`. `CommandList` and `TableWalker` share
+      logic. `StateMachine` and `Program` are tags that no tool reads: drop
+      them, or check them in `tools/specs.py`.
+- [ ] Drop template 1 from `tools/cards.py`, its tests and fixtures. Delete
+      `details/` and drop it from `.pre-commit-config.yaml`, `tools/cogload.py`
+      and `tools/links.py`. Drop the glossary's control levels, generator, role,
+      write modes and the DMA output.
 - [ ] Composer's view for MED rests on the format notes. Ask the user for an
       OctaMED manual that covers synth sounds.
 
@@ -65,6 +54,8 @@ the first card on it, with `specs/med.py`.
       `specs/digital_sonix_chrome.py:WaitAudioIrq`, 15 in
       `specs/jochen_hippel_st.py:NotePlay` and 10 in
       `specs/oktalyzer.py:QueueBuffers`. Measure or cite one poll of each.
+- [ ] `specs/midi_loriciel.py:StartNote` waits 513 loops of `nop` and `dbra`,
+      estimated at 7 CCK each. Measure or cite one loop.
 - [ ] `specs/soundmon_22.py:PlayRow` waits 640 CCK, an estimate of 128 `dbra`
       loops. Does a note with a period above 320 miss its restart?
 - [ ] `specs/jochen_hippel_st.py` and `specs/soundmon_22.py` run by a 50 Hz

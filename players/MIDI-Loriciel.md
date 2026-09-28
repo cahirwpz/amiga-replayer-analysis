@@ -1,79 +1,75 @@
 ---
 player: MIDI-Loriciel
-control: { sequencer: commands, instrument: none }
-themes: [tricks]
+template: 2
 ideas: [midi-score, voice-allocation, multisamples]
-streams: { track: 1 }
 ---
 
 # MIDI-Loriciel
 
-An SMF sample player with four allocated voices and no instrument programs.
+An SMF player with four allocated voices, where each note plays its sample once.
+
+## Context
+
+| Fact      | Value                                                              |
+| --------- | ------------------------------------------------------------------ |
+| Player    | `MIDI-Loriciel`                                                    |
+| Author    | Loriciel                                                           |
+| Year      | 1993                                                               |
+| Game      | Entity (intro music)                                               |
+| Code read | disassembly: `ext/uade/amigasrc/players/wanted_team/MIDI-Loriciel` |
+| Spec      | [specs/midi_loriciel.py](../specs/midi_loriciel.py)                |
 
 ## Key ideas
 
-- MIDI tracks share instruments and note ownership through 16 MIDI channels.
-  Only each channel's latest voice can receive note-off.
-  `data/annot/MIDI-Loriciel.yaml:AllocateVoice` `:MatchNoteOff`
-- Instruments map note ranges to samples and tuning offsets. These are lookups,
-  not streams. `:SelectSample`
-- Velocity and pitch use fixed lookups, not evolving controllers. `:SetVelocity`
-  `:SelectSample`
-- [Supported events and limits](../details/MIDI-Loriciel-events.md): no CCs,
-  pitch bend or running status.
+- The score is an SMF. Only note-on, note-off, program change and tempo act.
+  `:ChannelEvent` `:ReadMeta`
+  - Enables: music from any MIDI sequencer.
+  - Costs: no CC, no pitch bend, no running status.
+- Voice allocation takes the first free voice. Voice stealing takes the last
+  busy voice of the same MIDI channel, else voice 0. `:AllocateVoice`
+  - Enables: 16 MIDI channels share four voices.
+  - Costs: no rule for age or priority, so a fifth note cuts a playing note.
+- An instrument is a multisample. Each sample covers the notes up to its top
+  note and has its own tuning. `:FindSampleZone` `:SelectSample`
+  - Enables: low and high notes from different recordings.
+- Velocity sets the volume once, by a fixed curve. `:SetVelocity`
+  - Enables: dynamics with no envelope.
+  - Costs: the volume never changes during a note.
+- At the end of every tick, each busy voice queues silence. So a sample plays
+  once and never loops. `:SilentTail`
+  - Enables: notes that end by themselves, with no timer per voice.
+  - Costs: a held note falls silent when its sample ends.
+- A tick is four pulses. Tempo sets the CIA timer's rate. `:TrackTick`
+  `:SetTempo`
+  - Enables: tempo changes with no change to the pulse step.
+  - Costs: events closer than four pulses slip to a later tick.
 
-## Streams
+## Composer's view
 
-| Stream       | Scope | Role      | Carries                       | Control   | Rate  |
-| ------------ | ----- | --------- | ----------------------------- | --------- | ----- |
-| Track events | track | sequencer | notes, programs, tempo; score | wait, end | delta |
+The composer writes an SMF and a sample bank (the format's `BNKS`). The bank
+gives each MIDI program a list of samples, each for a range of notes.
 
-## Sequencer
+| Aspect   | Answer                                                                             | Source           |
+| -------- | ---------------------------------------------------------------------------------- | ---------------- |
+| Notation | A note is a note-on and a note-off on one MIDI channel.                            | `:NoteOnEvent`   |
+| Notation | A program change picks the instrument for later notes on the MIDI channel.         | `:SelectProgram` |
+| Notation | A tempo meta event sets the tick rate.                                             | `:TempoEvent`    |
+| Notation | The header's division gives the PPQ. A negative division becomes 192 PPQ.          | `:InitTracks`    |
+| Cost     | A long note needs a long sample. Nothing loops.                                    | `:SilentTail`    |
+| Cost     | Two notes of different pitch on one MIDI channel: the first note-off does nothing. | `:MatchNoteOff`  |
+| Cost     | A voice whose note-off did nothing stays busy until it is stolen.                  | `:MatchNoteOff`  |
+| Cost     | Two notes of one pitch on one MIDI channel: the first note-off ends the second.    | `:MatchNoteOff`  |
+| Cost     | Every event needs its status byte. Running status breaks the score.                | `:ReadEvent`     |
+| Cost     | The game sets how often the song plays. Then the player stops the timer.           | `:PlayTick`      |
 
-| Aspect   | Value     | Label            |
-| -------- | --------- | ---------------- |
-| Time     | deltas    | `:ReadDelta`     |
-| Unit     | pulse     | `:TrackTick`     |
-| Note end | note-off  | `:StopNote`      |
-| Routing  | allocated | `:AllocateVoice` |
-| Reuse    | none      | `:ReadEvent`     |
-| Tempo    | timer     | `:SetTempo`      |
+## What is unique
 
-- First free voice wins, scanning 0 to 3. `:AllocateVoice`
-- Otherwise, steal the last voice belonging to this MIDI channel.
-- Without a match, steal voice 0. There is no age or priority policy.
-
-Each tick advances four pulses. Tempo changes the timer, not this step.
-`:TrackTick` `:SetTempo`
-
-## Generators
-
-| Generator   | Scope | States     | Writes | Rate | Set by       | Note-on |
-| ----------- | ----- | ---------- | ------ | ---- | ------------ | ------- |
-| Silent tail | voice | free, busy | sample | tick | Track events | restart |
-
-## Channel outputs
-
-| Output | Writers, in tick order                |
-| ------ | ------------------------------------- |
-| Sample | Track events (set), Silent tail (set) |
-| Period | Track events (note)                   |
-| Volume | Track events (set)                    |
-| DMA    | Track events (on), Track events (off) |
-
-Track writers run in event order. Busy voices then get a silent reload.
-`:SilentTail`
-
-Sample end does not free a voice. A matching note-off stops DMA without release.
-`:MatchNoteOff` `:StopNote`
-
-## State
-
-| Scope      | Fields                                                                        |
-| ---------- | ----------------------------------------------------------------------------- |
-| Voice      | free/busy, MIDI channel, note, output address                                 |
-| Instrument | sample zones: upper note bound, tuning offset, sample address and length      |
-| Global     | tempo; tracks: cursor, wait, channel; MIDI channels: instrument, latest voice |
+- Only the latest voice of a MIDI channel can take a note-off. `:MatchNoteOff`
+- A stolen voice gets no DMA off, so its new sample may be lost. The note is
+  then silent, or the old sample plays on at the new pitch. `:StartNote`
+- A note-off stops the channel at once. There is no release. `:StopNote`
+- Each tick reads the tracks in file order. Events at one pulse play in track
+  order, not in time order. `:PlayTick`
 
 ## Open questions
 

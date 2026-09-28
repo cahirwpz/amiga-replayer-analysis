@@ -20,6 +20,7 @@ labels:
   lbC00024C: SetTempo
   lbC00026C: StartSound
   lbC0002F4: SetTimer
+  Play: PlayTick
   lbC00037E: TrackTick
   lbC0003A0: ReadDelta
   lbC0003C8: DispatchDueEvent
@@ -58,3 +59,12 @@ comments:
   1345: with no free voice, the last matching MIDI channel wins; fallback voice zero
   1357: only the latest allocated voice remains reachable by this MIDI channel
   1372: no search for older overlapping notes
+
+types:
+  Zone: [lbC000854]
+  Bank: [lbL000840]
+  Score: [lbL0005AC]
+  Track: [lbL0005B2]
+  Voice: [lbL000B9A]
+  MidiChannel: [lbL000A64]
+  Module: [lbL00059A]

@@ -1,80 +1,81 @@
 ---
 player: SoundPlayer
-control: { sequencer: commands, instrument: none }
-themes: [tricks]
-ideas: [attach-modes, per-voice-positions, game-sync-flags]
-streams: { voice: 1 }
+template: 2
+ideas: [attach-modes, per-voice-positions, game-sync-flags, voice-masks]
 ---
 
 # SoundPlayer
 
-Pattern commands switch Paula's attach modes, so one channel modulates the next.
+Row commands switch Paula's attach modes, and a song takes only the voices in
+its mask.
+
+## Context
+
+| Fact      | Value                                                            |
+| --------- | ---------------------------------------------------------------- |
+| Player    | `SoundPlayer`                                                    |
+| Author    | Scott Johnston                                                   |
+| Year      | 1991                                                             |
+| Game      | Lemmings                                                         |
+| Code read | disassembly: `ext/uade/amigasrc/players/wanted_team/SoundPlayer` |
+| Spec      | [specs/soundplayer.py](../specs/soundplayer.py)                  |
 
 ## Key ideas
 
-- Commands set attach bits: volume or period modulation of the next channel.
-  `data/annot/SoundPlayer.yaml:CmdVolModOn` `:CmdVolModOff`
-- All voices read one list of rows, each from its own position. `:InitVoices`
-  `:ReadRow`
-- Commands set flags that the game can read. `:CmdSetFlag` `:GameReadsFlag`
-- Instruments are IFF 8SVX samples: a first part, then a repeat part.
-  `:LoadInstrument`
-- [All commands](../details/SoundPlayer-commands.md).
+- A command turns an attach mode on or off. One channel's sample then sets the
+  next channel's volume or period. `:CmdVolModOn` `:CmdPerModOn`
+  - Enables: volume or period curves from sample data, with no CPU work.
+  - Costs: the modulating channel is silent, so the song loses a voice. See
+    [Paula](../docs/paula.md).
+- A song takes the voices in its mask. The other voices play on in their own
+  songs. `:StartSong` `:ClaimVoices`
+  - Enables: a sound effect as a song on one voice, while the music keeps the
+    others.
+  - Costs: the voice returns to the music only when the game restarts the music.
+- Each voice reads its own column of the rows, from its own position. Waits and
+  repeats count per voice. `:VoiceWait` `:ReadRow`
+  - Enables: a short loop on one voice under a long line on another.
+  - Costs: the columns drift apart, so rows no longer line up as written.
+- Commands set and clear 20 flags that the game reads. `:CmdSetFlag`
+  `:GameReadsFlag`
+  - Enables: game events in time with the music.
+- An instrument is an IFF 8SVX sample: a one-shot part, then a repeat part. Hold
+  loops the playing part until release. `:HoldOrRelease`
+  - Enables: a held sound and its ending from one sample.
 
-## Streams
+## Composer's view
 
-| Stream | Scope | Role      | Carries                   | Control          | Rate |
-| ------ | ----- | --------- | ------------------------- | ---------------- | ---- |
-| Track  | voice | sequencer | note, instrument, command | loop, wait, jump | row  |
+The composer writes one list of rows. Each row gives each voice a note, an
+instrument and a command. The song's header sets the tick rate and the voice
+mask.
 
-## Sequencer
+| Aspect   | Answer                                                                       | Source          |
+| -------- | ---------------------------------------------------------------------------- | --------------- |
+| Notation | A row: note, instrument and command for each of the four voices.             | `:ReadRow`      |
+| Notation | A range of bytes names a command. The byte's place in it is the argument.    | `:RunCommand`   |
+| Notation | The header sets a CIA timer value, or keeps the running rate.                | `:ClaimVoices`  |
+| Cost     | One command per voice per row.                                               | `:ReadRow`      |
+| Cost     | A long note takes a wait command: its row lasts 1 to 50 rows.                | `:CmdWait`      |
+| Cost     | A note starts one tick after its row. The tick before is silent.             | `:NoteStop`     |
+| Cost     | A song starts its voices at volume 0. The first note needs a volume command. | `:ClaimVoices`  |
+| Cost     | A repeat of N plays its rows N + 1 times. Repeats do not nest.               | `:CmdRepeatEnd` |
+| Cost     | A row lasts six ticks. No command changes that.                              | `:RowTimer`     |
+| Cost     | An instrument without a one-shot part never sounds.                          | `:NoteRestart`  |
 
-| Aspect   | Value               | Label                             |
-| -------- | ------------------- | --------------------------------- |
-| Time     | rows, deltas        | `:RowTimer` `:CmdWait`            |
-| Unit     | row                 | `:RowTimer`                       |
-| Note end | next note, note-off | `:NoteStop` `:CmdStop`            |
-| Routing  | fixed               | `:ReadRow`                        |
-| Reuse    | loops               | `:CmdRepeatStart` `:CmdRepeatEnd` |
-| Tempo    | none                | `:RowTimer`                       |
+## What is unique
 
-## Generators
-
-| Generator    | Scope | States         | Writes | Rate          | Set by | Note-on |
-| ------------ | ----- | -------------- | ------ | ------------- | ------ | ------- |
-| Volume slide | voice | up, down, done | volume | every N ticks | Track  | keep    |
-| Hold         | voice | hold, release  | sample | tick          | Track  | keep    |
-
-## Channel outputs
-
-| Output | Writers, in tick order          |
-| ------ | ------------------------------- |
-| Volume | Volume slide (add), Track (set) |
-| Period | Track (note)                    |
-| Sample | Hold (set), Track (set)         |
-| DMA    | Track (on), Track (off)         |
-
-## Interactions
-
-| From  | To          | Event                                                     |
-| ----- | ----------- | --------------------------------------------------------- |
-| Track | other voice | Attach bits: modulate its volume or period `:CmdPerModOn` |
-| Track | game        | Sets flags for the game `:CmdSetFlag`                     |
-
-- Waits and repeats count per voice, so the columns drift apart. `:VoiceWait`
-- A row comes every 6 ticks. `:RowTimer`
-- A note stops its channel on the row tick and restarts it one tick later.
-  `:NoteStop` `:NoteRestart`
-
-## State
-
-| Scope      | Fields                                                     |
-| ---------- | ---------------------------------------------------------- |
-| Voice      | position, wait, repeat mark and count, volume, slide, hold |
-| Instrument | first part start and length, repeat part start and length  |
-| Global     | tick counter, 20 game flags, attach bits                   |
+- An instrument has no volume. A note keeps the voice's volume. `:NoteStop`
+- Step back plays its own row again at every row. The voice stays there until
+  the game starts a new song on it. `:CmdStepBack`
+- Restart sends only its own voice back to the first row. `:CmdRestart`
+- Any voice's command can link any pair of channels. `:CmdVolModOn`
+- During a game fade, volume commands do nothing until a song takes the voice
+  again. `:GameFade`
 
 ## Open questions
 
 - Did the Lemmings songs use modulation for timbre or for effects?
-- `DD` parks a voice on its row until a restart. `:CmdStepBack` Why?
+- Do sound effect songs end with step back, to park the voice (guess)?
+  `:CmdStepBack`
+- Period modulation from channel 2 has a handler but no command byte. Is this a
+  bug? `:CmdPerModOff2`

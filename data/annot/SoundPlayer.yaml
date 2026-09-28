@@ -5,7 +5,14 @@ sha1: c00350c86a129b65cdb82fa34f5e568d4d2e20f7
 labels:
   lbC06392C: LoadInstrument
   lbC0639D6: InitVoices
+  lbC0638DA: ClearVoices
+  lbC063A40: StartSong
+  lbC063A4A: RewindSong
+  lbC063A96: ClaimVoices
+  lbC063B6C: SilenceVoices
+  946: GameFade
   967: GameReadsFlag
+  lbC063CE6: Tick
   lbC063D18: RowTimer
   lbC063D4E: ReadRow
   lbC063D8A: VoiceWait
@@ -38,3 +45,11 @@ labels:
   lbC06410A: CmdStop
   lbC064144: CmdWait
   lbW0642F4: CommandTable
+  lbW0642A6: PeriodTable
+
+types:
+  Instrument: [lbL0643F4]
+  Track: [lbC063A80]
+  Song: [lbW064178]
+  Voice: [lbC0638DA]
+  Module: [lbC0637FA]
