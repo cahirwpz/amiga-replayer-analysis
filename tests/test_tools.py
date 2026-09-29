@@ -500,6 +500,14 @@ class Disasm(unittest.TestCase):
         jmp = bytes.fromhex("4efa0006 4efa0004 4e75 4e75")  # jmp (d16,pc)
         self.assertEqual(self.disasm.jump_table(jmp), [0x8, 0xA])
 
+    def test_reads_entry_stubs(self):
+        # movem.l d0/a0,-(sp); bsr.w; movem.l (sp)+,d0/a0; rts, then
+        # move.l a3,-(sp); bsr.w; move.l (sp)+,a3; rts, then other code
+        raw = bytes.fromhex("48e78080 61000010 4cdf0101 4e75")
+        raw += bytes.fromhex("2f0b 61000006 265f 4e75 08f90001")
+        self.assertEqual(self.disasm.stubs(raw), [0x0, 0xE])
+        self.assertEqual(self.disasm.stubs(raw[:0xE]), [])  # one stub
+
     def test_wraps_raw_code_at_address_0(self):
         if not self.disasm.VASM.exists():
             self.skipTest("vasm missing; run: disasm.py install")

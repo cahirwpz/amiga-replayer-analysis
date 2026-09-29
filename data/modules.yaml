@@ -45,3 +45,17 @@ data/module/Fred/fred.title:
   game: Fuzzball
   archive: Fuzzball.lha
   source: ExoticA
+
+data/module/DavidWhittaker/dw.ingame:
+  sha1: 6e0c63c90de52e450722e72add5565fed2f3d82a
+  player: DavidWhittaker
+  game: Xenon 2 Megablast
+  archive: Xenon_2_-_Megablast.lha
+  source: ExoticA
+
+data/module/DavidWhittaker/dw.title:
+  sha1: 7b571748b6efbed6a619d0202557b6e800282d23
+  player: DavidWhittaker
+  game: Xenon 2 Megablast
+  archive: Xenon_2_-_Megablast.lha
+  source: ExoticA

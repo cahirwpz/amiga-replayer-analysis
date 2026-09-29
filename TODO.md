@@ -50,14 +50,20 @@ the first card on it, with `specs/med.py`.
       code of `data/module/Fred/fred.ingame1`, shared by all three Fuzzball
       modules. Map: `ext/c-flod/neoart/flod/fred`.
 
+- [ ] `DavidWhittaker`: read the replay of
+      `data/module/DavidWhittaker/dw.ingame`, then decide on a card.
+  - The command handlers: `data/disasm/DavidWhittaker.cnf:CommandTable`.
+  - The port shows pitch and volume lists like Hippel ST and Future Composer.
+  - Some versions rewrite a pulse wave between two limits (inference from
+    `DavidWhittakerWorker.cs:ExtractInfoFromPlayFunction`). Xenon 2 lacks that
+    code.
+
 Skip unless a new lead turns up:
 
 - `ActionAmics`: the one-byte sweep, once per tick per shared sample.
 - `QuadraComposer`: `ProTracker`-like effects.
 - `DeltaMusic2.0`: only C and C# ports. They show tables close to Future
   Composer, SoundMon and Sonic Arranger.
-- `DavidWhittaker`: only C and C# ports. Its pitch and volume lists look like
-  Hippel ST and Future Composer (inference from the port).
 
 ### Then
 

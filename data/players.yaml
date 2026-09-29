@@ -45,7 +45,10 @@ MED:
 DavidWhittaker:
   source: ext/c-flod/neoart/flod/whittaker
   note: C port of Flod 4.1 DWPlayer
-  provenance: port
+  provenance: ira
+  module: data/module/DavidWhittaker/dw.ingame
+  author: David Whittaker
+  game: Xenon 2 Megablast
   ports: [ext/nostalgicplayer/Source/Agents/Players/DavidWhittaker]
 
 DeltaMusic1.3:

@@ -33,7 +33,9 @@ LABELs; entries are offset 0 and every symbol in a code hunk.
 Raw code, e.g. a module, has no hunk header. vasm wraps it into one code
 hunk at address 0, so offsets are file offsets. Entries are offset 0 and
 the targets of a leading table of `bra.w` or `jmp (d16,pc)`, labelled
-Jump0, Jump1 and on.
+Jump0, Jump1 and on. Without one, a leading row of short stubs that call a
+routine with `bsr.w` and end in `rts` gives the entries, labelled Stub0,
+Stub1 and on.
 
 `seed` drops an entry whose code would run past the end of its hunk: it is
 data. It prints each entry and whether it was kept. A data symbol whose
@@ -122,6 +124,8 @@ HUNK_RELOC32, HUNK_RELOC32SHORT, HUNK_DREL32 = 0x3EC, 0x3FC, 0x3F7
 HUNK_SYMBOL, HUNK_DEBUG, HUNK_END, HUNK_NAME = 0x3F0, 0x3F1, 0x3F2, 0x3E8
 # Jump table entries: a 16-bit displacement from the second word follows.
 JUMPS = (b"\x60\x00", b"\x4e\xfa")  # bra.w, jmp (d16,pc)
+BSR_W, RTS = b"\x61\x00", b"\x4e\x75"
+STUB_MAX = 16  # bytes in an entry stub, e.g. movem.l, bsr.w, movem.l, rts
 LFS_POINTER = b"version https://git-lfs"
 
 
@@ -297,6 +301,19 @@ def jump_table(raw):
     return out
 
 
+def stubs(raw):
+    """Starts of the entry stubs at the start of raw code: each calls a
+    routine with `bsr.w` and ends in `rts`. One stub alone is no table."""
+    out, off = [], 0
+    while True:
+        words = [raw[p : p + 2] for p in range(off, off + STUB_MAX, 2)]
+        if RTS not in words or BSR_W not in words[: words.index(RTS)]:
+            break
+        out.append(off)
+        off += 2 * words.index(RTS) + 2
+    return out if len(out) > 1 else []
+
+
 def wrap(path):
     """Raw code as an executable with one code hunk at address 0."""
     with tempfile.TemporaryDirectory() as tmp:
@@ -311,6 +328,9 @@ def load(path):
     if data[:4] not in (HUNK_HEADER.to_bytes(4, "big"), HUNK_UNIT.to_bytes(4, "big")):
         targets = jump_table(data)
         labels = [(f"Jump{n}", addr) for n, addr in enumerate(targets)]
+        if not targets:
+            targets = stubs(data)
+            labels = [(f"Stub{n}", addr) for n, addr in enumerate(targets)]
         return wrap(path.resolve()), labels, sorted({0, *targets})
     if path.parent == PLAYERS:
         found = tags(path)
