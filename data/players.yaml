@@ -151,8 +151,8 @@ SIDMon1.0:
 
 SIDMon2.0:
   source: ext/c-flod/neoart/flod/sidmon
-  note: C port of Flod 4.1 S2Player
-  provenance: port
+  note: no card; table walkers and sample negation as in SoundMon
+  provenance: ira
   ports: [ext/nostalgicplayer/Source/Agents/Players/SidMon20]
   family: SIDMon
   after: { player: SIDMon1.0, evidence: name }

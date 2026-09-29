@@ -60,8 +60,8 @@ Skip unless a new lead turns up:
 - `InStereo2.0`: two waves per instrument, an LFO and an envelope. Close to
   Sonic Arranger (inference from the port).
 - `QuadraComposer`: `ProTracker`-like effects.
-- `DeltaMusic2.0` and `SIDMon2.0`: only C and C# ports. They show tables close
-  to Future Composer, SoundMon and Sonic Arranger.
+- `DeltaMusic2.0`: only C and C# ports. They show tables close to Future
+  Composer, SoundMon and Sonic Arranger.
 - `DavidWhittaker`: only C and C# ports. Its pitch and volume lists look like
   Hippel ST and Future Composer (inference from the port).
 
@@ -84,8 +84,6 @@ Skip unless a new lead turns up:
   - [Jason Page](players/JasonPage.md): branch markers and save slots.
   - [Paul Robotham](players/PaulRobotham.md): pulses per quarter note.
   - [MusicMaker 8V](players/MusicMaker-8V.md): quarter tones.
-- Modules the user can find: `SIDMon1.0`. Its replay code ships inside each
-  module.
 - Releases: did a game or demo ship Oktalyzer's replay 1? Which games used
   MaxTrax?
 - Docs or credits: Sonic Arranger's `AMF` name. Other games with Digital Sonix &
@@ -108,12 +106,11 @@ Skip unless a new lead turns up:
 A port is not evidence (see [`AGENTS.md`](AGENTS.md#evidence)). These players
 need 68k code first.
 
-| Player             | Why                                          | Map                             |
-| ------------------ | -------------------------------------------- | ------------------------------- |
-| `BenDaglish-SID`   | Replay code is in the module; needs a module | —                               |
-| `JankoMrsicFlogel` | Replay code is in the module; needs a module | —                               |
-| `Special-FX`       | Replay code is in the module; needs a module | —                               |
-| `SIDMon1.0`        | Replay code is in the module; needs a module | `ext/c-flod/neoart/flod/sidmon` |
+| Player             | Why                                          | Map |
+| ------------------ | -------------------------------------------- | --- |
+| `BenDaglish-SID`   | Replay code is in the module; needs a module | —   |
+| `JankoMrsicFlogel` | Replay code is in the module; needs a module | —   |
+| `Special-FX`       | Replay code is in the module; needs a module | —   |
 
 ## Disassembly notes
 
@@ -127,8 +124,7 @@ objects; `listing` checks that vasm rebuilds the input. Workflow:
   `SH_Speed` and `SH_Len` are data. Their bogus `CODE` range in `okplay1` and
   `okplay2` was removed by hand.
 
-- Seeding was tried on `DeltaMusic2.0`, `SIDMon2.0`, `Laxity` and
-  `TFMX-7V-TFHD`.
+- Seeding was tried on `DeltaMusic2.0`, `Laxity` and `TFMX-7V-TFHD`.
 - `-preproc` misses code reached by jump tables or pointers. Example:
   `TFMX-7V-TFHD` keeps `4e75` (`rts`) inside data at `$060c`. Add `CODE` ranges
   by hand.
