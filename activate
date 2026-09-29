@@ -1,116 +1,6 @@
 #!/bin/bash
 # This file must be used with "source ./activate" in the repository root.
-
-# A shallow, partial and sparse submodule: only the commit we pin, only the
-# given folders, and only the files in them. Git keeps sparse settings per
-# clone, so this runs before `git submodule update`, which then finds the
-# submodule at its pin.
-function replayer_analysis_sparse {
-  local dir=$1
-  shift
-  [ -e "$dir/.git" ] && return 0
-  local url sha
-  url=$(git config -f .gitmodules "submodule.$dir.url") || return 1
-  sha=$(git rev-parse ":$dir") || return 1
-  git init -q "$dir" &&
-    git -C "$dir" remote add origin "$url" &&
-    git -C "$dir" sparse-checkout set "$@" &&
-    git -C "$dir" fetch -q --depth 1 --filter=blob:none origin "$sha" &&
-    git -C "$dir" checkout -q "$sha" &&
-    git submodule init -- "$dir" &&
-    git submodule absorbgitdirs -- "$dir"
-}
-
-# The commands activate needs: Python, git with LFS, and what builds IRA,
-# vasm, vlink and the timing driver. Commands, not packages: a CI image may
-# install a tool outside the package manager. Reports all missing at once.
-function replayer_analysis_check {
-  if ! [ -e /etc/debian_version ]; then
-    echo "activate: only Debian and Ubuntu are supported."
-    return 1
-  fi
-  local need
-  local -a missing
-  # COMMAND:PACKAGE
-  for need in git:git git-lfs:git-lfs python3:python3 venv:python3-venv \
-    curl:curl bsdtar:libarchive-tools make:make gcc:gcc g++:g++ \
-    cmake:cmake ninja:ninja-build; do
-    if [ "${need%%:*}" = venv ]; then
-      python3 -c "import ensurepip, venv" 2>/dev/null && continue
-    else
-      command -v "${need%%:*}" >/dev/null && continue
-    fi
-    missing+=("${need#*:}")
-  done
-  if [ ${#missing[@]} -gt 0 ]; then
-    echo "activate: missing packages: ${missing[*]}"
-    echo "  Run: sudo apt-get install ${missing[*]}"
-    return 1
-  fi
-}
-
-# Build TOOL into .venv/bin from the archive at URL, unless it is there.
-# The archive holds one directory with a Makefile; ARGS go to make.
-# bsdtar reads both LHA and tar.gz.
-function replayer_analysis_build {
-  local tool=$1 url=$2
-  shift 2
-  [ -x ".venv/bin/$tool" ] && return 0
-  local tmp src
-  tmp=$(mktemp -d) || return 1
-  if curl -fsSL "$url" | bsdtar -xf - -C "$tmp" &&
-    src=$(find "$tmp" -mindepth 1 -maxdepth 1 -type d) &&
-    mkdir -p "$src/objects" && # vlink's Makefile needs it
-    make -C "$src" "$@" >"$tmp/make.log" 2>&1 &&
-    cp "$src/$tool" ".venv/bin/$tool"; then
-    echo "activate: built .venv/bin/$tool"
-    rm -rf "$tmp"
-  else
-    tail -20 "$tmp/make.log" 2>/dev/null
-    rm -rf "$tmp"
-    return 1
-  fi
-}
-
-function replayer_analysis_activate {
-  # NostalgicPlayer: 162 MB in full; we read only its replayer ports and
-  # its format notes.
-  replayer_analysis_sparse ext/nostalgicplayer \
-    Source/Agents/Players Format_Descriptions || return 1
-  # vAmiga: we build only its emulator core, for tools/timing.py.
-  replayer_analysis_sparse ext/vamiga Core || return 1
-  git submodule update --init || return 1
-  python3 -m venv .venv || return 1
-  # shellcheck source=/dev/null
-  source .venv/bin/activate || return 1
-  python3 -m pip -q install -U -r requirements.txt || return 1
-  # IRA: the current Aminet release; vlink and vasm: pinned tags. Each is
-  # built once; delete one to rebuild it.
-  replayer_analysis_build ira https://aminet.net/dev/asm/ira.lha || return 1
-  replayer_analysis_build vlink http://phoenix.owl.de/tags/vlink0_18a.tar.gz ||
-    return 1
-  replayer_analysis_build vasmm68k_mot http://phoenix.owl.de/tags/vasm2_0f.tar.gz \
-    CPU=m68k SYNTAX=mot || return 1
-  # amiga-timing: the driver of tools/timing.py, linked with vAmiga's core.
-  # Built once, in about three minutes; delete it to rebuild.
-  if ! [ -x .venv/bin/amiga-timing ]; then
-    echo "activate: building .venv/bin/amiga-timing, about 3 minutes"
-    mkdir -p build
-    if ! {
-      cmake -S tools/timing -B build/amiga-timing -G Ninja \
-        -DCMAKE_BUILD_TYPE=Release -DVAMIGA_CORE="$PWD/ext/vamiga/Core" &&
-        cmake --build build/amiga-timing &&
-        cmake --install build/amiga-timing --prefix .venv
-    } >build/amiga-timing.log 2>&1; then
-      tail -20 build/amiga-timing.log
-      return 1
-    fi
-  fi
-  # CI runs the hooks directly; a git hook there would be pointless.
-  if [[ "$GITHUB_ACTIONS" != "true" ]]; then
-    pre-commit install || return 1
-  fi
-}
+# setup/Makefile sets up the environment; this file adds it to the shell.
 
 # The venv and requirements.txt resolve against $(pwd).
 # zsh names the sourced file in $0 at top level; bash in BASH_SOURCE.
@@ -122,7 +12,15 @@ if ! [ "${BASH_SOURCE[0]:-$0}" -ef ./activate ]; then
   return 1
 fi
 
-if ! { replayer_analysis_check && replayer_analysis_activate; }; then
+# setup/check-packages.sh checks the rest, but make must run it.
+if ! command -v make >/dev/null; then
+  echo "activate: missing packages: make"
+  echo "  Run: sudo apt-get install make"
+  return 1
+fi
+
+# shellcheck source=/dev/null
+if ! { make -s -j"$(nproc)" -f setup/Makefile && source .venv/bin/activate; }; then
   echo "amiga-replayer-analysis environment setup failed!"
   return 1
 fi

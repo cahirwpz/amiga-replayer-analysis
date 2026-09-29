@@ -1,6 +1,6 @@
 # Builds amiga-timing, the driver of tools/timing.py, against vAmiga's core.
-# activate passes VAMIGA_CORE, the path of vAmiga's Core directory, and
-# installs the driver into .venv/bin.
+# setup/Makefile passes VAMIGA_CORE, the path of vAmiga's Core directory,
+# and installs the driver into .venv/bin.
 cmake_minimum_required(VERSION 3.16)
 project(AmigaTiming CXX)
 set(CMAKE_CXX_STANDARD 20)

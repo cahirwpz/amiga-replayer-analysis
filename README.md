@@ -40,7 +40,8 @@ The shape is fixed by [the card template](docs/card-template.md).
 
 ## Contributing
 
-- Run `source ./activate` in the repo root. It fetches the sources and installs
-  the pre-commit checks.
+- Run `source ./activate` in the repo root. It fetches the sources, builds the
+  tools and installs the pre-commit checks. [`setup/`](setup/Makefile) does the
+  work; a rerun rebuilds only what changed.
 - Writing rules and checks: [`AGENTS.md`](AGENTS.md).
 - Open work: [`TODO.md`](TODO.md).
