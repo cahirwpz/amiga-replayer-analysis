@@ -30,15 +30,18 @@ jobs:
         id: vamiga
         run: echo "pin=$(git rev-parse HEAD:ext/vamiga)" >> "$GITHUB_OUTPUT"
       - name: Cache the environment
-        # The venv with IRA, vlink, vasm and the timing driver; the driver
-        # takes about 7 minutes here. setup/Makefile compares build/keys, so
-        # an older cache still keeps every tool whose inputs did not change.
+        # The venv with IRA, vlink, vasm and the timing driver, and the
+        # driver's build directory; vAmiga's core takes about 8 minutes here.
+        # setup/Makefile compares build/keys, so an older cache still keeps
+        # every tool whose inputs did not change, and vAmiga's objects while
+        # the pin stays.
         id: env
         uses: actions/cache@v6
         with:
           path: |
             .venv
             build/keys
+            build/amiga-timing
             build/packages.ok
           key: env-${{ steps.vamiga.outputs.pin }}-${{ hashFiles('requirements.txt', 'setup/*', 'tools/timing/driver.cpp', 'tools/timing/CMakeLists.txt') }}
           restore-keys: env-

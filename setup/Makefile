@@ -65,12 +65,24 @@ $(ARCHIVE_TOOLS): $(BIN)/%: $(KEYS)/% | .venv/.installed build/packages.ok
 	  cp "$$src/$*" $@; } >build/$*.log 2>&1 || \
 	{ tail -20 build/$*.log; exit 1; }
 
+# The build directory is valid for one pin only; a new pin starts it empty.
+build/amiga-timing/.vacore: $(KEYS)/vacore
+	@rm -rf build/amiga-timing
+	@mkdir -p build/amiga-timing
+	@touch $@
+
 # The driver of tools/timing.py, linked with vAmiga's core. The first build
-# takes about three minutes; ninja rebuilds only what changed. The install
+# takes about eight minutes in CI. A checkout gives the core's sources fresh
+# mtimes, so they get the pin's commit time instead; the core's objects then
+# stay up to date and only the driver is rebuilt. This is safe only because
+# the rule above empties a directory built from another pin. The install
 # may keep an unchanged binary's mtime, hence the touch.
-$(BIN)/amiga-timing: $(KEYS)/amiga-timing \
+$(BIN)/amiga-timing: $(KEYS)/amiga-timing build/amiga-timing/.vacore \
   | build/submodules.ok .venv/.installed build/packages.ok
 	@echo "setup: building $@"
+	@t=$$(git -C ext/vamiga log -1 --format=%ct) && \
+	git -C ext/vamiga ls-files -z Core | \
+	  (cd ext/vamiga && xargs -0 touch -d @$$t)
 	@{ cmake -S tools/timing -B build/amiga-timing -G Ninja \
 	    -DCMAKE_BUILD_TYPE=Release -DVAMIGA_CORE="$(CURDIR)/ext/vamiga/Core" && \
 	  cmake --build build/amiga-timing && \
