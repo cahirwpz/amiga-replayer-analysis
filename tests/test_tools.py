@@ -266,6 +266,12 @@ class Annot(unittest.TestCase):
         ):
             self.assertIn(text, out)
 
+    def test_cites_resource_strings(self):
+        with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
+            path = Path(tmp) / "Resources.resx"
+            path.write_text('<data name="IDS_A" xml:space="preserve">\n')
+            self.assertEqual(self.annot.cited_labels(path), {"IDS_A"})
+
     def test_rejects_duplicate_keys(self):
         out = "\n".join(self.annot.process(self.dir / "duplicate.yaml", write=False))
         self.assertIn("duplicate key 2", out)

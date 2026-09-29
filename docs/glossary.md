@@ -225,12 +225,13 @@ Where the replay code we read comes from. Set per player in `data/players.yaml`.
 
 How we know that one player grew from another.
 
-| Value    | Meaning                                        |
-| -------- | ---------------------------------------------- |
-| **code** | We compared the replay code of both versions.  |
-| **port** | One port plays both versions with one player.  |
-| **docs** | The author or another first-hand page says so. |
-| **name** | Only the player names match. Not compared yet. |
+| Value     | Meaning                                        |
+| --------- | ---------------------------------------------- |
+| **code**  | We compared the replay code of both versions.  |
+| **port**  | One port plays both versions with one player.  |
+| **docs**  | The author or another first-hand page says so. |
+| **notes** | A port's notes say so. Not compared yet.       |
+| **name**  | Only the player names match. Not compared yet. |
 
 ## Stream names
 

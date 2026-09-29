@@ -52,13 +52,7 @@ the first card on it, with `specs/med.py`.
 
 Skip unless a new lead turns up:
 
-- `Synth`: an envelope sets how many bytes of a wave are negated. Its wave
-  effects overlap Sonic Arranger's (inference from the port).
 - `ActionAmics`: the one-byte sweep, once per tick per shared sample.
-- `InStereo`: `Synth`'s file layout without wave effects. Guess: `Synth` grew
-  from it.
-- `InStereo2.0`: two waves per instrument, an LFO and an envelope. Close to
-  Sonic Arranger (inference from the port).
 - `QuadraComposer`: `ProTracker`-like effects.
 - `DeltaMusic2.0`: only C and C# ports. They show tables close to Future
   Composer, SoundMon and Sonic Arranger.

@@ -241,7 +241,8 @@ def cited_labels(path, cache={}):
 
     Assembler: identifiers in column 1. C: function names. IRA config: LABEL
     and SYMBOL. data/annot/*.yaml: the labels of the rendered listing.
-    Python, e.g. specs/: top-level functions and classes.
+    Python, e.g. specs/: top-level functions and classes. .NET resources
+    (.resx), e.g. a port's notes: string names.
     """
     if path not in cache:
         text = path.read_bytes().decode("latin-1")
@@ -253,6 +254,9 @@ def cited_labels(path, cache={}):
             cache[path] = {getattr(n, "name", "") for n in tree.body} - {""}
         elif suffix == ".cnf":
             found = re.finditer(r"^(?:LABEL|SYMBOL)\s+(\S+)\s", text, re.M)
+            cache[path] = {m.group(1) for m in found}
+        elif suffix == ".resx":
+            found = re.finditer(r'<data name="([^"]+)"', text)
             cache[path] = {m.group(1) for m in found}
         elif suffix in (".c", ".h"):
             found = re.finditer(r"^[A-Za-z_][^;()=\n]*?\b(\w+)\s*\(", text, re.M)

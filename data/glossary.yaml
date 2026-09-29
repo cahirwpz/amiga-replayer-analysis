@@ -224,6 +224,7 @@ sections:
       code: We compared the replay code of both versions.
       port: One port plays both versions with one player.
       docs: The author or another first-hand page says so.
+      notes: A port's notes say so. Not compared yet.
       name: Only the player names match. Not compared yet.
 
   - key: stream_names

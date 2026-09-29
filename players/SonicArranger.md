@@ -21,6 +21,8 @@ Seventeen wave effects rewrite each voice's own copy of its wave.
 | --------- | ------------------------------------------------------------------- |
 | Player    | `SonicArranger`                                                     |
 | Author    | Carsten Schlote, Branko Mikiç and Carsten Herbst                    |
+| Family    | Sonic Arranger                                                      |
+| Grew from | `Synth`                                                             |
 | Code read | disassembly: `ext/uade/amigasrc/players/wanted_team/Sonic_Arranger` |
 | Spec      | [specs/sonic_arranger.py](../specs/sonic_arranger.py)               |
 

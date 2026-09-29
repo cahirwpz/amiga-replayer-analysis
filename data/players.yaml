@@ -179,6 +179,12 @@ SonicArranger:
   spec: specs/sonic_arranger.py
   provenance: disassembly
   author: Carsten Schlote, Branko Mikiç and Carsten Herbst
+  family: Sonic Arranger
+  after:
+    player: Synth
+    evidence: notes
+    cite: ext/nostalgicplayer/Source/Agents/Players/Synthesis/Resources.resx:IDS_SYN_DESCRIPTION_AGENT1
+  head: true
 
 SonixMusicDriver:
   spec: specs/sonix_music_driver.py
@@ -332,6 +338,13 @@ Synth:
   source: ext/nostalgicplayer/Source/Agents/Players/Synthesis
   note: C# port in NostalgicPlayer
   provenance: port
+  author: Carsten Herbst and Branko Mikiç
+  family: Sonic Arranger
+  after:
+    player: InStereo
+    evidence: notes
+    why: adds wave effects to the InStereo 1.0 player
+    cite: ext/nostalgicplayer/Source/Agents/Players/Synthesis/Resources.resx:IDS_SYN_DESCRIPTION_AGENT1
 
 VoodooSupremeSynthesizer:
   ports: [ext/nostalgicplayer/Source/Agents/Players/VoodooSupremeSynthesizer]
@@ -344,11 +357,20 @@ InStereo:
   source: ext/nostalgicplayer/Source/Agents/Players/InStereo10
   note: C# port in NostalgicPlayer
   provenance: port
+  author: Hans Bergstedt
+  family: Sonic Arranger
 
 InStereo2.0:
   source: ext/nostalgicplayer/Source/Agents/Players/InStereo20
   note: C# port in NostalgicPlayer
   provenance: port
+  author: Hans Bergstedt
+  family: Sonic Arranger
+  after:
+    player: InStereo
+    evidence: notes
+    why: a rewrite with a new file format
+    cite: ext/nostalgicplayer/Source/Agents/Players/InStereo20/Resources.resx:IDS_IS20_DESCRIPTION_AGENT1
 
 ActionAmics:
   source: ext/nostalgicplayer/Source/Agents/Players/Actionamics
