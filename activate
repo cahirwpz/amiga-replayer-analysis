@@ -21,6 +21,46 @@ function replayer_analysis_sparse {
     git submodule absorbgitdirs -- "$dir"
 }
 
+# The commands activate needs: Python, git with LFS, and what builds IRA,
+# vasm, vlink and the timing driver. Commands, not packages: a CI image may
+# install a tool outside the package manager. Reports all missing at once.
+function replayer_analysis_check {
+  local install command package
+  local -a needs missing
+  # Pairs of a command and the package that provides it.
+  if [ -e /etc/debian_version ]; then
+    install="sudo apt-get install"
+    needs=(git git git-lfs git-lfs python3 python3 venv python3-venv
+      curl curl bsdtar libarchive-tools make make gcc gcc g++ g++
+      cmake cmake ninja ninja-build)
+  elif [ -e /etc/fedora-release ]; then
+    # Fedora ships venv inside python3.
+    install="sudo dnf install"
+    needs=(git git git-lfs git-lfs python3 python3 venv python3
+      curl curl bsdtar bsdtar make make gcc gcc g++ gcc-c++
+      cmake cmake ninja ninja-build)
+  else
+    echo "activate: unknown Linux distribution; Debian, Ubuntu and Fedora work."
+    return 1
+  fi
+  while [ ${#needs[@]} -gt 0 ]; do
+    command=${needs[*]:0:1}
+    package=${needs[*]:1:1}
+    needs=("${needs[@]:2}")
+    if [ "$command" = venv ]; then
+      python3 -c "import ensurepip, venv" 2>/dev/null && continue
+    else
+      command -v "$command" >/dev/null && continue
+    fi
+    missing+=("$package")
+  done
+  if [ ${#missing[@]} -gt 0 ]; then
+    echo "activate: missing packages: ${missing[*]}"
+    echo "  Run: $install ${missing[*]}"
+    return 1
+  fi
+}
+
 # Build TOOL into .venv/bin from the archive at URL, unless it is there.
 # The archive holds one directory with a Makefile; ARGS go to make.
 # bsdtar reads both LHA and tar.gz.
@@ -94,7 +134,7 @@ if ! [ "${BASH_SOURCE[0]:-$0}" -ef ./activate ]; then
   return 1
 fi
 
-if ! replayer_analysis_activate; then
+if ! { replayer_analysis_check && replayer_analysis_activate; }; then
   echo "amiga-replayer-analysis environment setup failed!"
   return 1
 fi
