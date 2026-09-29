@@ -15,7 +15,7 @@ Each instrument runs two command lists: volume, and pitch with waveform.
 | Player    | `FutureComposer1.4`                                           |
 | Family    | Future Composer                                               |
 | Grew from | `FutureComposer1.3`                                           |
-| Code read | original (guess): `ext/uade/amigasrc/players/defect/fc14`     |
+| Code read | original: `ext/uade/amigasrc/players/defect/fc14`             |
 | Spec      | [specs/future_composer_14.py](../specs/future_composer_14.py) |
 
 ## Key ideas

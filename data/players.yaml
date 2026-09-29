@@ -9,7 +9,7 @@
 #   replay            replay location when the heuristic in inventory.py is wrong.
 #   note              remark in the output of tools/inventory.py.
 #   provenance        where the code we read comes from; values in the glossary.
-#   provenance_guess  true when provenance is a guess.
+#                     Leave it out until the code settles it.
 #   author, year, game
 #   family            lineage name. Members grow from each other.
 #   after             {player, evidence, why, cite}: the version this one grew
@@ -79,8 +79,7 @@ DigitalSonixChrome:
 
 FutureComposer1.3:
   ports: [ext/c-flod/neoart/flod/futurecomposer]
-  provenance: original
-  provenance_guess: true
+  provenance: disassembly
   family: Future Composer
 
 FutureComposer1.4:
@@ -88,7 +87,6 @@ FutureComposer1.4:
   spec: specs/future_composer_14.py
   source: defect/fc14
   provenance: original
-  provenance_guess: true
   family: Future Composer
   after:
     player: FutureComposer1.3
@@ -338,8 +336,6 @@ Sound-FX:
   ports: [ext/c-flod/neoart/flod/soundfx]
 
 Andrew_Parton:
-  provenance: disassembly
-  provenance_guess: true
   note: raw MIDI stream; MIDI channel AND 3 picks the Paula channel
 
 # No 68k code yet: NostalgicPlayer's C# ports show where to look.

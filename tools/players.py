@@ -31,7 +31,6 @@ FIELDS = {
     "replay": str,
     "note": str,
     "provenance": str,
-    "provenance_guess": bool,
     "author": str,
     "year": int,
     "game": str,

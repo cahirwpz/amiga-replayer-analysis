@@ -124,7 +124,7 @@ def context_rows(player, facts, sources, cards):
         ]
         rows.append(["Influences", ", ".join(names)])
     if "provenance" in f:
-        code = f["provenance"] + (" (guess)" if f.get("provenance_guess") else "")
+        code = f["provenance"]
         src = sources.get(player, {}).get("source") or f.get("source", "")
         if src:
             path = src if src.startswith(("ext/", "data/")) else f"{UADE_SOURCES}/{src}"
