@@ -1,0 +1,12 @@
+# Types for specs/david_whittaker.py. The IRA config holds the labels; it
+# reads data/module/DavidWhittaker/dw.ingame.
+source: data/disasm/DavidWhittaker.cnf
+
+# Classes in the spec: each word is a label of the config.
+types:
+  Module: [Songs]
+  Sample: [Samples]
+  Shadow: [Shadows]
+  Voice: [Voices]
+  Effect: [EffectVoices, SynthEffects]
+  EffectSample: [EffectSamples]

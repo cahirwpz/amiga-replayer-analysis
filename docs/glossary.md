@@ -23,6 +23,7 @@ One line per term. Every acronym used in this repo must appear here.
 | **CPU**             | The Motorola 68000 family processor.                                                      |
 | **DMA**             | Direct memory access. Paula fetches samples without the CPU.                              |
 | **PAL**             | European TV standard. Sets the Amiga clock and 50 Hz frame rate.                          |
+| **NTSC**            | American TV standard. Sets another Amiga clock and a 60 Hz frame rate.                    |
 | **PWM**             | Pulse-width modulation. Paula uses it to apply volume. Not the same as pulse width.       |
 | **RAM**             | Random-access memory. The CPU reads and writes it.                                        |
 | **VBL**             | Vertical blank interrupt, once per frame. The usual replayer tick.                        |
@@ -289,6 +290,7 @@ can still appear as `code`.
 | hybrid             | synth sound with a sample |
 | option             | command                   |
 | hard cut           | note cut                  |
+| synchro            | restart flags             |
 
 ## Control vocabulary
 

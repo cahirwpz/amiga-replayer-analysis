@@ -1,0 +1,9 @@
+# Types for specs/fred.py. The IRA config holds the labels; it reads
+# data/module/Fred/fred.ingame1.
+source: data/disasm/Fred.cnf
+
+# Classes in the spec: each word is a label of the config.
+types:
+  Module: [Tracks]
+  Instrument: [InstrumentsAt]
+  Voice: [Voices]

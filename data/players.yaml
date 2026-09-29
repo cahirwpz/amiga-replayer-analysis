@@ -51,6 +51,9 @@ DavidWhittaker:
   module: data/module/DavidWhittaker/dw.ingame
   author: David Whittaker
   game: Xenon 2 Megablast
+  year: 1989
+  spec: specs/david_whittaker.py
+  related: [RobHubbard, Fred]
   ports: [ext/nostalgicplayer/Source/Agents/Players/DavidWhittaker]
 
 DeltaMusic1.3:
@@ -321,6 +324,9 @@ Fred:
   ports: [ext/c-flod/neoart/flod/fred, ext/nostalgicplayer/Source/Agents/Players/Fred]
   module: data/module/Fred/fred.ingame1
   provenance: ira
+  spec: specs/fred.py
+  related: [DavidWhittaker]
+  author: Frederic Hahn
   game: Fuzzball
 
 RobHubbard:

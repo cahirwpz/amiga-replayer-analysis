@@ -36,18 +36,6 @@ the first card on it, with `specs/med.py`.
 
 ### New cards
 
-- [ ] `Fred`: write its card and spec. `data/disasm/Fred.cnf` covers the replay
-      code of `data/module/Fred/fred.ingame1`, shared by all three Fuzzball
-      modules. Map: `ext/c-flod/neoart/flod/fred`.
-
-- [ ] `DavidWhittaker`: read the replay of
-      `data/module/DavidWhittaker/dw.ingame`, then decide on a card.
-  - The command handlers: `data/disasm/DavidWhittaker.cnf:CommandTable`.
-  - The port shows pitch and volume lists like Hippel ST and Future Composer.
-  - Some versions rewrite a pulse wave between two limits (inference from
-    `DavidWhittakerWorker.cs:ExtractInfoFromPlayFunction`). Xenon 2 lacks that
-    code.
-
 Skip unless a new lead turns up:
 
 - `ActionAmics`: the one-byte sweep, once per tick per shared sample.
@@ -66,7 +54,12 @@ Skip unless a new lead turns up:
 - Modules: which songs use a feature? MED list jumps, TFMX Pro offset loops and
   byte checks, SoundPlayer `DD` and modulation in Lemmings. TFMX 7V notes to
   voice 3.
-- Modules for new cards:
+- Modules for cards:
+  - [Fred](players/Fred.md): a module with morph instruments.
+  - [David Whittaker](players/DavidWhittaker.md): a version that rewrites a
+    pulse wave (inference from
+    `DavidWhittakerWorker.cs:ExtractInfoFromPlayFunction`). It may earn a delta
+    card. Also Xenon 2's effect waves and effect samples, past `dw.ingame`.
   - [SoundFactory](players/SoundFactory.md): sync opcodes.
   - [Jason Page](players/JasonPage.md): branch markers and save slots.
   - [Paul Robotham](players/PaulRobotham.md): pulses per quarter note.
@@ -83,6 +76,8 @@ Skip unless a new lead turns up:
 
 - [ ] Full survey of the remaining players with readable source.
 - [ ] Compare code for the `name` lineage links in `data/players.yaml`.
+- [ ] Rob Hubbard, David Whittaker and Fred share a period table, and the last
+      two a vibrato. Compare their code for one lineage.
 - [ ] Mark `ProTracker`-like players `skip: protracker` in `data/players.yaml`.
 - [ ] Pick the first binary-only player to disassemble. Filter by scope first.
 - [ ] Before disassembling a player, look for a port of it outside UADE. Use it
