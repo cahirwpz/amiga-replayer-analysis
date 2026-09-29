@@ -336,7 +336,10 @@ Sound-FX:
   ports: [ext/c-flod/neoart/flod/soundfx]
 
 Andrew_Parton:
-  note: raw MIDI stream; MIDI channel AND 3 picks the Paula channel
+  provenance: ira
+  skip: covered
+  covered_by: [MIDI-Loriciel, MaxTrax]
+  note: MIDI stream; channel AND 3 is the Paula channel; program 126 loops
 
 # No 68k code yet: NostalgicPlayer's C# ports show where to look.
 Synth:
