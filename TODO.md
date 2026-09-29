@@ -17,14 +17,6 @@ All twelve pilot cards exist.
 
 ## After the pilot
 
-### Card template 2
-
-The template is in [`docs/card-template.md`](docs/card-template.md). `MED` is
-the first card on it, with `specs/med.py`.
-
-- [ ] Composer's view for MED rests on the format notes. Ask the user for an
-      OctaMED manual that covers synth sounds.
-
 ### Hardware model
 
 - [ ] `START_CCK` in `specs/soundmon_22.py:PlayRow` comes from a Musashi run of
