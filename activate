@@ -26,6 +26,8 @@ function replayer_analysis_activate {
   # its format notes.
   replayer_analysis_sparse ext/nostalgicplayer \
     Source/Agents/Players Format_Descriptions || return 1
+  # vAmiga: we build only its emulator core, for tools/timing.py.
+  replayer_analysis_sparse ext/vamiga Core || return 1
   git submodule update --init || return 1
   python3 -m venv .venv || return 1
   # shellcheck source=/dev/null
@@ -40,8 +42,8 @@ function replayer_analysis_activate {
       break
     fi
   done
-  # amiga-timing: vAmiga's Core at the commit pinned in tools/timing.py,
-  # fetched sparse. Built once, in about three minutes; delete it to rebuild.
+  # amiga-timing: the driver of tools/timing.py, linked with vAmiga's core.
+  # Built once, in about three minutes; delete it to rebuild.
   if ! [ -x .venv/bin/amiga-timing ]; then
     python3 tools/timing.py install || return 1
   fi

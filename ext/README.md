@@ -1,7 +1,8 @@
 # Sources
 
-The replayer code we read. Each folder here is a pinned git submodule.
-`tools/inventory.py` maps every UADE player binary to its source.
+The replayer code we read, and one emulator we run it on. Each folder here is a
+pinned git submodule. `tools/inventory.py` maps every UADE player binary to its
+source.
 
 ## `uade`
 
@@ -59,3 +60,14 @@ NostalgicPlayer by Thomas Neumann, a music player in C#, from
   megabytes. `activate` sets it up; a plain `git submodule update` would not.
 - Which player uses which port: `ports` and `source` in
   [`data/players.yaml`](../data/players.yaml).
+
+## `vamiga`
+
+vAmiga by Dirk W. Hoffmann, an Amiga 500, 1000 and 2000 emulator, from
+[GitHub](https://github.com/dirkwhoffmann/vAmiga). Licence: `MPL-2.0`.
+
+- Pinned at tag v4.5.
+- Only `Core`: the emulator without its user interface. About 12 of 152
+  megabytes. `activate` sets it up, as for `nostalgicplayer`.
+- `tools/timing.py` builds its driver against it. vAmiga's CPU is cycle-exact.
+  It also models bus slots and Paula.

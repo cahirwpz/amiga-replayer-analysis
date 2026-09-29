@@ -5,8 +5,8 @@ Usage: timing.py install
        timing.py run NAME
        timing.py check NAME
 
-  install  fetch vAmiga's Core at a pinned commit into build/vamiga and
-           build .venv/bin/amiga-timing from tools/timing/
+  install  build .venv/bin/amiga-timing from tools/timing/ and the
+           vAmiga submodule, ext/vamiga
   run      print the measured CCK of every span, case and load
   check    compare them with `expect` in the data file; exit 1 on a
            difference
@@ -52,12 +52,10 @@ from hardware.clock import CPU_PER_CCK  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data" / "timing"
 BUILD = ROOT / "build"
-SOURCE = BUILD / "vamiga"  # a sparse checkout of Core/ only
+CORE = ROOT / "ext" / "vamiga" / "Core"  # a sparse submodule: Core/ only
 BIN = ROOT / ".venv" / "bin"
 DRIVER = BIN / "amiga-timing"
 VASM = BIN / "vasmm68k_mot"
-VAMIGA_URL = "https://github.com/dirkwhoffmann/vAmiga.git"
-VAMIGA_COMMIT = "090681fdd8c2e3475e49cb2fc6f5031750399b6b"  # tag v4.5
 EXCERPT_AT = 0x10000
 START_LINE = 0x50  # inside the display window of every load
 
@@ -67,38 +65,19 @@ SIZES = {"b": 1, "w": 2, "l": 4}
 
 
 def install():
-    """Fetch vAmiga's Core once, then build the driver."""
-    if not (SOURCE / ".git").exists():
-        SOURCE.mkdir(parents=True, exist_ok=True)
-        for args in (
-            ["init", "-q"],
-            ["remote", "add", "origin", VAMIGA_URL],
-            ["sparse-checkout", "set", "Core"],
-            [
-                "fetch",
-                "-q",
-                "--depth",
-                "1",
-                "--filter=blob:none",
-                "origin",
-                VAMIGA_COMMIT,
-            ],
-            ["checkout", "-q", VAMIGA_COMMIT],
-        ):
-            git(*args)
+    """Build the driver against the vAmiga submodule."""
+    if not (CORE / "VAmiga.h").exists():
+        sys.exit("ext/vamiga is missing; run: source ./activate")
     build = BUILD / "amiga-timing"
     run_or_exit(
         "cmake", "-S", ROOT / "tools" / "timing", "-B", build, "-G", "Ninja",
-        "-DCMAKE_BUILD_TYPE=Release", f"-DVAMIGA_CORE={SOURCE / 'Core'}",
+        "-DCMAKE_BUILD_TYPE=Release", f"-DVAMIGA_CORE={CORE}",
     )  # fmt: skip
     run_or_exit("ninja", "-C", build, "amiga-timing")
     BIN.mkdir(parents=True, exist_ok=True)
     shutil.copy(build / "amiga-timing", DRIVER)
-    print(f"installed vAmiga {VAMIGA_COMMIT[:7]} as {DRIVER.relative_to(ROOT)}")
-
-
-def git(*args):
-    run_or_exit("git", "-C", SOURCE, *args)
+    pin = run_or_exit("git", "-C", CORE, "rev-parse", "--short", "HEAD").strip()
+    print(f"installed vAmiga {pin} as {DRIVER.relative_to(ROOT)}")
 
 
 def run_or_exit(*args):

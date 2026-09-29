@@ -26,6 +26,15 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Read the vAmiga pin
+        id: vamiga
+        run: echo "pin=$(git rev-parse HEAD:ext/vamiga)" >> "$GITHUB_OUTPUT"
+      - name: Cache the timing driver
+        # tools/timing.py builds it from ext/vamiga in about 7 minutes here.
+        uses: actions/cache@v6
+        with:
+          path: .venv/bin/amiga-timing
+          key: amiga-timing-${{ steps.vamiga.outputs.pin }}-${{ hashFiles('tools/timing/**') }}
       - name: Run all hooks
         # Formatters fail here instead of fixing files; the diff shows why.
         shell: bash
