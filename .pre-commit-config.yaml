@@ -74,6 +74,12 @@ repos:
         pass_filenames: false
         args: [ players/ ]
 
+      - id: asmfmt                   # 68k assembler layout, see tools/asmfmt.py
+        name: asmfmt
+        entry: .venv/bin/python3 tools/asmfmt.py
+        language: system
+        files: \.asm$
+
       - id: glossary                 # docs/glossary.md matches data/glossary.yaml
         name: glossary
         entry: .venv/bin/python3 tools/glossary.py --check

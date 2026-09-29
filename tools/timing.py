@@ -29,7 +29,7 @@ write before the code runs:
            most bus slots from the CPU
 
 The excerpt is assembled with vasm at $10000 in chip RAM, as a replay
-runs. tools/timing/boot.s is the boot ROM: it copies the excerpt, does
+runs. tools/timing/boot.asm is the boot ROM: it copies the excerpt, does
 the writes, sets up the load, waits for line $50 and calls the entry.
 Nothing generated is kept outside build/.
 """
@@ -54,7 +54,7 @@ VASM = BIN / "vasmm68k_mot"
 EXCERPT_AT = 0x10000
 START_LINE = 0x50  # inside the display window of every load
 
-BOOT = ROOT / "tools" / "timing" / "boot.s"
+BOOT = ROOT / "tools" / "timing" / "boot.asm"
 LOADS = {"no display": 0}  # without `loads` in the data file
 SIZES = {"b": 1, "w": 2, "l": 4}
 
@@ -118,7 +118,7 @@ def address(expr, symbols):
 
 
 def writes(case, symbols):
-    """The writes.bin table of boot.s for "ADDRESS SIZE VALUE" writes. A
+    """The writes.bin table of boot.asm for "ADDRESS SIZE VALUE" writes. A
     nested list, e.g. a YAML alias, adds its writes in place."""
     items = case.get("writes", [])
     while any(isinstance(i, list) for i in items):
@@ -139,8 +139,8 @@ def measure(name):
     data = yaml.safe_load((DATA / f"{name}.yaml").read_text())
     work = BUILD / "timing" / name
     work.mkdir(parents=True, exist_ok=True)
-    (work / "excerpt.s").write_text(excerpt(data), "latin-1")
-    symbols = assemble(work, "excerpt", work / "excerpt.s")
+    (work / "excerpt.asm").write_text(excerpt(data), "latin-1")
+    symbols = assemble(work, "excerpt", work / "excerpt.asm")
     points = {p: address(expr, symbols) for p, expr in data["points"].items()}
     results = {}
     for case_name, case in data["cases"].items():

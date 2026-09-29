@@ -589,5 +589,36 @@ class Timing(unittest.TestCase):
         self.assertEqual(code, 0, out)
 
 
+class Asmfmt(unittest.TestCase):
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import asmfmt
+
+        self.asmfmt = asmfmt
+
+    def test_puts_fields_at_multiples_of_8(self):
+        text = "start:\n\tmove.w\t#1,d0\t; one\n.loop\tdbra d0,.loop\n"
+        start, move, loop = self.asmfmt.format_text(text).splitlines()
+        self.assertEqual(start, "start:")
+        self.assertEqual([move.index(f) for f in ("move", "#1", ";")], [8, 16, 32])
+        self.assertEqual([loop.index(f) for f in (".loop", "dbra", "d0")], [0, 8, 16])
+
+    def test_moves_long_fields_to_the_next_stop(self):
+        line = self.asmfmt.layout("a_long_label equ $1000 ; x")
+        self.assertEqual([line.index(f) for f in ("equ", "$1000", ";")], [16, 24, 32])
+        code = "        move.l  #(excerpt_end-excerpt)/2-1,d0"
+        self.assertEqual(self.asmfmt.layout(code + " ; x").index(";"), 48)
+
+    def test_keeps_quotes_and_comment_lines(self):
+        self.assertEqual(self.asmfmt.layout(' incbin "a;b"'), '        incbin  "a;b"')
+        self.assertEqual(self.asmfmt.layout("; top"), "; top")
+        self.assertEqual(self.asmfmt.layout("   ; inner"), "        ; inner")
+
+    def test_accepts_the_repo_files(self):
+        boot = ROOT / "tools" / "timing" / "boot.asm"
+        text = boot.read_text("latin-1")
+        self.assertEqual(self.asmfmt.format_text(text), text)
+
+
 if __name__ == "__main__":
     unittest.main()
