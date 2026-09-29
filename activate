@@ -21,6 +21,29 @@ function replayer_analysis_sparse {
     git submodule absorbgitdirs -- "$dir"
 }
 
+# Build TOOL into .venv/bin from the archive at URL, unless it is there.
+# The archive holds one directory with a Makefile; ARGS go to make.
+# bsdtar reads both LHA and tar.gz.
+function replayer_analysis_build {
+  local tool=$1 url=$2
+  shift 2
+  [ -x ".venv/bin/$tool" ] && return 0
+  local tmp src
+  tmp=$(mktemp -d) || return 1
+  if curl -fsSL "$url" | bsdtar -xf - -C "$tmp" &&
+    src=$(find "$tmp" -mindepth 1 -maxdepth 1 -type d) &&
+    mkdir -p "$src/objects" && # vlink's Makefile needs it
+    make -C "$src" "$@" >"$tmp/make.log" 2>&1 &&
+    cp "$src/$tool" ".venv/bin/$tool"; then
+    echo "activate: built .venv/bin/$tool"
+    rm -rf "$tmp"
+  else
+    tail -20 "$tmp/make.log" 2>/dev/null
+    rm -rf "$tmp"
+    return 1
+  fi
+}
+
 function replayer_analysis_activate {
   # NostalgicPlayer: 162 MB in full; we read only its replayer ports and
   # its format notes.
@@ -33,19 +56,27 @@ function replayer_analysis_activate {
   # shellcheck source=/dev/null
   source .venv/bin/activate || return 1
   python3 -m pip -q install -U -r requirements.txt || return 1
-  # IRA: the current Aminet release; vlink and vasm: tags pinned in
-  # tools/disasm.py. Built once; delete one to rebuild all three.
-  local tool
-  for tool in ira vlink vasmm68k_mot; do
-    if ! [ -x ".venv/bin/$tool" ]; then
-      python3 tools/disasm.py install || return 1
-      break
-    fi
-  done
+  # IRA: the current Aminet release; vlink and vasm: pinned tags. Each is
+  # built once; delete one to rebuild it.
+  replayer_analysis_build ira https://aminet.net/dev/asm/ira.lha || return 1
+  replayer_analysis_build vlink http://phoenix.owl.de/tags/vlink0_18a.tar.gz ||
+    return 1
+  replayer_analysis_build vasmm68k_mot http://phoenix.owl.de/tags/vasm2_0f.tar.gz \
+    CPU=m68k SYNTAX=mot || return 1
   # amiga-timing: the driver of tools/timing.py, linked with vAmiga's core.
   # Built once, in about three minutes; delete it to rebuild.
   if ! [ -x .venv/bin/amiga-timing ]; then
-    python3 tools/timing.py install || return 1
+    echo "activate: building .venv/bin/amiga-timing, about 3 minutes"
+    mkdir -p build
+    if ! {
+      cmake -S tools/timing -B build/amiga-timing -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release -DVAMIGA_CORE="$PWD/ext/vamiga/Core" &&
+        cmake --build build/amiga-timing &&
+        cmake --install build/amiga-timing --prefix .venv
+    } >build/amiga-timing.log 2>&1; then
+      tail -20 build/amiga-timing.log
+      return 1
+    fi
   fi
   # CI runs the hooks directly; a git hook there would be pointless.
   if [[ "$GITHUB_ACTIONS" != "true" ]]; then

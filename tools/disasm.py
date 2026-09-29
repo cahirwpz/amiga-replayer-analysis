@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 """Disassemble UADE player binaries and other 68k hunk files with IRA.
 
-Usage: disasm.py install
-       disasm.py seed PLAYER|FILE
+Usage: disasm.py seed PLAYER|FILE
        disasm.py listing PLAYER|FILE
        disasm.py trace PLAYER|FILE ADDR|START-END...
 
-  install  build IRA (current Aminet release), vlink and vasm (pinned tags)
-           into .venv/bin
   seed     create data/disasm/NAME.cnf; refuses to overwrite it
   listing  write build/disasm/NAME.asm from the config, then check that vasm
            rebuilds the input from it
@@ -55,15 +52,12 @@ a player without source as `replay: disasm`.
 """
 
 import hashlib
-import io
 import re
 import shutil
 import struct
 import subprocess
 import sys
-import tarfile
 import tempfile
-import urllib.request
 from pathlib import Path
 
 import players
@@ -77,9 +71,6 @@ BIN = ROOT / ".venv" / "bin"
 IRA = BIN / "ira"
 VLINK = BIN / "vlink"
 VASM = BIN / "vasmm68k_mot"
-IRA_URL = "https://aminet.net/dev/asm/ira.lha"  # the current release
-VLINK_URL = "http://phoenix.owl.de/tags/vlink0_18a.tar.gz"
-VASM_URL = "http://phoenix.owl.de/tags/vasm2_0f.tar.gz"
 
 # -a: address and data in comments; -label=1: labels named by address.
 FLAGS = ["-a", "-label=1"]
@@ -484,65 +475,7 @@ def listing(arg):
     print(f"{out.relative_to(ROOT)}: vasm rebuilds the input")
 
 
-def make(src, *args):
-    proc = subprocess.run(["make", *args], cwd=src, capture_output=True, text=True)
-    if proc.returncode:
-        sys.exit(f"building {src.name} failed:\n{proc.stdout}{proc.stderr}")
-
-
-def install_ira():
-    import lhafile
-
-    with tempfile.TemporaryDirectory() as tmp:
-        with urllib.request.urlopen(IRA_URL) as r:
-            archive = lhafile.Lhafile(io.BytesIO(r.read()))
-        for info in archive.infolist():
-            name = info.filename.replace("\\", "/")
-            if name.endswith("/"):
-                continue
-            path = Path(tmp) / name
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(archive.read(info.filename))
-        src = Path(tmp) / "ira"
-        make(src)
-        shutil.copy(src / "ira", IRA)
-        h = (src / "ira.h").read_text(encoding="latin-1")
-        v = [re.search(rf'{k}\s+"(\d+)"', h).group(1) for k in ("VERSION", "REVISION")]
-    print(f"installed IRA {'.'.join(v)} as {IRA.relative_to(ROOT)}")
-
-
-def install_tagged(url, tool, *make_args):
-    """Build `tool` from a tagged source archive of Frank Wille's site."""
-    with tempfile.TemporaryDirectory() as tmp:
-        with urllib.request.urlopen(url) as r:
-            with tarfile.open(fileobj=io.BytesIO(r.read()), mode="r:gz") as archive:
-                archive.extractall(tmp, filter="data")
-        (src,) = Path(tmp).iterdir()  # the archive holds one directory
-        (src / "objects").mkdir(exist_ok=True)  # vlink's Makefile needs it
-        make(src, *make_args)
-        shutil.copy(src / tool.name, tool)
-        # vasm -v goes on to assemble stdin into a.out: keep that in tmp.
-        proc = subprocess.run(
-            [str(tool), "-v"],
-            cwd=tmp,
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            text=True,
-        )
-    version = (proc.stdout + proc.stderr).splitlines()[0].split(" (c)")[0]
-    print(f"installed {version} as {tool.relative_to(ROOT)}")
-
-
-def install():
-    BIN.mkdir(parents=True, exist_ok=True)
-    install_ira()
-    install_tagged(VLINK_URL, VLINK)
-    install_tagged(VASM_URL, VASM, "CPU=m68k", "SYNTAX=mot")
-
-
 def main(argv):
-    if argv == ["install"]:
-        return install()
     ok = len(argv) == 2 and argv[0] in ("seed", "listing")
     if ok or (len(argv) > 2 and argv[0] == "trace"):
         if not all(tool.exists() for tool in (IRA, VLINK, VASM)):

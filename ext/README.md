@@ -69,5 +69,5 @@ vAmiga by Dirk W. Hoffmann, an Amiga 500, 1000 and 2000 emulator, from
 - Pinned at tag v4.5.
 - Only `Core`: the emulator without its user interface. About 12 of 152
   megabytes. `activate` sets it up, as for `nostalgicplayer`.
-- `tools/timing.py` builds its driver against it. vAmiga's CPU is cycle-exact.
-  It also models bus slots and Paula.
+- `activate` builds the driver of `tools/timing.py` against it. vAmiga's CPU is
+  cycle-exact. It also models bus slots and Paula.

@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """Time replay code on an emulated Amiga 500 with vAmiga.
 
-Usage: timing.py install
-       timing.py run NAME
+Usage: timing.py run NAME
        timing.py check NAME
 
-  install  build .venv/bin/amiga-timing from tools/timing/ and the
-           vAmiga submodule, ext/vamiga
   run      print the measured CCK of every span, case and load
   check    compare them with `expect` in the data file; exit 1 on a
            difference
@@ -38,7 +35,6 @@ Nothing generated is kept outside build/.
 """
 
 import re
-import shutil
 import struct
 import subprocess
 import sys
@@ -52,7 +48,6 @@ from hardware.clock import CPU_PER_CCK  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data" / "timing"
 BUILD = ROOT / "build"
-CORE = ROOT / "ext" / "vamiga" / "Core"  # a sparse submodule: Core/ only
 BIN = ROOT / ".venv" / "bin"
 DRIVER = BIN / "amiga-timing"
 VASM = BIN / "vasmm68k_mot"
@@ -62,22 +57,6 @@ START_LINE = 0x50  # inside the display window of every load
 BOOT = ROOT / "tools" / "timing" / "boot.s"
 LOADS = {"no display": 0}  # without `loads` in the data file
 SIZES = {"b": 1, "w": 2, "l": 4}
-
-
-def install():
-    """Build the driver against the vAmiga submodule."""
-    if not (CORE / "VAmiga.h").exists():
-        sys.exit("ext/vamiga is missing; run: source ./activate")
-    build = BUILD / "amiga-timing"
-    run_or_exit(
-        "cmake", "-S", ROOT / "tools" / "timing", "-B", build, "-G", "Ninja",
-        "-DCMAKE_BUILD_TYPE=Release", f"-DVAMIGA_CORE={CORE}",
-    )  # fmt: skip
-    run_or_exit("ninja", "-C", build, "amiga-timing")
-    BIN.mkdir(parents=True, exist_ok=True)
-    shutil.copy(build / "amiga-timing", DRIVER)
-    pin = run_or_exit("git", "-C", CORE, "rev-parse", "--short", "HEAD").strip()
-    print(f"installed vAmiga {pin} as {DRIVER.relative_to(ROOT)}")
 
 
 def run_or_exit(*args):
@@ -156,7 +135,7 @@ def writes(case, symbols):
 def measure(name):
     """{case: {load: {span: CCK}}}. Files go to build/timing/NAME."""
     if not DRIVER.exists():
-        sys.exit("amiga-timing missing; run: tools/timing.py install")
+        sys.exit("amiga-timing missing; run: source ./activate")
     data = yaml.safe_load((DATA / f"{name}.yaml").read_text())
     work = BUILD / "timing" / name
     work.mkdir(parents=True, exist_ok=True)
@@ -215,8 +194,6 @@ def check(name):
 
 
 def main(argv):
-    if argv == ["install"]:
-        return install()
     if len(argv) == 2 and argv[0] in ("run", "check"):
         return {"run": run, "check": check}[argv[0]](argv[1])
     sys.exit(__doc__)

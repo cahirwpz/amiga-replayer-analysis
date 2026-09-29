@@ -532,7 +532,7 @@ class Disasm(unittest.TestCase):
 
     def test_wraps_raw_code_at_address_0(self):
         if not self.disasm.VASM.exists():
-            self.skipTest("vasm missing; run: disasm.py install")
+            self.skipTest("vasm missing; run: source ./activate")
         with tempfile.TemporaryDirectory() as tmp:
             raw = Path(tmp) / "raw"
             raw.write_bytes(self.RAW)
@@ -544,7 +544,7 @@ class Disasm(unittest.TestCase):
 
     def test_reads_a_pointer_table(self):
         if not self.disasm.VASM.exists():
-            self.skipTest("vasm missing; run: disasm.py install")
+            self.skipTest("vasm missing; run: source ./activate")
         raw = bytes.fromhex("4e75 4e75 00000000 00000002")  # two pointers at $4
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "raw"
@@ -584,7 +584,7 @@ class Timing(unittest.TestCase):
 
     def test_matches_the_recorded_times(self):
         if not self.timing.DRIVER.exists():
-            self.skipTest("amiga-timing is not built; run tools/timing.py install")
+            self.skipTest("amiga-timing is not built; run: source ./activate")
         code, _, out = run("timing.py", "check", "soundmon_22")
         self.assertEqual(code, 0, out)
 

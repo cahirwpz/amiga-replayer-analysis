@@ -26,11 +26,14 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Install bsdtar
+        # activate unpacks IRA's LHA archive and vasm's and vlink's tarballs.
+        run: command -v bsdtar || sudo apt-get install -y -qq libarchive-tools
       - name: Read the vAmiga pin
         id: vamiga
         run: echo "pin=$(git rev-parse HEAD:ext/vamiga)" >> "$GITHUB_OUTPUT"
       - name: Cache the timing driver
-        # tools/timing.py builds it from ext/vamiga in about 7 minutes here.
+        # activate builds it from ext/vamiga in about 7 minutes here.
         uses: actions/cache@v6
         with:
           path: .venv/bin/amiga-timing
