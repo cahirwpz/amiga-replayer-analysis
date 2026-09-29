@@ -60,8 +60,9 @@ DeltaMusic1.3:
 
 DeltaMusic2.0:
   source: ext/c-flod/neoart/flod/deltamusic
-  note: C port of Flod 4.1 D2Player
-  provenance: port
+  note: no card; wave lists, noise remade each tick, effects mute a voice
+  provenance: ira
+  module: data/module/DeltaMusic2.0/Arkanoid.dm2
   ports: [ext/nostalgicplayer/Source/Agents/Players/DeltaMusic20]
   family: Delta Music
   after: { player: DeltaMusic1.3, evidence: name }

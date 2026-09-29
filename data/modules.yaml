@@ -59,3 +59,9 @@ data/module/DavidWhittaker/dw.title:
   game: Xenon 2 Megablast
   archive: Xenon_2_-_Megablast.lha
   source: ExoticA
+
+data/module/DeltaMusic2.0/Arkanoid.dm2:
+  sha1: 06b73cfb594dfc6cf3a81137ff4373d2888080b2
+  player: DeltaMusic2.0
+  game: Arkanoid, C64 tune by Martin Galway; Amiga remix by Archon, 1994
+  source: https://nostalgicplayer.dk/modules/format/deltamusic20/

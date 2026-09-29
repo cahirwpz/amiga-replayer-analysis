@@ -62,8 +62,6 @@ Skip unless a new lead turns up:
 
 - `ActionAmics`: the one-byte sweep, once per tick per shared sample.
 - `QuadraComposer`: `ProTracker`-like effects.
-- `DeltaMusic2.0`: only C and C# ports. They show tables close to Future
-  Composer, SoundMon and Sonic Arranger.
 
 ### Then
 
@@ -124,7 +122,7 @@ objects; `listing` checks that vasm rebuilds the input. Workflow:
   `SH_Speed` and `SH_Len` are data. Their bogus `CODE` range in `okplay1` and
   `okplay2` was removed by hand.
 
-- Seeding was tried on `DeltaMusic2.0`, `Laxity` and `TFMX-7V-TFHD`.
+- Seeding was tried on `Laxity` and `TFMX-7V-TFHD`.
 - `-preproc` misses code reached by jump tables or pointers. Example:
   `TFMX-7V-TFHD` keeps `4e75` (`rts`) inside data at `$060c`. Add `CODE` ranges
   by hand.
