@@ -1,0 +1,16 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/npm/m68k-formatter@0/m68k-format.schema.json",
+  "case": "any",
+  "labelColon": "any",
+  "quotes": "any",
+  "operandSpace": "any",
+  "trimWhitespace": true,
+  "align": {
+    "mnemonic": 8,
+    "operands": 16,
+    "comment": 32,
+    "indentStyle": "space",
+    "tabSize": 8,
+    "standaloneComment": "mnemonic"
+  }
+}

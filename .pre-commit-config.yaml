@@ -74,10 +74,15 @@ repos:
         pass_filenames: false
         args: [ players/ ]
 
-      - id: asmfmt                   # 68k assembler layout, see tools/asmfmt.py
+      # Fields at columns 8, 16 and 32, spaces only; a field past its column
+      # gets one space. Options: .m68k-format.json.
+      - id: asmfmt                   # 68k assembler layout
         name: asmfmt
-        entry: .venv/bin/python3 tools/asmfmt.py
-        language: system
+        entry: m68k-format --write
+        language: node
+        # The formatter needs Node 22.15.1 or later; the CI image's is older.
+        language_version: 24.14.0
+        additional_dependencies: [ m68k-formatter@0.3.0 ]
         files: \.asm$
 
       - id: glossary                 # docs/glossary.md matches data/glossary.yaml

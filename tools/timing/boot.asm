@@ -15,7 +15,7 @@
         dc.w    $4ef9           ; jmp: reset reads its address as the PC
         dc.l    start
 
-COPPER_AT       equ     $1000   ; the copper reads chip RAM only
+COPPER_AT equ   $1000           ; the copper reads chip RAM only
 
 start:
         lea     $80000,sp       ; the top of chip RAM; reset's is odd
@@ -60,7 +60,7 @@ copy:
         dbra    d1,.write
 
         ifne    BITPLANES
-        move.w  #BITPLANES<<12|$200,$dff100     ; BPLCON0: colour on
+        move.w  #BITPLANES<<12|$200,$dff100 ; BPLCON0: colour on
         move.w  #$0038,$dff092  ; DDFSTRT
         move.w  #$00d0,$dff094  ; DDFSTOP
         move.w  #$2c81,$dff08e  ; DIWSTRT
@@ -81,7 +81,7 @@ planes:
         move.l  (a0)+,(a1)+
         move.l  (a0)+,(a1)+
         move.l  (a0)+,(a1)+
-        move.l  #COPPER_AT,$dff080      ; COP1LC
+        move.l  #COPPER_AT,$dff080 ; COP1LC
         move.w  d0,$dff088      ; COPJMP1
         move.w  #$8280,$dff096  ; DMACON: DMA and copper on
         move.w  #$c010,$dff09a  ; INTENA: copper interrupt on
