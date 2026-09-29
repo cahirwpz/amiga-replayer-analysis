@@ -37,7 +37,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .venv/bin/amiga-timing
-          key: amiga-timing-${{ steps.vamiga.outputs.pin }}-${{ hashFiles('tools/timing/**') }}
+          key: amiga-timing-${{ steps.vamiga.outputs.pin }}-${{ hashFiles('tools/timing/driver.cpp', 'tools/timing/CMakeLists.txt') }}
       - name: Run all hooks
         # Formatters fail here instead of fixing files; the diff shows why.
         shell: bash
