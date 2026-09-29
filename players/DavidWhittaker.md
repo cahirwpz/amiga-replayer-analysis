@@ -89,5 +89,5 @@ come before a note and stay until changed.
   `dw.ingame` ends.
 - The ports rewrite a pulse wave in some versions (inference). Which modules use
   it? It may earn a delta card.
-- [Fred](Fred.md) shares this period table and vibrato. Rob Hubbard's table
-  starts one octave up. Is there one source?
+- Did Rob Hubbard and David Whittaker write the shared core together? See
+  [the shared driver](../docs/shared-driver.md).

@@ -76,8 +76,6 @@ Skip unless a new lead turns up:
 
 - [ ] Full survey of the remaining players with readable source.
 - [ ] Compare code for the `name` lineage links in `data/players.yaml`.
-- [ ] Rob Hubbard, David Whittaker and Fred share a period table, and the last
-      two a vibrato. Compare their code for one lineage.
 - [ ] Mark `ProTracker`-like players `skip: protracker` in `data/players.yaml`.
 - [ ] Pick the first binary-only player to disassemble. Filter by scope first.
 - [ ] Before disassembling a player, look for a port of it outside UADE. Use it

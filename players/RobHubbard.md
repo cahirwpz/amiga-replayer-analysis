@@ -28,9 +28,8 @@ width of a short wave.
   - Enables: each game gets the replay its music was written for.
   - Costs: every module has its own copy. The two PGA Tour Golf modules differ.
     See [What is unique](#what-is-unique).
-- A sweep writes one byte per tick into a 16-byte wave. So an edge moves between
-  two bounds. `:Sweep` `:SweepDown`
-  - Enables: a pulse-width sweep, as on the C64, for one byte write per tick.
+- A sweep writes one byte per tick into a 16-byte wave, like [Fred](Fred.md)'s
+  pulse. `:Sweep` `:SweepDown`
   - Costs: the wave is shared, so every voice on the instrument hears it.
 - Each sample stores its recording rate. The period is scaled by it.
   `:InitSamples` `:NoteOn`

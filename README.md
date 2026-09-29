@@ -32,7 +32,7 @@ The shape is fixed by [the card template](docs/card-template.md).
   provenance.
 - Binary-only players: our own IRA disassembly. See
   [`tools/disasm.py`](tools/disasm.py).
-- Players whose replay code hides inside music files are left out.
+- Replay code inside a music file: our own IRA disassembly of one module.
 - What you would hear is marked as "(inference)".
 
 `tools/inventory.py` lists every UADE replayer and its source.
