@@ -572,14 +572,15 @@ class Timing(unittest.TestCase):
 
         data = yaml.safe_load((ROOT / "data/timing/soundmon_22.yaml").read_text())
         text = self.timing.excerpt(data)
-        self.assertIn("\nbpnext:\n", text)
-        self.assertNotIn("bsr\t\tbpnext", text)
+        self.assertIn("\nReadRow:\n", text)
+        self.assertNotIn("bsr\t\tReadRow", text)
+        self.assertNotIn("bpxx", text)
         self.assertNotIn("Section", text)
 
     def test_reads_addresses(self):
-        symbols = {"bpxx": 0x1000A}
-        self.assertEqual(self.timing.address("bpxx+4", symbols), 0x1000E)
-        self.assertEqual(self.timing.address("bpxx - 2", symbols), 0x10008)
+        symbols = {"DmaWait": 0x1000A}
+        self.assertEqual(self.timing.address("DmaWait+4", symbols), 0x1000E)
+        self.assertEqual(self.timing.address("DmaWait - 2", symbols), 0x10008)
         self.assertEqual(self.timing.address("0x40038", symbols), 0x40038)
 
     def test_matches_the_recorded_times(self):

@@ -19,6 +19,7 @@ labels:
   bpplayarp: SetArpPeriod
   # every row
   bpskip1: PlayRow
+  bpplay: ReadAndStartRow
   bpxx: DmaWait
   bploopel: RestoreWaves
   bploop2: StartNoteLoop
@@ -94,6 +95,7 @@ labels:
   bpper: Periods
   samples: SamplePtrs
   bpsong: Song
+  bp_buffer: StateBackup
 
 comments:
   132: "'V.3' in the header: the module has a table pool"

@@ -12,11 +12,14 @@ NAME is a data file, data/timing/NAME.yaml. It says which code to take
 from a replay's source, where to set breakpoints, and what memory to
 write before the code runs:
 
-  source   the replay's source, from the repo root
+  source   the replay's annotation, data/annot/PLAYER.yaml; labels are
+           then its new names. A raw source, from the repo root, only
+           for a player without one
   take     label ranges [FROM, TO] of the source, TO excluded. TO becomes
            a label at the range's end. A third item gives lines to add
            after that label.
-  drop     source lines to leave out; whitespace does not count
+  drop     source lines to leave out; whitespace and comments do not
+           count
   entry    the label that the boot code calls
   points   breakpoints: LABEL or LABEL+OFFSET or LABEL-OFFSET
   spans    NAME: [FROM, TO], two points. The span is the CPU time
@@ -43,6 +46,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import annot  # noqa: E402
 from hardware.clock import CPU_PER_CCK  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -75,15 +79,31 @@ def labels(lines):
     return found
 
 
+def source_lines(source):
+    """The lines of a raw source, or of an annotation's rendered listing."""
+    path = ROOT / source
+    if path.suffix != ".yaml":
+        return path.read_text("latin-1").splitlines()
+    if problems := annot.process(path, write=False):
+        sys.exit("\n".join(problems))
+    spec = annot.load(path)
+    return annot.render(spec, annot.source_lines(spec)[1])
+
+
+def code(line):
+    """The code of an assembler line, whitespace normalised."""
+    return " ".join(annot.code_part(line)[0].split())
+
+
 def excerpt(data):
     """The assembler text: the taken ranges of the source, at EXCERPT_AT."""
-    lines = (ROOT / data["source"]).read_text("latin-1").splitlines()
+    lines = source_lines(data["source"])
     where = labels(lines)
-    drop = {" ".join(d.split()) for d in data.get("drop", [])}
+    drop = {code(d) for d in data.get("drop", [])}
     out = [f" org ${EXCERPT_AT:x}"]
     for first, end, *extra in data["take"]:
         for line in lines[where[first] : where[end]]:
-            if " ".join(line.split()) not in drop:
+            if code(line) not in drop:
                 out.append(line)
         out.append(f"{end}:")
         out.extend(extra)
