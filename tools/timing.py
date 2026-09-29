@@ -27,16 +27,19 @@ write before the code runs:
   cases    NAME: {writes, expect}. `writes` are "ADDRESS SIZE VALUE",
            with SIZE b, w or l, done before the call. `expect` holds
            the spans per load
+  loads    NAME: BITPLANES, the low-resolution bitplanes fetched during
+           the call. Default: {no display: 0}. 6 bitplanes take the
+           most bus slots from the CPU
 
 The excerpt is assembled with vasm at $10000 in chip RAM, as a replay
-runs. A boot ROM copies it there, does the writes, waits for line $50
-and calls the entry. Each case runs under each load in LOADS: without
-display DMA, and with 6 low-resolution bitplanes, which take the most
-bus slots from the CPU. Nothing generated is kept outside build/.
+runs. tools/timing/boot.s is the boot ROM: it copies the excerpt, does
+the writes, sets up the load, waits for line $50 and calls the entry.
+Nothing generated is kept outside build/.
 """
 
 import re
 import shutil
+import struct
 import subprocess
 import sys
 from pathlib import Path
@@ -58,55 +61,9 @@ VAMIGA_COMMIT = "090681fdd8c2e3475e49cb2fc6f5031750399b6b"  # tag v4.5
 EXCERPT_AT = 0x10000
 START_LINE = 0x50  # inside the display window of every load
 
-# Register writes that set up each load before the call
-LOADS = {
-    "no display": [],
-    "6 bitplanes": [
-        "move.w #$6200,$dff100",  # BPLCON0: 6 bitplanes, low resolution
-        "move.w #$0038,$dff092",  # DDFSTRT
-        "move.w #$00d0,$dff094",  # DDFSTOP
-        "move.w #$2c81,$dff08e",  # DIWSTRT
-        "move.w #$2cc1,$dff090",  # DIWSTOP
-        *(f"move.l #$70000,$dff0{0xE0 + 4 * n:x}" for n in range(6)),  # BPLxPT
-        "move.w #$8300,$dff096",  # DMACON: DMA and bitplanes on
-    ],
-}
-
-BOOT = """\
- org $fc0000
- dc.w $1111
- dc.w $4ef9 ; jmp: reset reads its address as the PC
- dc.l start
-start:
- move.b #3,$bfe201 ; CIA-A: LED and overlay are outputs
- move.b #2,$bfe001 ; overlay off: chip RAM at 0
- move.w #$7fff,$dff096 ; all DMA off
- move.w #$7fff,$dff09a ; all interrupts off
-frame: ; vAmiga sets up bitplane DMA at the first frame's last line
- move.l $dff004,d0
- and.l #$1ff00,d0
- cmp.l #$13800,d0
- bne.s frame
- lea excerpt(pc),a0
- lea ${at:x},a1
- move.l #(excerpt_end-excerpt)/2-1,d0
-copy:
- move.w (a0)+,(a1)+
- dbra d0,copy
-{setup}
-wait:
- move.l $dff004,d0
- and.l #$1ff00,d0
- cmp.l #${line:x}00,d0
- bne.s wait
- jsr ${entry:x}
-done:
- bra.s done
-excerpt:
- incbin "excerpt.bin"
-excerpt_end:
- cnop 0,$40000
-"""
+BOOT = ROOT / "tools" / "timing" / "boot.s"
+LOADS = {"no display": 0}  # without `loads` in the data file
+SIZES = {"b": 1, "w": 2, "l": 4}
 
 
 def install():
@@ -175,19 +132,14 @@ def excerpt(data):
     return "\n".join(out) + "\n"
 
 
-def assemble(work, name, text):
-    """Assemble text in work; return the symbols of its listing."""
-    (work / f"{name}.s").write_text(text, "latin-1")
+def assemble(work, name, source, **defines):
+    """Assemble source with work in the include path, into work/NAME.bin.
+    Return the symbols of its listing."""
     run_or_exit(
-        VASM,
-        "-quiet",
-        "-Fbin",
-        "-L",
-        work / f"{name}.lst",
-        "-o",
-        work / f"{name}.bin",
-        work / f"{name}.s",
-    )
+        VASM, "-quiet", "-Fbin", "-I", work,
+        *(f"-D{key}={value}" for key, value in defines.items()),
+        "-L", work / f"{name}.lst", "-o", work / f"{name}.bin", source,
+    )  # fmt: skip
     listing = (work / f"{name}.lst").read_text("latin-1")
     return {
         m[1]: int(m[2], 16)
@@ -208,16 +160,18 @@ def address(expr, symbols):
 
 
 def writes(case, symbols):
-    """move instructions for "ADDRESS SIZE VALUE" writes. A nested list,
-    e.g. a YAML alias, adds its writes in place."""
+    """The writes.bin table of boot.s for "ADDRESS SIZE VALUE" writes. A
+    nested list, e.g. a YAML alias, adds its writes in place."""
     items = case.get("writes", [])
     while any(isinstance(i, list) for i in items):
         items = [j for i in items for j in (i if isinstance(i, list) else [i])]
-    out = []
+    table = struct.pack(">H", len(items))
     for item in items:
         target, size, value = item.split()
-        out.append(f" move.{size} #{int(value, 0)},${address(target, symbols):x}")
-    return out
+        table += struct.pack(
+            ">LHL", address(target, symbols), SIZES[size], int(value, 0) & 0xFFFFFFFF
+        )
+    return table
 
 
 def measure(name):
@@ -227,18 +181,17 @@ def measure(name):
     data = yaml.safe_load((DATA / f"{name}.yaml").read_text())
     work = BUILD / "timing" / name
     work.mkdir(parents=True, exist_ok=True)
-    symbols = assemble(work, "excerpt", excerpt(data))
+    (work / "excerpt.s").write_text(excerpt(data), "latin-1")
+    symbols = assemble(work, "excerpt", work / "excerpt.s")
     points = {p: address(expr, symbols) for p, expr in data["points"].items()}
     results = {}
     for case_name, case in data["cases"].items():
-        for load, setup in LOADS.items():
-            text = BOOT.format(
-                at=EXCERPT_AT,
-                setup="\n".join(writes(case, symbols) + [f" {s}" for s in setup]),
-                line=START_LINE,
-                entry=symbols[data["entry"]],
-            )
-            assemble(work, "boot", text)
+        (work / "writes.bin").write_bytes(writes(case, symbols))
+        for load, bitplanes in data.get("loads", LOADS).items():
+            assemble(
+                work, "boot", BOOT, EXCERPT_AT=EXCERPT_AT, ENTRY=symbols[data["entry"]],
+                START_LINE=START_LINE, BITPLANES=bitplanes,
+            )  # fmt: skip
             out = run_or_exit(
                 DRIVER, work / "boot.bin", *(f"{a:x}" for a in points.values())
             )

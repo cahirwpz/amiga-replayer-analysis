@@ -38,9 +38,9 @@ DEFAULT_SPEED = 6
 ARP_STEPS = 4
 # Measured in vAmiga without display DMA: data/timing/soundmon_22.yaml, run by
 # tools/timing.py. Bitplane DMA takes bus slots, so a display makes both longer.
-DMA_WAIT_CCK = 648  # DmaWait: 128 dbra loops
+DMA_WAIT_CCK = 647  # DmaWait: 128 dbra loops
 # From DmaWait's end to DMA on: RestoreWaves and StartNoteLoop, for one new
-# note without a sample, the shortest path. Four sample notes take 1291 CCK.
+# note without a sample, the shortest path. Four sample notes take 1290 CCK.
 START_CCK = 442
 
 # Commands: the low nibble of a row's second byte
@@ -314,9 +314,9 @@ def PlayRow(module: Module) -> None:
 
     A stopped channel restarts only if its word ends before DMA on. That
     takes up to 2 × period CCK. DMA off to DMA on takes at least
-    DMA_WAIT_CCK + START_CCK = 1090 CCK. So a note with a period above 545
-    can miss its restart. With 6 bitplanes on, both take longer: 1554 CCK,
-    so the limit falls to 777. It then plays the old sample on, and the new
+    DMA_WAIT_CCK + START_CCK = 1089 CCK. So a note with a period above 544
+    can miss its restart. With 6 bitplanes on, both take longer: 1543 CCK,
+    so the limit falls to 771. It then plays the old sample on, and the new
     sample starts at the old one's next reload."""
     module.tick_count = module.speed
     ReadRow(module)

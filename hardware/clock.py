@@ -16,7 +16,7 @@ FRAME_LINES = 312  # scanlines per PAL frame
 FRAME_CCK = LINE_CCK * FRAME_LINES
 CPU_PER_CCK = 2  # 68000 cycles per CCK. Busy-waits in specs count 68000
 # instruction times without chip-bus waits. tools/timing.py measures one in
-# vAmiga, SoundMon's DmaWait: 1% longer without display DMA, 39% longer with
+# vAmiga, SoundMon's DmaWait: 1% longer without display DMA, 38% longer with
 # 6 bitplanes (data/timing/soundmon_22.yaml).
 
 

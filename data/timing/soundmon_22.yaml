@@ -21,6 +21,9 @@ points:
   wait: bpxx # the busy-wait's dbra, first pass
   waited: bpxx+4 # the first instruction after the busy-wait
   started: bpnext-2 # the rts after the DMA-on write
+loads: # bitplanes fetched during the call
+  no display: 0
+  6 bitplanes: 6
 spans:
   DMA_WAIT_CCK: [wait, waited]
   START_CCK: [waited, started]
@@ -31,8 +34,8 @@ spans:
 cases:
   one note without a sample:
     expect:
-      no display: {DMA_WAIT_CCK: 648, START_CCK: 442}
-      6 bitplanes: {DMA_WAIT_CCK: 892, START_CCK: 662}
+      no display: {DMA_WAIT_CCK: 647, START_CCK: 442}
+      6 bitplanes: {DMA_WAIT_CCK: 884, START_CCK: 659}
     writes:
       - bpcurrent w 0x81ac
       - bpcurrent+2 b 64
@@ -40,8 +43,8 @@ cases:
       - bpsong l 0x40000
   four sample notes with a loop:
     expect:
-      no display: {DMA_WAIT_CCK: 646, START_CCK: 1291}
-      6 bitplanes: {DMA_WAIT_CCK: 891, START_CCK: 1880}
+      no display: {DMA_WAIT_CCK: 647, START_CCK: 1290}
+      6 bitplanes: {DMA_WAIT_CCK: 884, START_CCK: 1888}
     writes: &four
       - bpcurrent w 0x81ac
       - bpcurrent+2 b 64
@@ -63,7 +66,7 @@ cases:
       - 0x4003e w 64
   four sample notes with a loop and saved waves:
     expect:
-      no display: {DMA_WAIT_CCK: 648, START_CCK: 1656}
+      no display: {DMA_WAIT_CCK: 647, START_CCK: 1656}
       6 bitplanes: {DMA_WAIT_CCK: 884, START_CCK: 2473}
     writes:
       - *four
