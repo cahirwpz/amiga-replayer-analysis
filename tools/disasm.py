@@ -163,7 +163,9 @@ def hunks(data, symbols=None):
     sizes = [w & 0x3FFFFFFF for w in words[p + 4 : p + 5 + last - first]]
     p += 5 + last - first
     bases = [4 * sum(sizes[:i]) for i in range(len(sizes))]
-    out, cur, code = [], None, False
+    out: list[tuple[bytes, dict[int, int]]] = []
+    relocs: dict[int, int] = {}
+    code = False
     while p < len(words):
         kind = words[p] & 0x3FFFFFFF
         p += 1
@@ -171,18 +173,18 @@ def hunks(data, symbols=None):
             code = kind == HUNK_CODE
         if kind in (HUNK_CODE, HUNK_DATA):
             n = words[p]
-            cur = [bytes(data[4 * (p + 1) : 4 * (p + 1 + n)]), {}]
-            out.append(cur)
+            relocs = {}
+            out.append((bytes(data[4 * (p + 1) : 4 * (p + 1 + n)]), relocs))
             p += 1 + n
         elif kind == HUNK_BSS:
-            cur = [b"", {}]
-            out.append(cur)
+            relocs = {}
+            out.append((b"", relocs))
             p += 1
         elif kind == HUNK_RELOC32:
             while words[p]:
                 n, target = words[p], words[p + 1]
                 for off in words[p + 2 : p + 2 + n]:
-                    cur[1][off] = target
+                    relocs[off] = target
                 p += 2 + n
             p += 1
         elif kind in (HUNK_RELOC32SHORT, HUNK_DREL32):
@@ -192,7 +194,7 @@ def hunks(data, symbols=None):
             while half[q]:
                 n, target = half[q], half[q + 1]
                 for off in half[q + 2 : q + 2 + n]:
-                    cur[1][off] = target
+                    relocs[off] = target
                 q += 2 + n
             q += 1
             p += (q + 1) // 2
@@ -231,7 +233,8 @@ def tags(binary):
         raise ValueError("no tag list pointer at offset 12")
     hunk = max(i for i, h in enumerate(hs) if h[0] <= start)
     names = tag_names()
-    out, off = [], start - hs[hunk][0]
+    out: list[tuple[str, int]] = []
+    off = start - hs[hunk][0]
     while True:
         tag, _ = struct.unpack(">II", hs[hunk][1][off : off + 8])
         if tag == 0:  # TAG_DONE
@@ -250,7 +253,7 @@ def run(tool, *args, cwd=None):
 
 
 def merge(areas):
-    out = []
+    out: list[list[int]] = []
     for a, b in sorted(areas):
         if b <= a:
             continue
@@ -335,7 +338,7 @@ def load(path):
             exe = Path(tmp) / "exe"
             run(VLINK, "-b", "amigahunk", "-o", str(exe), str(path))
             data = exe.read_bytes()
-    symbols = []
+    symbols: list[tuple[str, int, bool]] = []
     hunks(data, symbols)
     labels = [(name, addr) for name, addr, _ in symbols]
     return data, labels, sorted({0} | {addr for _, addr, code in symbols if code})
@@ -387,7 +390,9 @@ def traced(exe, entries):
     """(CODE areas, config header, rejected entries) that `ira -preproc`
     finds from each entry of the executable."""
     bounds = [(base, base + len(body)) for base, body, _ in hunks(exe)]
-    areas, header, rejected = [], [], []
+    areas: list[tuple[int, int]] = []
+    header: list[str] = []
+    rejected: list[int] = []
     with tempfile.TemporaryDirectory() as tmp:
         # IRA names the config after the input minus its extension.
         (Path(tmp) / "p").write_bytes(exe)

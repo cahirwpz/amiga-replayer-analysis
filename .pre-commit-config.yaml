@@ -101,6 +101,13 @@ repos:
         pass_filenames: false
         always_run: true             # annotations and players.yaml matter too
 
+      - id: mypy                     # tools/ type-check; not yet --strict
+        name: mypy
+        entry: .venv/bin/python3 -m mypy --check-untyped-defs --cache-dir build/mypy-tools tools/
+        language: system
+        files: ^tools/.*\.py$
+        pass_filenames: false
+
       - id: players                  # data/players.yaml is valid
         name: players
         entry: .venv/bin/python3 tools/players.py --check

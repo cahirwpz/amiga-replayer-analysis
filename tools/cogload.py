@@ -151,7 +151,7 @@ def check(path, known_terms, avoided=()):
 
     total_words = 0
     prose_words = prose_sentences = prose_syllables = 0
-    unknown = {}
+    unknown: dict[str, int] = {}
     lists = []  # one [item count, first line] per open list
 
     for kind, n, text, code in blocks(read(path)):

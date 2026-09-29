@@ -72,7 +72,7 @@ def run_or_exit(*args):
 
 def labels(lines):
     """{label: line index}: a label starts in the first column."""
-    found = {}
+    found: dict[str, int] = {}
     for i, line in enumerate(lines):
         if line and not line[0].isspace() and not line.startswith(";"):
             found.setdefault(re.split(r"[:\s]", line, maxsplit=1)[0], i)
@@ -162,7 +162,7 @@ def measure(name):
     (work / "excerpt.asm").write_text(excerpt(data), "latin-1")
     symbols = assemble(work, "excerpt", work / "excerpt.asm")
     points = {p: address(expr, symbols) for p, expr in data["points"].items()}
-    results = {}
+    results: dict[str, dict[str, dict[str, float]]] = {}
     for case_name, case in data["cases"].items():
         (work / "writes.bin").write_bytes(writes(case, symbols))
         for load, bitplanes in data.get("loads", LOADS).items():
