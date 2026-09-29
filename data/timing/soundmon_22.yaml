@@ -1,0 +1,73 @@
+# SoundMon 2.2 starts new notes: DMA off, a busy-wait, the setup of each
+# new note, then DMA on. tools/timing.py times it in vAmiga.
+# specs/soundmon_22.py uses DMA_WAIT_CCK and START_CCK.
+source: ext/uade/amigasrc/players/uade/soundmon/Soundmon2.2.s
+
+# From the DMA-off write to the DMA-on write and its rts, then the note
+# setup of a sample instrument, then the voice data. A synth instrument
+# stops the run: its setup is not measured.
+take:
+  - [bpplay, bpnext]
+  - [bpplayit, bpplaysynthetic, " illegal"]
+  - ["null", bpstep] # quoted: YAML reads null as no value
+  - [dma, tables]
+  - [bpbuffer, bp_buffer]
+drop:
+  - bsr bpnext # the row reader; the cases set the rows' results
+  - Section Buffer,BSS
+entry: bpplay
+
+points:
+  wait: bpxx # the busy-wait's dbra, first pass
+  waited: bpxx+4 # the first instruction after the busy-wait
+  started: bpnext-2 # the rts after the DMA-on write
+spans:
+  DMA_WAIT_CCK: [wait, waited]
+  START_CCK: [waited, started]
+
+# A voice record is $24 bytes: period and new-note bit, volume, instrument.
+# Instrument 1's header is at bpsong + 32; bytes 24 to 31 hold the length,
+# the loop start, the loop length and the volume.
+cases:
+  one note without a sample:
+    expect:
+      no display: {DMA_WAIT_CCK: 648, START_CCK: 442}
+      6 bitplanes: {DMA_WAIT_CCK: 892, START_CCK: 662}
+    writes:
+      - bpcurrent w 0x81ac
+      - bpcurrent+2 b 64
+      - bpcurrent+3 b 1
+      - bpsong l 0x40000
+  four sample notes with a loop:
+    expect:
+      no display: {DMA_WAIT_CCK: 646, START_CCK: 1291}
+      6 bitplanes: {DMA_WAIT_CCK: 891, START_CCK: 1880}
+    writes: &four
+      - bpcurrent w 0x81ac
+      - bpcurrent+2 b 64
+      - bpcurrent+3 b 1
+      - bpcurrent+0x24 w 0x81ac
+      - bpcurrent+0x26 b 64
+      - bpcurrent+0x27 b 1
+      - bpcurrent+0x48 w 0x81ac
+      - bpcurrent+0x4a b 64
+      - bpcurrent+0x4b b 1
+      - bpcurrent+0x6c w 0x81ac
+      - bpcurrent+0x6e b 64
+      - bpcurrent+0x6f b 1
+      - bpsong l 0x40000
+      - samples l 0x60000
+      - 0x40038 w 1000
+      - 0x4003a w 200
+      - 0x4003c w 400
+      - 0x4003e w 64
+  four sample notes with a loop and saved waves:
+    expect:
+      no display: {DMA_WAIT_CCK: 648, START_CCK: 1656}
+      6 bitplanes: {DMA_WAIT_CCK: 884, START_CCK: 2473}
+    writes:
+      - *four
+      - bpbuffer l 0x50000
+      - bpbuffer+0x24 l 0x50040
+      - bpbuffer+0x48 l 0x50080
+      - bpbuffer+0x6c l 0x500c0

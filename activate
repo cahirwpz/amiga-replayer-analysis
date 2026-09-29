@@ -40,6 +40,11 @@ function replayer_analysis_activate {
       break
     fi
   done
+  # amiga-timing: vAmiga's Core at the commit pinned in tools/timing.py,
+  # fetched sparse. Built once, in about three minutes; delete it to rebuild.
+  if ! [ -x .venv/bin/amiga-timing ]; then
+    python3 tools/timing.py install || return 1
+  fi
   # CI runs the hooks directly; a git hook there would be pointless.
   if [[ "$GITHUB_ACTIONS" != "true" ]]; then
     pre-commit install || return 1

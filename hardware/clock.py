@@ -14,8 +14,10 @@ CCK_HZ = 3546895  # PAL colour clock
 LINE_CCK = 227  # colour clocks per scanline
 FRAME_LINES = 312  # scanlines per PAL frame
 FRAME_CCK = LINE_CCK * FRAME_LINES
-CPU_PER_CCK = 2  # 68000 cycles per CCK. Instruction times: Musashi's
-# m68k_in.c table, without waits for the chip bus, so a busy wait may be longer
+CPU_PER_CCK = 2  # 68000 cycles per CCK. Busy-waits in specs count 68000
+# instruction times without chip-bus waits. tools/timing.py measures one in
+# vAmiga, SoundMon's DmaWait: 1% longer without display DMA, 39% longer with
+# 6 bitplanes (data/timing/soundmon_22.yaml).
 
 
 class Clock(Protocol):

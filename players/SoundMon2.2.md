@@ -63,7 +63,8 @@ row carries one command and its argument byte. The source calls it `option`.
 | Cost     | `LEGATO_FLIP`, `LEGATO` and `LEGATO_KEEP_ADSR` change the note and keep the sound. | `:NewNote`         |
 | Cost     | `EFFECT` on a row with a note is lost: the instrument sets the effect.             | `:StartSynthNote`  |
 | Cost     | `SLIDE_UP` and `SLIDE_DOWN` slide once per row. `AUTO_SLIDE` slides every tick.    | `:Options`         |
-| Cost     | A note with a period above 547 can start late: at the old sample's reload.         | `:PlayRow`         |
+| Cost     | A note with a period above 545 can start late: at the old sample's reload.         | `:PlayRow`         |
+| Cost     | With 6 bitplanes on, the limit falls to a period of 777.                           | `:PlayRow`         |
 
 ## What is unique
 

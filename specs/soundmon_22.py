@@ -18,7 +18,6 @@ from dataclasses import dataclass, field
 
 from hardware import paula
 from hardware.amiga import DEFAULT_LATCH, Amiga, Priority
-from hardware.clock import CPU_PER_CCK
 from specs.controls import Countdown, Mode, TableWalker
 
 VOICES = 4
@@ -37,11 +36,12 @@ SYNTH = 0xFF  # the first byte of a synth instrument
 USE_INSTRUMENT = 0xFF  # a voice volume that means: the instrument's volume
 DEFAULT_SPEED = 6
 ARP_STEPS = 4
-DMA_WAIT_CCK = (127 * 10 + 14) // CPU_PER_CCK  # DmaWait: 128 dbra loops
-# From DmaWait's end to DMA on: RestoreWaves and StartNoteLoop. A Musashi run
-# of this code takes 453 CCK for one new note without a sample, the shortest
-# path, and 1302 CCK for four sample notes with a loop.
-START_CCK = 453
+# Measured in vAmiga without display DMA: data/timing/soundmon_22.yaml, run by
+# tools/timing.py. Bitplane DMA takes bus slots, so a display makes both longer.
+DMA_WAIT_CCK = 648  # DmaWait: 128 dbra loops
+# From DmaWait's end to DMA on: RestoreWaves and StartNoteLoop, for one new
+# note without a sample, the shortest path. Four sample notes take 1291 CCK.
+START_CCK = 442
 
 # Commands: the low nibble of a row's second byte
 ARPEGGIO, VOLUME, SPEED, FILTER, SLIDE_UP, SLIDE_DOWN = 0, 1, 2, 3, 4, 5
@@ -314,8 +314,9 @@ def PlayRow(module: Module) -> None:
 
     A stopped channel restarts only if its word ends before DMA on. That
     takes up to 2 × period CCK. DMA off to DMA on takes at least
-    DMA_WAIT_CCK + START_CCK = 1095 CCK. So a note with a period above 547
-    can miss its restart. It then plays the old sample on, and the new
+    DMA_WAIT_CCK + START_CCK = 1090 CCK. So a note with a period above 545
+    can miss its restart. With 6 bitplanes on, both take longer: 1554 CCK,
+    so the limit falls to 777. It then plays the old sample on, and the new
     sample starts at the old one's next reload."""
     module.tick_count = module.speed
     ReadRow(module)

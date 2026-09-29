@@ -560,5 +560,34 @@ class Disasm(unittest.TestCase):
                     self.assertTrue(names - self.disasm.DATA_TAGS)
 
 
+class Timing(unittest.TestCase):
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import timing
+
+        self.timing = timing
+
+    def test_takes_ranges_and_marks_their_ends(self):
+        import yaml
+
+        data = yaml.safe_load((ROOT / "data/timing/soundmon_22.yaml").read_text())
+        text = self.timing.excerpt(data)
+        self.assertIn("\nbpnext:\n", text)
+        self.assertNotIn("bsr\t\tbpnext", text)
+        self.assertNotIn("Section", text)
+
+    def test_reads_addresses(self):
+        symbols = {"bpxx": 0x1000A}
+        self.assertEqual(self.timing.address("bpxx+4", symbols), 0x1000E)
+        self.assertEqual(self.timing.address("bpxx - 2", symbols), 0x10008)
+        self.assertEqual(self.timing.address("0x40038", symbols), 0x40038)
+
+    def test_matches_the_recorded_times(self):
+        if not self.timing.DRIVER.exists():
+            self.skipTest("amiga-timing is not built; run tools/timing.py install")
+        code, _, out = run("timing.py", "check", "soundmon_22")
+        self.assertEqual(code, 0, out)
+
+
 if __name__ == "__main__":
     unittest.main()

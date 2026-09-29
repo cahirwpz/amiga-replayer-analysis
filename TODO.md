@@ -19,12 +19,13 @@ All twelve pilot cards exist.
 
 ### Hardware model
 
-- [ ] `START_CCK` in `specs/soundmon_22.py:PlayRow` comes from a Musashi run of
-      the original code. The C harness and the code excerpt live only in the
-      session's scratchpad. Decide with the user: add them to `tools/`, or
-      describe the run in `docs/`.
-- [ ] Busy-wait times assume no chip-bus waits. Check one wait in WinUAE's
-      cycle-exact mode.
+- [ ] Test `hardware/paula.py` against vAmiga's Paula. Case: a SoundMon note
+      restart above the period limit in `specs/soundmon_22.py:PlayRow`. The
+      driver of `tools/timing.py` must read the audio channel state.
+- [ ] vAmiga bug: bitplane DMA before the first frame's end crashes it.
+      `tools/timing.py` works around it. Ask the user: report it upstream?
+- [ ] Sound from vAmiga: save its audio port's samples to a file. Then a replay
+      can be heard without a display.
 
 ### New cards
 
