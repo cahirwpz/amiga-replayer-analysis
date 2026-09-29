@@ -400,6 +400,28 @@ class Players(unittest.TestCase):
         out = "\n".join(self.players.validate({"MED": {"spec": "specs/nope.py"}}))
         self.assertIn("spec `specs/nope.py` is not a file under specs/", out)
 
+    def test_reports_bad_skips(self):
+        facts = {
+            "SIDMon2.0": {"skip": "boring"},
+            "MED": {"skip": "protracker"},
+            "SIDMon1.0": {"skip": "covered"},
+            "Mugician": {"skip": "covered", "covered_by": ["SIDMon1.0"]},
+            "Synth": {"skip": "lineage", "family": "Nobody"},
+            "TFMX-7V-TFHD": {"skip": "lineage", "distinct": "x"},
+        }
+        out = "\n".join(self.players.validate(facts))
+        for text in (
+            "SIDMon2.0: `skip` not in",
+            "MED: `skip` but players/ has its card",
+            "SIDMon1.0: `skip: covered` and `covered_by` go together",
+            "Mugician: covered_by `SIDMon1.0` has no card",
+            "Synth: `skip: lineage` needs a family with a head",
+            "TFMX-7V-TFHD: `skip` and `distinct` contradict",
+        ):
+            self.assertIn(text, out)
+        good = {"Mugician": {"skip": "covered", "covered_by": ["MugicianII"]}}
+        self.assertEqual(self.players.validate(good), [])
+
     def test_accepts_a_source_only_player(self):
         facts = {"MaxTrax": {"replay": "source", "source": "other/max_trax"}}
         self.assertEqual(self.players.validate(facts), [])
@@ -519,6 +541,16 @@ class Disasm(unittest.TestCase):
         self.assertEqual((base, body.rstrip(b"\0"), relocs), (0, self.RAW, {}))
         self.assertEqual(labels, [("Jump0", 0x8), ("Jump1", 0xA)])
         self.assertEqual(entries, [0, 0x8, 0xA])
+
+    def test_reads_a_pointer_table(self):
+        if not self.disasm.VASM.exists():
+            self.skipTest("vasm missing; run: disasm.py install")
+        raw = bytes.fromhex("4e75 4e75 00000000 00000002")  # two pointers at $4
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "raw"
+            path.write_bytes(raw)
+            exe = self.disasm.load(path)[0]
+        self.assertEqual(self.disasm.pointers(exe, 0x4, 0xC), [0x0, 0x2])
 
     def test_every_player_has_a_code_tag(self):
         for binary in sorted(self.disasm.PLAYERS.iterdir()):

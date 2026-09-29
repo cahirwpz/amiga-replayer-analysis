@@ -4,12 +4,16 @@
 Usage: disasm.py install
        disasm.py seed PLAYER|FILE
        disasm.py listing PLAYER|FILE
+       disasm.py trace PLAYER|FILE ADDR|START-END...
 
   install  build IRA (current Aminet release), vlink and vasm (pinned tags)
            into .venv/bin
   seed     create data/disasm/NAME.cnf; refuses to overwrite it
   listing  write build/disasm/NAME.asm from the config, then check that vasm
            rebuilds the input from it
+  trace    add to the config the code IRA finds from each ADDR, or from each
+           long pointer in the table START-END; for code reached through
+           tables that IRA does not follow. Hex, with or without `$`.
 
 PLAYER is a binary in ext/uade/players; NAME is the player. FILE is a path
 under ext/ to an executable or an object file; NAME is its stem, e.g.
@@ -373,6 +377,24 @@ def seed(arg):
         if addr not in seen:  # one routine may serve several tags
             labels.append((label, addr))
             seen.add(addr)
+    areas, header, rejected = traced(exe, entries)
+    lines = header + ["ENTRY $00000000"]
+    lines += [f"CODE ${a:08X} - ${b:08X}" for a, b in merge(areas)]
+    lines += [f"LABEL {n} ${a:08X}" for n, a in sorted(labels, key=lambda x: x[1])]
+    CONFIGS.mkdir(parents=True, exist_ok=True)
+    cnf.write_text("\n".join(lines + ["END"]) + "\n")
+    print(
+        f"{cnf.relative_to(ROOT)}: {len(entries) - len(rejected)} entries, {len(labels)} labels"
+    )
+    names = dict((addr, label) for label, addr in reversed(labels))
+    for addr in entries:
+        verdict = "rejected: runs past its hunk" if addr in rejected else "entry"
+        print(f"  ${addr:08X} {names.get(addr, '')}: {verdict}")
+
+
+def traced(exe, entries):
+    """(CODE areas, config header, rejected entries) that `ira -preproc`
+    finds from each entry of the executable."""
     bounds = [(base, base + len(body)) for base, body, _ in hunks(exe)]
     areas, header, rejected = [], [], []
     with tempfile.TemporaryDirectory() as tmp:
@@ -397,18 +419,52 @@ def seed(arg):
                 areas += found
             else:
                 rejected.append(addr)
-    lines = header + ["ENTRY $00000000"]
-    lines += [f"CODE ${a:08X} - ${b:08X}" for a, b in merge(areas)]
-    lines += [f"LABEL {n} ${a:08X}" for n, a in sorted(labels, key=lambda x: x[1])]
-    CONFIGS.mkdir(parents=True, exist_ok=True)
-    cnf.write_text("\n".join(lines + ["END"]) + "\n")
-    print(
-        f"{cnf.relative_to(ROOT)}: {len(entries) - len(rejected)} entries, {len(labels)} labels"
+    return areas, header, rejected
+
+
+CODE_LINE = re.compile(r"CODE \$(\w+) - \$(\w+)")
+
+
+def pointers(exe, start, end):
+    """The long pointers in [start, end) of the executable's hunks."""
+    for base, body, _ in hunks(exe):
+        if base <= start and end <= base + len(body):
+            data = body[start - base : end - base]
+            return [
+                int.from_bytes(data[i : i + 4], "big") for i in range(0, len(data), 4)
+            ]
+    sys.exit(f"${start:X}-${end:X} is not inside one hunk")
+
+
+def trace(arg, specs):
+    name, path = resolve(arg)
+    cnf = CONFIGS / f"{name}.cnf"
+    if not cnf.exists():
+        sys.exit(f"{cnf.relative_to(ROOT)} missing; run: disasm.py seed {arg}")
+    exe = load(path)[0]
+    entries = []
+    for spec in specs:
+        lo, _, hi = spec.replace("$", "").partition("-")
+        if hi:
+            entries += pointers(exe, int(lo, 16), int(hi, 16))
+        else:
+            entries.append(int(lo, 16))
+    entries = sorted(set(entries))
+    areas, _, rejected = traced(exe, entries)
+    lines = cnf.read_text().splitlines()
+    old = [
+        (int(m[1], 16), int(m[2], 16)) for x in lines if (m := CODE_LINE.fullmatch(x))
+    ]
+    first = next(i for i, x in enumerate(lines) if CODE_LINE.fullmatch(x))
+    rest = [x for x in lines if not CODE_LINE.fullmatch(x)]
+    code = [f"CODE ${a:08X} - ${b:08X}" for a, b in merge(old + areas)]
+    cnf.write_text("\n".join(rest[:first] + code + rest[first:]) + "\n")
+    added = sum(b - a for a, b in merge(old + areas)) - sum(
+        b - a for a, b in merge(old)
     )
-    names = dict((addr, label) for label, addr in reversed(labels))
-    for addr in entries:
-        verdict = "rejected: runs past its hunk" if addr in rejected else "entry"
-        print(f"  ${addr:08X} {names.get(addr, '')}: {verdict}")
+    print(f"{cnf.relative_to(ROOT)}: {len(entries)} entries, {added} bytes of new code")
+    for addr in rejected:
+        print(f"  ${addr:08X}: rejected: runs past its hunk")
 
 
 def listing(arg):
@@ -487,9 +543,12 @@ def install():
 def main(argv):
     if argv == ["install"]:
         return install()
-    if len(argv) == 2 and argv[0] in ("seed", "listing"):
+    ok = len(argv) == 2 and argv[0] in ("seed", "listing")
+    if ok or (len(argv) > 2 and argv[0] == "trace"):
         if not all(tool.exists() for tool in (IRA, VLINK, VASM)):
             sys.exit("IRA, vlink or vasm missing; run: source ./activate")
+        if argv[0] == "trace":
+            return trace(argv[1], argv[2:])
         return {"seed": seed, "listing": listing}[argv[0]](argv[1])
     sys.exit(__doc__)
 

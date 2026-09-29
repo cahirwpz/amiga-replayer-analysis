@@ -21,6 +21,8 @@ The `replay` column says where the replay logic is:
   disasm   - no source; data/disasm/<player>.cnf drives an IRA disassembly
   source   - original source, but no UADE binary; listed after the binaries
 
+The `skip` column is why a player gets no card; see data/players.yaml.
+
 Caveats:
   - `lines` includes old versions kept next to new ones: an upper bound.
   - EMS-6, Mark_Cooksey_Old and ScottJohnston have no version string.
@@ -60,6 +62,7 @@ FACTS = players.load()
 REPLAY = {p: f["replay"] for p, f in FACTS.items() if "replay" in f}
 OVERRIDES = {p: f["source"] for p, f in FACTS.items() if "source" in f}
 NOTES = {p: f["note"] for p, f in FACTS.items() if "note" in f}
+SKIPS = {p: f["skip"] for p, f in FACTS.items() if "skip" in f}
 
 
 def norm(name):
@@ -173,6 +176,7 @@ def rows():
             "replay",
             "files",
             "lines",
+            "skip",
             "note",
             "prefixes",  # last: very long for some players
         ]
@@ -196,6 +200,7 @@ def rows():
                 where,
                 files,
                 lines,
+                SKIPS.get(b.name, ""),
                 note,
                 pref.get(b.name, ""),
             ]
@@ -205,7 +210,10 @@ def rows():
             src = facts["source"]
             files, lines = stats(Path(src))
             note = NOTES.get(name, "")
-            out.append([name, "", src, "manual", "source", files, lines, note, ""])
+            skip = SKIPS.get(name, "")
+            out.append(
+                [name, "", src, "manual", "source", files, lines, skip, note, ""]
+            )
     return out
 
 

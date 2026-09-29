@@ -45,6 +45,8 @@ FIELDS = {
     "links": list,
     "spec": str,
     "module": str,
+    "skip": str,
+    "covered_by": list,
 }
 REPLAY = {"uade", "module", "check", "port", "ext", "disasm", "source"}
 
@@ -68,6 +70,7 @@ def validate(data=None):
     binaries_ = binaries()
     provenance = glossary.words("provenance")
     evidence = glossary.words("lineage_evidence")
+    reasons = glossary.words("skip_reasons")
     errors = []
 
     def err(player, detail):
@@ -126,6 +129,25 @@ def validate(data=None):
                     err(player, f"cite: {name} does not exist")
                 elif label not in (annot.cited_labels(path) or ()):
                     err(player, f"cite: {path.name} has no label {label}")
+        skip = facts.get("skip")
+        if skip is not None and skip not in reasons:
+            err(player, f"`skip` not in {sorted(reasons)}")
+        if skip and (ROOT / "players" / f"{player}.md").is_file():
+            err(player, "`skip` but players/ has its card")
+        for key in ("distinct", "head"):
+            if skip and key in facts:
+                err(player, f"`skip` and `{key}` contradict each other")
+        if (skip == "covered") != ("covered_by" in facts):
+            err(player, "`skip: covered` and `covered_by` go together")
+        for name in facts.get("covered_by") or []:
+            if not (ROOT / "players" / f"{name}.md").is_file():
+                err(player, f"covered_by `{name}` has no card in players/")
+        if skip == "lineage" and not any(
+            f.get("head") and f.get("family") == facts.get("family")
+            for f in data.values()
+            if isinstance(f, dict)
+        ):
+            err(player, "`skip: lineage` needs a family with a head")
         after = facts.get("after") or {}
         if after and "family" not in facts:
             err(player, "`after` needs `family`")

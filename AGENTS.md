@@ -26,7 +26,7 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
 ## Scope
 
 - Focus on formats that did not prevail on the Amiga demoscene.
-- Skip `ProTracker`-like players; at most note them in `data/players.yaml`.
+- Skip `ProTracker`-like players. Record each skip in `data/players.yaml`.
 - Themes: cheap but expressive synthesis, unusual tricks, soft voice mixing.
 - Describe control: streams, their state, and what instruments carry. Paula
   features matter less.

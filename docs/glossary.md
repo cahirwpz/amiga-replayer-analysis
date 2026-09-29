@@ -221,6 +221,18 @@ Where the replay code we read comes from. Set per player in `data/players.yaml`.
 | **port**        | A rewrite of the replayer in another language, e.g. C.     |
 | **ira**         | Our own IRA disassembly of a player binary.                |
 
+## Skip reasons
+
+Why a player gets no card. Set per player as `skip` in `data/players.yaml`.
+
+| Value          | Meaning                                                |
+| -------------- | ------------------------------------------------------ |
+| **covered**    | Its ideas are on other cards; `covered_by` names them. |
+| **protracker** | It is ProTracker-like, so out of scope.                |
+| **lineage**    | An older version; its family's card covers it.         |
+| **primitive**  | Too simple to teach anything, or already well known.   |
+| **binary**     | Its replay is a prebuilt binary we chose not to read.  |
+
 ## Lineage evidence
 
 How we know that one player grew from another.

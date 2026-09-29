@@ -15,16 +15,6 @@ Selection rules:
 
 All twelve pilot cards exist.
 
-### Rejected
-
-| Player                     | Reason                              |
-| -------------------------- | ----------------------------------- |
-| `PreTracker`               | Replay code is a prebuilt binary    |
-| `Pokeynoise`, `ADPCM_mono` | Too primitive or already well known |
-| `Mugician`                 | Covered by `MugicianII`             |
-| `JochenHippel-7V`          | Same mixer as `TFMX-7V`             |
-| `PTK-Prowiz`               | `ProTracker`-like                   |
-
 ## After the pilot
 
 ### Card template 2
@@ -61,7 +51,6 @@ the first card on it, with `specs/med.py`.
 Skip unless a new lead turns up:
 
 - `ActionAmics`: the one-byte sweep, once per tick per shared sample.
-- `QuadraComposer`: `ProTracker`-like effects.
 
 ### Then
 
@@ -94,7 +83,7 @@ Skip unless a new lead turns up:
 
 - [ ] Full survey of the remaining players with readable source.
 - [ ] Compare code for the `name` lineage links in `data/players.yaml`.
-- [ ] Note `ProTracker`-like players in `data/players.yaml`.
+- [ ] Mark `ProTracker`-like players `skip: protracker` in `data/players.yaml`.
 - [ ] Pick the first binary-only player to disassemble. Filter by scope first.
 - [ ] Before disassembling a player, look for a port of it outside UADE. Use it
       as a map, not as evidence.
