@@ -33,6 +33,10 @@ A player with only an IRA config has no source to annotate. Its file names
 the config as `source` and holds only `types` and `refs`; the config's own
 LABELs are the new names. It needs no sha1 and renders nothing.
 
+Comments and banners name no command by number, and no hex number equal
+to a constant of the player's spec; see tools/numbered.py. A banner line
+that starts with an offset may, if the banner has several: a layout.
+
 Line numbers are those of the pinned source. Renames change whole
 identifiers outside `;` comments. New labels get a line of their own; the
 listing is for reading, so they may split the scope of local labels. Added
@@ -49,6 +53,7 @@ import re
 import sys
 from pathlib import Path
 
+import numbered
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -167,6 +172,27 @@ def check_types(spec, lines, labels):
                 yield f"types: {name}: {word} is in neither the source nor refs"
 
 
+def check_numbers(spec, consts):
+    """Yield numbers that stand in for names in comments and banners."""
+    for field in ("comments", "banners"):
+        for num, text in (spec.get(field) or {}).items():
+            skip = numbered.layout(str(text)) if field == "banners" else set()
+            for line in str(text).split("\n"):
+                if line in skip:
+                    continue
+                for _, detail in numbered.find(line, consts):
+                    yield f"{field}: line {num}: {detail}"
+
+
+def player_of(path):
+    """The player an annotation file belongs to: <player>[-<part>].yaml."""
+    import players  # players imports this module
+
+    known = players.load()
+    stem = path.stem
+    return stem if stem in known else stem.rpartition("-")[0]
+
+
 def render(spec, lines):
     """The annotated source, as a list of lines."""
     labels = {k: v for k, v in (spec.get("labels") or {}).items() if isinstance(k, str)}
@@ -250,6 +276,8 @@ def process(path, write):
     problems = [
         f"{rel}: {p}" for p in check(spec, lines, hashlib.sha1(data).hexdigest())
     ]
+    consts = numbered.for_player(player_of(path))
+    problems += [f"{rel}: {p}" for p in check_numbers(spec, consts)]
     if write and not problems and not is_config(spec):
         OUT.mkdir(parents=True, exist_ok=True)
         dest = OUT / (path.stem + source.suffix)

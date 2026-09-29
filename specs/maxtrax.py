@@ -42,6 +42,7 @@ MUST_HAVE_SIDE = 0x08
 SOUND_RIGHT_SIDE, SOUND_STEREO, SOUND_LOOP = 0x02, 0x03, 0x04
 
 NOTE_OFF = 0xFF  # a free stop event
+NO_NOTE = 0xFF  # a channel's last note: none; bit 7 marks it
 TEMPO, SPECIAL, CONTROL, PROGRAM, BEND, END = 0x80, 0xA0, 0xB0, 0xC0, 0xE0, 0xFF
 MARK, SYNC, BEGIN_REPEAT, END_REPEAT = 0, 1, 2, 3
 
@@ -192,7 +193,7 @@ class Channel:  # ChannelData: a MIDI channel
     portamento: bool = False
     damper: bool = False
     altered: bool = False  # recalculate pitch and volume this frame
-    last_note: int = 0xFF  # bit 7: none
+    last_note: int = NO_NOTE
 
 
 @dataclass
@@ -614,7 +615,7 @@ def DamperPedal(module: Module, channel: Channel, value: int) -> None:
 
 
 def PortaOffBug(channel: Channel) -> None:
-    """Should forget the last note. The code writes $ff through a2, which
+    """Should forget the last note. The code writes NO_NOTE through a2, which
     in MusicServer points into the score: the channel keeps its last
     note, and a score byte is overwritten (not modelled)."""
 

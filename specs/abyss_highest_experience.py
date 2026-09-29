@@ -83,6 +83,7 @@ CUT, DELAY = 0xC, 0xD
 # Performance commands, 3 bits each
 (FILTER_POSITION, PITCH_UP, PITCH_DOWN, SQUARE_POSITION,
  TOGGLE_SWEEPS, STEP_JUMP, STEP_VOLUME, STEP_SPEED) = range(8)  # fmt: skip
+SWEEP_DOWN = 0xF  # a TOGGLE_SWEEPS nibble: the sweep runs downwards
 
 
 # --- What the composer edits -------------------------------------------
@@ -114,7 +115,7 @@ class Instrument:  # SetInstrument: 22 bytes, then 4 bytes per step
 
 @dataclass
 class Song:  # InitModule: "THX", revision, then the header
-    revision: int  # 3: 0 or 1; 1 adds commands 4xx and Performance 0
+    revision: int  # 3: 0 or 1; 1 adds FILTER_SET and FILTER_POSITION
     empty_track0: bool  # 6, bit 15: track 0 is not stored
     tick_rate: int  # 6, bits 13-14: TickRates index
     positions: list[list[tuple[int, int]]]  # 8 bytes: track, transpose × 4
@@ -321,7 +322,7 @@ class Voice:  # ClearVoice: VOICE_SIZE bytes each
     square: Sweep = field(default_factory=Sweep)
     filter: Sweep = field(default_factory=lambda: Sweep(position=UNFILTERED))
     filter_speed: int = 0  # 78
-    pending_filter: int = 0  # 80: from command 4xx, for Performance 0
+    pending_filter: int = 0  # 80: from FILTER_SET, for FILTER_POSITION
     step: int = 0  # 81
     step_speed: int = 0  # 82
     step_wait: int = 0  # 83
@@ -342,7 +343,7 @@ class Player:  # WorkArea: the global state, then four voice records
     amiga: Amiga
     voices: list[Voice] = field(default_factory=list)
     master_volume: int = FULL  # 1: DeliTracker's volume
-    host_byte: int = 0  # 0: command 8xx writes it for the host
+    host_byte: int = 0  # 0: HOST_BYTE writes it for the host
     song_end: bool = False  # 3
     playing: bool = False  # 4
     speed: int = DEFAULT_SPEED  # 949
@@ -549,9 +550,9 @@ def read_note(voice: Voice, note: int, command: int, arg: int) -> None:
 
 
 def voice_commands(player: Player, voice: Voice, command: int, arg: int) -> None:
-    """Slides, fine changes and volumes. Cxx sets the note volume up to
-    $40; $50-$90 sets the track volume of all voices; $a0-$e0 of this
-    voice."""
+    """Slides, fine changes and volumes. SET_VOLUME sets the note volume
+    up to FULL; $50-$90 sets the track volume of all voices; $a0-$e0 of
+    this voice."""
     high, low = arg >> 4, arg & 0xF
     if command in (SLIDE_UP, SLIDE_DOWN):
         voice.slide_speed = -arg if command == SLIDE_UP else arg
@@ -764,10 +765,12 @@ def PerformanceStep(player: Player, voice: Voice) -> None:
 
 
 def PerformanceCommand(player: Player, voice: Voice, command: int, arg: int) -> None:
-    """0 sets the filter position, or takes a pending 4xx; revision 1 only.
-    4 toggles the square sweep; in revision 1 its low nibble toggles the
-    square, its high the filter, and $f starts downwards. 5 jumps to a
-    step. 6 sets a volume as Cxx does, with $50-$90 for the step volume."""
+    """FILTER_POSITION sets the filter position, or takes a pending
+    FILTER_SET; revision 1 only. TOGGLE_SWEEPS toggles the square sweep;
+    in revision 1 its low nibble toggles the square, its high the filter,
+    and SWEEP_DOWN starts downwards. STEP_JUMP jumps to a step.
+    STEP_VOLUME sets a volume as SET_VOLUME does, with $50-$90 for the
+    step volume."""
     new = player.song.revision
     if command == FILTER_POSITION and new and arg:
         voice.filter.position = voice.pending_filter or arg
@@ -804,7 +807,7 @@ def PerformanceCommand(player: Player, voice: Voice, command: int, arg: int) -> 
 def toggle(sweep: Sweep, nibble: int) -> None:
     sweep.on = not sweep.on
     sweep.restarted = sweep.on
-    sweep.sign = -1 if nibble == 0xF else 1
+    sweep.sign = -1 if nibble == SWEEP_DOWN else 1
 
 
 def SquareSweep(voice: Voice) -> None:

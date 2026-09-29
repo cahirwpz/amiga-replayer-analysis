@@ -16,6 +16,10 @@ DIR defaults to specs/, checked with hardware/. Checks:
   - comments and strings name no label of the source, only new names
     and types: no label it defines, and no disassembler name it uses;
     words in PLAIN_WORDS are read as English
+  - comments and strings name no command by number, and no hex number
+    equal to a constant of the spec; see tools/numbered.py. A constant's
+    definition line may, and so may a hex number that starts a comment,
+    an offset or a table entry's value, and a comment that lists offsets
   - snake_case helpers need no label
   - the module docstring names the card, `Card: players/<player>.md`,
     and each data/annot/ file of the player
@@ -31,6 +35,7 @@ import tokenize
 from pathlib import Path
 
 import annot
+import numbered
 import players
 from mypy import api as mypy_api
 
@@ -41,6 +46,7 @@ SHARED = {"__init__.py", "controls.py"}
 CAMEL = re.compile(r"[A-Z][A-Za-z0-9]*[a-z][A-Za-z0-9]*")
 MYPY_LINE = re.compile(r"^(.+?):(\d+): error: (.*)$")
 WORD = re.compile(r"[A-Za-z_]\w*(?:\.\w+)*")
+LEADING_HEX = re.compile(r"^#\s*[-+]?(?:\$|0x)[0-9A-Fa-f]+\b")  # an offset or a value
 GENERATED = re.compile(r"L_[0-9A-Fa-f]+|lb[A-Z][0-9A-F]+")  # disassembler names
 # Source labels that are also English words in our prose.
 PLAIN_WORDS = {
@@ -100,8 +106,11 @@ def check_docstring(path, player):
 
 
 def check_prose(path, player):
-    """Yield (line, rule, detail) for old labels in comments and strings."""
+    """Yield (line, rule, detail) for old labels and numbers standing in for
+    names in comments and strings."""
     old = old_labels(player)
+    consts = numbered.constants(path)
+    defining = numbered.definition_lines(path)
     text = path.read_text(encoding="utf-8")
     for token in tokenize.generate_tokens(io.StringIO(text).readline):
         if token.type not in (tokenize.COMMENT, tokenize.STRING):
@@ -109,6 +118,16 @@ def check_prose(path, player):
         for n, line in enumerate(token.string.split("\n")):
             for word in sorted(set(WORD.findall(line)) & old):
                 yield token.start[0] + n, "old", f"{word} is not a new name"
+        if token.start[0] in defining:
+            continue
+        prose = token.string
+        if token.type == tokenize.COMMENT:
+            prose = LEADING_HEX.sub("#", prose)
+            if numbered.layout(prose.lstrip("# ")):
+                continue
+        for n, line in enumerate(prose.split("\n")):
+            for _, detail in numbered.find(line, consts):
+                yield token.start[0] + n, "number", detail
 
 
 def defined(path):

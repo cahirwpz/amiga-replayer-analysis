@@ -205,8 +205,8 @@ labels:
 comments:
   1937: "IMS: the ims macro opcodes"
   1949: "guess: CheckByteTrap, SetByte and CheckByte"
-  2155: "$80-$8f keep the pattern running into the new position"
-  2184: "$7f-$bf: note, then wait; $c0-$ef: portamento note"
+  2155: "TRACK_HOLD to $8f keep the pattern running into the new position"
+  2184: "NOTE_WAIT to $bf: note, then wait; PORTAMENTO_NOTE to $ef: portamento note"
   2233: any track's end moves the whole song on
   2309: "reads and writes track 0 (a5), not the running track (a0)"
   2349: this pattern goes to another track
@@ -235,10 +235,10 @@ banners:
     Tracks are not voices: every note names its voice.
   2171: |
     Pattern entry, 4 bytes: note, macro, volume (high nibble) and voice
-    (low nibble), detune. Notes $f0-$fe are opcodes.
+    (low nibble), detune. Notes from FIRST_PATTERN_OPCODE are opcodes.
   2362: |
     NewPosition: a position is 16 bytes, one word per track: pattern
-    number, transpose. $effe starts a special position.
+    number, transpose. POSITION_SPECIAL starts a special position.
   2607: |
     Macro statement, 4 bytes: opcode, then 3 bytes of arguments.
     A macro runs statements until a wait, a stop or a note change.

@@ -113,7 +113,7 @@ class Instrument:  # 152 bytes
     volume: int  # $10
     fine_tune: int  # $12: the low byte is signed
     portamento: int  # $14: speed; 0 off
-    vibrato_delay: int  # $16: $ff in the low byte is off
+    vibrato_delay: int  # $16: VIBRATO_OFF in the low byte is off
     vibrato_speed: int  # $18
     vibrato_depth: int  # $1a: divides the sine
     pitch_table: int  # $1c: the pitch table's number

@@ -858,7 +858,7 @@ def CheckSampleEnds(module: Module) -> None:
 
 
 def BuildMixTables(module: Module) -> None:
-    """64 volume tables: a byte × volume / 63, plus $80; for volumes
+    """64 volume tables: a byte × volume / 63, plus 128; for volumes
     1-62 a negative byte gives one less. Four sum to 0..1020 around
     512. The clip table maps the sum to a signed byte."""
     tables = []

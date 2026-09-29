@@ -31,6 +31,7 @@ FLUSH_PERIOD = 9  # the shortest period, so a stopped channel ends its word
 LOW_MEMORY = 0x80000  # byte checks address $80000 + offset, in 512 KB
 LOW_MEMORY_MASK = 0x7FFFF
 RANDOM_ADD = 0x4335
+WITH_NOTE = 0xFE  # NoteVolume's byte 2: set the note too
 IMS_BUFFERS = 4  # ImsBufferOffset: voice n's buffer is at 4 + $100 × n
 IMS_BUFFER = 0x100  # bytes per voice's IMS buffer
 
@@ -336,7 +337,8 @@ def TrackStart(module: Module, track: Track) -> None:
 
 
 def ReadPattern(module: Module, track: Track) -> None:
-    """Notes $00-$7e and $c0-$ef read on; $7f-$bf and a wait end the row."""
+    """Notes below NOTE_WAIT and from PORTAMENTO_NOTE to $ef read on;
+    NOTE_WAIT to $bf and a wait end the row."""
     number = module.tracks.index(track)
     while True:
         s = bytearray(track.statements[track.pos])
@@ -617,7 +619,7 @@ def PortaNote(voice: Voice, s: Statement) -> None:
 
 
 def StopVoice(module: Module, number: int) -> None:
-    """A position's $fe: stops the macro, IMS and riff; DMA off at once."""
+    """A position's TRACK_OFF: stops the macro, IMS and riff; DMA off at once."""
     voice = module.voices[number & 0x0F]
     if voice.priority:
         return
@@ -854,8 +856,8 @@ def MacroVibrato(module: Module, voice: Voice, s: Statement) -> bool:
 
 def NoteVolume(module: Module, voice: Voice, s: Statement) -> bool:
     """Volume = 3 × the pattern's note volume + byte 3. With byte 2
-    = $fe, it also sets the note: byte 1 added to the current one."""
-    if s[2] == 0xFE:
+    = WITH_NOTE, it also sets the note: byte 1 added to the current one."""
+    if s[2] == WITH_NOTE:
         PutNote(voice, bytes([s[0], s[1], 0, 0]), voice.note)
     voice.volume = (3 * voice.note_volume + s[3]) & 0xFF
     voice.macro.pos += 1
@@ -863,8 +865,8 @@ def NoteVolume(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def MacroVolume(module: Module, voice: Voice, s: Statement) -> bool:
-    """Volume = byte 3. Byte 2 = $fe sets the note too, as in NoteVolume."""
-    if s[2] == 0xFE:
+    """Volume = byte 3. Byte 2 = WITH_NOTE sets the note too, as in NoteVolume."""
+    if s[2] == WITH_NOTE:
         PutNote(voice, bytes([s[0], s[1], 0, 0]), voice.note)
     voice.volume = s[3]
     voice.macro.pos += 1
@@ -1128,7 +1130,7 @@ def CheckByteTrap(module: Module, voice: Voice, s: Statement) -> bool:
 
 
 def SetByte(module: Module, voice: Voice, s: Statement) -> bool:
-    """Writes byte 1 to $80000 + signed word, in 512 KB."""
+    """Writes byte 1 to LOW_MEMORY + signed word, in 512 KB."""
     voice.macro.pos += 1
     return True
 

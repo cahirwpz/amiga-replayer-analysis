@@ -6,6 +6,8 @@ Usage: cogload.py FILE.md|DIR...
 Prints `file:line: rule: detail` for each violation; exits 1 if any.
 Limits depend on the file's directory (see PROFILES). Code is exempt.
 Also flags acronyms missing from data/glossary.yaml, and its avoided terms.
+A card, players/<player>.md, names no command by number and no hex number
+equal to a constant of the player's spec; see tools/numbered.py.
 Markdown is parsed by tools/mdtools.py; regexes only see the extracted prose.
 """
 
@@ -14,7 +16,8 @@ import sys
 from pathlib import Path
 
 import glossary
-from mdtools import CODE, line_of, plain, read
+import numbered
+from mdtools import CODE, line_of, literal, plain, read
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -103,20 +106,21 @@ def load_avoided():
 
 
 def blocks(doc):
-    """Yield (kind, line, text, list_event) for each block of prose.
+    """Yield (kind, line, text, code) for each block of prose.
 
-    kind: 'heading', 'para' or 'cell'. Lists come as separate events:
-    ('list-open', line), ('item', line) and ('list-close', line).
+    kind: 'heading', 'para' or 'cell'; code is the text with code spans.
+    Lists come as separate events: ('list-open', line), ('item', line) and
+    ('list-close', line).
     """
     tokens = doc.tokens
     for i, token in enumerate(tokens):
         kind = token.type
         if kind in ("bullet_list_open", "ordered_list_open"):
-            yield "list-open", line_of(token), None
+            yield "list-open", line_of(token), None, None
         elif kind in ("bullet_list_close", "ordered_list_close"):
-            yield "list-close", 0, None
+            yield "list-close", 0, None, None
         elif kind == "list_item_open":
-            yield "item", line_of(token), None
+            yield "item", line_of(token), None, None
         elif kind == "inline":
             parent = tokens[i - 1].type
             block = {
@@ -126,11 +130,20 @@ def blocks(doc):
                 "td_open": "cell",
             }.get(parent)
             if block:
-                yield block, line_of(token), plain(token)
+                yield block, line_of(token), plain(token), literal(token)
+
+
+def card_constants(rel):
+    """{value: [names]} of the spec of the player whose card this is."""
+    parts = Path(rel).parts
+    if len(parts) == 2 and parts[0] == "players" and rel.endswith(".md"):
+        return numbered.for_player(Path(rel).stem)
+    return None
 
 
 def check(path, known_terms, avoided=()):
     rel, lim = profile_for(path)
+    consts = card_constants(rel)
     errors = []
 
     def err(line, rule, detail):
@@ -141,7 +154,7 @@ def check(path, known_terms, avoided=()):
     unknown = {}
     lists = []  # one [item count, first line] per open list
 
-    for kind, n, text in blocks(read(path)):
+    for kind, n, text, code in blocks(read(path)):
         if kind == "list-open":
             lists.append([0, n])
             if len(lists) > lim["list_depth"]:
@@ -156,6 +169,9 @@ def check(path, known_terms, avoided=()):
             lists[-1][0] += 1
             continue
 
+        if consts is not None:
+            for _, detail in numbered.find(code, consts):
+                err(n, "number", detail)
         w = words(text)
         if kind != "cell" or lim["count_tables"]:
             total_words += len(w)

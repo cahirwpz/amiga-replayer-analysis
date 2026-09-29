@@ -67,15 +67,15 @@ comments:
   647: "'Synthesis' instrument file, 502 bytes"
   651: plus 64 filtered waves of 128 bytes
   2047: tick length, used to scale rates
-  2078: "$ffff: end of track"
-  2081: "$c000 and above: wait N ticks"
+  2078: "TRACK_END: end of track"
+  2081: "WAIT and above: wait N ticks"
   2087: "below SET_INSTRUMENT: note number, then velocity"
   2088: "SET_INSTRUMENT, SET_VOLUME, SET_TEMPO, SET_BEND"
   2199: "pitch bend for this track"
   1600: "track pitch bend: one of 64 period factors, x1.52 to x0.67"
   4748: "TINY: release the note after 3/4 of its length"
-  6543: "SMUS: $82 time signature"
-  6556: "SMUS: $84 track volume"
+  6543: "SMUS: time signature"
+  6556: "SMUS: track volume"
   6960: "SMUS: release the note after 3/4 of its length"
   2151: velocity 0 releases the note
   2169: velocity scales the volume
@@ -90,7 +90,8 @@ comments:
 banners:
   4631: |
     PlayTINY: TINY scores. A note event carries a length, not a velocity.
-    $80 is a rest, $81 changes instrument.
+    Its event codes differ from SNX: one is a rest, the next one changes
+    instrument.
   6528: |
     SMUS loader: turn EA duration codes into ticks. A whole note is 32
     ticks; a dotted note is 1.5 times longer.
@@ -99,7 +100,8 @@ banners:
     entry points: tick, then write Paula registers.
   2455: |
     SynthTick: pitch with portamento, LFO, envelope, then the wave.
-    Instrument offsets: $24 wave (128 bytes), $a4 LFO table (256 bytes),
+    Instrument offsets:
+    $24 wave (128 bytes), $a4 LFO table (256 bytes),
     $1ac volume, $1ae envelope to volume, $1b0 LFO to volume,
     $1b2 portamento time, $1b4 LFO to pitch, $1b6 filter base,
     $1b8 envelope to filter, $1ba LFO to filter, $1bc LFO rate,

@@ -3,6 +3,7 @@
 Reading goes through markdown-it-py, never through regular expressions:
   read(path)       front matter (YAML) and the token stream
   plain(inline)    the prose of an inline token; code spans become CODE
+  literal(inline)  the same, with code spans kept in backticks
   children(inline) (line, child) for each child of an inline token
   sections(doc)    body tokens grouped under their `##` headings
   split(tokens, level)  a token list grouped under headings of one level
@@ -66,19 +67,25 @@ def children(inline):
             line += 1
 
 
-def plain(inline):
-    """Prose of an inline token: text and link text, code spans as CODE."""
+def plain(inline, code=False):
+    """Prose of an inline token: text and link text, code spans as CODE.
+    With code=True, code spans keep their content, in backticks."""
     out = []
     for _, child in children(inline):
         if child.type == "text":
             out.append(child.content)
         elif child.type == "code_inline":
-            out.append(CODE)
+            out.append(f"`{child.content}`" if code else CODE)
         elif child.type == "image":
             out.append(child.content)
         elif child.type in ("softbreak", "hardbreak", "html_inline"):
             out.append(" ")
     return "".join(out).strip()
+
+
+def literal(inline):
+    """Prose of an inline token, with code spans kept in backticks."""
+    return plain(inline, code=True)
 
 
 def split(tokens, level="h2"):

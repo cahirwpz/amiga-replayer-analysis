@@ -909,8 +909,8 @@ def VolumeOffset(voice: Voice) -> int:
 def SidVoice(module: Module, voice: Voice, period: int, volume: int) -> None:
     """Voice A's `SID` mode picks a period: 1 its own, 2 and 3 voice B's or
     C's from the last tick, 4 the last one. Paula channel 1 then plays a
-    2-byte pulse; see SidPulse. Mode 0 or a period outside $11-$eee turns
-    it off."""
+    2-byte pulse; see SidPulse. Mode 0, a period up to SID_MIN or one above
+    SID_MAX turns it off."""
     mode, digi = voice.sid_mode, module.digi
     if mode < 0:
         return

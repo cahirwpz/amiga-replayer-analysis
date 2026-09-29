@@ -68,6 +68,118 @@ class Cogload(unittest.TestCase):
             cogload.PROFILES = saved
 
 
+class Numbered(unittest.TestCase):
+    """Numbers that stand in for names; see tools/numbered.py."""
+
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import numbered
+
+        self.numbered = numbered
+        self.consts = {0x80: ["HOLD"], 0x32: ["SAMPLE_DATA"], 0xE8: ["SIZE"]}
+
+    def found(self, text):
+        return [d for _, d in self.numbered.find(text, self.consts)]
+
+    def test_rejects_a_command_by_number(self):
+        for text in ("command 4 slides", "Effects 2 and 3", "opcode $e0"):
+            with self.subTest(text=text):
+                self.assertEqual(len(self.found(text)), 1)
+
+    def test_rejects_a_hex_number_equal_to_a_constant(self):
+        self.assertEqual(self.found("rows marked $80 hold"), ["`$80` is HOLD"])
+        self.assertEqual(self.found("if 0x80 is set"), ["`0x80` is HOLD"])
+        self.assertEqual(self.found("$81 is free"), [])
+
+    def test_allows_offsets(self):
+        for text in ("the wave plays from +$32", "`$e8` bytes", "$e8 bytes each"):
+            with self.subTest(text=text):
+                self.assertEqual(self.found(text), [])
+
+    def test_passes_a_wrong_name_with_the_right_value(self):
+        self.assertEqual(self.found("GAME_LOOP ends it"), [])
+
+    def test_reads_constants_of_a_spec(self):
+        code = "A, B = 0x80, 1 << 4\nC = A + 1\nD, E = range(2, 4)\nx = 5\n"
+        with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
+            spec = Path(tmp) / "spec.py"
+            spec.write_text(code, encoding="utf-8")
+            consts = self.numbered.constants(spec)
+        self.assertEqual(
+            consts, {0x80: ["A"], 16: ["B"], 0x81: ["C"], 2: ["D"], 3: ["E"]}
+        )
+
+    def test_finds_layout_lines(self):
+        banner = "Record, 8 bytes:\n  $00 flag   $02 wave\n  $04 length\n"
+        self.assertEqual(
+            self.numbered.layout(banner), {"  $00 flag   $02 wave", "  $04 length"}
+        )
+        self.assertEqual(self.numbered.layout("Text.\n$80 is a rest."), set())
+        self.assertEqual(self.numbered.layout("4 list, $16 pos"), {"4 list, $16 pos"})
+        self.assertEqual(self.numbered.layout("$80 is a rest, $81 is not"), set())
+
+    def test_specs_allow_definitions_and_leading_hex(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        spec = importlib.util.spec_from_file_location(
+            "specs_tool", ROOT / "tools/specs.py"
+        )
+        specs = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(specs)
+        code = "HOLD = 0x80  # $80 in a row\n"
+        code += "TABLE = (\n    HOLD,  # $80\n)\n"
+        code += "class Voice:\n    note: int = 0  # $80: the note\n"
+        code += "    pos: int = 0  # -$80\n"
+        code += '    """Hold with $80; command 4 slides."""\n'
+        with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
+            path = Path(tmp) / "med.py"
+            path.write_text(code, encoding="utf-8")
+            found = [(n, d) for n, rule, d in specs.check_prose(path, "MED")]
+        self.assertEqual(
+            found,
+            [
+                (8, "`$80` is HOLD"),
+                (8, "`command 4`: name it by its constant or handler"),
+            ],
+        )
+
+    def test_annotations_allow_layout_banners(self):
+        import annot
+
+        spec = {
+            "comments": {3: "$80: hold"},
+            "banners": {5: "Record:\n  $00 flag\n  $80 hold\n", 9: "Command 4."},
+        }
+        self.assertEqual(
+            list(annot.check_numbers(spec, self.consts)),
+            [
+                "comments: line 3: `$80` is HOLD",
+                "banners: line 9: `Command 4`: name it by its constant or handler",
+            ],
+        )
+        self.assertEqual(annot.player_of(Path("MaxTrax-shared.yaml")), "MaxTrax")
+        self.assertEqual(annot.player_of(Path("TFMX-Pro.yaml")), "TFMX-Pro")
+
+    def test_cards_check_code_spans(self):
+        import cogload
+
+        self.assertIn(0x80, cogload.card_constants("players/MED.md"))
+        self.assertIsNone(cogload.card_constants("docs/card-template.md"))
+        saved = cogload.card_constants
+        try:
+            cogload.card_constants = lambda rel: self.consts
+            errors = cogload.check(FIXTURES / "numbered_card.md", set())
+        finally:
+            cogload.card_constants = saved
+        found = [e.split(": ", 1)[1] for e in errors if ": number: " in e]
+        self.assertEqual(
+            found,
+            [
+                "number: `$80` is HOLD",
+                "number: `command 4`: name it by its constant or handler",
+            ],
+        )
+
+
 class Links(unittest.TestCase):
     def test_reports_each_rule(self):
         code, rules, out = run("links.py", FIXTURES / "links_bad.md")

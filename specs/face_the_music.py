@@ -97,7 +97,7 @@ class Track:  # Track0: $BA bytes each
     loop: int = 0  # $12
     end: int = 0  # $14
     volume: int = 0  # $1C: 0-64
-    pitch: int = 0  # $1E: 0-$21E
+    pitch: int = 0  # $1E: 0-PITCH_MAX
     step: int = 0  # $20: the lower track's skip step
     fraction: int = 0  # $22
     held: int = 0  # $28: the last byte mixed
@@ -507,7 +507,7 @@ Op = Callable[[Module, Track, int], Flow]
 
 
 def no_op(module: Module, track: Track, line: int) -> Flow:
-    """Op 0: the next line."""
+    """The first of SCRIPT_OPS: the next line."""
     return Flow.NEXT
 
 

@@ -189,7 +189,7 @@ def VoiceTick(module: Module, voice: Voice) -> None:
 
 def PulseSweep(voice: Voice) -> None:
     """Instruments 0-3 only. Every `speed` ticks, the pulse widens by one
-    byte up to index $1e, then narrows down to 4. It edits the sample
+    byte up to PULSE_MAX, then narrows down to PULSE_MIN. It edits the sample
     itself, so voices on one pulse instrument share the wave."""
     pulse, sample = voice.pulse, voice.sample
     if voice.instrument >= PULSE_INSTRUMENTS or sample is None:
@@ -210,7 +210,7 @@ def PulseSweep(voice: Voice) -> None:
 
 def EnvelopeTick(module: Module, voice: Voice) -> None:
     """Attack adds `step` every attack_ticks + 1 ticks and
-    ends only at exactly $3f. Decay subtracts it until the volume equals
+    ends only at exactly ATTACK_TOP. Decay subtracts it until the volume equals
     the sustain level, or goes negative. Then the volume holds. The
     volume goes out every tick."""
     env = voice.envelope
@@ -515,8 +515,9 @@ def CmdJump(module: Module, voice: Voice) -> None:
 
 def ResetPulse(voice: Voice) -> None:
     """Restarts the sweep at index 7, widening. It writes a fresh pulse
-    at +2 to +$21, but the played wave starts at +$32. So the wave that
-    plays is not reset (guess: $2 is a typo for $32)."""
+    at RESET_AT to +$21, but the played wave starts at SAMPLE_DATA. So
+    the wave that plays is not reset (guess: RESET_AT is a typo for
+    SAMPLE_DATA)."""
     voice.pulse.count, voice.pulse.index = voice.pulse.speed, PULSE_RESET
     voice.pulse.narrowing = False
     if voice.sample is not None:

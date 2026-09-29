@@ -110,7 +110,7 @@ def new_module(module: Module, song: int, instrument: int) -> Module:
 
 
 def InitSong(module: Module, song: int, instrument: int) -> None:
-    """d0: the song; d1: the instrument that $80 with a negative
+    """d0: the song; d1: the instrument that INSTRUMENT with a negative
     argument picks. Stops the sound, sets up samples, waves and voices,
     then points the level 4 interrupt at NullInterrupt.
 

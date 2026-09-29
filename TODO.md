@@ -35,22 +35,6 @@ the first card on it, with `specs/med.py`.
 - [ ] Composer's view for MED rests on the format notes. Ask the user for an
       OctaMED manual that covers synth sounds.
 
-### Checks
-
-- [ ] Add a check against numbers that stand in for names. One helper in
-      `tools/` serves `tools/cogload.py`, `tools/specs.py:check_prose` and
-      `tools/annot.py`. Tests go in `tests/test_tools.py`.
-
-| Rule   | Case                                                       |
-| ------ | ---------------------------------------------------------- |
-| Reject | A command, effect or opcode by number, e.g. "command 4"    |
-| Reject | A `$xx` equal to a constant of the player's spec           |
-| Allow  | A constant's definition line                               |
-| Allow  | A hex comment on a table entry, e.g. `CmdCall,  # $81`     |
-| Allow  | An offset: `+$32`, "`$e8` bytes", a field comment `# $aa:` |
-| Allow  | A layout banner in an annotation file                      |
-| Limit  | A wrong name with the right value passes, e.g. `GAME_LOOP` |
-
 ### Hardware model
 
 - [ ] `START_CCK` in `specs/soundmon_22.py:PlayRow` comes from a Musashi run of

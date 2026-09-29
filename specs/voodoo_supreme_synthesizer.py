@@ -52,6 +52,7 @@ STOPPED = 0x02  # chunks: past the sample's end, play EmptySample
 CHUNKS = 0x20
 XOR = 0x40
 MORPH = 0x80
+PLAIN_COPY = 0x80  # a morph table command: copy sample 1
 
 # Keep flags, voice field $2A: a note leaves these tables running
 KEEP_WAVE, KEEP_PERIOD, KEEP_VOLUME = 0x20, 0x40, 0x80
@@ -397,8 +398,8 @@ def MorphWave(module: Module, voice: Voice) -> None:
     """Entries (command, speed, ticks); TABLE_END jumps. Inside the window,
     each byte of the playing half moves toward the target by at most
     `speed` per tick. Command bits 6-7: 01 targets sample 1, else sample
-    2; 11 keeps the window still, else it moves by its length. $80: a
-    plain copy of sample 1."""
+    2; 11 keeps the window still, else it moves by its length.
+    PLAIN_COPY copies sample 1."""
     data = module.data
     voice.wave_count = (voice.wave_count - 1) & 0xFF
     if not voice.wave_count:
@@ -411,7 +412,7 @@ def MorphWave(module: Module, voice: Voice) -> None:
     playing = voice.half
     fill = swap_halves(voice)
     command = voice.step
-    if command == 0x80:
+    if command == PLAIN_COPY:
         CopyWave(module, voice, fill)
         return
     target = voice.pointer if command & 0xC0 == 0x40 else voice.sample2
