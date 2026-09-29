@@ -33,7 +33,7 @@ frame:
 
         lea     excerpt(pc),a0
         lea     EXCERPT_AT,a1
-        move.l  #(excerpt_end-excerpt)/2-1,d0
+        move.w  #(excerpt_end-excerpt)/2-1,d0
 copy:
         move.w  (a0)+,(a1)+
         dbra    d0,copy
