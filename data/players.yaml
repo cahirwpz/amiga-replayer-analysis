@@ -306,6 +306,9 @@ TFMX-Pro-TFHD:
 
 Fred:
   ports: [ext/c-flod/neoart/flod/fred, ext/nostalgicplayer/Source/Agents/Players/Fred]
+  module: data/module/Fred/fred.ingame1
+  provenance: ira
+  game: Fuzzball
 
 RobHubbard:
   ports: [ext/c-flod/neoart/flod/hubbard]

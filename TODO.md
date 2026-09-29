@@ -46,6 +46,10 @@ the first card on it, with `specs/med.py`.
 
 ### New cards
 
+- [ ] `Fred`: write its card and spec. `data/disasm/Fred.cnf` covers the replay
+      code of `data/module/Fred/fred.ingame1`, shared by all three Fuzzball
+      modules. Map: `ext/c-flod/neoart/flod/fred`.
+
 Skip unless a new lead turns up:
 
 - `Synth`: an envelope sets how many bytes of a wave are negated. Its wave
@@ -80,8 +84,8 @@ Skip unless a new lead turns up:
   - [Jason Page](players/JasonPage.md): branch markers and save slots.
   - [Paul Robotham](players/PaulRobotham.md): pulses per quarter note.
   - [MusicMaker 8V](players/MusicMaker-8V.md): quarter tones.
-- Modules the user can find: FredMonitor (`Fred`) and `SIDMon1.0`. Their replay
-  code ships inside each module.
+- Modules the user can find: `SIDMon1.0`. Its replay code ships inside each
+  module.
 - Releases: did a game or demo ship Oktalyzer's replay 1? Which games used
   MaxTrax?
 - Docs or credits: Sonic Arranger's `AMF` name. Other games with Digital Sonix &
@@ -109,7 +113,6 @@ need 68k code first.
 | `BenDaglish-SID`   | Replay code is in the module; needs a module | —                               |
 | `JankoMrsicFlogel` | Replay code is in the module; needs a module | —                               |
 | `Special-FX`       | Replay code is in the module; needs a module | —                               |
-| `Fred`             | Replay code is in the module; needs a module | `ext/c-flod/neoart/flod/fred`   |
 | `SIDMon1.0`        | Replay code is in the module; needs a module | `ext/c-flod/neoart/flod/sidmon` |
 
 ## Disassembly notes

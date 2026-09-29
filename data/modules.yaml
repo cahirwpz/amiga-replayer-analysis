@@ -24,3 +24,24 @@ data/module/RobHubbard/rh.FLYMUS:
   game: PGA Tour Golf
   archive: PGA_Tour_Golf.lha
   source: Modland / Exotica
+
+data/module/Fred/fred.ingame1:
+  sha1: c6b2b0982977f3799122944f238703b4b8411ec8
+  player: Fred
+  game: Fuzzball
+  archive: Fuzzball.lha
+  source: ExoticA
+
+data/module/Fred/fred.ingame2:
+  sha1: 5c83bab9f21d2704ae9ffe1a0a9ef0b41abc9280
+  player: Fred
+  game: Fuzzball
+  archive: Fuzzball.lha
+  source: ExoticA
+
+data/module/Fred/fred.title:
+  sha1: 7bb0b03dfad9fd7fc08c4d94dd0bf852d6db50ab
+  player: Fred
+  game: Fuzzball
+  archive: Fuzzball.lha
+  source: ExoticA

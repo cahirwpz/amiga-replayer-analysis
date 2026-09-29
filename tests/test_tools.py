@@ -491,6 +491,8 @@ class Disasm(unittest.TestCase):
 
     def test_reads_a_jump_table(self):
         self.assertEqual(self.disasm.jump_table(self.RAW), [0x8, 0xA])
+        jmp = bytes.fromhex("4efa0006 4efa0004 4e75 4e75")  # jmp (d16,pc)
+        self.assertEqual(self.disasm.jump_table(jmp), [0x8, 0xA])
 
     def test_wraps_raw_code_at_address_0(self):
         if not self.disasm.VASM.exists():

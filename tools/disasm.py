@@ -32,7 +32,8 @@ LABELs; entries are offset 0 and every symbol in a code hunk.
 
 Raw code, e.g. a module, has no hunk header. vasm wraps it into one code
 hunk at address 0, so offsets are file offsets. Entries are offset 0 and
-the targets of a leading table of `bra.w`, labelled Jump0, Jump1 and on.
+the targets of a leading table of `bra.w` or `jmp (d16,pc)`, labelled
+Jump0, Jump1 and on.
 
 `seed` drops an entry whose code would run past the end of its hunk: it is
 data. It prints each entry and whether it was kept. A data symbol whose
@@ -119,7 +120,8 @@ HUNK_HEADER, HUNK_UNIT = 0x3F3, 0x3E7
 HUNK_CODE, HUNK_DATA, HUNK_BSS = 0x3E9, 0x3EA, 0x3EB
 HUNK_RELOC32, HUNK_RELOC32SHORT, HUNK_DREL32 = 0x3EC, 0x3FC, 0x3F7
 HUNK_SYMBOL, HUNK_DEBUG, HUNK_END, HUNK_NAME = 0x3F0, 0x3F1, 0x3F2, 0x3E8
-BRA_W = b"\x60\x00"  # bra.w with a 16-bit displacement
+# Jump table entries: a 16-bit displacement from the second word follows.
+JUMPS = (b"\x60\x00", b"\x4e\xfa")  # bra.w, jmp (d16,pc)
 LFS_POINTER = b"version https://git-lfs"
 
 
@@ -286,9 +288,9 @@ def resolve(arg):
 
 
 def jump_table(raw):
-    """Targets of the `bra.w` table at the start of raw code."""
+    """Targets of the jump table at the start of raw code."""
     out, off = [], 0
-    while raw[off : off + 2] == BRA_W:
+    while raw[off : off + 2] in JUMPS:
         (disp,) = struct.unpack(">h", raw[off + 2 : off + 4])
         out.append(off + 2 + disp)
         off += 4
