@@ -25,38 +25,26 @@ function replayer_analysis_sparse {
 # vasm, vlink and the timing driver. Commands, not packages: a CI image may
 # install a tool outside the package manager. Reports all missing at once.
 function replayer_analysis_check {
-  local install command package
-  local -a needs missing
-  # Pairs of a command and the package that provides it.
-  if [ -e /etc/debian_version ]; then
-    install="sudo apt-get install"
-    needs=(git git git-lfs git-lfs python3 python3 venv python3-venv
-      curl curl bsdtar libarchive-tools make make gcc gcc g++ g++
-      cmake cmake ninja ninja-build)
-  elif [ -e /etc/fedora-release ]; then
-    # Fedora ships venv inside python3.
-    install="sudo dnf install"
-    needs=(git git git-lfs git-lfs python3 python3 venv python3
-      curl curl bsdtar bsdtar make make gcc gcc g++ gcc-c++
-      cmake cmake ninja ninja-build)
-  else
-    echo "activate: unknown Linux distribution; Debian, Ubuntu and Fedora work."
+  if ! [ -e /etc/debian_version ]; then
+    echo "activate: only Debian and Ubuntu are supported."
     return 1
   fi
-  while [ ${#needs[@]} -gt 0 ]; do
-    command=${needs[*]:0:1}
-    package=${needs[*]:1:1}
-    needs=("${needs[@]:2}")
-    if [ "$command" = venv ]; then
+  local need
+  local -a missing
+  # COMMAND:PACKAGE
+  for need in git:git git-lfs:git-lfs python3:python3 venv:python3-venv \
+    curl:curl bsdtar:libarchive-tools make:make gcc:gcc g++:g++ \
+    cmake:cmake ninja:ninja-build; do
+    if [ "${need%%:*}" = venv ]; then
       python3 -c "import ensurepip, venv" 2>/dev/null && continue
     else
-      command -v "$command" >/dev/null && continue
+      command -v "${need%%:*}" >/dev/null && continue
     fi
-    missing+=("$package")
+    missing+=("${need#*:}")
   done
   if [ ${#missing[@]} -gt 0 ]; then
     echo "activate: missing packages: ${missing[*]}"
-    echo "  Run: $install ${missing[*]}"
+    echo "  Run: sudo apt-get install ${missing[*]}"
     return 1
   fi
 }
