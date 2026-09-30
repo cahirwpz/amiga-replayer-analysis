@@ -42,12 +42,13 @@ Fix in `tools/print.py:write_pdf`:
 
 ### Then
 
-- [ ] Fix the open writing findings of Fred and MaxTrax: `tools/reviews.py`
-      lists them. Then record the writing review again.
 - [ ] Decide whether to run the card reviews on the other cards.
   - Check each finding against the code before recording it.
-  - Writing runs vary: one run found 1 issue, a rerun 14.
+  - Runs vary. Writing found 1 issue, then 14. MaxTrax coverage found 0, then 7
+    real gaps.
   - Coverage overclaimed once.
+  - The session may not load `.claude/agents/`. Then run a general-purpose agent
+    with the agent file as its prompt.
 - [ ] Review the cards with the user.
 - [ ] Decide how to group `ideas/`: pages per technique slug, or per control
       dimension (see `docs/control-dimensions.md`).

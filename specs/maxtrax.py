@@ -325,6 +325,15 @@ def SkipMarks(module: Module, count: int) -> None:
     module.current = start
 
 
+def AdvanceSong(module: Module, count: int) -> bool:
+    """A game call while the score plays. The clocks run on, so the
+    next event waits its start delta after the last one read."""
+    if not module.playing:
+        return False
+    SkipMarks(module, count)
+    return True
+
+
 def SystemReset(module: Module) -> None:
     for voice in module.voices:
         if voice.channel is not None:

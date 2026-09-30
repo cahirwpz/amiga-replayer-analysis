@@ -1,80 +1,19 @@
 coverage:
   date: 2026-09-30
   inputs:
-    players/MaxTrax.md: 35e3404764a4de889a89b0d879637aac4a325000
-    specs/maxtrax.py: 6cc80e54e4c68f11d471d3ad14e875ab98d388c1
-    AGENTS.md: 1a741c6fdab753e2ca799ee8fcf1bbc378cecc32
+    players/MaxTrax.md: 7122bdb741dd12457c7e77b06ff5f88ce6367c67
+    specs/maxtrax.py: 50df5c0be676670f78a731c3116e8d227dfa30e3
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
     docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
-    data/annot/MaxTrax.yaml: 8892916cc029b962ced0a94b3099dd6fe7b8f933
+    data/annot/MaxTrax.yaml: e2bac913f54768de259456fe4a8ca45dfef1e14e
     data/annot/MaxTrax-shared.yaml: 84a09c0dee8f9d906f1d8006bf1afa1aed259bce
   open: []
 writing:
   date: 2026-09-30
   inputs:
-    players/MaxTrax.md: 35e3404764a4de889a89b0d879637aac4a325000
-    specs/maxtrax.py: 6cc80e54e4c68f11d471d3ad14e875ab98d388c1
-    AGENTS.md: 1a741c6fdab753e2ca799ee8fcf1bbc378cecc32
-    data/glossary.yaml: df5ca1a11855edaea7b488f23697aae5c02f149b
-    docs/card-template.md: 1aa2f0ceaf8d803930d38df76c0c7d7dd1d06e5d
-  open:
-  - section: Key ideas
-    quote: 'Enables: songs from a MIDI sequencer play almost unchanged.'
-    rule: guess
-    fix: 'Mark it "(guess)": no replay code shows how a Music-X export maps.'
-  - section: Key ideas
-    quote: 'An instrument is a multisample: one sample per octave.'
-    rule: one-claim
-    fix: An instrument is a multisample. It has one sample per octave.
-  - section: Key ideas
-    quote: 'Pitch adds up as a logarithm: note, pitch bend, portamento and tuning.'
-    rule: one-claim
-    fix: Pitch adds up as a logarithm. It sums the note, pitch bend, portamento and
-      tuning.
-  - section: Key ideas
-    quote: 'A note is two audio.device requests: the attack part once, then the sustain
-      part looped.'
-    rule: one-claim
-    fix: A note is two audio.device requests. The attack part plays once. The sustain
-      part loops.
-  - section: Composer's view
-    quote: 'An event: command, data, start delta, stop time.'
-    rule: one-fact
-    fix: One row per field, each citing `:Event`.
-  - section: Composer's view
-    quote: 'A note: MIDI channel, velocity in 16 steps, length.'
-    rule: one-fact
-    fix: One row per field, each citing `:RunEvent`.
-  - section: Composer's view
-    quote: A glide needs mono mode and CC 65.
-    rule: label-claim
-    fix: 'Cite `:NoteOn`: it checks mono mode and CC 65 before `MonoLegato` runs.'
-  - section: Composer's view
-    quote: A repeat is a begin and an end event, 4 levels deep.
-    rule: one-fact
-    fix: 'Two rows: a begin and an end event; 4 levels deep.'
-  - section: What is unique
-    quote: 'Pan picks a side, not a level: the left or the right voices.'
-    rule: one-claim
-    fix: Pan picks a side, not a level. A note plays on the left or the right voices.
-  - section: What is unique
-    quote: 'Of two voices on one side, the freer one wins: free, then releasing, then
-      held.'
-    rule: one-claim
-    fix: Of two voices on one side, the freer one wins. Free beats releasing, and
-      releasing beats held.
-  - section: What is unique
-    quote: 'Priority: score 0, game notes 1, game sounds 2.'
-    rule: one-claim
-    fix: Game sounds rank above game notes. Game notes rank above the score.
-  - section: What is unique
-    quote: 'A slide to a slower tempo overshoots high until it ends: a bug.'
-    rule: one-claim
-    fix: A slide to a slower tempo overshoots high until it ends. This is a bug.
-  - section: What is unique
-    quote: 'A new pitch bend range, with the wheel below center, bends up: a bug.'
-    rule: one-claim
-    fix: With the wheel below center, a new pitch bend range bends up. This is a bug.
-  - section: What is unique
-    quote: 'CC 65 off writes a byte into the score: a bug.'
-    rule: one-claim
-    fix: CC 65 off writes a byte into the score. This is a bug.
+    players/MaxTrax.md: 7122bdb741dd12457c7e77b06ff5f88ce6367c67
+    specs/maxtrax.py: 50df5c0be676670f78a731c3116e8d227dfa30e3
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 8a09a7b2f91ad7427a604e839126f3a0f80fc6c9
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []

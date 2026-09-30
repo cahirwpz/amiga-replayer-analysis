@@ -168,6 +168,8 @@ Standard MIDI terms. Note-on and note-off are under Sound and synthesis.
 | **tempo**            | Beats per minute; in an SMF, microseconds per quarter note.                                       |
 | **voice allocation** | Choosing a voice for a note at note-on.                                                           |
 | **voice stealing**   | Taking a busy voice for a new note when none is free.                                             |
+| **marker**           | A named point in a MIDI score, e.g. the start of a verse.                                         |
+| **round-robin**      | Taking the next choice in a fixed cycle, so each gets a turn.                                     |
 | **multisample**      | An instrument with several samples, each for a range of notes.                                    |
 
 ## Programming

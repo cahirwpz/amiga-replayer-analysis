@@ -21,9 +21,8 @@ adds scaled deltas to a wave.
 
 ## Key ideas
 
-- A pulse instrument fills the voice's buffer with low bytes, then high bytes.
-  Each step writes one byte at the edge, so the edge moves between two
-  positions. `:Pulse` `:PulseInit`
+- A pulse wave holds low bytes below the edge and high bytes above it. Each step
+  moves the edge by one byte, between two positions. `:Pulse` `:PulseInit`
   - Enables: a pulse-width sweep, as on the C64, for one byte write per step.
   - Costs: the wave is at most 64 bytes long.
 - Each tick, a morph instrument rewrites 32 bytes. Each byte is the source plus
@@ -37,29 +36,33 @@ adds scaled deltas to a wave.
   command always restarts it. `:NoteOn`
   - Enables: one sweep can run through a whole phrase.
 - A turn count can stop a sweep after N turns. `:Pulse` `:MorphStep`
-- The ADSR is timed. Sustain lasts a set number of ticks, then the release
-  starts on its own. `:Envelope` `:Sustain`
+- The ADSR is timed. The release starts after a set number of sustain ticks.
+  `:Envelope` `:Sustain`
   - Costs: the note's length cannot end the sustain.
 
 ## Composer's view
 
-The composer writes one track per voice: a list of patterns. A pattern is a
-stream of notes, waits and commands.
+The composer writes one track per voice. A track is a list of patterns. A
+pattern is a stream of notes, waits and commands.
 
-| Aspect   | Answer                                                              | Source           |
-| -------- | ------------------------------------------------------------------- | ---------------- |
-| Notation | A note byte lasts one row.                                          | `:NoteOn`        |
-| Notation | A wait byte adds 1 to 123 rows. After a note, it ties.              | `:ReadStream`    |
-| Notation | `INSTRUMENT`, `SPEED`, `PORTAMENTO` come before a note.             | `:ReadStream`    |
-| Notation | `REST` silences the voice for one row.                              | `:Rest`          |
-| Notation | `PATTERN_END` goes to the track's next pattern.                     | `:NextPosition`  |
-| Notation | A track word with `TRACK_JUMP` loops the track.                     | `:NextPosition`  |
-| Notation | `TRACK_END` stops the song.                                         | `:SongEnd`       |
-| Notation | Arpeggio, vibrato, ADSR, pulse and morph live in the instrument.    | `:Instrument`    |
-| Cost     | DMA goes off one tick before the next note or command.              | `:CountDown`     |
-| Cost     | `SPEED` on one voice sets the speed of all voices.                  | `:SetSpeed`      |
-| Cost     | A glide is set before its note: length, target note, delay.         | `:SetPortamento` |
-| Cost     | Vibrato depth is in period units. Low notes get a smaller interval. | `:Vibrato`       |
+| Aspect   | Answer                                                           | Source           |
+| -------- | ---------------------------------------------------------------- | ---------------- |
+| Notation | A note byte lasts one row.                                       | `:NoteOn`        |
+| Notation | A wait byte adds 1 to 123 rows.                                  | `:ReadStream`    |
+| Notation | A wait after a note ties the note.                               | `:CountDown`     |
+| Notation | `INSTRUMENT`, `SPEED`, `PORTAMENTO` come before a note.          | `:ReadStream`    |
+| Notation | `REST` silences the voice for one row.                           | `:Rest`          |
+| Notation | `PATTERN_END` goes to the track's next pattern.                  | `:NextPosition`  |
+| Notation | A track word with `TRACK_JUMP` loops the track.                  | `:NextPosition`  |
+| Notation | `TRACK_END` stops the song.                                      | `:SongEnd`       |
+| Notation | Arpeggio, vibrato, ADSR, pulse and morph live in the instrument. | `:Instrument`    |
+| Cost     | DMA goes off one tick before the next note or command.           | `:CountDown`     |
+| Cost     | `SPEED` on one voice sets the speed of all voices.               | `:SetSpeed`      |
+| Cost     | A glide's length is set before its note.                         | `:SetPortamento` |
+| Cost     | A glide's target note is set before its note.                    | `:SetPortamento` |
+| Cost     | A glide's delay is set before its note.                          | `:SetPortamento` |
+| Cost     | Vibrato depth is in period units.                                | `:Vibrato`       |
+| Cost     | Low notes get a smaller vibrato interval.                        | `:Vibrato`       |
 
 ## What is unique
 
@@ -71,9 +74,9 @@ stream of notes, waits and commands.
   distance. `:NoteOn`
 - A fade lowers the volume once per playing voice. Four voices fade four times
   as fast as one. `:Volume`
-- Notes below 32 keep DMA on before them: the gap test compares signed bytes.
+- Notes below 32 keep DMA on before them. The gap test compares signed bytes.
   `:CountDown`
-- The loop offset moves the start in bytes but shortens the length in words.
+- The loop offset moves the start in bytes. It shortens the length in words.
   `:QueueLoop`
 
 ## Open questions
@@ -81,5 +84,5 @@ stream of notes, waits and commands.
 - Which Fred Editor modules use morph instruments? The three Fuzzball modules
   use none.
 - Is the missing gap before notes below 32 intended? (guess: a wrong branch)
-- `fred.title`'s one sample runs 138 bytes past the end of the file. Is the rip
-  short?
+- `fred.title`'s one sample runs 138 bytes past the end of the file. Is the file
+  cut short?

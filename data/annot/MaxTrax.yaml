@@ -29,6 +29,7 @@ labels:
   2212: ExtraSound
   2414: ExtraStop
   # new names that specs cite
+  AdvanceSong: AdvanceSong
   _channel: _channel
   _globaldata: _globaldata
   _patch: _patch
