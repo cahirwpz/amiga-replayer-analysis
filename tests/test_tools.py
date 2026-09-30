@@ -276,6 +276,33 @@ class Annot(unittest.TestCase):
         out = "\n".join(self.annot.process(self.dir / "duplicate.yaml", write=False))
         self.assertIn("duplicate key 2", out)
 
+    def test_reports_bad_layouts(self):
+        spec = {
+            "types": {"Voice": ["x"]},
+            "layouts": {
+                "Voice": {
+                    "size": 4,
+                    "fields": {
+                        "period": [0, "w"],
+                        "volume": [1, "b"],
+                        "start": [3, "w"],
+                        "Bad": [2, "b"],
+                    },
+                },
+                "Ghost": {"size": 4},
+            },
+        }
+        out = "\n".join(self.annot.check_layouts(spec))
+        for text in (
+            "Voice: volume overlaps period",
+            "Voice: start lies outside 4 bytes",
+            "Voice: start is a w at an odd offset",
+            "Voice: Bad is not an attribute name",
+            "layouts: Ghost is not in types",
+            "layouts: Ghost needs a size and fields",
+        ):
+            self.assertIn(text, out)
+
     def test_accepts_the_repo_files(self):
         self.assertEqual(self.annot.main(["--check"]), 0)
 
@@ -567,12 +594,15 @@ class Timing(unittest.TestCase):
 
         self.timing = timing
 
-    def test_takes_ranges_and_marks_their_ends(self):
+    def data(self, name="soundmon_22"):
         import yaml
 
-        data = yaml.safe_load((ROOT / "data/timing/soundmon_22.yaml").read_text())
-        text = self.timing.excerpt(data)
+        return yaml.safe_load((ROOT / f"data/timing/{name}.yaml").read_text())
+
+    def test_takes_ranges_and_marks_their_ends(self):
+        text = self.timing.excerpt(self.data())
         self.assertIn("\nReadRow:\n", text)
+        self.assertIn("\nStartSynthNote:\n illegal\n", text)
         self.assertNotIn("bsr\t\tReadRow", text)
         self.assertNotIn("bpxx", text)
         self.assertNotIn("Section", text)
@@ -582,6 +612,32 @@ class Timing(unittest.TestCase):
         self.assertEqual(self.timing.address("DmaWait+4", symbols), 0x1000E)
         self.assertEqual(self.timing.address("DmaWait - 2", symbols), 0x10008)
         self.assertEqual(self.timing.address("0x40038", symbols), 0x40038)
+
+    def test_writes_record_fields(self):
+        memory = self.timing.records(self.data())
+        symbols = {"Voices": 0x10100, "Song": 0x10200}
+        self.assertEqual(
+            self.timing.write("voice[1].volume 64", symbols, memory),
+            (0x10100 + 36 + 2, 1, 64),
+        )
+        self.assertEqual(
+            self.timing.write("instrument[1].length 1000", symbols, memory),
+            (0x40038, 2, 1000),
+        )
+        self.assertEqual(
+            self.timing.write("Song l 0x40000", symbols, memory), (0x10200, 4, 0x40000)
+        )
+
+    def test_spec_constants_match_the_measurements(self):
+        import numbered
+
+        for path in sorted((ROOT / "data/timing").glob("*.yaml")):
+            data = self.data(path.stem)
+            consts = numbered.constants(ROOT / "specs" / f"{path.stem}.py")
+            for constant, (case, load) in data["measure"].get("spec", {}).items():
+                with self.subTest(file=path.name, constant=constant):
+                    want = data["cases"][case]["expect"][load][constant]
+                    self.assertIn(constant, consts.get(want, []))
 
     def test_matches_the_recorded_times(self):
         if not self.timing.DRIVER.exists():

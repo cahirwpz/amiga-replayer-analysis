@@ -8,28 +8,36 @@ Usage: timing.py run NAME
   check    compare them with `expect` in the data file; exit 1 on a
            difference
 
-NAME is a data file, data/timing/NAME.yaml. It says which code to take
-from a replay's source, where to set breakpoints, and what memory to
-write before the code runs:
+NAME is a data file, data/timing/NAME.yaml. Its sections:
 
-  source   the replay's annotation, data/annot/PLAYER.yaml; labels are
-           then its new names. A raw source, from the repo root, only
-           for a player without one
-  take     label ranges [FROM, TO] of the source, TO excluded. TO becomes
-           a label at the range's end. A third item gives lines to add
-           after that label.
-  drop     source lines to leave out; whitespace and comments do not
-           count
-  entry    the label that the boot code calls
-  points   breakpoints: LABEL or LABEL+OFFSET or LABEL-OFFSET
-  spans    NAME: [FROM, TO], two points. The span is the CPU time
-           between them, in CCK
-  cases    NAME: {writes, expect}. `writes` are "ADDRESS SIZE VALUE",
-           with SIZE b, w or l, done before the call. `expect` holds
-           the spans per load
-  loads    NAME: BITPLANES, the low-resolution bitplanes fetched during
-           the call. Default: {no display: 0}. 6 bitplanes take the
-           most bus slots from the CPU
+  code       what runs, cut from the replay's source
+    source   the replay's annotation, data/annot/PLAYER.yaml; labels are
+             then its new names. A raw source, from the repo root, only
+             for a player without one
+    take     label ranges [FROM, TO] of the source, TO excluded. TO
+             becomes a label at the range's end
+    entry    the label that the boot code calls
+  harness    what changes so the code runs alone
+    drop     source lines to leave out; whitespace and comments do not
+             count
+    stop     labels that end a `take` range; `illegal` follows each, so
+             code that reaches one stops the run
+  measure    where the clock is read
+    points   breakpoints: LABEL or LABEL+OFFSET or LABEL-OFFSET
+    spans    NAME: [FROM, TO], two points. The span is the CPU time
+             between them, in CCK
+    spec     CONSTANT: [CASE, LOAD]; the spec specs/NAME.py holds the
+             span CONSTANT as measured there. tests/ check it
+  memory     NAME: {layout, at}: an array of records. `layout` is a type
+             in the annotation's `layouts`; record N is at AT + N * size
+  cases      NAME: {writes, expect}, done before the call. A write is
+             "NAME[N].FIELD VALUE", a field of a `memory` record, or
+             "ADDRESS SIZE VALUE" with SIZE b, w or l. A nested list,
+             e.g. a YAML alias, adds its writes in place. `expect` holds
+             the spans per load
+  loads      optional; NAME: BITPLANES, the low-resolution bitplanes
+             fetched during the call. Default: no display and 6
+             bitplanes, which take the most bus slots from the CPU
 
 The excerpt is assembled with vasm at $10000 in chip RAM, as a replay
 runs. tools/timing/boot.asm is the boot ROM: it copies the excerpt, does
@@ -59,7 +67,8 @@ EXCERPT_AT = 0x10000
 START_LINE = 0x50  # inside the display window of every load
 
 BOOT = ROOT / "tools" / "timing" / "boot.asm"
-LOADS = {"no display": 0}  # without `loads` in the data file
+LOADS = {"no display": 0, "6 bitplanes": 6}  # without `loads` in the data file
+SECTIONS = {"code", "harness", "measure", "memory", "cases", "loads"}
 SIZES = {"b": 1, "w": 2, "l": 4}
 
 
@@ -97,16 +106,21 @@ def code(line):
 
 def excerpt(data):
     """The assembler text: the taken ranges of the source, at EXCERPT_AT."""
-    lines = source_lines(data["source"])
+    lines = source_lines(data["code"]["source"])
     where = labels(lines)
-    drop = {code(d) for d in data.get("drop", [])}
+    harness = data.get("harness", {})
+    drop = {code(d) for d in harness.get("drop", [])}
+    stop = set(harness.get("stop", []))
+    if unknown := stop - {end for _, end in data["code"]["take"]}:
+        sys.exit(f"stop: {', '.join(sorted(unknown))} ends no take range")
     out = [f" org ${EXCERPT_AT:x}"]
-    for first, end, *extra in data["take"]:
+    for first, end in data["code"]["take"]:
         for line in lines[where[first] : where[end]]:
             if code(line) not in drop:
                 out.append(line)
         out.append(f"{end}:")
-        out.extend(extra)
+        if end in stop:
+            out.append(" illegal")
     return "\n".join(out) + "\n"
 
 
@@ -137,18 +151,49 @@ def address(expr, symbols):
     return value
 
 
-def writes(case, symbols):
-    """The writes.bin table of boot.asm for "ADDRESS SIZE VALUE" writes. A
-    nested list, e.g. a YAML alias, adds its writes in place."""
+def records(data):
+    """{NAME: (base expression, record size, {field: (offset, size)})} of
+    the `memory` section, with layouts from the annotation."""
+    memory = data.get("memory", {})
+    if not memory:
+        return {}
+    spec = annot.load(ROOT / data["code"]["source"])
+    layouts = spec.get("layouts") or {}
+    found = {}
+    for name, place in memory.items():
+        if place["layout"] not in layouts:
+            sys.exit(f"memory: {name}: no layout {place['layout']} in the annotation")
+        size = layouts[place["layout"]]["size"]
+        found[name] = (str(place["at"]), size, annot.fields(spec, place["layout"]))
+    return found
+
+
+def write(item, symbols, memory):
+    """(address, size, value) of one write."""
+    m = re.fullmatch(r"(\w+)\[(\w+)\]\.([\w.]+)\s+(\S+)", item.strip())
+    if not m:
+        target, size, value = item.split()
+        return address(target, symbols), SIZES[size], int(value, 0)
+    name, index, field, value = m.groups()
+    if name not in memory:
+        sys.exit(f"write {item}: no {name} in memory")
+    base, record, fields = memory[name]
+    if field not in fields:
+        sys.exit(f"write {item}: the layout has no field {field}")
+    offset, size = fields[field]
+    return address(base, symbols) + int(index, 0) * record + offset, size, int(value, 0)
+
+
+def writes(case, symbols, memory):
+    """The writes.bin table of boot.asm. A nested list, e.g. a YAML alias,
+    adds its writes in place."""
     items = case.get("writes", [])
     while any(isinstance(i, list) for i in items):
         items = [j for i in items for j in (i if isinstance(i, list) else [i])]
     table = struct.pack(">H", len(items))
     for item in items:
-        target, size, value = item.split()
-        table += struct.pack(
-            ">LHL", address(target, symbols), SIZES[size], int(value, 0) & 0xFFFFFFFF
-        )
+        target, size, value = write(item, symbols, memory)
+        table += struct.pack(">LHL", target, size, value & 0xFFFFFFFF)
     return table
 
 
@@ -157,17 +202,21 @@ def measure(name):
     if not DRIVER.exists():
         sys.exit("amiga-timing missing; run: source ./activate")
     data = yaml.safe_load((DATA / f"{name}.yaml").read_text())
+    if unknown := set(data) - SECTIONS:
+        sys.exit(f"{name}: unknown sections {', '.join(sorted(unknown))}")
+    measure = data["measure"]
     work = BUILD / "timing" / name
     work.mkdir(parents=True, exist_ok=True)
     (work / "excerpt.asm").write_text(excerpt(data), "latin-1")
     symbols = assemble(work, "excerpt", work / "excerpt.asm")
-    points = {p: address(expr, symbols) for p, expr in data["points"].items()}
+    memory = records(data)
+    points = {p: address(expr, symbols) for p, expr in measure["points"].items()}
     results: dict[str, dict[str, dict[str, float]]] = {}
     for case_name, case in data["cases"].items():
-        (work / "writes.bin").write_bytes(writes(case, symbols))
+        (work / "writes.bin").write_bytes(writes(case, symbols, memory))
         for load, bitplanes in data.get("loads", LOADS).items():
             assemble(
-                work, "boot", BOOT, EXCERPT_AT=EXCERPT_AT, ENTRY=symbols[data["entry"]],
+                work, "boot", BOOT, EXCERPT_AT=EXCERPT_AT, ENTRY=symbols[data["code"]["entry"]],
                 START_LINE=START_LINE, BITPLANES=bitplanes,
             )  # fmt: skip
             out = run_or_exit(
@@ -179,7 +228,7 @@ def measure(name):
             }
             spans = {
                 span: (clock[points[b]] - clock[points[a]]) / CPU_PER_CCK
-                for span, (a, b) in data["spans"].items()
+                for span, (a, b) in measure["spans"].items()
             }
             results.setdefault(case_name, {})[load] = spans
     return data, results

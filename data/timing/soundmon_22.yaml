@@ -1,76 +1,83 @@
 # SoundMon 2.2 starts new notes: DMA off, a busy-wait, the setup of each
 # new note, then DMA on. tools/timing.py times it in vAmiga.
-# specs/soundmon_22.py uses DMA_WAIT_CCK and START_CCK.
-source: data/annot/SoundMon2.2.yaml
 
 # From the DMA-off write to the DMA-on write and its rts, then the note
-# setup of a sample instrument, then the voice data. A synth instrument
-# stops the run: its setup is not measured.
-take:
-  - [ReadAndStartRow, ReadRow]
-  - [StartNote, StartSynthNote, " illegal"]
-  - [EmptySample, Position]
-  - [DmaMask, TablePool]
-  - [SavedWaves, StateBackup]
-drop:
-  - bsr ReadRow # the row reader; the cases set the rows' results
-  - Section Buffer,BSS
-entry: ReadAndStartRow
+# setup of a sample instrument, then the voice data.
+code:
+  source: data/annot/SoundMon2.2.yaml
+  take:
+    - [ReadAndStartRow, ReadRow]
+    - [StartNote, StartSynthNote]
+    - [EmptySample, Position]
+    - [DmaMask, TablePool]
+    - [SavedWaves, StateBackup]
+  entry: ReadAndStartRow
 
-points:
-  wait: DmaWait # the busy-wait's dbra, first pass
-  waited: DmaWait+4 # the first instruction after the busy-wait
-  started: ReadRow-2 # the rts after the DMA-on write
-loads: # bitplanes fetched during the call
-  no display: 0
-  6 bitplanes: 6
-spans:
-  DMA_WAIT_CCK: [wait, waited]
-  START_CCK: [waited, started]
+harness:
+  drop:
+    - bsr ReadRow # the row reader; the cases set the rows' results
+    - Section Buffer,BSS
+  stop:
+    - StartSynthNote # a synth instrument's setup is not measured
 
-# A voice record is $24 bytes: period and new-note bit, volume, instrument.
-# Instrument 1's header is at Song + 32; bytes 24 to 31 hold the length,
-# the loop start, the loop length and the volume.
+measure:
+  points:
+    wait: DmaWait # the busy-wait's dbra, first pass
+    waited: DmaWait+4 # the first instruction after the busy-wait
+    started: ReadRow-2 # the rts after the DMA-on write
+  spans:
+    DMA_WAIT_CCK: [wait, waited]
+    START_CCK: [waited, started]
+  spec:
+    DMA_WAIT_CCK: [one note without a sample, no display]
+    START_CCK: [one note without a sample, no display]
+
+# Records the cases write; layouts in the annotation.
+memory:
+  voice: { layout: Voice, at: Voices }
+  saved: { layout: SavedWave, at: SavedWaves }
+  instrument: { layout: Instrument, at: 0x40000 } # the value written to Song
+
 cases:
   one note without a sample:
-    expect:
-      no display: {DMA_WAIT_CCK: 647, START_CCK: 442}
-      6 bitplanes: {DMA_WAIT_CCK: 884, START_CCK: 659}
     writes:
-      - Voices w 0x81ac
-      - Voices+2 b 64
-      - Voices+3 b 1
+      - voice[0].period 0x81ac # new note
+      - voice[0].volume 64
+      - voice[0].instrument 1
       - Song l 0x40000
+    expect:
+      no display: { DMA_WAIT_CCK: 647, START_CCK: 442 }
+      6 bitplanes: { DMA_WAIT_CCK: 884, START_CCK: 659 }
   four sample notes with a loop:
-    expect:
-      no display: {DMA_WAIT_CCK: 647, START_CCK: 1290}
-      6 bitplanes: {DMA_WAIT_CCK: 884, START_CCK: 1888}
     writes: &four
-      - Voices w 0x81ac
-      - Voices+2 b 64
-      - Voices+3 b 1
-      - Voices+0x24 w 0x81ac
-      - Voices+0x26 b 64
-      - Voices+0x27 b 1
-      - Voices+0x48 w 0x81ac
-      - Voices+0x4a b 64
-      - Voices+0x4b b 1
-      - Voices+0x6c w 0x81ac
-      - Voices+0x6e b 64
-      - Voices+0x6f b 1
+      - voice[0].period 0x81ac
+      - voice[0].volume 64
+      - voice[0].instrument 1
+      - voice[1].period 0x81ac
+      - voice[1].volume 64
+      - voice[1].instrument 1
+      - voice[2].period 0x81ac
+      - voice[2].volume 64
+      - voice[2].instrument 1
+      - voice[3].period 0x81ac
+      - voice[3].volume 64
+      - voice[3].instrument 1
       - Song l 0x40000
-      - SamplePtrs l 0x60000
-      - 0x40038 w 1000
-      - 0x4003a w 200
-      - 0x4003c w 400
-      - 0x4003e w 64
-  four sample notes with a loop and saved waves:
+      - SamplePtrs l 0x60000 # instrument 1's sample
+      - instrument[1].length 1000
+      - instrument[1].repeat_start 200
+      - instrument[1].repeat_length 400
+      - instrument[1].volume 64
     expect:
-      no display: {DMA_WAIT_CCK: 647, START_CCK: 1656}
-      6 bitplanes: {DMA_WAIT_CCK: 884, START_CCK: 2473}
+      no display: { DMA_WAIT_CCK: 647, START_CCK: 1290 }
+      6 bitplanes: { DMA_WAIT_CCK: 884, START_CCK: 1888 }
+  four sample notes with a loop and saved waves:
     writes:
       - *four
-      - SavedWaves l 0x50000
-      - SavedWaves+0x24 l 0x50040
-      - SavedWaves+0x48 l 0x50080
-      - SavedWaves+0x6c l 0x500c0
+      - saved[0].address 0x50000
+      - saved[1].address 0x50040
+      - saved[2].address 0x50080
+      - saved[3].address 0x500c0
+    expect:
+      no display: { DMA_WAIT_CCK: 647, START_CCK: 1656 }
+      6 bitplanes: { DMA_WAIT_CCK: 884, START_CCK: 2473 }

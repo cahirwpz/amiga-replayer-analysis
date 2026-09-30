@@ -20,6 +20,8 @@ in ext/, which stays read-only:
     - ext/uade/amigasrc/players/uade/soundmon/format.txt
   types:                 # spec class: words in the source or refs
     Voice: [trk_prevper]
+  layouts:               # a type's record: size, field: [offset, b|w|l]
+    Voice: {size: 36, fields: {period: [0, w], volume: [2, b]}}
 
 A key may be any identifier of the code, also one used but not defined,
 e.g. an offset symbol. Specs name labels only by their new names; see
@@ -29,8 +31,14 @@ tools/specs.py.
 tools/specs.py. Each word must occur as a whole word. Citations may name
 types like labels.
 
+`layouts` give the byte layout of a type's record, for tools that write
+records into memory, e.g. tools/timing.py. Field names are the spec's
+attribute names; a nested one is dotted: `eg.pos`. Only the fields a
+tool needs are listed. A field lies inside the record; a word or long
+starts at an even offset; fields do not overlap.
+
 A player with only an IRA config has no source to annotate. Its file names
-the config as `source` and holds only `types` and `refs`; the config's own
+the config as `source` and holds only `types`, `layouts` and `refs`; the config's own
 LABELs are the new names. It needs no sha1 and renders nothing.
 
 Comments and banners name no command by number, and no hex number equal
@@ -60,7 +68,8 @@ ROOT = Path(__file__).resolve().parent.parent
 ANNOT = ROOT / "data" / "annot"
 OUT = ROOT / "build" / "annot"
 
-FIELDS = {"source", "sha1", "labels", "comments", "banners", "refs", "types"}
+FIELDS = {"source", "sha1", "labels", "comments", "banners", "refs", "types", "layouts"}
+SIZES = {"b": 1, "w": 2, "l": 4}
 IDENT = r"[A-Za-z_][\w.]*"
 
 
@@ -107,9 +116,10 @@ def check(spec, lines, sha1):
     for key in sorted(set(spec) - FIELDS):
         yield f"unknown field `{key}`"
     if is_config(spec):
-        for key in sorted(set(spec) - {"source", "refs", "types"}):
-            yield f"`{key}` needs a source; a config takes only types and refs"
+        for key in sorted(set(spec) - {"source", "refs", "types", "layouts"}):
+            yield f"`{key}` needs a source; a config takes only types, layouts and refs"
         yield from check_types(spec, lines, cited_labels(ROOT / spec["source"]))
+        yield from check_layouts(spec)
         return
     if spec.get("sha1") != sha1:
         yield f"sha1 is {spec.get('sha1')}, source has {sha1}"
@@ -147,6 +157,7 @@ def check(spec, lines, sha1):
                     yield f"{field}: line {num} is not Latin-1"
 
     yield from check_types(spec, lines, set(labels.values()))
+    yield from check_layouts(spec)
 
 
 def check_types(spec, lines, labels):
@@ -170,6 +181,47 @@ def check_types(spec, lines, labels):
             pattern = re.compile(rf"(?<![\w.]){re.escape(str(word))}(?!\w)")
             if not any(pattern.search(t) for t in texts):
                 yield f"types: {name}: {word} is in neither the source nor refs"
+
+
+def fields(spec, name):
+    """{field: (offset, size in bytes)} of a type's layout."""
+    layout = (spec.get("layouts") or {})[name]
+    return {f: (at, SIZES[size]) for f, (at, size) in layout["fields"].items()}
+
+
+def check_layouts(spec):
+    """Yield problems with `layouts`."""
+    types = spec.get("types") or {}
+    for name, layout in (spec.get("layouts") or {}).items():
+        if name not in types:
+            yield f"layouts: {name} is not in types"
+        size = layout.get("size") if isinstance(layout, dict) else None
+        found = layout.get("fields") if isinstance(layout, dict) else None
+        if not isinstance(size, int) or size <= 0 or not isinstance(found, dict):
+            yield f"layouts: {name} needs a size and fields"
+            continue
+        taken: dict[int, str] = {}
+        for field, place in found.items():
+            if not re.fullmatch(r"[a-z_]\w*(\.[a-z_]\w*)*", str(field)):
+                yield f"layouts: {name}: {field} is not an attribute name"
+            if (
+                not isinstance(place, list)
+                or len(place) != 2
+                or not isinstance(place[0], int)
+                or place[1] not in SIZES
+            ):
+                yield f"layouts: {name}: {field} needs [offset, b|w|l]"
+                continue
+            at, width = place[0], SIZES[place[1]]
+            if at < 0 or at + width > size:
+                yield f"layouts: {name}: {field} lies outside {size} bytes"
+            if width > 1 and at % 2:
+                yield f"layouts: {name}: {field} is a {place[1]} at an odd offset"
+            for byte in range(at, at + width):
+                if byte in taken:
+                    yield f"layouts: {name}: {field} overlaps {taken[byte]}"
+                    break
+                taken[byte] = field
 
 
 def check_numbers(spec, consts):
