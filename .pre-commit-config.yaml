@@ -120,6 +120,13 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: reviews                  # data/reviews/*.yaml are valid; staleness passes
+        name: reviews
+        entry: .venv/bin/python3 tools/reviews.py --check
+        language: system
+        files: ^(data/reviews/.*\.yaml|players/.*\.md|tools/reviews\.py)$
+        pass_filenames: false
+
       - id: tests                    # Checker self-tests and spec tests
         name: tests
         entry: .venv/bin/python3 -m unittest discover -s tests

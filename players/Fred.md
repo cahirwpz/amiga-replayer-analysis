@@ -67,6 +67,8 @@ stream of notes, waits and commands.
   freezes the envelope, arpeggio and sweep. `:Arpeggio`
 - A glide adds its share on top of the arpeggio. At its end, the note becomes
   the target note. `:Portamento`
+- A glide runs on across later notes. Only its first note sets its start and
+  distance. `:NoteOn`
 - A fade lowers the volume once per playing voice. Four voices fade four times
   as fast as one. `:Volume`
 - Notes below 32 keep DMA on before them: the gap test compares signed bytes.

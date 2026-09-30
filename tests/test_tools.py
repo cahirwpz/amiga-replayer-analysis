@@ -3,7 +3,9 @@
 Run: python3 -m unittest discover -s tests
 """
 
+import contextlib
 import importlib.util
+import io
 import subprocess
 import sys
 import tempfile
@@ -642,6 +644,80 @@ class Timing(unittest.TestCase):
             self.skipTest("amiga-timing is not built; run: source ./activate")
         code, _, out = run("timing.py", "check", "soundmon_22")
         self.assertEqual(code, 0, out)
+
+
+class Reviews(unittest.TestCase):
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import annot
+        import reviews
+
+        self.reviews = reviews
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = root = Path(tmp.name)
+        files = {
+            "players/Fred.md": "---\nplayer: Fred\n---\n# Fred\n",
+            "specs/fred.py": "",
+            "docs/control-dimensions.md": "",
+            "docs/card-template.md": "",
+            "data/glossary.yaml": "",
+            "AGENTS.md": "",
+            "data/annot/Fred.yaml": "",
+        }
+        for name, text in files.items():
+            (root / name).parent.mkdir(parents=True, exist_ok=True)
+            (root / name).write_text(text)
+        for module, name, value in (
+            (reviews, "ROOT", root),
+            (reviews, "REVIEWS", root / "data/reviews"),
+            (reviews, "CARDS", root / "players"),
+            (annot, "ANNOT", root / "data/annot"),
+        ):
+            self.addCleanup(setattr, module, name, getattr(module, name))
+            setattr(module, name, value)
+        (root / "none.yaml").write_text("[]\n")
+        with contextlib.redirect_stdout(io.StringIO()):
+            for review in ("coverage", "writing"):
+                reviews.record("Fred", review, root / "none.yaml")
+
+    def statuses(self):
+        reviews = self.reviews
+        data = reviews.load("Fred")
+        card = self.root / "players/Fred.md"
+        return {r: reviews.status("Fred", r, card, data.get(r)) for r in reviews.FIELDS}
+
+    def test_recorded_reviews_are_ok(self):
+        self.assertEqual(self.statuses(), {"coverage": "ok", "writing": "ok"})
+
+    def test_a_spec_change_makes_both_stale(self):
+        (self.root / "specs/fred.py").write_text("x = 1\n")
+        stale = "stale: specs/fred.py"
+        self.assertEqual(self.statuses(), {"coverage": stale, "writing": stale})
+
+    def test_a_checklist_change_makes_only_coverage_stale(self):
+        (self.root / "docs/control-dimensions.md").write_text("new\n")
+        got = self.statuses()
+        self.assertEqual(got["coverage"], "stale: docs/control-dimensions.md")
+        self.assertEqual(got["writing"], "ok")
+
+    def test_a_new_listing_config_makes_coverage_stale(self):
+        (self.root / "data/disasm").mkdir()
+        (self.root / "data/disasm/Fred.cnf").write_text("")
+        self.assertEqual(self.statuses()["coverage"], "stale: data/disasm/Fred.cnf")
+
+    def test_a_review_not_run_is_missing(self):
+        (self.root / "data/reviews/Fred.yaml").write_text("coverage: null\n")
+        self.assertEqual(self.statuses()["writing"], "missing")
+
+    def test_rejects_findings_without_their_fields(self):
+        data = self.reviews.load("Fred")
+        data["writing"]["open"] = [{"section": "Key ideas", "quote": "x"}]
+        data["coverage"]["open"] = [
+            {"dimension": "gate", "finding": "", "evidence": ":NoteOn"}
+        ]
+        problems = self.reviews.validate("Fred", data)
+        self.assertEqual(len(problems), 2, problems)
 
 
 if __name__ == "__main__":

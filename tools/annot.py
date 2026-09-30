@@ -241,6 +241,12 @@ def check_numbers(spec: Spec, consts: dict[int, list[str]]) -> Iterator[str]:
                     yield f"{field}: line {num}: {detail}"
 
 
+def player_files(player: str) -> list[Path]:
+    """A player's annotation files: <player>.yaml, then <player>-*.yaml."""
+    paths = [ANNOT / f"{player}.yaml", *sorted(ANNOT.glob(f"{player}-*.yaml"))]
+    return [path for path in paths if path.is_file()]
+
+
 def player_of(path: Path) -> str:
     """The player an annotation file belongs to: <player>[-<part>].yaml."""
     import players  # players imports this module

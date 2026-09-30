@@ -57,16 +57,10 @@ PLAIN_WORDS = {
 }  # fmt: skip
 
 
-def annot_files(player):
-    annots = ROOT / "data/annot"
-    paths = [annots / f"{player}.yaml", *sorted(annots.glob(f"{player}-*.yaml"))]
-    return [path for path in paths if path.is_file()]
-
-
 def anchors(player):
     """(labels, types) a player's spec may use: new names and types."""
     labels, types = set(), set()
-    for path in annot_files(player):
+    for path in annot.player_files(player):
         spec = annot.load(path)
         labels |= set((spec.get("labels") or {}).values())
         types |= set(spec.get("types") or {})
@@ -79,7 +73,7 @@ def anchors(player):
 def old_labels(player):
     """Labels of the player's sources that a spec may not name."""
     old = set()
-    for path in annot_files(player):
+    for path in annot.player_files(player):
         if annot.is_config(annot.load(path)):
             continue  # the config's labels are new names
         lines = annot.source_lines(annot.load(path))
@@ -97,7 +91,7 @@ def check_docstring(path, player):
     doc = ast.get_docstring(ast.parse(path.read_text(encoding="utf-8"))) or ""
     card = f"players/{player}.md"
     wanted = [f"Card: {card}"]
-    wanted += [p.relative_to(ROOT).as_posix() for p in annot_files(player)]
+    wanted += [p.relative_to(ROOT).as_posix() for p in annot.player_files(player)]
     for text in wanted:
         if text not in " ".join(doc.split()):
             yield 1, "docstring", f"does not name {text}"

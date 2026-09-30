@@ -49,6 +49,10 @@ A card lets a reader:
 - see how a composer writes for the player
 - find the routine in the spec that shows the details
 
+[`control-dimensions.md`](control-dimensions.md) lists the control questions a
+card answers when the player's answer is distinct. Card reviews run only when
+asked: [`tools/reviews.py`](../tools/reviews.py).
+
 ## Card and spec
 
 - The spec, `specs/<player>.py`, is the model: state, routines and their order.

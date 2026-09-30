@@ -65,22 +65,38 @@ One line per term. Every acronym used in this repo must appear here.
 | **mix rate**         | Bytes per second that a mixer writes; the channel plays them at this rate.          |
 | **resampling**       | Reading a sample at another rate, by skipping or repeating bytes. It changes pitch. |
 | **hard sync**        | A wave restarts at each cycle of another. Its rate changes timbre, not pitch.       |
+| **sample region**    | One part of a sample, played once or looped, e.g. an attack or a release.           |
 | **slew limiter**     | Limits each sample's move from the last. It rounds sharp edges.                     |
 
 ## Music theory
 
-| Term           | Meaning                                                  |
-| -------------- | -------------------------------------------------------- |
-| **note**       | A pitch with a duration.                                 |
-| **transpose**  | Shift all pitches by the same interval.                  |
-| **arpeggio**   | Fast cycle of note offsets, making a chord-like sound.   |
-| **portamento** | Slide of the pitch, often towards a target note.         |
-| **vibrato**    | Periodic pitch change.                                   |
-| **trill**      | Fast alternation between a note and a note above it.     |
-| **tie**        | A note that joins the note before it. The sound goes on. |
-| **swing**      | Beats alternate between a longer and a shorter length.   |
-| **tremolo**    | Periodic volume change.                                  |
-| **voice**      | One independent part of the music.                       |
+| Term           | Meaning                                                                  |
+| -------------- | ------------------------------------------------------------------------ |
+| **note**       | A pitch with a duration.                                                 |
+| **transpose**  | Shift all pitches by the same interval.                                  |
+| **arpeggio**   | Fast cycle of note offsets, making a chord-like sound.                   |
+| **portamento** | Slide of the pitch, often towards a target note.                         |
+| **vibrato**    | Periodic pitch change.                                                   |
+| **trill**      | Fast alternation between a note and a note above it.                     |
+| **tie**        | A note that joins the note before it. The sound goes on.                 |
+| **swing**      | Beats alternate between a longer and a shorter length.                   |
+| **tremolo**    | Periodic volume change.                                                  |
+| **voice**      | One independent part of the music.                                       |
+| **semitone**   | The smallest step between two notes of a common scale.                   |
+| **cent**       | One hundredth of a semitone.                                             |
+| **ornament**   | A short, fixed pitch figure around a note, e.g. a trill or a grace note. |
+| **grace note** | A short note just before a main note.                                    |
+
+## Control dimensions
+
+What one voice can change over time. See `docs/control-dimensions.md`.
+
+| Term       | Meaning                                                     |
+| ---------- | ----------------------------------------------------------- |
+| **pitch**  | How high a note sounds.                                     |
+| **volume** | How loud a note sounds.                                     |
+| **timbre** | The colour of a sound, apart from pitch and volume.         |
+| **gate**   | Whether and how a note sounds, from its note-on to its end. |
 
 ## Sound changes
 
@@ -88,7 +104,6 @@ What an operation does to a sound. The "(inference)" notes use these words.
 
 | Term          | Meaning                                                          |
 | ------------- | ---------------------------------------------------------------- |
-| **timbre**    | The colour of a sound, apart from pitch and volume.              |
 | **clipping**  | Cutting values that exceed the allowed range.                    |
 | **detune**    | A slight shift away from the intended pitch.                     |
 | **phasing**   | A sweeping, hollow tone from mixing a sound with a shifted copy. |

@@ -1,0 +1,43 @@
+coverage:
+  date: 2026-09-30
+  inputs:
+    players/Fred.md: 5165d943709d043aa6b10ab0c12495d3dafa200e
+    specs/fred.py: 4d3714812f7eef6a754097949e0e69100af99517
+    AGENTS.md: 1a741c6fdab753e2ca799ee8fcf1bbc378cecc32
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/Fred.yaml: cd6b7bf76899fd57068b514534427645e0986a0b
+    data/disasm/Fred.cnf: e85f4f29aad200d1fad6eacd3969f52e191df776
+  open: []
+writing:
+  date: 2026-09-30
+  inputs:
+    players/Fred.md: 5165d943709d043aa6b10ab0c12495d3dafa200e
+    specs/fred.py: 4d3714812f7eef6a754097949e0e69100af99517
+    AGENTS.md: 1a741c6fdab753e2ca799ee8fcf1bbc378cecc32
+    data/glossary.yaml: df5ca1a11855edaea7b488f23697aae5c02f149b
+    docs/card-template.md: 1aa2f0ceaf8d803930d38df76c0c7d7dd1d06e5d
+  open:
+  - section: Key ideas
+    quote: Each step writes one byte at the edge, so the edge moves between two positions.
+    rule: one-claim
+    fix: Each step writes one byte at the edge. The edge moves between two positions.
+  - section: Key ideas
+    quote: Sustain lasts a set number of ticks, then the release starts on its own.
+    rule: one-claim
+    fix: Sustain lasts a set number of ticks. Then the release starts on its own.
+  - section: Composer's view
+    quote: A wait byte adds 1 to 123 rows. After a note, it ties.
+    rule: one-fact
+    fix: 'Two rows: the wait length (`:ReadStream`), and the tie after a note.'
+  - section: Composer's view
+    quote: Vibrato depth is in period units. Low notes get a smaller interval.
+    rule: one-fact
+    fix: Two rows, both citing `:Vibrato`.
+  - section: What is unique
+    quote: 'Notes below 32 keep DMA on before them: the gap test compares signed bytes.'
+    rule: one-claim
+    fix: Notes below 32 keep DMA on before them. The gap test compares signed bytes.
+  - section: What is unique
+    quote: The loop offset moves the start in bytes but shortens the length in words.
+    rule: one-claim
+    fix: The loop offset moves the start in bytes. It shortens the length in words.

@@ -35,7 +35,15 @@ Skip unless a new lead turns up:
 
 ### Then
 
+- [ ] Fix the open writing findings of Fred and MaxTrax: `tools/reviews.py`
+      lists them. Then record the writing review again.
+- [ ] Decide whether to run the card reviews on the other cards.
+  - Check each finding against the code before recording it.
+  - Writing runs vary: one run found 1 issue, a rerun 14.
+  - Coverage overclaimed once.
 - [ ] Review the cards with the user.
+- [ ] Decide how to group `ideas/`: pages per technique slug, or per control
+      dimension (see `docs/control-dimensions.md`).
 - [ ] Write more technique pages in `ideas/`; `voice-mixing` is the first.
 - [ ] Add a check that `ideas:` slugs in cards exist.
 - [ ] Generate a technique index from the slugs, for the front page.

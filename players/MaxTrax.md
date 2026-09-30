@@ -50,15 +50,18 @@ A MIDI-like score for 16 MIDI channels, played on 4 voices through audio.device.
 The composer writes a song in Music-X, a MIDI sequencer. MaxTrax calls an
 instrument a `patch`.
 
-| Aspect   | Answer                                               | Source                      |
-| -------- | ---------------------------------------------------- | --------------------------- |
-| Notation | An event: command, data, start delta, stop time.     | `:Event`                    |
-| Notation | A note: MIDI channel, velocity in 16 steps, length.  | `:RunEvent`                 |
-| Notation | 192 pulses per quarter note.                         | `:SetTempo`                 |
-| Notation | Tempo in beats per minute.                           | `:SetTempo`                 |
-| Cost     | A chord takes one voice per note, out of 4.          | `:PickVoice`                |
-| Cost     | A glide needs mono mode and CC 65.                   | `:MonoLegato`               |
-| Cost     | A repeat is a begin and an end event, 4 levels deep. | `:BeginRepeat` `:EndRepeat` |
+| Aspect   | Answer                                                    | Source                      |
+| -------- | --------------------------------------------------------- | --------------------------- |
+| Notation | An event: command, data, start delta, stop time.          | `:Event`                    |
+| Notation | A note: MIDI channel, velocity in 16 steps, length.       | `:RunEvent`                 |
+| Notation | 192 pulses per quarter note.                              | `:SetTempo`                 |
+| Notation | Tempo in beats per minute.                                | `:SetTempo`                 |
+| Cost     | A chord takes one voice per note, out of 4.               | `:PickVoice`                |
+| Cost     | A glide needs mono mode and CC 65.                        | `:MonoLegato`               |
+| Cost     | A glide takes the portamento time, whatever its interval. | `:CalcNote`                 |
+| Cost     | A legato note keeps the voice's sample and envelope.      | `:MonoLegato`               |
+| Cost     | A release waits while CC 64 is down.                      | `:DamperPedal`              |
+| Cost     | A repeat is a begin and an end event, 4 levels deep.      | `:BeginRepeat` `:EndRepeat` |
 
 ## What is unique
 
@@ -68,8 +71,8 @@ instrument a `patch`.
 - Priority: score 0, game notes 1, game sounds 2. No note takes a voice of
   higher priority. `:PickVoice`
 - Past display line 128, the frame's other events wait. `:BeamBudget`
-- A tempo slide to a slower tempo overshoots high until it ends: a bug.
-  `:ContinueTempo`
+- A tempo event can slide the tempo in a straight line. A slide to a slower
+  tempo overshoots high until it ends: a bug. `:TempoSlide` `:ContinueTempo`
 - A new pitch bend range, with the wheel below center, bends up: a bug.
   `:ControlCh`
 - CC 65 off writes a byte into the score: a bug. `:PortaOffBug`

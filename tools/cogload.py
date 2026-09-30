@@ -36,6 +36,8 @@ DEFAULT = {
 PROFILES = [
     # A lookup table, not read top to bottom.
     ("docs/glossary.md", {"file_words": 3000}),
+    # A checklist; its tables are lookups, like the glossary.
+    ("docs/control-dimensions.md", {"file_words": 450, "count_tables": False}),
     # Working rules; read at the start of every session.
     ("AGENTS.md", {"file_words": 600}),
     # Working notes; sections go away as tasks are done.

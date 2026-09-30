@@ -8,20 +8,10 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
   `README.md`.
 - Before a session ends or context is cleared, update `TODO.md`. Nothing may
   live only in the conversation.
-
-`TODO.md` keeps:
-
-- open tasks, in order, and questions for the user
-- reading notes for unfinished work, with `file:Label`
-- decisions still pending
-
-`TODO.md` never keeps:
-
-- finished results: they go to `players/`, `specs/` or `ideas/`
-- rules and conventions: they go here
-- reasons behind finished work: they go to `docs/`
-- done items: delete them, git keeps the history
-- unmarked guesses, secrets, or chat transcripts
+- `TODO.md` keeps open tasks in order, pending decisions, user questions and
+  reading notes (`file:Label`). Delete done items.
+- Results go to `players/`, `specs/` or `ideas/`. Reasons go to `docs/`, rules
+  here. Unmarked guesses, secrets and chat transcripts go nowhere.
 
 ## Scope
 
@@ -39,7 +29,7 @@ This repo analyses Amiga replayers for distinct ideas, not for every detail.
   [`data/players.yaml`](data/players.yaml).
 - A card covers a lineage's latest version. If it is binary-only, disassemble
   it. A version with a distinct idea gets its own card.
-- Compare in tables, not prose.
+- Compare in tables. Put detail in tables or specs; they skip prose limits.
 - A player's model is its spec, `specs/<player>.py`. Its card is
   [prose](docs/card-template.md). Chips: `hardware/`.
 
@@ -50,10 +40,10 @@ the same rules.
 
 - Use plain words. Define each acronym in `data/glossary.yaml`.
 - Use glossary terms, only in their defined meaning. Define new concepts there.
-- Name a format's own term once, in code. Add it and replaced synonyms to the
-  avoided terms.
-- One claim per sentence, one fact per table cell. No filler, no hedging.
-- Put technical detail in tables or specs; they skip prose limits.
+- Name a format's own term once, in code. Constants may repeat. Add the term and
+  replaced synonyms to the avoided terms.
+- One claim per sentence: split at "so", "then", "but" and colons. One fact per
+  table cell. No filler, no hedging.
 - Name, don't number: a jump's target ("jumps to its release part"), a command's
   constant (`HOLD`).
 - Say each thing once. Elsewhere, link to it or generate it from `data/`. Tool
@@ -68,7 +58,8 @@ glossary and each label against its code.
   the player's source; elsewhere, at the repo root.
 - A bare `:<Label>` uses the previous citation's file. On a card, it first names
   a spec function or class.
-- Mark guesses as guesses. Mark what you hear as "(inference)".
+- Mark guesses "(guess)", counts from code "(estimate)", what you hear
+  "(inference)".
 - Keyword scans only pick candidates. A claim needs 68k replay code that was
   read.
 - Record provenance in `data/players.yaml`: `original`, `disassembly` or `ira`.
