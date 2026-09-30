@@ -12,8 +12,7 @@ NAME is a data file, data/timing/NAME.yaml. Its sections:
 
   code       what runs, cut from the replay's source
     source   the replay's annotation, data/annot/PLAYER.yaml; labels are
-             then its new names. A raw source, from the repo root, only
-             for a player without one
+             its new names
     take     label ranges [FROM, TO] of the source, TO excluded. TO
              becomes a label at the range's end
     entry    the label that the boot code calls
@@ -45,19 +44,22 @@ the writes, sets up the load, waits for line $50 and calls the entry.
 Nothing generated is kept outside build/.
 """
 
+# mypy: disallow-untyped-defs
+
 import re
 import struct
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 import yaml
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 import annot  # noqa: E402
 from hardware.clock import CPU_PER_CCK  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data" / "timing"
 BUILD = ROOT / "build"
 BIN = ROOT / ".venv" / "bin"
@@ -68,63 +70,60 @@ START_LINE = 0x50  # inside the display window of every load
 
 BOOT = ROOT / "tools" / "timing" / "boot.asm"
 LOADS = {"no display": 0, "6 bitplanes": 6}  # without `loads` in the data file
-SECTIONS = {"code", "harness", "measure", "memory", "cases", "loads"}
-SIZES = {"b": 1, "w": 2, "l": 4}
+
+Data = dict[str, Any]  # a data file, as loaded
+Memory = dict[str, tuple[str, int, dict[str, tuple[int, int]]]]
+Results = dict[str, dict[str, dict[str, float]]]  # {case: {load: {span: CCK}}}
 
 
-def run_or_exit(*args):
+def run_or_exit(*args: object) -> str:
     proc = subprocess.run([str(a) for a in args], capture_output=True, text=True)
     if proc.returncode:
         sys.exit(f"{' '.join(map(str, args[:2]))} failed:\n{proc.stdout}{proc.stderr}")
     return proc.stdout
 
 
-def labels(lines):
-    """{label: line index}: a label starts in the first column."""
-    found: dict[str, int] = {}
-    for i, line in enumerate(lines):
-        if line and not line[0].isspace() and not line.startswith(";"):
-            found.setdefault(re.split(r"[:\s]", line, maxsplit=1)[0], i)
-    return found
+def labels(lines: list[str]) -> dict[str, int]:
+    """{label: index of its first line}: a label starts in column 1."""
+    found = [
+        (m[0], i) for i, line in enumerate(lines) if (m := re.match(annot.IDENT, line))
+    ]
+    return dict(reversed(found))
 
 
-def source_lines(source):
-    """The lines of a raw source, or of an annotation's rendered listing."""
+def source_lines(source: str) -> list[str]:
+    """The lines of an annotation's rendered listing."""
     path = ROOT / source
-    if path.suffix != ".yaml":
-        return path.read_text("latin-1").splitlines()
     if problems := annot.process(path, write=False):
         sys.exit("\n".join(problems))
     spec = annot.load(path)
-    return annot.render(spec, annot.source_lines(spec)[1])
+    return annot.render(spec, annot.source_lines(spec))
 
 
-def code(line):
+def code(line: str) -> str:
     """The code of an assembler line, whitespace normalised."""
     return " ".join(annot.code_part(line)[0].split())
 
 
-def excerpt(data):
+def excerpt(data: Data) -> str:
     """The assembler text: the taken ranges of the source, at EXCERPT_AT."""
     lines = source_lines(data["code"]["source"])
     where = labels(lines)
     harness = data.get("harness", {})
     drop = {code(d) for d in harness.get("drop", [])}
     stop = set(harness.get("stop", []))
-    if unknown := stop - {end for _, end in data["code"]["take"]}:
-        sys.exit(f"stop: {', '.join(sorted(unknown))} ends no take range")
     out = [f" org ${EXCERPT_AT:x}"]
     for first, end in data["code"]["take"]:
-        for line in lines[where[first] : where[end]]:
-            if code(line) not in drop:
-                out.append(line)
+        out += [
+            line for line in lines[where[first] : where[end]] if code(line) not in drop
+        ]
         out.append(f"{end}:")
         if end in stop:
             out.append(" illegal")
     return "\n".join(out) + "\n"
 
 
-def assemble(work, name, source, **defines):
+def assemble(work: Path, name: str, source: Path, **defines: int) -> dict[str, int]:
     """Assemble source with work in the include path, into work/NAME.bin.
     Return the symbols of its listing."""
     run_or_exit(
@@ -139,7 +138,7 @@ def assemble(work, name, source, **defines):
     }
 
 
-def address(expr, symbols):
+def address(expr: str, symbols: dict[str, int]) -> int:
     """A number, LABEL, LABEL+OFFSET or LABEL-OFFSET; numbers in Python
     syntax."""
     m = re.fullmatch(r"(\w+)\s*(?:([+-])\s*(\w+))?", expr.strip())
@@ -151,45 +150,37 @@ def address(expr, symbols):
     return value
 
 
-def records(data):
+def records(data: Data) -> Memory:
     """{NAME: (base expression, record size, {field: (offset, size)})} of
     the `memory` section, with layouts from the annotation."""
     memory = data.get("memory", {})
     if not memory:
         return {}
     spec = annot.load(ROOT / data["code"]["source"])
-    layouts = spec.get("layouts") or {}
-    found = {}
-    for name, place in memory.items():
-        if place["layout"] not in layouts:
-            sys.exit(f"memory: {name}: no layout {place['layout']} in the annotation")
-        size = layouts[place["layout"]]["size"]
-        found[name] = (str(place["at"]), size, annot.fields(spec, place["layout"]))
-    return found
+    return {
+        name: (str(place["at"]), *annot.layout(spec, place["layout"]))
+        for name, place in memory.items()
+    }
 
 
-def write(item, symbols, memory):
+def write(item: str, symbols: dict[str, int], memory: Memory) -> tuple[int, int, int]:
     """(address, size, value) of one write."""
     m = re.fullmatch(r"(\w+)\[(\w+)\]\.([\w.]+)\s+(\S+)", item.strip())
     if not m:
-        target, size, value = item.split()
-        return address(target, symbols), SIZES[size], int(value, 0)
+        target, kind, value = item.split()
+        return address(target, symbols), annot.SIZES[kind], int(value, 0)
     name, index, field, value = m.groups()
-    if name not in memory:
-        sys.exit(f"write {item}: no {name} in memory")
     base, record, fields = memory[name]
-    if field not in fields:
-        sys.exit(f"write {item}: the layout has no field {field}")
     offset, size = fields[field]
     return address(base, symbols) + int(index, 0) * record + offset, size, int(value, 0)
 
 
-def writes(case, symbols, memory):
+def writes(case: dict[str, Any], symbols: dict[str, int], memory: Memory) -> bytes:
     """The writes.bin table of boot.asm. A nested list, e.g. a YAML alias,
     adds its writes in place."""
-    items = case.get("writes", [])
-    while any(isinstance(i, list) for i in items):
-        items = [j for i in items for j in (i if isinstance(i, list) else [i])]
+    items = [
+        j for i in case.get("writes", []) for j in (i if isinstance(i, list) else [i])
+    ]
     table = struct.pack(">H", len(items))
     for item in items:
         target, size, value = write(item, symbols, memory)
@@ -197,21 +188,19 @@ def writes(case, symbols, memory):
     return table
 
 
-def measure(name):
-    """{case: {load: {span: CCK}}}. Files go to build/timing/NAME."""
+def measure(name: str) -> tuple[Data, Results]:
+    """The data file and its results. Files go to build/timing/NAME."""
     if not DRIVER.exists():
         sys.exit("amiga-timing missing; run: source ./activate")
     data = yaml.safe_load((DATA / f"{name}.yaml").read_text())
-    if unknown := set(data) - SECTIONS:
-        sys.exit(f"{name}: unknown sections {', '.join(sorted(unknown))}")
-    measure = data["measure"]
+    section = data["measure"]
     work = BUILD / "timing" / name
     work.mkdir(parents=True, exist_ok=True)
     (work / "excerpt.asm").write_text(excerpt(data), "latin-1")
     symbols = assemble(work, "excerpt", work / "excerpt.asm")
     memory = records(data)
-    points = {p: address(expr, symbols) for p, expr in measure["points"].items()}
-    results: dict[str, dict[str, dict[str, float]]] = {}
+    points = {p: address(expr, symbols) for p, expr in section["points"].items()}
+    results: Results = {}
     for case_name, case in data["cases"].items():
         (work / "writes.bin").write_bytes(writes(case, symbols, memory))
         for load, bitplanes in data.get("loads", LOADS).items():
@@ -228,25 +217,27 @@ def measure(name):
             }
             spans = {
                 span: (clock[points[b]] - clock[points[a]]) / CPU_PER_CCK
-                for span, (a, b) in measure["spans"].items()
+                for span, (a, b) in section["spans"].items()
             }
             results.setdefault(case_name, {})[load] = spans
     return data, results
 
 
-def number(value):
+def cck(value: float) -> int | float:
+    """A span as written in the data file: whole CCK as an int."""
     return int(value) if value == int(value) else value
 
 
-def run(name):
+def run(name: str) -> int:
     _, results = measure(name)
     for case, loads in results.items():
         for load, spans in loads.items():
-            cells = ", ".join(f"{s} {number(v)}" for s, v in spans.items())
+            cells = ", ".join(f"{s} {cck(v)}" for s, v in spans.items())
             print(f"{case} | {load} | {cells}")
+    return 0
 
 
-def check(name):
+def check(name: str) -> int:
     data, results = measure(name)
     bad = 0
     for case, loads in results.items():
@@ -254,15 +245,15 @@ def check(name):
         for load, spans in loads.items():
             for span, value in spans.items():
                 want = expect.get(load, {}).get(span)
-                if want != number(value):
+                if want != cck(value):
                     print(
-                        f"{name}: {case}, {load}, {span}: {number(value)}, expected {want}"
+                        f"{name}: {case}, {load}, {span}: {cck(value)}, expected {want}"
                     )
                     bad = 1
     return bad
 
 
-def main(argv):
+def main(argv: list[str]) -> int:
     if len(argv) == 2 and argv[0] in ("run", "check"):
         return {"run": run, "check": check}[argv[0]](argv[1])
     sys.exit(__doc__)

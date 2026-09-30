@@ -245,7 +245,6 @@ class Annot(unittest.TestCase):
             "types: lower is not a CamelCase name",
             "Ghost: nowhere_word is in neither the source nor refs",
             "types: NextNote is also a label",
-            "types: Empty needs a list of words",
         ):
             self.assertIn(text, out)
 
@@ -289,7 +288,7 @@ class Annot(unittest.TestCase):
                         "Bad": [2, "b"],
                     },
                 },
-                "Ghost": {"size": 4},
+                "Ghost": {"size": 4, "fields": {}},
             },
         }
         out = "\n".join(self.annot.check_layouts(spec))
@@ -299,7 +298,6 @@ class Annot(unittest.TestCase):
             "Voice: start is a w at an odd offset",
             "Voice: Bad is not an attribute name",
             "layouts: Ghost is not in types",
-            "layouts: Ghost needs a size and fields",
         ):
             self.assertIn(text, out)
 

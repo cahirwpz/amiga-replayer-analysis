@@ -55,11 +55,17 @@ build/annot/<player><suffix>, never committed. With --check, nothing is
 written. Prints `file: problem` for each problem; exits 1 if any.
 """
 
+# mypy: disallow-untyped-defs
+
 import ast
 import hashlib
 import re
 import sys
+from collections import Counter
+from collections.abc import Hashable, Iterator
+from functools import cache
 from pathlib import Path
+from typing import Any
 
 import numbered
 import yaml
@@ -72,11 +78,15 @@ FIELDS = {"source", "sha1", "labels", "comments", "banners", "refs", "types", "l
 SIZES = {"b": 1, "w": 2, "l": 4}
 IDENT = r"[A-Za-z_][\w.]*"
 
+Spec = dict[str, Any]  # an annotation file, as loaded
+
 
 class UniqueKeyLoader(yaml.SafeLoader):
     """A duplicate key would silently drop an annotation."""
 
-    def construct_mapping(self, node, deep=False):
+    def construct_mapping(
+        self, node: yaml.MappingNode, deep: bool = False
+    ) -> dict[Hashable, Any]:
         seen = set()
         for key_node, _ in node.value:
             key = self.construct_object(key_node, deep=deep)
@@ -88,12 +98,12 @@ class UniqueKeyLoader(yaml.SafeLoader):
         return super().construct_mapping(node, deep)
 
 
-def load(path):
+def load(path: Path) -> Spec:
     with open(path, encoding="utf-8") as f:
         return yaml.load(f, UniqueKeyLoader) or {}
 
 
-def code_part(line):
+def code_part(line: str) -> tuple[str, str]:
     """(code, comment) of an assembler line; `*` in column 1 is a comment."""
     if line.startswith("*"):
         return "", line
@@ -101,26 +111,42 @@ def code_part(line):
     return code, sep + rest
 
 
-def defined(lines):
+def defined(lines: list[str]) -> set[str]:
     """Labels the source defines: identifiers in column 1."""
     return {m.group(0) for line in lines if (m := re.match(IDENT, line))}
 
 
-def is_config(spec):
+def is_config(spec: Spec) -> bool:
     """True if the source is one of our IRA configs, data/disasm/*.cnf."""
     return str(spec.get("source", "")).endswith(".cnf")
 
 
-def check(spec, lines, sha1):
+def renames(spec: Spec) -> tuple[dict[str, str], dict[int, str]]:
+    """({old label: new name}, {source line: new label}) of `labels`."""
+    labels = spec.get("labels") or {}
+    return (
+        {k: v for k, v in labels.items() if isinstance(k, str)},
+        {k: v for k, v in labels.items() if isinstance(k, int)},
+    )
+
+
+def check(spec: Spec, lines: list[str], sha1: str) -> Iterator[str]:
     """Yield problems with the spec against the source lines."""
     for key in sorted(set(spec) - FIELDS):
         yield f"unknown field `{key}`"
     if is_config(spec):
         for key in sorted(set(spec) - {"source", "refs", "types", "layouts"}):
             yield f"`{key}` needs a source; a config takes only types, layouts and refs"
-        yield from check_types(spec, lines, cited_labels(ROOT / spec["source"]))
-        yield from check_layouts(spec)
-        return
+        new_names = cited_labels(ROOT / spec["source"]) or set()
+    else:
+        yield from check_source(spec, lines, sha1)
+        new_names = set((spec.get("labels") or {}).values())
+    yield from check_types(spec, lines, new_names)
+    yield from check_layouts(spec)
+
+
+def check_source(spec: Spec, lines: list[str], sha1: str) -> Iterator[str]:
+    """Yield problems with `sha1`, `labels`, `comments` and `banners`."""
     if spec.get("sha1") != sha1:
         yield f"sha1 is {spec.get('sha1')}, source has {sha1}"
 
@@ -131,36 +157,29 @@ def check(spec, lines, sha1):
         if isinstance(old, int):
             if not 1 <= old <= len(lines):
                 yield f"labels: line {old} is not in the source"
-        elif not isinstance(old, str) or not isinstance(new, str):
-            yield f"labels: {old}: {new} is not a pair of strings; quote it"
         elif old not in known and old not in used:
             yield f"label {old} is not in the source"
         if not re.fullmatch(IDENT, str(new)):
             yield f"{new} is not an identifier"
         elif new in used and new != old:
             yield f"{new} already occurs in the source"
-    for new in {n for n in labels.values() if list(labels.values()).count(n) > 1}:
-        yield f"{new} is the new name of several labels"
+    for new, count in Counter(labels.values()).items():
+        if count > 1:
+            yield f"{new} is the new name of several labels"
 
     for field in ("comments", "banners"):
         for num, text in (spec.get(field) or {}).items():
             if not isinstance(num, int) or not 1 <= num <= len(lines):
                 yield f"{field}: line {num} is not in the source"
-            if not isinstance(text, str):
-                yield f"{field}: line {num} has no text"
-            elif field == "comments" and "\n" in text.strip():
+            if field == "comments" and "\n" in text.strip():
                 yield f"comments: line {num} spans several lines; use a banner"
-            else:
-                try:
-                    text.encode("latin-1")
-                except UnicodeEncodeError:
-                    yield f"{field}: line {num} is not Latin-1"
-
-    yield from check_types(spec, lines, set(labels.values()))
-    yield from check_layouts(spec)
+            try:
+                text.encode("latin-1")
+            except UnicodeEncodeError:
+                yield f"{field}: line {num} is not Latin-1"
 
 
-def check_types(spec, lines, labels):
+def check_types(spec: Spec, lines: list[str], labels: set[str]) -> Iterator[str]:
     """Yield problems with `refs` and `types`."""
     texts = ["\n".join(lines)]
     for ref in spec.get("refs") or []:
@@ -174,49 +193,35 @@ def check_types(spec, lines, labels):
             yield f"types: {name} is not a CamelCase name"
         if name in labels:
             yield f"types: {name} is also a label"
-        if not isinstance(words, list) or not words:
-            yield f"types: {name} needs a list of words"
-            continue
         for word in words:
             pattern = re.compile(rf"(?<![\w.]){re.escape(str(word))}(?!\w)")
             if not any(pattern.search(t) for t in texts):
                 yield f"types: {name}: {word} is in neither the source nor refs"
 
 
-def fields(spec, name):
-    """{field: (offset, size in bytes)} of a type's layout."""
-    layout = (spec.get("layouts") or {})[name]
-    return {f: (at, SIZES[size]) for f, (at, size) in layout["fields"].items()}
+def layout(spec: Spec, name: str) -> tuple[int, dict[str, tuple[int, int]]]:
+    """(record size, {field: (offset, size in bytes)}) of a type's layout."""
+    found = spec["layouts"][name]
+    fields = {f: (at, SIZES[size]) for f, (at, size) in found["fields"].items()}
+    return found["size"], fields
 
 
-def check_layouts(spec):
+def check_layouts(spec: Spec) -> Iterator[str]:
     """Yield problems with `layouts`."""
     types = spec.get("types") or {}
-    for name, layout in (spec.get("layouts") or {}).items():
+    for name, found in (spec.get("layouts") or {}).items():
         if name not in types:
             yield f"layouts: {name} is not in types"
-        size = layout.get("size") if isinstance(layout, dict) else None
-        found = layout.get("fields") if isinstance(layout, dict) else None
-        if not isinstance(size, int) or size <= 0 or not isinstance(found, dict):
-            yield f"layouts: {name} needs a size and fields"
-            continue
+        size = found["size"]
         taken: dict[int, str] = {}
-        for field, place in found.items():
+        for field, (at, kind) in found["fields"].items():
             if not re.fullmatch(r"[a-z_]\w*(\.[a-z_]\w*)*", str(field)):
                 yield f"layouts: {name}: {field} is not an attribute name"
-            if (
-                not isinstance(place, list)
-                or len(place) != 2
-                or not isinstance(place[0], int)
-                or place[1] not in SIZES
-            ):
-                yield f"layouts: {name}: {field} needs [offset, b|w|l]"
-                continue
-            at, width = place[0], SIZES[place[1]]
+            width = SIZES[kind]
             if at < 0 or at + width > size:
                 yield f"layouts: {name}: {field} lies outside {size} bytes"
             if width > 1 and at % 2:
-                yield f"layouts: {name}: {field} is a {place[1]} at an odd offset"
+                yield f"layouts: {name}: {field} is a {kind} at an odd offset"
             for byte in range(at, at + width):
                 if byte in taken:
                     yield f"layouts: {name}: {field} overlaps {taken[byte]}"
@@ -224,7 +229,7 @@ def check_layouts(spec):
                 taken[byte] = field
 
 
-def check_numbers(spec, consts):
+def check_numbers(spec: Spec, consts: dict[int, list[str]]) -> Iterator[str]:
     """Yield numbers that stand in for names in comments and banners."""
     for field in ("comments", "banners"):
         for num, text in (spec.get(field) or {}).items():
@@ -236,7 +241,7 @@ def check_numbers(spec, consts):
                     yield f"{field}: line {num}: {detail}"
 
 
-def player_of(path):
+def player_of(path: Path) -> str:
     """The player an annotation file belongs to: <player>[-<part>].yaml."""
     import players  # players imports this module
 
@@ -245,10 +250,9 @@ def player_of(path):
     return stem if stem in known else stem.rpartition("-")[0]
 
 
-def render(spec, lines):
+def render(spec: Spec, lines: list[str]) -> list[str]:
     """The annotated source, as a list of lines."""
-    labels = {k: v for k, v in (spec.get("labels") or {}).items() if isinstance(k, str)}
-    new = {k: v for k, v in (spec.get("labels") or {}).items() if isinstance(k, int)}
+    labels, new = renames(spec)
     comments = spec.get("comments") or {}
     banners = spec.get("banners") or {}
     rename = None
@@ -271,24 +275,24 @@ def render(spec, lines):
     return out
 
 
-def source_lines(spec):
-    """(raw bytes, lines) of the annotated source."""
-    data = (ROOT / str(spec["source"])).read_bytes()
-    return data, data.decode("latin-1").split("\n")
+def source_lines(spec: Spec) -> list[str]:
+    """The lines of the annotated source."""
+    return (ROOT / str(spec["source"])).read_bytes().decode("latin-1").split("\n")
 
 
-def listing_labels(path):
+def listing_labels(path: Path) -> set[str]:
     """Every label in the rendered listing, and every type; for citations."""
     spec = load(path)
+    types = set(spec.get("types") or {})
     if is_config(spec):
-        return cited_labels(ROOT / spec["source"]) | set(spec.get("types") or {})
-    labels = spec.get("labels") or {}
-    renamed = {k for k in labels if isinstance(k, str)}
-    listing = defined(source_lines(spec)[1]) - renamed
-    return listing | set(labels.values()) | set(spec.get("types") or {})
+        return (cited_labels(ROOT / spec["source"]) or set()) | types
+    labels, new = renames(spec)
+    listing = defined(source_lines(spec)) - set(labels)
+    return listing | set(labels.values()) | set(new.values()) | types
 
 
-def cited_labels(path, cache={}):
+@cache
+def cited_labels(path: Path) -> set[str] | None:
     """Labels a citation `path:Label` may name; None if the file has none.
 
     Assembler: identifiers in column 1. C: function names. IRA config: LABEL
@@ -296,29 +300,24 @@ def cited_labels(path, cache={}):
     Python, e.g. specs/: top-level functions and classes. .NET resources
     (.resx), e.g. a port's notes: string names.
     """
-    if path not in cache:
-        text = path.read_bytes().decode("latin-1")
-        suffix = path.suffix.lower()
-        if suffix == ".yaml":
-            cache[path] = listing_labels(path) if path.parent.name == "annot" else None
-        elif suffix == ".py":
-            tree = ast.parse(text)
-            cache[path] = {getattr(n, "name", "") for n in tree.body} - {""}
-        elif suffix == ".cnf":
-            found = re.finditer(r"^(?:LABEL|SYMBOL)\s+(\S+)\s", text, re.M)
-            cache[path] = {m.group(1) for m in found}
-        elif suffix == ".resx":
-            found = re.finditer(r'<data name="([^"]+)"', text)
-            cache[path] = {m.group(1) for m in found}
-        elif suffix in (".c", ".h"):
-            found = re.finditer(r"^[A-Za-z_][^;()=\n]*?\b(\w+)\s*\(", text, re.M)
-            cache[path] = {m.group(1) for m in found}
-        else:
-            cache[path] = defined(text.split("\n"))
-    return cache[path]
+    text = path.read_bytes().decode("latin-1")
+    suffix = path.suffix.lower()
+    if suffix == ".yaml":
+        return listing_labels(path) if path.parent.name == "annot" else None
+    if suffix == ".py":
+        return {getattr(n, "name", "") for n in ast.parse(text).body} - {""}
+    if suffix == ".cnf":
+        pattern = r"^(?:LABEL|SYMBOL)\s+(\S+)\s"
+    elif suffix == ".resx":
+        pattern = r'<data name="([^"]+)"'
+    elif suffix in (".c", ".h"):
+        pattern = r"^[A-Za-z_][^;()=\n]*?\b(\w+)\s*\("
+    else:
+        return defined(text.split("\n"))
+    return {m.group(1) for m in re.finditer(pattern, text, re.M)}
 
 
-def process(path, write):
+def process(path: Path, write: bool) -> list[str]:
     """Check one YAML file and render it; return a list of problems."""
     rel = path.resolve().relative_to(ROOT).as_posix()
     try:
@@ -328,10 +327,9 @@ def process(path, write):
     source = ROOT / str(spec.get("source", ""))
     if not spec.get("source") or not source.is_file():
         return [f"{rel}: source {spec.get('source')} does not exist"]
-    data, lines = source_lines(spec)
-    problems = [
-        f"{rel}: {p}" for p in check(spec, lines, hashlib.sha1(data).hexdigest())
-    ]
+    lines = source_lines(spec)
+    sha1 = hashlib.sha1(source.read_bytes()).hexdigest()
+    problems = [f"{rel}: {p}" for p in check(spec, lines, sha1)]
     consts = numbered.for_player(player_of(path))
     problems += [f"{rel}: {p}" for p in check_numbers(spec, consts)]
     if write and not problems and not is_config(spec):
@@ -342,7 +340,7 @@ def process(path, write):
     return problems
 
 
-def main(argv):
+def main(argv: list[str]) -> int:
     write = "--check" not in argv
     args = [a for a in argv if a != "--check"]
     if any(a.startswith("-") for a in args):
