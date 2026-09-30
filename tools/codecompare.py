@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Find instruction runs that two or more disassembled replays share.
 
 Usage: codecompare.py [-n N] NAME:START-END NAME:START-END...
@@ -17,9 +18,10 @@ in and any labels inside it. Shared runs point to shared code; reading both
 routines decides it.
 """
 
-import argparse
 import re
 from pathlib import Path
+
+import cli
 
 ROOT = Path(__file__).resolve().parent.parent
 LINE = re.compile(r"\t([A-Z.]+)\t([^;]*);([0-9a-f]+):")
@@ -95,7 +97,7 @@ def report(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser = cli.parser(__doc__)
     parser.add_argument("-n", type=int, default=4)
     parser.add_argument("ranges", nargs="+", metavar="NAME:START-END")
     args = parser.parse_args()

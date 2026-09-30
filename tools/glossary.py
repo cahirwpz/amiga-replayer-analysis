@@ -17,6 +17,7 @@ import sys
 from functools import cache
 from pathlib import Path
 
+import cli
 import yaml
 from mdtools import format_table, wrap
 
@@ -87,21 +88,23 @@ def render():
 
 
 def main(argv):
+    parser = cli.parser(__doc__)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--write", action="store_true")
+    mode.add_argument("--check", action="store_true")
+    args = parser.parse_args(argv)
     text = render()
-    if not argv:
-        sys.stdout.write(text)
-        return 0
-    if argv == ["--write"]:
+    if args.write:
         DOC.write_text(text, encoding="utf-8")
-        return 0
-    if argv == ["--check"]:
+    elif args.check:
         if DOC.read_text(encoding="utf-8") != text:
             print(
                 f"{DOC.relative_to(ROOT)}: out of date; run tools/glossary.py --write"
             )
             return 1
-        return 0
-    sys.exit(__doc__)
+    else:
+        sys.stdout.write(text)
+    return 0
 
 
 if __name__ == "__main__":

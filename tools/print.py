@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Print player cards as 80-column text, and check that each fits its pages.
 
-Usage: print.py [--check] [--pdf OUT.pdf] FILE.md|DIR...
+Usage: print.py [--check | --pdf OUT.pdf] FILE.md|DIR...
 
   (no option)  print each card as the text that goes on paper
   --check      exit 1 if a card needs more than PAGES pages
@@ -30,6 +30,7 @@ import sys
 import textwrap
 from pathlib import Path
 
+import cli
 from markdown_it.token import Token
 from mdtools import children, read
 
@@ -222,21 +223,18 @@ def write_pdf(paths: list[Path], out: Path) -> int:
 
 
 def main(argv: list[str]) -> int:
-    check = "--check" in argv
-    argv = [a for a in argv if a != "--check"]
-    pdf = None
-    if "--pdf" in argv:
-        k = argv.index("--pdf")
-        if k + 1 >= len(argv):
-            sys.exit(__doc__)
-        pdf = Path(argv[k + 1])
-        del argv[k : k + 2]
-    paths = cards(argv)
+    parser = cli.parser(__doc__)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--check", action="store_true")
+    mode.add_argument("--pdf", type=Path)
+    parser.add_argument("paths", nargs="+")
+    args = parser.parse_args(argv)
+    paths, pdf = cards(args.paths), args.pdf
     if pdf:
         sides = write_pdf(paths, pdf)
         print(f"wrote {pdf}: {count(len(paths), 'card')} on {count(sides, 'side')}")
         return 0
-    if check:
+    if args.check:
         errors = [
             f"{path}:1: pages: {pages(lines)} > {PAGES} ({len(lines)} lines, {LINES} per page)"
             for path in paths

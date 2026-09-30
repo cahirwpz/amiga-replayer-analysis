@@ -67,6 +67,7 @@ from functools import cache
 from pathlib import Path
 from typing import Any
 
+import cli
 import numbered
 import yaml
 
@@ -347,12 +348,12 @@ def process(path: Path, write: bool) -> list[str]:
 
 
 def main(argv: list[str]) -> int:
-    write = "--check" not in argv
-    args = [a for a in argv if a != "--check"]
-    if any(a.startswith("-") for a in args):
-        sys.exit(__doc__)
-    paths = [Path(a) for a in args] or sorted(ANNOT.glob("*.yaml"))
-    problems = [p for path in paths for p in process(path, write)]
+    parser = cli.parser(__doc__)
+    parser.add_argument("--check", action="store_true")
+    parser.add_argument("yaml", nargs="*", type=Path)
+    args = parser.parse_args(argv)
+    paths = args.yaml or sorted(ANNOT.glob("*.yaml"))
+    problems = [p for path in paths for p in process(path, not args.check)]
     for p in problems:
         print(p)
     return 1 if problems else 0

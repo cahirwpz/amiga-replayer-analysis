@@ -17,6 +17,7 @@ from functools import cache
 from pathlib import Path
 
 import annot
+import cli
 import glossary
 import yaml
 
@@ -157,8 +158,9 @@ def validate(data=None):
 
 
 def main(argv):
-    if argv != ["--check"]:
-        sys.exit(__doc__)
+    parser = cli.parser(__doc__)
+    parser.add_argument("--check", action="store_true", required=True)
+    parser.parse_args(argv)
     errors = validate()
     for e in errors:
         print(e)

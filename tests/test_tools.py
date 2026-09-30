@@ -3,9 +3,11 @@
 Run: python3 -m unittest discover -s tests
 """
 
+import ast
 import contextlib
 import importlib.util
 import io
+import os
 import subprocess
 import sys
 import tempfile
@@ -26,6 +28,46 @@ def run(tool, *files):
     )
     rules = {line.split(": ")[1] for line in proc.stdout.splitlines() if ": " in line}
     return proc.returncode, rules, proc.stdout
+
+
+class Help(unittest.TestCase):
+    TOOLS = sorted(
+        p.name
+        for p in (ROOT / "tools").glob("*.py")
+        if "def main(" in p.read_text(encoding="utf-8")
+    )
+
+    def test_help_prints_the_docstring(self):
+        for tool in self.TOOLS:
+            with self.subTest(tool=tool):
+                proc = subprocess.run(
+                    [sys.executable, str(ROOT / "tools" / tool), "--help"],
+                    capture_output=True,
+                    text=True,
+                    cwd=ROOT,
+                )
+                self.assertEqual(proc.returncode, 0, proc.stderr)
+                doc = ast.get_docstring(ast.parse((ROOT / "tools" / tool).read_text()))
+                self.assertEqual(proc.stdout.strip(), (doc or "").strip())
+
+    def test_tools_are_executable(self):
+        for tool in self.TOOLS:
+            with self.subTest(tool=tool):
+                path = ROOT / "tools" / tool
+                self.assertTrue(os.access(path, os.X_OK))
+                self.assertTrue(path.read_text().startswith("#!/usr/bin/env python3\n"))
+
+    def test_a_bad_option_shows_the_usage(self):
+        for tool in self.TOOLS:
+            with self.subTest(tool=tool):
+                proc = subprocess.run(
+                    [sys.executable, str(ROOT / "tools" / tool), "--no-such-option"],
+                    capture_output=True,
+                    text=True,
+                    cwd=ROOT,
+                )
+                self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+                self.assertIn("Usage:", proc.stderr)
 
 
 class GoodCard(unittest.TestCase):

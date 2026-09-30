@@ -60,6 +60,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+import cli
 import players
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -481,14 +482,18 @@ def listing(arg):
 
 
 def main(argv):
-    ok = len(argv) == 2 and argv[0] in ("seed", "listing")
-    if ok or (len(argv) > 2 and argv[0] == "trace"):
-        if not all(tool.exists() for tool in (IRA, VLINK, VASM)):
-            sys.exit("IRA, vlink or vasm missing; run: source ./activate")
-        if argv[0] == "trace":
-            return trace(argv[1], argv[2:])
-        return {"seed": seed, "listing": listing}[argv[0]](argv[1])
-    sys.exit(__doc__)
+    parser = cli.parser(__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    for name in ("seed", "listing", "trace"):
+        command = commands.add_parser(name, description=__doc__)
+        command.add_argument("target", metavar="PLAYER|FILE")
+    commands.choices["trace"].add_argument("addrs", nargs="+", metavar="ADDR")
+    args = parser.parse_args(argv)
+    if not all(tool.exists() for tool in (IRA, VLINK, VASM)):
+        sys.exit("IRA, vlink or vasm missing; run: source ./activate")
+    if args.command == "trace":
+        return trace(args.target, args.addrs)
+    return {"seed": seed, "listing": listing}[args.command](args.target)
 
 
 if __name__ == "__main__":

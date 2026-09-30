@@ -27,6 +27,7 @@ import re
 import sys
 from pathlib import Path
 
+import cli
 import players
 import inventory
 from links import citation
@@ -261,17 +262,21 @@ def write_context(path, facts, sources):
 
 
 def main(argv):
-    write = "--write" in argv
-    argv = [a for a in argv if a not in ("--write", "--check")]
+    parser = cli.parser(__doc__)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--write", action="store_true")
+    mode.add_argument("--check", action="store_true")
+    parser.add_argument("paths", nargs="+", type=Path)
+    args = parser.parse_args(argv)
     known = players.binaries()
     facts = players.load()
     sources = inventory.table()
     paths = [
         path
-        for arg in map(Path, argv)
+        for arg in args.paths
         for path in (sorted(arg.rglob("*.md")) if arg.is_dir() else [arg])
     ]
-    if write:
+    if args.write:
         for path in paths:
             if write_context(path, facts, sources):
                 print(f"wrote {path}")

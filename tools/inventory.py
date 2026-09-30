@@ -38,6 +38,7 @@ import sys
 from functools import cache
 from pathlib import Path
 
+import cli
 import players
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -232,8 +233,7 @@ def table():
 
 
 def main(argv):
-    if argv:
-        sys.exit(__doc__)
+    cli.parser(__doc__).parse_args(argv)
     sys.stdout.write(to_csv(rows()))
     return 0
 

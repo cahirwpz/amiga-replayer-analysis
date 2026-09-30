@@ -58,6 +58,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 import annot  # noqa: E402
+import cli  # noqa: E402
 from hardware.clock import CPU_PER_CCK  # noqa: E402
 
 DATA = ROOT / "data" / "timing"
@@ -254,9 +255,12 @@ def check(name: str) -> int:
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) == 2 and argv[0] in ("run", "check"):
-        return {"run": run, "check": check}[argv[0]](argv[1])
-    sys.exit(__doc__)
+    parser = cli.parser(__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    for name in ("run", "check"):
+        commands.add_parser(name, description=__doc__).add_argument("name")
+    args = parser.parse_args(argv)
+    return {"run": run, "check": check}[args.command](args.name)
 
 
 if __name__ == "__main__":

@@ -33,6 +33,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 import annot
+import cli
 import inventory
 import players
 import specs
@@ -208,9 +209,12 @@ def check(path, known_sources):
 
 
 def main(argv):
+    parser = cli.parser(__doc__)
+    parser.add_argument("paths", nargs="+", type=Path)
+    args = parser.parse_args(argv)
     known = sources()
     errors = []
-    for arg in map(Path, argv):
+    for arg in args.paths:
         for path in sorted(arg.rglob("*.md")) if arg.is_dir() else [arg]:
             errors += check(path, known)
     for e in errors:

@@ -35,6 +35,7 @@ import tokenize
 from pathlib import Path
 
 import annot
+import cli
 import numbered
 import players
 from mypy import api as mypy_api
@@ -157,7 +158,9 @@ def spec_players(data=None):
 
 
 def main(argv):
-    root = Path(argv[0]) if argv else SPECS
+    parser = cli.parser(__doc__)
+    parser.add_argument("dir", nargs="?", type=Path, default=SPECS)
+    root = parser.parse_args(argv).dir
     owners = spec_players()
     errors = list(check_types(root, HARDWARE) if root == SPECS else check_types(root))
     for path in sorted(root.glob("*.py")):

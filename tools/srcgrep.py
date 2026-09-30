@@ -15,26 +15,23 @@ import re
 import sys
 from pathlib import Path
 
+import cli
+
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT = ROOT / "ext" / "uade" / "amigasrc" / "players"
 TEXT_EXT = {".s", ".asm", ".a", ".i", ".c", ".h", ".txt", ".readme", ".doc"}
 
 
 def main(argv):
-    flags = 0
-    code_only = False
-    while argv and argv[0].startswith("-") and len(argv[0]) == 2:
-        opt = argv.pop(0)
-        if opt == "-i":
-            flags |= re.IGNORECASE
-        elif opt == "-c":
-            code_only = True
-        else:
-            sys.exit(__doc__)
-    if not argv:
-        sys.exit(__doc__)
-    pattern = re.compile(argv[0], flags)
-    paths = [Path(p) for p in argv[1:]] or [DEFAULT]
+    parser = cli.parser(__doc__)
+    parser.add_argument("-i", action="store_true")
+    parser.add_argument("-c", action="store_true")
+    parser.add_argument("pattern")
+    parser.add_argument("paths", nargs="*", type=Path)
+    args = parser.parse_args(argv)
+    pattern = re.compile(args.pattern, re.IGNORECASE if args.i else 0)
+    code_only = args.c
+    paths = args.paths or [DEFAULT]
     found = False
     for base in paths:
         files = sorted(base.rglob("*")) if base.is_dir() else [base]

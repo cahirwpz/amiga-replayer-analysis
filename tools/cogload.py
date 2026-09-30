@@ -15,6 +15,7 @@ import re
 import sys
 from pathlib import Path
 
+import cli
 import glossary
 import numbered
 from mdtools import CODE, line_of, literal, plain, read
@@ -226,10 +227,13 @@ def check(path, known_terms, avoided=()):
 
 
 def main(argv):
+    parser = cli.parser(__doc__)
+    parser.add_argument("paths", nargs="+", type=Path)
+    args = parser.parse_args(argv)
     known_terms = glossary.terms()
     avoided = load_avoided()
     errors = []
-    for arg in map(Path, argv):
+    for arg in args.paths:
         for path in sorted(arg.rglob("*.md")) if arg.is_dir() else [arg]:
             errors += check(path, known_terms, avoided)
     for e in errors:

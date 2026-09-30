@@ -46,6 +46,7 @@ from pathlib import Path
 from typing import Any
 
 import annot
+import cli
 import players
 import yaml
 from mdtools import read
@@ -173,12 +174,15 @@ def record(player: str, review: str, findings_path: str | Path) -> None:
 
 
 def main(argv: list[str]) -> int:
-    if argv[:1] == ["--record"]:
-        if len(argv) != 4:
-            sys.exit(__doc__)
-        record(*argv[1:])
+    parser = cli.parser(__doc__)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--check", action="store_true")
+    mode.add_argument("--record", nargs=3, metavar=("PLAYER", "REVIEW", "FINDINGS"))
+    args = parser.parse_args(argv)
+    if args.record:
+        record(*args.record)
         return 0
-    if argv == ["--check"]:
+    if args.check:
         errors = [
             f"{path.relative_to(ROOT)}: {p}"
             for path in sorted(REVIEWS.glob("*.yaml"))
@@ -191,8 +195,6 @@ def main(argv: list[str]) -> int:
         ]
         print("\n".join(errors), end="\n" if errors else "")
         return 1 if errors else 0
-    if argv:
-        sys.exit(__doc__)
     for player, card in cards().items():
         data = load(player)
         for review in FIELDS:

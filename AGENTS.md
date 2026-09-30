@@ -47,7 +47,7 @@ the same rules.
 - Name, don't number: a jump's target ("jumps to its release part"), a command's
   constant (`HOLD`).
 - Say each thing once. Elsewhere, link to it or generate it from `data/`. Tool
-  usage lives in the tool's docstring.
+  usage lives in the tool's docstring; parse with `tools/cli.py`.
 
 Before showing a card, read it as that reader. Check each noun against the
 glossary and each label against its code.
