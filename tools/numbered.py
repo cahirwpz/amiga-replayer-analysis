@@ -72,7 +72,7 @@ def values(node, count, known):
 
 def definitions(tree):
     """(line, name, value) of each module-level constant; value may be None."""
-    known = {}
+    known: dict[str, int | None] = {}
     for node in tree.body:
         if isinstance(node, ast.Assign):
             targets, rhs = node.targets, node.value
@@ -97,7 +97,7 @@ def definitions(tree):
 def constants(spec):
     """{value: [names]} of the int constants of a spec file."""
     tree = ast.parse(Path(spec).read_text(encoding="utf-8"))
-    out = {}
+    out: dict[int, list[str]] = {}
     for _, name, v in definitions(tree):
         if v is not None:
             out.setdefault(v, []).append(name)

@@ -1,50 +1,6 @@
 #!/bin/bash
 # This file must be used with "source ./activate" in the repository root.
-
-# A shallow, partial and sparse submodule: only the commit we pin, only the
-# given folders, and only the files in them. Git keeps sparse settings per
-# clone, so this runs before `git submodule update`, which then finds the
-# submodule at its pin.
-function replayer_analysis_sparse {
-  local dir=$1
-  shift
-  [ -e "$dir/.git" ] && return 0
-  local url sha
-  url=$(git config -f .gitmodules "submodule.$dir.url") || return 1
-  sha=$(git rev-parse ":$dir") || return 1
-  git init -q "$dir" &&
-    git -C "$dir" remote add origin "$url" &&
-    git -C "$dir" sparse-checkout set "$@" &&
-    git -C "$dir" fetch -q --depth 1 --filter=blob:none origin "$sha" &&
-    git -C "$dir" checkout -q "$sha" &&
-    git submodule init -- "$dir" &&
-    git submodule absorbgitdirs -- "$dir"
-}
-
-function replayer_analysis_activate {
-  # NostalgicPlayer: 162 MB in full; we read only its replayer ports and
-  # its format notes.
-  replayer_analysis_sparse ext/nostalgicplayer \
-    Source/Agents/Players Format_Descriptions || return 1
-  git submodule update --init || return 1
-  python3 -m venv .venv || return 1
-  # shellcheck source=/dev/null
-  source .venv/bin/activate || return 1
-  python3 -m pip -q install -U -r requirements.txt || return 1
-  # IRA: the current Aminet release; vlink and vasm: tags pinned in
-  # tools/disasm.py. Built once; delete one to rebuild all three.
-  local tool
-  for tool in ira vlink vasmm68k_mot; do
-    if ! [ -x ".venv/bin/$tool" ]; then
-      python3 tools/disasm.py install || return 1
-      break
-    fi
-  done
-  # CI runs the hooks directly; a git hook there would be pointless.
-  if [[ "$GITHUB_ACTIONS" != "true" ]]; then
-    pre-commit install || return 1
-  fi
-}
+# setup/Makefile sets up the environment; this file adds it to the shell.
 
 # The venv and requirements.txt resolve against $(pwd).
 # zsh names the sourced file in $0 at top level; bash in BASH_SOURCE.
@@ -56,7 +12,15 @@ if ! [ "${BASH_SOURCE[0]:-$0}" -ef ./activate ]; then
   return 1
 fi
 
-if ! replayer_analysis_activate; then
+# setup/check-packages.sh checks the rest, but make must run it.
+if ! command -v make >/dev/null; then
+  echo "activate: missing packages: make"
+  echo "  Run: sudo apt-get install make"
+  return 1
+fi
+
+# shellcheck source=/dev/null
+if ! { make -s -j"$(nproc)" -f setup/Makefile && source .venv/bin/activate; }; then
   echo "amiga-replayer-analysis environment setup failed!"
   return 1
 fi

@@ -21,6 +21,7 @@ from pathlib import Path
 
 import yaml
 from markdown_it import MarkdownIt
+from markdown_it.token import Token
 from mdit_py_plugins.front_matter import front_matter_plugin
 
 CODE = "CODE"  # stands in for a code span in plain()
@@ -91,7 +92,8 @@ def literal(inline):
 def split(tokens, level="h2"):
     """{title: tokens} for each heading of one level; tokens run to the next
     heading of that level or higher. Tokens before the first are dropped."""
-    out, current = {}, None
+    out: dict[str, list[Token]] = {}
+    current = None
     for i, token in enumerate(tokens):
         if token.type == "heading_open" and token.tag <= level:
             current = plain(tokens[i + 1]) if token.tag == level else None
@@ -119,17 +121,17 @@ def heading_lines(doc, level="h2"):
 
 def table(tokens):
     """Rows of the first table in tokens, as (line, [plain cell text])."""
-    rows, row, inside = [], None, False
+    rows: list[tuple[int, list[str]]] = []
+    inside = False
     for i, token in enumerate(tokens):
         if token.type == "table_open":
             inside = True
         elif token.type == "table_close":
             break
         elif inside and token.type == "tr_open":
-            row = (line_of(token), [])
-            rows.append(row)
+            rows.append((line_of(token), []))
         elif inside and token.type in ("th_open", "td_open"):
-            row[1].append(plain(tokens[i + 1]))
+            rows[-1][1].append(plain(tokens[i + 1]))
     return rows
 
 
@@ -159,13 +161,13 @@ def format_table(header, rows):
 def wrap(text):
     """A paragraph wrapped at WIDTH. Like prettier, it breaks only at spaces
     and never inside a code span."""
-    atoms = []
+    atoms: list[str] = []
     for word in text.split():
         if atoms and atoms[-1].count("`") % 2:
             atoms[-1] += " " + word  # still inside a code span
         else:
             atoms.append(word)
-    lines = []
+    lines: list[str] = []
     for atom in atoms:
         if lines and len(lines[-1]) + 1 + len(atom) <= WIDTH:
             lines[-1] += " " + atom

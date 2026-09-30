@@ -98,7 +98,8 @@ def source_unit(path):
 
 
 def index_sources():
-    by_hash, by_name = {}, {}
+    by_hash: dict[str, set[Path]] = {}
+    by_name: dict[str, set[Path]] = {}
     for f in SOURCES.rglob("*"):
         if not f.is_file():
             continue
@@ -167,7 +168,7 @@ def locate(binary, by_hash, by_name):
 def rows():
     by_hash, by_name = index_sources()
     pref = prefixes()
-    out = [
+    out: list[list[str | int]] = [
         [
             "player",
             "version",

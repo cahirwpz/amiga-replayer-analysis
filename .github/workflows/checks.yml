@@ -26,6 +26,30 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Read the vAmiga pin
+        id: vamiga
+        run: echo "pin=$(git rev-parse HEAD:ext/vamiga)" >> "$GITHUB_OUTPUT"
+      - name: Cache the environment
+        # The venv with IRA, vlink, vasm and the timing driver, and the
+        # driver's build directory; vAmiga's core takes about 8 minutes here.
+        # setup/Makefile compares build/keys, so an older cache still keeps
+        # every tool whose inputs did not change, and vAmiga's objects while
+        # the pin stays.
+        id: env
+        uses: actions/cache@v6
+        with:
+          path: |
+            .venv
+            build/keys
+            build/amiga-timing
+            build/packages.ok
+          key: env-${{ steps.vamiga.outputs.pin }}-${{ hashFiles('requirements.txt', 'setup/*', 'tools/timing/driver.cpp', 'tools/timing/CMakeLists.txt') }}
+          restore-keys: env-
+      - name: Install bsdtar
+        # setup/Makefile unpacks IRA's LHA archive and vasm's and vlink's
+        # tarballs; only a build needs it.
+        if: steps.env.outputs.cache-hit != 'true'
+        run: command -v bsdtar || sudo apt-get install -y -qq libarchive-tools
       - name: Run all hooks
         # Formatters fail here instead of fixing files; the diff shows why.
         shell: bash

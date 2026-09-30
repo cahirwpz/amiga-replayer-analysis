@@ -18,7 +18,6 @@ from dataclasses import dataclass, field
 
 from hardware import paula
 from hardware.amiga import DEFAULT_LATCH, Amiga, Priority
-from hardware.clock import CPU_PER_CCK
 from specs.controls import Countdown, Mode, TableWalker
 
 VOICES = 4
@@ -37,11 +36,12 @@ SYNTH = 0xFF  # the first byte of a synth instrument
 USE_INSTRUMENT = 0xFF  # a voice volume that means: the instrument's volume
 DEFAULT_SPEED = 6
 ARP_STEPS = 4
-DMA_WAIT_CCK = (127 * 10 + 14) // CPU_PER_CCK  # DmaWait: 128 dbra loops
-# From DmaWait's end to DMA on: RestoreWaves and StartNoteLoop. A Musashi run
-# of this code takes 453 CCK for one new note without a sample, the shortest
-# path, and 1302 CCK for four sample notes with a loop.
-START_CCK = 453
+# Measured in vAmiga without display DMA: data/timing/soundmon_22.yaml, run by
+# tools/timing.py. Bitplane DMA takes bus slots, so a display makes both longer.
+DMA_WAIT_CCK = 647  # DmaWait: 128 dbra loops
+# From DmaWait's end to DMA on: RestoreWaves and StartNoteLoop, for one new
+# note without a sample, the shortest path. Four sample notes take 1290 CCK.
+START_CCK = 442
 
 # Commands: the low nibble of a row's second byte
 ARPEGGIO, VOLUME, SPEED, FILTER, SLIDE_UP, SLIDE_DOWN = 0, 1, 2, 3, 4, 5
@@ -85,7 +85,7 @@ class Score:  # the module in chip memory, after InitSong
 
 
 @dataclass
-class Instrument:  # a sample instrument: a name, then 4 words at byte 24
+class Instrument:  # a sample instrument: a name, then 4 words
     length: int  # words
     repeat_start: int  # bytes
     repeat_length: int  # words; 1: no loop
@@ -147,41 +147,39 @@ def synth_instrument(score: Score, number: int) -> SynthInstrument:
 
 
 @dataclass
-class Walker(
-    TableWalker, Countdown
-):  # RunWalkers: pos 14-20, counter 22-25, control 29-32
+class Walker(TableWalker, Countdown):  # RunWalkers
     BITS = 8
 
 
 @dataclass
-class SavedWave:  # SavedWaves: 36 bytes per voice
+class SavedWave:  # SavedWaves: one per voice
     address: int | None = None  # the wave; None: nothing saved
     data: bytes = bytes(SAVED)
 
 
 @dataclass
-class Voice:  # Voices: 36 bytes per voice
+class Voice:  # Voices: one per voice
     channel: paula.Channel
     number: int
-    period: int = 0  # 0; bit 15 there is new_note
+    period: int = 0  # bit 15 there is new_note
     new_note: bool = False
-    volume: int = 0  # 2; USE_INSTRUMENT: the instrument's
-    instrument: int = 0  # 3
-    start: int | None = None  # 4: the loop, AUDxLC every tick; None: EmptySample
-    length: int = 1  # 8: words
-    note: int = 0  # 10
-    arpeggio: int = 0  # 11: ARPEGGIO's argument
-    auto_slide: int = 0  # 12: signed, added every tick
-    auto_arpeggio: int = 0  # 13
+    volume: int = 0  # USE_INSTRUMENT: the instrument's
+    instrument: int = 0
+    start: int | None = None  # the loop, AUDxLC every tick; None: EmptySample
+    length: int = 1  # words
+    note: int = 0
+    arpeggio: int = 0  # ARPEGGIO's argument
+    auto_slide: int = 0  # signed, added every tick
+    auto_arpeggio: int = 0
     eg: Walker = field(default_factory=Walker)
     lfo: Walker = field(default_factory=Walker)
     adsr: Walker = field(default_factory=Walker)
     mod: Walker = field(default_factory=Walker)
-    effect_delay: int = 0  # 26
-    synth: bool = False  # 27
-    eg_value: int = 0  # 28: negated samples now
-    vibrato: int = 0  # 34: divides the table value; 0 off
-    effect: int = 0  # 35
+    effect_delay: int = 0
+    synth: bool = False
+    eg_value: int = 0  # negated samples now
+    vibrato: int = 0  # divides the table value; 0 off
+    effect: int = 0
 
 
 @dataclass
@@ -314,8 +312,9 @@ def PlayRow(module: Module) -> None:
 
     A stopped channel restarts only if its word ends before DMA on. That
     takes up to 2 × period CCK. DMA off to DMA on takes at least
-    DMA_WAIT_CCK + START_CCK = 1095 CCK. So a note with a period above 547
-    can miss its restart. It then plays the old sample on, and the new
+    DMA_WAIT_CCK + START_CCK = 1089 CCK. So a note with a period above 544
+    can miss its restart. With 6 bitplanes on, both take longer: 1543 CCK,
+    so the limit falls to 771. It then plays the old sample on, and the new
     sample starts at the old one's next reload."""
     module.tick_count = module.speed
     ReadRow(module)

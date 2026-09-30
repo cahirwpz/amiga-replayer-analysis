@@ -20,7 +20,7 @@ repos:
     rev: v0.11.0.1
     hooks:
       - id: shellcheck               # Static analysis for shell scripts
-        files: ^activate$
+        files: ^(activate|setup/.*\.sh)$
         types: [file]                # activate is sourced, not executable
 
   # --- PYTHON (Ruff) ---
@@ -74,6 +74,17 @@ repos:
         pass_filenames: false
         args: [ players/ ]
 
+      # Fields at columns 8, 16 and 32, spaces only; a field past its column
+      # gets one space. Options: .m68k-format.json.
+      - id: asmfmt                   # 68k assembler layout
+        name: asmfmt
+        entry: m68k-format --write
+        language: node
+        # The formatter needs Node 22.15.1 or later; the CI image's is older.
+        language_version: 24.14.0
+        additional_dependencies: [ m68k-formatter@0.3.0 ]
+        files: \.asm$
+
       - id: glossary                 # docs/glossary.md matches data/glossary.yaml
         name: glossary
         entry: .venv/bin/python3 tools/glossary.py --check
@@ -94,6 +105,13 @@ repos:
         language: system
         pass_filenames: false
         always_run: true             # annotations and players.yaml matter too
+
+      - id: mypy                     # tools/ type-check; not yet --strict
+        name: mypy
+        entry: .venv/bin/python3 -m mypy --check-untyped-defs --cache-dir build/mypy-tools tools/
+        language: system
+        files: ^tools/.*\.py$
+        pass_filenames: false
 
       - id: players                  # data/players.yaml is valid
         name: players

@@ -19,6 +19,7 @@ labels:
   bpplayarp: SetArpPeriod
   # every row
   bpskip1: PlayRow
+  bpplay: ReadAndStartRow
   bpxx: DmaWait
   bploopel: RestoreWaves
   bploop2: StartNoteLoop
@@ -94,6 +95,7 @@ labels:
   bpper: Periods
   samples: SamplePtrs
   bpsong: Song
+  bp_buffer: StateBackup
 
 comments:
   132: "'V.3' in the header: the module has a table pool"
@@ -141,7 +143,7 @@ comments:
   840: saved copy, same as MorphToSaved
   864: copy the next table over the wave
   881: byte 32 of the wave, outside the saved 32 bytes
-  895: one 36-byte record per voice, see the banner
+  895: one record per voice, see the banner
 
 banners:
   128: |
@@ -189,15 +191,8 @@ banners:
   867: |
     ModWalker: write one table value into the wave.
   894: |
-    Voice record, 36 bytes, one per voice:
-       0 period (bit 15: new note)   2 volume    3 instrument
-       4 sample start                8 length (words)
-      10 note     11 arpeggio        12 auto slide    13 auto arpeggio
-      14 EG, 16 LFO, 18 ADSR, 20 MOD: table positions
-      22 EG, 23 LFO, 24 ADSR, 25 MOD, 26 effect: delay counters
-      27 synth flag       28 current EG value
-      29 EG, 30 LFO, 31 ADSR, 32 MOD: control
-      34 vibrato depth    35 effect
+    Voice record, one per voice: see `layouts: Voice` in
+    data/annot/SoundMon2.2.yaml.
 
 # Classes in specs/soundmon_22.py: each word occurs in the source.
 types:
@@ -209,3 +204,47 @@ types:
   SavedWave: [bpbuffer]
   Voice: [bpcurrent]
   Module: [bpstep, bpdelay, arpcount]
+
+# Records of specs/soundmon_22.py: size in bytes, then field: [offset, size].
+# Field names are the spec's; a walker's are WALKER.pos, .counter, .mode.
+layouts:
+  Voice:
+    size: 36
+    fields:
+      period: [0, w] # bit 15: new_note
+      volume: [2, b]
+      instrument: [3, b]
+      start: [4, l]
+      length: [8, w]
+      note: [10, b]
+      arpeggio: [11, b]
+      auto_slide: [12, b]
+      auto_arpeggio: [13, b]
+      eg.pos: [14, w]
+      lfo.pos: [16, w]
+      adsr.pos: [18, w]
+      mod.pos: [20, w]
+      eg.counter: [22, b]
+      lfo.counter: [23, b]
+      adsr.counter: [24, b]
+      mod.counter: [25, b]
+      effect_delay: [26, b]
+      synth: [27, b]
+      eg_value: [28, b]
+      eg.mode: [29, b]
+      lfo.mode: [30, b]
+      adsr.mode: [31, b]
+      mod.mode: [32, b]
+      vibrato: [34, b]
+      effect: [35, b]
+  SavedWave:
+    size: 36
+    fields:
+      address: [0, l]
+  Instrument:
+    size: 32
+    fields:
+      length: [24, w]
+      repeat_start: [26, w]
+      repeat_length: [28, w]
+      volume: [30, w]

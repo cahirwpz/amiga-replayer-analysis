@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 """Disassemble UADE player binaries and other 68k hunk files with IRA.
 
-Usage: disasm.py install
-       disasm.py seed PLAYER|FILE
+Usage: disasm.py seed PLAYER|FILE
        disasm.py listing PLAYER|FILE
        disasm.py trace PLAYER|FILE ADDR|START-END...
 
-  install  build IRA (current Aminet release), vlink and vasm (pinned tags)
-           into .venv/bin
   seed     create data/disasm/NAME.cnf; refuses to overwrite it
   listing  write build/disasm/NAME.asm from the config, then check that vasm
            rebuilds the input from it
@@ -55,15 +52,12 @@ a player without source as `replay: disasm`.
 """
 
 import hashlib
-import io
 import re
 import shutil
 import struct
 import subprocess
 import sys
-import tarfile
 import tempfile
-import urllib.request
 from pathlib import Path
 
 import players
@@ -77,9 +71,6 @@ BIN = ROOT / ".venv" / "bin"
 IRA = BIN / "ira"
 VLINK = BIN / "vlink"
 VASM = BIN / "vasmm68k_mot"
-IRA_URL = "https://aminet.net/dev/asm/ira.lha"  # the current release
-VLINK_URL = "http://phoenix.owl.de/tags/vlink0_18a.tar.gz"
-VASM_URL = "http://phoenix.owl.de/tags/vasm2_0f.tar.gz"
 
 # -a: address and data in comments; -label=1: labels named by address.
 FLAGS = ["-a", "-label=1"]
@@ -172,7 +163,9 @@ def hunks(data, symbols=None):
     sizes = [w & 0x3FFFFFFF for w in words[p + 4 : p + 5 + last - first]]
     p += 5 + last - first
     bases = [4 * sum(sizes[:i]) for i in range(len(sizes))]
-    out, cur, code = [], None, False
+    out: list[tuple[bytes, dict[int, int]]] = []
+    relocs: dict[int, int] = {}
+    code = False
     while p < len(words):
         kind = words[p] & 0x3FFFFFFF
         p += 1
@@ -180,18 +173,18 @@ def hunks(data, symbols=None):
             code = kind == HUNK_CODE
         if kind in (HUNK_CODE, HUNK_DATA):
             n = words[p]
-            cur = [bytes(data[4 * (p + 1) : 4 * (p + 1 + n)]), {}]
-            out.append(cur)
+            relocs = {}
+            out.append((bytes(data[4 * (p + 1) : 4 * (p + 1 + n)]), relocs))
             p += 1 + n
         elif kind == HUNK_BSS:
-            cur = [b"", {}]
-            out.append(cur)
+            relocs = {}
+            out.append((b"", relocs))
             p += 1
         elif kind == HUNK_RELOC32:
             while words[p]:
                 n, target = words[p], words[p + 1]
                 for off in words[p + 2 : p + 2 + n]:
-                    cur[1][off] = target
+                    relocs[off] = target
                 p += 2 + n
             p += 1
         elif kind in (HUNK_RELOC32SHORT, HUNK_DREL32):
@@ -201,7 +194,7 @@ def hunks(data, symbols=None):
             while half[q]:
                 n, target = half[q], half[q + 1]
                 for off in half[q + 2 : q + 2 + n]:
-                    cur[1][off] = target
+                    relocs[off] = target
                 q += 2 + n
             q += 1
             p += (q + 1) // 2
@@ -240,7 +233,8 @@ def tags(binary):
         raise ValueError("no tag list pointer at offset 12")
     hunk = max(i for i, h in enumerate(hs) if h[0] <= start)
     names = tag_names()
-    out, off = [], start - hs[hunk][0]
+    out: list[tuple[str, int]] = []
+    off = start - hs[hunk][0]
     while True:
         tag, _ = struct.unpack(">II", hs[hunk][1][off : off + 8])
         if tag == 0:  # TAG_DONE
@@ -259,7 +253,7 @@ def run(tool, *args, cwd=None):
 
 
 def merge(areas):
-    out = []
+    out: list[list[int]] = []
     for a, b in sorted(areas):
         if b <= a:
             continue
@@ -344,7 +338,7 @@ def load(path):
             exe = Path(tmp) / "exe"
             run(VLINK, "-b", "amigahunk", "-o", str(exe), str(path))
             data = exe.read_bytes()
-    symbols = []
+    symbols: list[tuple[str, int, bool]] = []
     hunks(data, symbols)
     labels = [(name, addr) for name, addr, _ in symbols]
     return data, labels, sorted({0} | {addr for _, addr, code in symbols if code})
@@ -396,7 +390,9 @@ def traced(exe, entries):
     """(CODE areas, config header, rejected entries) that `ira -preproc`
     finds from each entry of the executable."""
     bounds = [(base, base + len(body)) for base, body, _ in hunks(exe)]
-    areas, header, rejected = [], [], []
+    areas: list[tuple[int, int]] = []
+    header: list[str] = []
+    rejected: list[int] = []
     with tempfile.TemporaryDirectory() as tmp:
         # IRA names the config after the input minus its extension.
         (Path(tmp) / "p").write_bytes(exe)
@@ -484,65 +480,7 @@ def listing(arg):
     print(f"{out.relative_to(ROOT)}: vasm rebuilds the input")
 
 
-def make(src, *args):
-    proc = subprocess.run(["make", *args], cwd=src, capture_output=True, text=True)
-    if proc.returncode:
-        sys.exit(f"building {src.name} failed:\n{proc.stdout}{proc.stderr}")
-
-
-def install_ira():
-    import lhafile
-
-    with tempfile.TemporaryDirectory() as tmp:
-        with urllib.request.urlopen(IRA_URL) as r:
-            archive = lhafile.Lhafile(io.BytesIO(r.read()))
-        for info in archive.infolist():
-            name = info.filename.replace("\\", "/")
-            if name.endswith("/"):
-                continue
-            path = Path(tmp) / name
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(archive.read(info.filename))
-        src = Path(tmp) / "ira"
-        make(src)
-        shutil.copy(src / "ira", IRA)
-        h = (src / "ira.h").read_text(encoding="latin-1")
-        v = [re.search(rf'{k}\s+"(\d+)"', h).group(1) for k in ("VERSION", "REVISION")]
-    print(f"installed IRA {'.'.join(v)} as {IRA.relative_to(ROOT)}")
-
-
-def install_tagged(url, tool, *make_args):
-    """Build `tool` from a tagged source archive of Frank Wille's site."""
-    with tempfile.TemporaryDirectory() as tmp:
-        with urllib.request.urlopen(url) as r:
-            with tarfile.open(fileobj=io.BytesIO(r.read()), mode="r:gz") as archive:
-                archive.extractall(tmp, filter="data")
-        (src,) = Path(tmp).iterdir()  # the archive holds one directory
-        (src / "objects").mkdir(exist_ok=True)  # vlink's Makefile needs it
-        make(src, *make_args)
-        shutil.copy(src / tool.name, tool)
-        # vasm -v goes on to assemble stdin into a.out: keep that in tmp.
-        proc = subprocess.run(
-            [str(tool), "-v"],
-            cwd=tmp,
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            text=True,
-        )
-    version = (proc.stdout + proc.stderr).splitlines()[0].split(" (c)")[0]
-    print(f"installed {version} as {tool.relative_to(ROOT)}")
-
-
-def install():
-    BIN.mkdir(parents=True, exist_ok=True)
-    install_ira()
-    install_tagged(VLINK_URL, VLINK)
-    install_tagged(VASM_URL, VASM, "CPU=m68k", "SYNTAX=mot")
-
-
 def main(argv):
-    if argv == ["install"]:
-        return install()
     ok = len(argv) == 2 and argv[0] in ("seed", "listing")
     if ok or (len(argv) > 2 and argv[0] == "trace"):
         if not all(tool.exists() for tool in (IRA, VLINK, VASM)):

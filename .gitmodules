@@ -14,3 +14,7 @@
 	path = ext/nostalgicplayer
 	url = https://github.com/neumatho/NostalgicPlayer.git
 	shallow = true
+[submodule "ext/vamiga"]
+	path = ext/vamiga
+	url = https://github.com/dirkwhoffmann/vAmiga.git
+	shallow = true

@@ -72,7 +72,7 @@ def anchors(player):
         types |= set(spec.get("types") or {})
     cnf = ROOT / "data/disasm" / f"{player}.cnf"
     if cnf.is_file():
-        labels |= annot.cited_labels(cnf)
+        labels |= annot.cited_labels(cnf) or set()
     return labels - types, types
 
 
@@ -82,7 +82,7 @@ def old_labels(player):
     for path in annot_files(player):
         if annot.is_config(annot.load(path)):
             continue  # the config's labels are new names
-        lines = annot.source_lines(annot.load(path))[1]
+        lines = annot.source_lines(annot.load(path))
         old |= annot.defined(lines)
         code = (annot.code_part(line)[0] for line in lines)
         old |= {
