@@ -17,6 +17,17 @@ All twelve pilot cards exist.
 
 ## After the pilot
 
+### Card reviews
+
+- [ ] Run the card reviews on the other cards. The user chose this as the next
+      task.
+  - Check each finding against the code before recording it.
+  - Runs vary. Writing found 1 issue, then 14. MaxTrax coverage found 0, then 7
+    real gaps.
+  - Coverage overclaimed once.
+  - The session may not load `.claude/agents/`. Then run a general-purpose agent
+    with the agent file as its prompt.
+
 ### Hardware model
 
 - [ ] Test `hardware/paula.py` against vAmiga's Paula. Case: a SoundMon note
@@ -42,13 +53,6 @@ Fix in `tools/print.py:write_pdf`:
 
 ### Then
 
-- [ ] Decide whether to run the card reviews on the other cards.
-  - Check each finding against the code before recording it.
-  - Runs vary. Writing found 1 issue, then 14. MaxTrax coverage found 0, then 7
-    real gaps.
-  - Coverage overclaimed once.
-  - The session may not load `.claude/agents/`. Then run a general-purpose agent
-    with the agent file as its prompt.
 - [ ] Review the cards with the user.
 - [ ] Decide how to group `ideas/`: pages per technique slug, or per control
       dimension (see `docs/control-dimensions.md`).
