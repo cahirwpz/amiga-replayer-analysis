@@ -33,6 +33,13 @@ Skip unless a new lead turns up:
 
 - `ActionAmics`: the one-byte sweep, once per tick per shared sample.
 
+### Print layout
+
+Fix in `tools/print.py:write_pdf`:
+
+- [ ] A table split across two pages repeats no header row.
+- [ ] A heading can land on the last line of a page.
+
 ### Then
 
 - [ ] Fix the open writing findings of Fred and MaxTrax: `tools/reviews.py`
