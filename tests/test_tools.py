@@ -720,5 +720,88 @@ class Reviews(unittest.TestCase):
         self.assertEqual(len(problems), 2, problems)
 
 
+class Print(unittest.TestCase):
+    CARD = """---
+player: Fred
+---
+
+# Fred
+
+One sentence that is long enough to wrap past the eighty columns of a page, twice over.
+
+## Context
+
+| Fact   | Value  |
+| ------ | ------ |
+| Player | `Fred` |
+
+## Key ideas
+
+- A bullet with a code span, `NoteOn`, and words enough to wrap onto a second line.
+  - A nested bullet.
+
+| Aspect   | Answer                                                                   | Source      |
+| -------- | ------------------------------------------------------------------------ | ----------- |
+| Notation | A cell long enough that the table must shrink it to fit eighty columns. | `:ReadStream` |
+"""
+
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import print as printer
+
+        self.printer = printer
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.card = Path(tmp.name) / "Fred.md"
+        self.card.write_text(self.CARD)
+        self.lines = [line for line, _ in printer.render(self.card)]
+
+    def test_lines_fit_the_columns(self):
+        self.assertTrue(all(len(line) <= 80 for line in self.lines), self.lines)
+
+    def test_leaves_out_front_matter_and_context(self):
+        text = "\n".join(self.lines)
+        self.assertNotIn("player:", text)
+        self.assertNotIn("Context", text)
+        self.assertEqual(self.lines[0], "Fred")
+
+    def test_bullets_hang_and_nest(self):
+        start = next(i for i, line in enumerate(self.lines) if line.startswith("- A"))
+        self.assertRegex(self.lines[start + 1], r"^  [a-z]")
+        self.assertIn("  - A nested bullet.", self.lines)
+
+    def test_code_spans_lose_their_backticks(self):
+        self.assertIn("NoteOn", "\n".join(self.lines))
+        self.assertNotIn("`", "\n".join(self.lines))
+
+    def test_a_wide_table_wraps_its_cells(self):
+        rows = [line for line in self.lines if line.startswith(("Aspect", "Notation"))]
+        self.assertEqual(len(rows), 2)
+        self.assertIn("  :ReadStream", self.lines[self.lines.index(rows[1])])
+
+    def test_pages_count_whole_pages(self):
+        lines = self.printer.LINES
+        self.assertEqual(self.printer.pages([("", False)] * lines * 2), 2)
+        self.assertEqual(self.printer.pages([("", False)] * (lines * 2 + 1)), 3)
+
+    def test_pdf_starts_each_card_on_a_new_side(self):
+        if not (self.printer.FONTS / "JetBrainsMono-Regular.ttf").is_file():
+            self.skipTest("the font is missing; run: source ./activate")
+        out = self.card.with_suffix(".pdf")
+        self.assertEqual(self.printer.write_pdf([self.card, self.card], out), 2)
+
+    def test_font_matches_the_page_model(self):
+        font = self.printer.FONTS / "JetBrainsMono-Regular.ttf"
+        if not font.is_file():
+            self.skipTest("the font is missing; run: source ./activate")
+        from fpdf import FPDF
+
+        pdf = FPDF(orientation="L", unit="mm", format="A4")
+        pdf.add_font("mono", "", str(font))
+        pdf.set_font("mono", size=self.printer.FONT_SIZE)
+        width = pdf.get_string_width("x" * self.printer.COLUMNS)
+        self.assertAlmostEqual(width, self.printer.PAGE_WIDTH, places=3)
+
+
 if __name__ == "__main__":
     unittest.main()

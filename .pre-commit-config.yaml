@@ -120,6 +120,13 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: pages                    # Each card fits its printed pages, see tools/print.py
+        name: pages
+        entry: .venv/bin/python3 tools/print.py --check players/
+        language: system
+        files: ^(players/.*\.md|tools/print\.py)$
+        pass_filenames: false
+
       - id: reviews                  # data/reviews/*.yaml are valid; staleness passes
         name: reviews
         entry: .venv/bin/python3 tools/reviews.py --check

@@ -1,3 +1,4 @@
+fpdf2
 markdown-it-py
 mdit-py-plugins
 pre-commit

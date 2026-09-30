@@ -30,8 +30,8 @@ jobs:
         id: vamiga
         run: echo "pin=$(git rev-parse HEAD:ext/vamiga)" >> "$GITHUB_OUTPUT"
       - name: Cache the environment
-        # The venv with IRA, vlink, vasm and the timing driver, and the
-        # driver's build directory; vAmiga's core takes about 8 minutes here.
+        # The venv with IRA, vlink, vasm, the timing driver and the font of
+        # tools/print.py (.venv/share/fonts), and the driver's build directory; vAmiga's core takes about 8 minutes here.
         # setup/Makefile compares build/keys, so an older cache still keeps
         # every tool whose inputs did not change, and vAmiga's objects while
         # the pin stays.
@@ -46,8 +46,8 @@ jobs:
           key: env-${{ steps.vamiga.outputs.pin }}-${{ hashFiles('requirements.txt', 'setup/*', 'tools/timing/driver.cpp', 'tools/timing/CMakeLists.txt') }}
           restore-keys: env-
       - name: Install bsdtar
-        # setup/Makefile unpacks IRA's LHA archive and vasm's and vlink's
-        # tarballs; only a build needs it.
+        # setup/Makefile unpacks IRA's LHA archive, vasm's and vlink's
+        # tarballs and the font's zip; only a build needs it.
         if: steps.env.outputs.cache-hit != 'true'
         run: command -v bsdtar || sudo apt-get install -y -qq libarchive-tools
       - name: Run all hooks
@@ -56,3 +56,13 @@ jobs:
         run: |
           . ./activate
           pre-commit run --all-files --show-diff-on-failure
+      - name: Print the cards
+        shell: bash
+        run: |
+          . ./activate
+          python3 tools/print.py --pdf build/cards.pdf players/
+      - name: Upload the cards
+        uses: actions/upload-artifact@v7
+        with:
+          name: cards
+          path: build/cards.pdf

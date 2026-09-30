@@ -26,7 +26,7 @@ DEFAULT = {
     "block_sentences": 3,  # sentences per paragraph or list item
     "list_items": 7,  # items per list (per nesting level)
     "list_depth": 2,  # nested list levels
-    "file_words": 450,  # words per file
+    "file_words": 450,  # words per file; 0: no limit
     "count_tables": True,  # table cells count toward file_words
     "cell_words": 15,  # words per table cell
     "fk_grade": 12.0,  # Flesch-Kincaid grade of the file's prose
@@ -42,8 +42,8 @@ PROFILES = [
     ("AGENTS.md", {"file_words": 600}),
     # Working notes; sections go away as tasks are done.
     ("TODO.md", {"file_words": 1000}),
-    # Tables are lookups; only prose counts.
-    ("players/", {"file_words": 400, "count_tables": False}),
+    # Cards: tools/print.py limits them by printed pages instead.
+    ("players/", {"file_words": 0}),
     ("ideas/", {"file_words": 300}),
 ]
 
@@ -209,7 +209,7 @@ def check(path, known_terms, avoided=()):
             prose_syllables += sum(syllables(x) for x in sw)
         prose_sentences += len(sents)
 
-    if total_words > lim["file_words"]:
+    if lim["file_words"] and total_words > lim["file_words"]:
         err(1, "file-words", f"{total_words} > {lim['file_words']}")
     if prose_words >= FK_MIN_WORDS and prose_sentences:
         grade = (

@@ -1,5 +1,5 @@
-# Sets up the environment: submodules, the venv, IRA, vlink, vasm and the
-# timing driver. activate runs it from the repo root:
+# Sets up the environment: submodules, the venv, IRA, vlink, vasm, the timing
+# driver and the font of tools/print.py. activate runs it from the repo root:
 #
 #   make -s -j"$(nproc)" -f setup/Makefile
 #
@@ -18,11 +18,17 @@ IRA := https://aminet.net/dev/asm/ira.lha
 VLINK := http://phoenix.owl.de/tags/vlink0_18a.tar.gz
 VASM := http://phoenix.owl.de/tags/vasm2_0f.tar.gz CPU=m68k SYNTAX=mot
 
-$(shell setup/keys.sh "ira=$(IRA)" "vlink=$(VLINK)" "vasmm68k_mot=$(VASM)")
+# JetBrains Mono (OFL): a pinned release; tools/print.py embeds it in PDFs.
+FONTS := https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip
+FONT_DIR := .venv/share/fonts
+
+$(shell setup/keys.sh "ira=$(IRA)" "vlink=$(VLINK)" "vasmm68k_mot=$(VASM)" \
+  "fonts=$(FONTS)")
 
 ARCHIVE_TOOLS := $(BIN)/ira $(BIN)/vlink $(BIN)/vasmm68k_mot
 
-all: build/submodules.ok .venv/.installed $(ARCHIVE_TOOLS) $(BIN)/amiga-timing
+all: build/submodules.ok .venv/.installed $(ARCHIVE_TOOLS) $(BIN)/amiga-timing \
+  $(FONT_DIR)/.installed
 
 # CI runs the hooks directly; a git hook there would be pointless.
 ifneq ($(GITHUB_ACTIONS),true)
@@ -64,6 +70,16 @@ $(ARCHIVE_TOOLS): $(BIN)/%: $(KEYS)/% | .venv/.installed build/packages.ok
 	  $(MAKE) -C "$$src" "$$@" && \
 	  cp "$$src/$*" $@; } >build/$*.log 2>&1 || \
 	{ tail -20 build/$*.log; exit 1; }
+
+# Only the regular and bold faces, and the licence.
+$(FONT_DIR)/.installed: $(KEYS)/fonts | .venv/.installed build/packages.ok
+	@echo "setup: fetching fonts"
+	@rm -rf $(FONT_DIR)
+	@mkdir -p $(FONT_DIR)
+	@curl -fsSL "$$(cat $<)" | bsdtar -xf - -C $(FONT_DIR) -s '|.*/||' \
+	  fonts/ttf/JetBrainsMono-Regular.ttf fonts/ttf/JetBrainsMono-Bold.ttf \
+	  OFL.txt
+	@touch $@
 
 # The build directory is valid for one pin only; a new pin starts it empty.
 build/amiga-timing/.vacore: $(KEYS)/vacore

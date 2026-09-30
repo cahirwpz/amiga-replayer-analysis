@@ -86,5 +86,6 @@ Composer's view.
   keep a key idea and link there.
 - Game sound effects appear only as a distinct key idea.
 - Skip Open questions when there is nothing to say.
-- Tables skip the card's word limit.
+- A card fits two printed pages, tables included. `tools/print.py --check`
+  counts them; Context does not count.
 - One fact per table cell, never `;`. Repeat the first column for more.
