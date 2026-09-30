@@ -66,6 +66,7 @@ start:
         move.b  #CIAF_LED,ciaa+ciapra ; overlay off: chip RAM at 0
         move.w  #CLEAR_ALL,dmacon(a6)
         move.w  #CLEAR_ALL,intena(a6)
+        move.w  #CLEAR_ALL,intreq(a6)
 
 ; vAmiga sets up bitplane DMA at the first frame's last line.
 frame:
@@ -152,4 +153,7 @@ excerpt_end:
 writes:
         incbin  "writes.bin"
 
-        cnop    0,$40000
+; A CPU that does not take the autovector from VPA reads the vector
+; numbers here during interrupt acknowledge: spurious, then levels 1-7.
+        dcb.b   $fffff0-*,0
+        dc.w    $0018,$0019,$001a,$001b,$001c,$001d,$001e,$001f
