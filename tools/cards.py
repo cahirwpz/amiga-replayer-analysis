@@ -11,10 +11,12 @@ A card is a Markdown file whose front matter has a `player` key. Checks, per
 docs/card-template.md; its model is the player's spec (tools/specs.py):
   - the file name matches `player`; `player` is a UADE binary, or has
     `replay: source`, and has a provenance in data/players.yaml
-  - front matter keys, with `template: 2`; sections present and in order
-  - Context matches what --write would generate, with the spec's link
-  - Composer's view: the aspects Notation and Cost, in order; each may
-    repeat
+  - front matter keys, with `template` 2 or 3; sections present and in
+    order, per template
+  - Context (template 2) matches what --write would generate, with the
+    spec's link
+  - Composer's view (template 2): the aspects Notation and Cost, in
+    order; each may repeat
   - no code blocks
   - no `;` in table cells; cited labels are readable CamelCase names
   - `base`: names another card; Composer's view becomes optional
@@ -46,13 +48,22 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # Analysis only. Facts about the player live in data/players.yaml.
 KEYS = ["player", "template", "ideas"]
-SECTIONS = [
-    ("Context", True),
-    ("Key ideas", True),
-    ("Composer's view", True),
-    ("What is unique", True),
-    ("Open questions", False),
-]
+TEMPLATES = {
+    2: [
+        ("Context", True),
+        ("Key ideas", True),
+        ("Composer's view", True),
+        ("What is unique", True),
+        ("Open questions", False),
+    ],
+    # The author's view: ideas, then the flow by owner, with its traps.
+    # No Context: data/players.yaml holds it.
+    3: [
+        ("Unique ideas", True),
+        ("How it plays", True),
+        ("Open questions", False),
+    ],
+}
 BASE_COVERS = {"Composer's view"}
 CONTEXT_HEADER = ["Fact", "Value"]
 COMPOSER_HEADER = ["Aspect", "Answer", "Source"]
@@ -93,8 +104,8 @@ def check(path, known, facts, sources):
         err(1, "front-matter", doc.meta_error)
     if "player" not in meta:
         return errors
-    if meta.get("template") != 2:
-        err(1, "front-matter", "`template` must be 2")
+    if meta.get("template") not in TEMPLATES:
+        err(1, "front-matter", f"`template` must be one of {list(TEMPLATES)}")
         return errors
     check_card(path, doc, known, facts, sources, err)
     return errors
@@ -195,9 +206,10 @@ def check_card(path, doc, known, facts, sources, err):
     check_player(path, meta, known, facts, err)
 
     found = heading_lines(doc)
-    order = [name for name, _ in SECTIONS]
+    template = TEMPLATES[meta["template"]]
+    order = [name for name, _ in template]
     present = [name for _, name in found]
-    for name, required in SECTIONS:
+    for name, required in template:
         if required and name not in present and not (delta and name in BASE_COVERS):
             err(1, "section", f"missing `## {name}`")
     for n, name in found:
@@ -251,7 +263,7 @@ def check_card(path, doc, known, facts, sources, err):
 def write_context(path, facts, sources):
     """Regenerate a card's Context; return True if it changed."""
     doc = read(path)
-    if doc.meta.get("template") != 2 or "player" not in doc.meta:
+    if doc.meta.get("template") not in TEMPLATES or "player" not in doc.meta:
         return False
     text = path.read_text(encoding="utf-8")
     rows = context_rows(str(doc.meta["player"]), facts, sources, path.parent)

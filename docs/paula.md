@@ -24,20 +24,11 @@ period and a volume. `hardware/paula.py:Channel`
 So replayers wait twice: before DMA on, and before they write the loop. ptplayer
 6.4 waits 576 CIA counts each time, with a one-shot CIA timer.
 
-## Tricks
+## Techniques
 
-| Trick         | What it gives                               | Cost                      | Model                       |
-| ------------- | ------------------------------------------- | ------------------------- | --------------------------- |
-| Loop counting | Waits in sample passes                      | One interrupt per reload  | —                           |
-| Loop counting | Sample chaining                             | One interrupt per reload  | —                           |
-| Mixing        | More than four voices                       | CPU time per output byte  | —                           |
-| Attach modes  | One channel modulates the next one          | A whole voice             | `:Attach`                   |
-| CIA timer     | Any tick rate, so the score sets a tempo    | A timer and its interrupt | `hardware/cia.py:CiaTimer`  |
-| Stop signal   | DMA on waits only until the channel is idle | A busy-wait per note      | `hardware/paula.py:Channel` |
-
-With its INTREQ bit clear, a stopped channel plays one more word and requests an
-interrupt. A write to AUDxDAT does the same from idle. The CPU can wait for that
-request, as [Digital Sonix & Chrome](../players/DigitalSonixChrome.md) does.
+Replayers combine these facts into a few techniques: silent loops, restart
+waits, mixing and more. They are listed in
+[Paula techniques](paula-techniques.md).
 
 ## Attach modes
 

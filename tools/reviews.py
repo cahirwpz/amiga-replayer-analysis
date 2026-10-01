@@ -16,9 +16,10 @@ Two reviews, each run by an agent in .claude/agents/ when the user asks:
 
 Each review reads the card, its spec and AGENTS.md, plus:
 
-  coverage  docs/control-dimensions.md, data/annot/<player>*.yaml,
-            data/disasm/<player>.cnf
-  writing   data/glossary.yaml, docs/card-template.md
+  coverage  docs/control-dimensions.md, docs/card-template.md,
+            data/annot/<player>*.yaml, data/disasm/<player>.cnf
+  writing   data/glossary.yaml, docs/card-template.md,
+            docs/paula-techniques.md
 
 A change to any input makes the review stale. Run coverage first: fixing
 the card after a writing review makes both stale.
@@ -61,8 +62,13 @@ FIELDS = {
 Review = dict[str, Any]  # one review entry: date, inputs, open
 
 SHARED = {
-    "coverage": ["AGENTS.md", "docs/control-dimensions.md"],
-    "writing": ["AGENTS.md", "data/glossary.yaml", "docs/card-template.md"],
+    "coverage": ["AGENTS.md", "docs/control-dimensions.md", "docs/card-template.md"],
+    "writing": [
+        "AGENTS.md",
+        "data/glossary.yaml",
+        "docs/card-template.md",
+        "docs/paula-techniques.md",
+    ],
 }
 
 

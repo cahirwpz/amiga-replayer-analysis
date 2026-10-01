@@ -21,7 +21,19 @@ All twelve pilot cards exist.
 
 In this order:
 
-1. [ ] Review the cards with the user.
+1. [ ] Review the cards with the user. The user opens each card; record verdicts
+       here. Order, synthesis first:
+   - Synthesis: SoundMon2.2, Fred, MugicianII, SynthDream, ArtOfNoise-8V,
+     FutureComposer1.4, Jochen_Hippel_ST, SonicArranger, AbyssHighestExperience,
+     VoodooSupremeSynthesizer, DigitalSonixChrome, MusiclineEditor,
+     DavidWhittaker, RobHubbard, TimFollin.
+   - Sequencing: TFMX-Pro, SoundFactory, JasonPage, PaulRobotham, MaxTrax,
+     MIDI-Loriciel, SonixMusicDriver, SoundPlayer, MED, FaceTheMusic.
+   - Mixing: MusicMaker-8V, Oktalyzer, TFMX-7V.
+   - SoundMon2.2 is the `template: 3` pilot. It awaits the user's verdict.
+   - Template 3 rules: the reader knows ProTracker replays and synth basics.
+     Traps are interactions between parts. Name interrupts and silence.
+   - SoundMon2.2 reviews are done. Next: the user's verdict on the pilot.
 2. Ideas:
    - [ ] Decide how to group `ideas/`: pages per technique slug, or per control
          dimension (see `docs/control-dimensions.md`).

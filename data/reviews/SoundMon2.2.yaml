@@ -1,18 +1,20 @@
 coverage:
   date: 2026-10-01
   inputs:
-    players/SoundMon2.2.md: ad8879a7f8c903b665b16f5820c4686eb387bbd0
-    specs/soundmon_22.py: 4b3e6de7032c8dc0517371810ec300455cc1efea
+    players/SoundMon2.2.md: a0e6597ab48875df59f05a884094b25e16e01b08
+    specs/soundmon_22.py: 666da0fbdf32cf3435466c30070ef80e821a159f
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
     docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    docs/card-template.md: b81148d8bc8c9fca18b6e7e549beb868e11f40e0
     data/annot/SoundMon2.2.yaml: 066024e7c93563c6825bfb4067269c4f9042bb7d
   open: []
 writing:
   date: 2026-10-01
   inputs:
-    players/SoundMon2.2.md: ad8879a7f8c903b665b16f5820c4686eb387bbd0
-    specs/soundmon_22.py: 4b3e6de7032c8dc0517371810ec300455cc1efea
+    players/SoundMon2.2.md: a0e6597ab48875df59f05a884094b25e16e01b08
+    specs/soundmon_22.py: 666da0fbdf32cf3435466c30070ef80e821a159f
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
     data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
-    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+    docs/card-template.md: b81148d8bc8c9fca18b6e7e549beb868e11f40e0
+    docs/paula-techniques.md: 2af1893670b0aafbc10b1b01b04b9f0d2a38a8cb
   open: []

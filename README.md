@@ -9,10 +9,11 @@ and its many relatives are left out.
 ## Where to start
 
 1. [Paula in one page](docs/paula.md): the hardware every replayer works around.
-2. [Player cards](players/): one page per replayer.
-3. [Player facts](data/players.yaml): provenance, lineage, authors.
-4. [Specs](specs/): each player's model; deep dives are in its docstrings.
-5. [Ideas](ideas/): one technique, compared across players.
+2. [Paula techniques](docs/paula-techniques.md): common ways replayers drive it.
+3. [Player cards](players/): one page per replayer.
+4. [Player facts](data/players.yaml): provenance, lineage, authors.
+5. [Specs](specs/): each player's model; deep dives are in its docstrings.
+6. [Ideas](ideas/): one technique, compared across players.
 
 Unknown terms are in [the glossary](docs/glossary.md).
 

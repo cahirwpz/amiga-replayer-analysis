@@ -383,14 +383,14 @@ class Cards(unittest.TestCase):
             run("cards.py", "--write", card)
             self.assertEqual(card.read_text(encoding="utf-8"), good)
 
-    def test_rejects_a_card_without_template_2(self):
+    def test_rejects_a_card_without_a_template(self):
         good = (FIXTURES / "good" / "MED.md").read_text(encoding="utf-8")
         with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
             card = Path(tmp) / "MED.md"
             card.write_text(good.replace("template: 2\n", ""), encoding="utf-8")
             code, _, out = run("cards.py", card)
             self.assertEqual(code, 1)
-            self.assertIn("`template` must be 2", out)
+            self.assertIn("`template` must be one of", out)
 
     def test_accepts_a_delta_card(self):
         delta = FIXTURES / "good" / "Jochen_Hippel_ST.md"
@@ -703,6 +703,7 @@ class Reviews(unittest.TestCase):
             "specs/fred.py": "",
             "docs/control-dimensions.md": "",
             "docs/card-template.md": "",
+            "docs/paula-techniques.md": "",
             "data/glossary.yaml": "",
             "AGENTS.md": "",
             "data/annot/Fred.yaml": "",

@@ -19,12 +19,14 @@ that reader, line by line.
 ## Read first
 
 1. `AGENTS.md`: the sections Depth, Writing and Evidence.
-2. `docs/card-template.md`.
+2. `docs/card-template.md`. The card's `template` in its front matter picks the
+   shape: 3 is current, 2 is older.
 3. `data/glossary.yaml`. The `avoid` section maps avoided terms to the preferred
    terms.
-4. The card you were given.
-5. The spec that the card's Context table links, `specs/<player>.py`.
-6. A delta card (`base:` in its front matter) also needs its base card.
+4. `docs/paula-techniques.md`: what a card links instead of explaining.
+5. The card you were given.
+6. The card's spec: `spec` of the player in `data/players.yaml`.
+7. A delta card (`base:` in its front matter) also needs its base card.
 
 Run shell commands as `source ./activate >/dev/null && python3 tools/...`.
 `python3 tools/cards.py players/<card>.md` reports structure problems; list them
@@ -47,7 +49,12 @@ as findings with rule `structure`.
 | `name`        | A number stands where a name belongs: a jump target, a command constant.          |
 | `repeat`      | A fact appears twice on the card, or repeats what the spec already holds.         |
 | `plain-words` | A rare word has a plain synonym.                                                  |
-| `unique`      | A "What is unique" bullet states what every tracker does.                         |
+| `unique`      | A unique idea, or a "What is unique" bullet, states what every tracker does.      |
+| `term`        | One meaning has two names on the card, or one name has two meanings.              |
+| `define`      | A card-local term is used before it is defined, or never defined.                 |
+| `trap`        | A **Trap:** is no interaction between replay parts, or sits under the wrong step. |
+| `paula`       | A common Paula technique is explained instead of linked.                          |
+| `editor`      | A sentence is about the editor, not the replay.                                   |
 
 Tables skip the word limit, not the other rules.
 
@@ -63,7 +70,7 @@ Say nothing but one fenced YAML block: a list of findings, or `[]`. Each finding
 has exactly these text fields:
 
 ```yaml
-- section: <h2 heading, or "front matter">
+- section: <h2 or h3 heading, or "front matter">
   quote: "<the exact text>"
   rule: <a rule from the table above>
   fix: "<the new text>"

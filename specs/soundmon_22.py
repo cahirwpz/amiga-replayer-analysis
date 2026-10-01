@@ -704,8 +704,8 @@ def CopyNextTable(module: Module, voice: Voice, saved: SavedWave) -> None:
 
 def ModWalker(module: Module, voice: Voice, at: int) -> None:
     """The value replaces wave byte 32, past the saved bytes: the next
-    note does not restore it. In a 16-word wave, byte 32 is the next
-    table's first byte."""
+    note does not restore it. A wave of 16 words or less never plays
+    that byte; it lies in the second half of the wave's table."""
     if voice.mod.mode == Mode.OFF or not voice.mod.due():
         return
     value = voice.mod.step()

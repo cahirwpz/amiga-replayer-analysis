@@ -1,13 +1,12 @@
 # Player card template
 
 Copy into `players/<name>.md`; angle brackets mark placeholders. Add `spec` to
-the player in [`data/players.yaml`](../data/players.yaml). Then run
-`tools/cards.py --write players/<name>.md` to fill Context.
+the player in [`data/players.yaml`](../data/players.yaml).
 
 ```markdown
 ---
 player: <binary name in ext/uade/players>
-template: 2
+template: 3
 ideas: [<idea slug>]
 ---
 
@@ -15,26 +14,23 @@ ideas: [<idea slug>]
 
 <One sentence: what makes it different.>
 
-## Context
-
-## Key ideas
+## Unique ideas
 
 - <Idea.> `:<Label>`
-  - Enables: <what it makes possible>.
-  - Costs: <limits or memory; CPU only when it is expensive>.
+  - Limits: <a hard limit of the idea>.
 
-## Composer's view
+## How it plays
 
-<What the composer edits. Name the format's own terms once, in code.>
+<The interrupts that drive the replay, and what each one does.>
 
-| Aspect   | Answer                                | Source                 |
-| -------- | ------------------------------------- | ---------------------- |
-| Notation | <what the editor shows>               | <(manual) or `:Label`> |
-| Cost     | <a musical figure, and what it takes> | <…>                    |
+<The order of one tick, in one or two sentences.>
 
-## What is unique
+### <Owner: player, voice, walker or table pool>
 
-- <One rule no common tracker has.> `:<Label>`
+<The state it holds.> `:<Class>`
+
+1. <A step, in code order: what it writes, from which state.> `:<Label>`
+   - **Trap:** <an interaction that a port gets wrong.>
 
 ## Open questions
 
@@ -43,10 +39,12 @@ ideas: [<idea slug>]
 
 ## Goals
 
-A card lets a reader:
+A card is a message from the replay's author. Its reader knows ProTracker
+replays, Paula and synth basics. A card lets the reader:
 
 - borrow an idea for a new player
-- see how a composer writes for the player
+- see how data and state become register writes, tick by tick
+- avoid the traps of a port
 - find the routine in the spec that shows the details
 
 [`control-dimensions.md`](control-dimensions.md) lists the control questions a
@@ -57,35 +55,41 @@ asked: [`tools/reviews.py`](../tools/reviews.py).
 
 - The spec, `specs/<player>.py`, is the model: state, routines and their order.
   [`tools/specs.py`](../tools/specs.py) checks it.
-- The card says what makes the player unique. It holds no code and nothing the
-  spec already holds.
+- The card explains how the player works and what makes it unique. It holds no
+  code.
 - Each `:<Label>` names a function or class in the spec.
 
 ## Sections
 
-- **Context** is generated from [`data/players.yaml`](../data/players.yaml),
-  which also holds manual links. Mark manual citations "(manual)".
-- **Key ideas**: each bullet gives the idea, what it enables and what it costs.
-  Rate CPU only when it is medium or high, with a reason.
-- **Composer's view**: prose, then Notation and Cost rows. A source is
-  "(manual)" or spec labels. Format notes feed the spec; cite its label.
-- **What is unique**: one flat list, no `###`. Each bullet is one rule on
-  timing, sound or sequencing, with its label. Leave out what every tracker
-  does.
+- **Unique ideas**: each bullet gives the idea, then its hard limits. Rate CPU
+  only when it is medium or high, with a reason.
+- **How it plays** starts with the interrupts. Then one `###` per owner of
+  state: its state, then what changes it.
+- A step names the register or the bytes it writes, and from which state. Steps
+  that run in a fixed order are numbered.
+- Each card says how a voice falls silent.
+- **Trap:** marks an interaction between parts of the replay. It sits under the
+  step that causes it.
+- Traps come from shared state, data with two readings, or row state mixed with
+  voice state.
+- **Open questions** cover the replay only, never the editor. Skip the section
+  when there is nothing to say.
 
 ## Delta cards
 
 A version with a distinct idea may share most of its model with the family's
-card. Its delta card has `base: <player>`, naming that card. It may skip
-Composer's view.
+card. Its delta card has `base: <player>`, naming that card. It covers only what
+differs.
 
 ## Rules
 
-- Paula mechanics go to [`paula.md`](paula.md) and
-  [`hardware/paula.py`](../hardware/paula.py). When a Paula feature is the idea,
-  keep a key idea and link there.
-- Game sound effects appear only as a distinct key idea.
-- Skip Open questions when there is nothing to say.
-- A card fits two printed pages, tables included. `tools/print.py --check`
-  counts them; Context does not count.
+- A term has one name and one meaning on a card. A card-local term is defined
+  once, with its owner's state.
+- Common Paula techniques are linked from
+  [`paula-techniques.md`](paula-techniques.md), not explained. Chip facts are in
+  [`paula.md`](paula.md).
+- Game sound effects appear only as a distinct unique idea.
+- A card fits two printed pages. `tools/print.py --check` counts them.
 - One fact per table cell, never `;`. Repeat the first column for more.
+- Template 2 cards keep their older shape until their review rewrites them.
+  [`tools/cards.py`](../tools/cards.py) checks both.
