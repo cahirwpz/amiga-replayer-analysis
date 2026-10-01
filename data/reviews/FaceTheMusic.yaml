@@ -1,0 +1,19 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/FaceTheMusic.md: 042c32283b3e342b383173cede2ff78d211056ce
+    specs/face_the_music.py: 81d4b08fe77bb9d700e07481f050bff9d8d317bc
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/FaceTheMusic.yaml: 280f210e18b7279cea9b3accdda5b64432130a36
+    data/disasm/FaceTheMusic.cnf: a84173e95a773608fbb58b794ff45c6c9146b84d
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/FaceTheMusic.md: 042c32283b3e342b383173cede2ff78d211056ce
+    specs/face_the_music.py: 81d4b08fe77bb9d700e07481f050bff9d8d317bc
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: c8f415edd21f7e515030f9e07d1410cbd623ff2d
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []

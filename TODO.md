@@ -25,8 +25,8 @@ All twelve pilot cards exist.
   - Runs vary. Writing found 1 issue, then 14. MaxTrax coverage found 0, then 7
     real gaps.
   - Coverage overclaimed once.
-  - Done: Fred, MaxTrax, AHX, David Whittaker, Digital Sonix & Chrome. Go on
-    alphabetically, three cards per batch. `tools/reviews.py` lists the state.
+  - Next card: `Jochen_Hippel_ST`. Go on alphabetically, three cards per batch.
+    `tools/reviews.py` lists the state.
   - A glossary edit makes every writing review stale. Rerun the stale ones at
     the end, not after each edit.
   - Writing reviews ask to split field lists ("A row: note, instrument, …") and

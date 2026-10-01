@@ -67,6 +67,8 @@ One line per term. Every acronym used in this repo must appear here.
 | **hard sync**        | A wave restarts at each cycle of another. Its rate changes timbre, not pitch.       |
 | **sample region**    | One part of a sample, played once or looped, e.g. an attack or a release.           |
 | **slew limiter**     | Limits each sample's move from the last. It rounds sharp edges.                     |
+| **sample pack**      | One sample that holds several samples. A command picks one.                         |
+| **fixed note**       | A note in an instrument's list or program that ignores the played note.             |
 | **sweep**            | A value that runs up and down between two limits, e.g. a pulse width.               |
 | **filter position**  | Which filtered copy of a wave plays.                                                |
 
@@ -124,6 +126,8 @@ What an operation does to a sound. The "(inference)" notes use these words.
 | **pattern**              | A block of rows, played by one or more tracks.                         |
 | **position**             | One entry of the song's play order: patterns to play.                  |
 | **section**              | One entry of a higher play order. It names a list of positions.        |
+| **measure**              | A fixed number of rows, set per module.                                |
+| **work track**           | The track that a track program's ops act on. At first, its own track.  |
 | **subsong**              | A separate tune inside one module.                                     |
 | **instrument**           | What a note plays: sample or waveform, plus settings.                  |
 | **instrument transpose** | Offset added to every instrument number of a track.                    |

@@ -18,8 +18,7 @@ An event can start a script: a program of 4-byte lines on the track.
 A script can wait, branch on pitch or volume, react to events, run four
 LFOs, and act on any other track.
 
-Left out: DeliTracker's hooks and song-end checks, the song loop events
-(PITCH_ONLY), Chase (after a seek, the last sample and volume replay), the
+Left out: DeliTracker's hooks and song-end checks, Chase (after a seek, the last sample and volume replay), the
 LED filter, and the tables' exact values: the model computes them.
 PairPeriods and StepTable come within 1 of the binary's tables,
 LfoWaves within 5.
@@ -48,7 +47,8 @@ TEMPO_MIN = 0x1000  # SetTempo: CIA counts
 WAIT_FOREVER = 0xFFFF  # ScriptWait 0: until an event
 RELEASE = 0x23  # a note event's pitch field: the note is released
 # A pattern event's top nibble; lower values carry a volume
-START_SCRIPT, PORTAMENTO, FADE, PITCH_ONLY = 0xB000, 0xC000, 0xD000, 0xE000
+START_SCRIPT, PORTAMENTO, FADE, REPEAT = 0xB000, 0xC000, 0xD000, 0xE000
+REPEATS_MAX = 16  # RepeatStack: 8 bytes per repeat
 LINE_LIMIT = 100_000  # model only: a script loop without a wait hangs the 68000
 
 # EventVolumes: an event's volume nibble 1-10. Nibble 3 gives 0; the
@@ -148,8 +148,14 @@ class Module:
     row_ticks: int = 1
     song_line: int = 0  # SongLine
     end_line: int = 0
+    measure: int = 16  # Measure: rows per measure
     restart_line: int = 0
     jump: int | None = None  # JumpToLine: the next row seeks
+    repeats: list[list[int]] = field(
+        default_factory=list
+    )  # RepeatStack: count, line, event
+    repeat_end: int = 0  # RepeatEnd: the line that seeks back; 0 none
+    repeat_line: int = 0  # SeekLine: where it seeks to
     ended: bool = False
     silent: Sample = field(default_factory=Sample)  # SilentSample
     pair_tune: list[int] = field(default_factory=lambda: [0] * PAIRS)  # PairTune
@@ -233,8 +239,8 @@ def LoadModule(module: Module) -> None:
     module.tempo = word(header, 4)
     module.track_mask, module.global_volume = header[7], header[8]
     module.ticks_per_row = header[10]
-    measure = header[11]
-    module.end_line = word(header, 2) * measure
+    module.measure = header[11]
+    module.end_line = word(header, 2) * module.measure
     module.scripts = [(0, 0)] * 64
     for _ in range(header[0x4C]):
         lines, index = word(data, at), word(data, at + 2)
@@ -273,6 +279,7 @@ def StartSong(module: Module) -> None:
         channel.play(paula.Sample(module.memory, module.silent.start, MIX_WORDS))
     module.next_periods = [214] * PAIRS
     module.song_line = module.restart_line
+    module.repeats, module.repeat_end = [], 0
     Seek(module)
     module.row_ticks = module.ticks_per_row
     PlayRows(module)
@@ -301,6 +308,10 @@ def PlayRows(module: Module) -> None:
         if module.track_mask & 1 << n:
             TrackRow(module, track)
     module.song_line += 1
+    if module.song_line == module.repeat_end:
+        module.song_line = module.repeat_line
+        Seek(module)
+        return
     if module.song_line == module.end_line:
         module.ended = True
         module.song_line = module.restart_line
@@ -342,7 +353,7 @@ def TrackRow(module: Module, track: Track) -> None:
         return
     if value == 0xF000:
         track.row_pos += 2
-    PatternEvent(module, track, word(data, track.row_pos))
+    PatternEvent(module, track, word(data, track.row_pos), track.row_pos)
     track.row_pos += 2
     following = word(data, track.row_pos) if track.row_pos < track.events_end else 0
     if following >= 0xF000:
@@ -352,9 +363,9 @@ def TrackRow(module: Module, track: Track) -> None:
         track.wait = track.spacing
 
 
-def PatternEvent(module: Module, track: Track, value: int) -> None:
+def PatternEvent(module: Module, track: Track, value: int, at: int) -> None:
     """START_SCRIPT starts a script, PORTAMENTO a portamento, FADE a
-    fade to 0. PITCH_ONLY sets only the pitch. Below START_SCRIPT: a
+    fade to 0. REPEAT opens or closes a repeat. Below START_SCRIPT: a
     sample in bits 6-11 and a volume in bits 12-15. Every kind but
     PORTAMENTO then takes bits 0-5 as a pitch. Each part that is
     set can raise its handler; a later one replaces an earlier one."""
@@ -373,7 +384,9 @@ def PatternEvent(module: Module, track: Track, value: int) -> None:
         track.script_wait = track.loop_count = track.pending = 0
         track.handlers = [0] * 6
         track.work = module.tracks.index(track)
-    elif kind != PITCH_ONLY:
+    elif kind == REPEAT:
+        Repeat(module, middle, at)
+    else:
         if middle:
             new_sample = True
             track.instrument = middle - 1
@@ -392,6 +405,31 @@ def PatternEvent(module: Module, track: Track, value: int) -> None:
     silent = track.start == module.silent.start
     if new_sample or silent or not sample.loop:
         StartSample(track, sample)
+
+
+def Repeat(module: Module, count: int, at: int) -> None:
+    """REPEAT with a count opens a repeat at the start of the measure.
+    It plays count - 1 more times. REPEAT without a count closes the
+    top repeat: at the next measure, every track seeks back. Repeats
+    nest. The opening event, read again after the seek, opens nothing."""
+    measure = module.measure
+    line = module.song_line // measure * measure
+    stack = module.repeats
+    if count:
+        if module.repeat_end:
+            if stack and stack[-1][2] == at:
+                module.repeat_end = 0
+        elif len(stack) < REPEATS_MAX:
+            stack.append([count - 1, line, at])
+        return
+    if not stack or module.repeat_end:
+        return
+    stack[-1][0] -= 1
+    if stack[-1][0] < 0:
+        stack.pop()
+        module.repeat_end = 0
+        return
+    module.repeat_end, module.repeat_line = line + measure, stack[-1][1]
 
 
 def Portamento(module: Module, track: Track, rows: int, note: int) -> None:
