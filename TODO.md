@@ -17,6 +17,48 @@ All twelve pilot cards exist.
 
 ## After the pilot
 
+### Priorities
+
+In this order:
+
+1. [ ] Review the cards with the user.
+2. Ideas:
+   - [ ] Decide how to group `ideas/`: pages per technique slug, or per control
+         dimension (see `docs/control-dimensions.md`).
+   - [ ] Write more technique pages in `ideas/`; `voice-mixing` is the first.
+   - [ ] Add a check that `ideas:` slugs in cards exist.
+   - [ ] Generate a technique index from the slugs, for the front page.
+3. [ ] Triage players, synthesis first. See [Triage](#triage).
+
+### Triage
+
+NostalgicPlayer's ports (`ext/nostalgicplayer/Source/Agents/Players`) are the
+shortlist and the map. A card still needs 68k code. Record each decision in
+`data/players.yaml`: a card, or a `skip`.
+
+Synthesis gaps (guess):
+
+- ring modulation and amplitude modulation
+- hard sync
+- synthesis per output sample
+- interpolation
+- C64-style pulse and filter
+
+Check `family` first. A newer version of a carded lineage needs a distinct idea.
+
+Players, in order:
+
+- [ ] `Sawteeth`: its own lineage, not in UADE. Find 68k code first, or ask the
+      user.
+- [ ] `ArtOfNoise-4V` and `ArtOfNoise-8V`, `SoundControl`, `MusicAssembler`: no
+      `family` yet.
+- [ ] `RonKlaren`, `BenDaglish`, and `MartinWalker` with its `ActivisionPro`
+      port. More likely control ideas than synthesis.
+- [ ] `HivelyTracker`: a delta card on AHX, only for a distinct idea.
+- [ ] `SIDMon1.0` and `DeltaMusic1.3`: their lineages' later versions were
+      skipped as covered. Likely `skip: lineage`.
+- [ ] Then the other players with `replay` `uade` and no decision, 82 in all.
+
 ### Review notes
 
 All card reviews are current. For the next rerun:
@@ -56,15 +98,6 @@ Fix in `tools/print.py:write_pdf`:
 
 - [ ] A table split across two pages repeats no header row.
 - [ ] A heading can land on the last line of a page.
-
-### Then
-
-- [ ] Review the cards with the user.
-- [ ] Decide how to group `ideas/`: pages per technique slug, or per control
-      dimension (see `docs/control-dimensions.md`).
-- [ ] Write more technique pages in `ideas/`; `voice-mixing` is the first.
-- [ ] Add a check that `ideas:` slugs in cards exist.
-- [ ] Generate a technique index from the slugs, for the front page.
 
 ## Open questions
 
