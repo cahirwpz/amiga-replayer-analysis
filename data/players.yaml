@@ -35,16 +35,18 @@ ArtOfNoise-4V:
   source: uade/artofnoise
   family: Art Of Noise
   author: Bastian Spiegel
+  skip: covered
+  covered_by: [ArtOfNoise-8V]
   note: same replay as the 8-voice version, without the mixer
   ports: [ext/nostalgicplayer/Source/Agents/Players/ArtOfNoise]
 
 ArtOfNoise-8V:
   source: uade/artofnoise
   provenance: original
+  spec: specs/art_of_noise_8v.py
   family: Art Of Noise
   author: Bastian Spiegel
   head: true
-  note: card queue. Synth instruments scan a wavetable, with ping-pong loops.
   ports: [ext/nostalgicplayer/Source/Agents/Players/ArtOfNoise]
 
 MED:

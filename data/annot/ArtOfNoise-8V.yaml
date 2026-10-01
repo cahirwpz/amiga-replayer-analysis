@@ -1,0 +1,51 @@
+# Annotations for Art Of Noise's 8-voice replay: the author's replay 1.6
+# and 8-channel mixer, adapted for UADE. Render: tools/annot.py
+source: ext/uade/amigasrc/players/uade/artofnoise/ArtofNoise8.s
+sha1: 3f0ce65473ec786a9292f4b271cb8862de0fb607
+
+labels:
+  # start
+  AON_INIT: Init
+  # tick
+  AON8_PLAY: Play
+  aon8_playnewstep: PlayNewStep
+  AON8_PLAYFX: PlayEffects
+  AON_GETDACHANNEL: ReadCell
+  aon_gdc_initsynth: StartSynth
+  aon_startsample: StartSample
+  aon_gdc_getarpeggio: PickArpeggio
+  aon_initADSR: InitEnvelope
+  # every tick, per voice
+  AON_DOFX: EffectsTick
+  AON_DOSYNTH: SynthTick
+  aon_dofx_viboldampl: VibratoTick
+  aon_dofx_portamentoup: CmdPortamentoUp
+  aon_dofx_portamentodown: CmdPortamentoDown
+  aon_dofx_toneslide: CmdToneSlide
+  aon_dofx_vibrato: CmdVibrato
+  aon_dofx_volumeslide: CmdVolumeSlide
+  aon_dofx_setvolume: CmdSetVolume
+  aon_dofx_setspd: CmdSetSpeed
+  aon_dofx_setwaveadsrspd: CmdWaveSpeed
+  aon_dofx_setarpspd: CmdArpeggioSpeed
+  aon_dofx_synthdrums: CmdSynthDrums
+  aon_dofx_settrackvol: CmdTrackVolume
+  aon_dofx_setwavecont: CmdWaveHold
+  aon_dofx_externalevent: CmdExternalEvent
+  # output
+  AON8_STARTINSTR.1: WriteShadow
+  AON8_STARTINSTR.2: WriteShadowLoop
+  # mixer
+  mix_init: MixInit
+  mix_startsamples: StartMixVoices
+  mix_startsample: StartMixVoice
+  mix_play: MixInterrupt
+  mix_mix_mix: MixPair
+
+types:
+  Instrument: [instr_control]
+  Score: [aon_posdata]
+  Voice: [aon_chflag]
+  Shadow: [mix_bypass]
+  MixVoice: [mix_wavestart]
+  Module: [aon_speed]

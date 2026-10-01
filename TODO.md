@@ -46,10 +46,9 @@ Synthesis gaps (guess):
 
 Check `family` first. A newer version of a carded lineage needs a distinct idea.
 
-- [ ] Card `ArtOfNoise-8V`: synth instruments scan a wavetable, with ping-pong
-      loops. Its 68k source is the author's.
-- [ ] Then mark `ArtOfNoise-4V` as covered by the 8V card.
-- [ ] Then the other 77 players with `replay` `uade` and no decision.
+- [ ] [Art Of Noise 8V](players/ArtOfNoise-8V.md): coverage and writing reviews.
+      Ask the user first.
+- [ ] The other 77 players with `replay` `uade` and no decision.
 
 Not in UADE, so not in `data/players.yaml`:
 
