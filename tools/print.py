@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
-"""Print player cards as 88-column text, and check that each fits its pages.
+"""Print player cards as text, and check that each fits its pages.
 
 Usage: print.py [--check | --pdf OUT.pdf] FILE.md|DIR...
 
   (no option)  print each card as the text that goes on paper
   --check      exit 1 if a card needs more than PAGES pages
-  --pdf        write the cards as one PDF: A4 landscape, two pages per
-               side, each card from a new side
+  --pdf        write the cards as one PDF: A4 portrait, each card from a
+               new page
 
-The paper: an A4 sheet in landscape holds two pages side by side, each 88
-columns wide in JetBrains Mono, 7.2 pt. The font size and the lines per page follow
-from the sheet, the margins and the font's advance width. A card may fill
-one side: PAGES pages.
+The paper: A4 portrait, JetBrains Mono at FONT_SIZE. The columns and the
+lines per page follow from the page, the margins and the font's advance
+width. A card may fill PAGES pages: one sheet, printed on both sides.
 
 Text leaves out the front matter and the Context section, which
 tools/cards.py generates. Headings print in bold, code spans without their
 backticks, labels without their leading colon, links as their text and
 an arrow (↗). The PDF sets code spans in italics and underlines link text;
-neither breaks across lines. The title prints at twice the
-size, over its own line and the blank line below it. Tables get columns wide enough for
+neither breaks across lines. The PDF prints the title at twice the size
+and headings at 1.4 (`##`) and 1.2 times (`###`); each still counts as
+one line. Tables get columns wide enough for
 their cells, then the widest columns shrink until the table fits; cells
 wrap inside their column.
 
@@ -44,24 +44,29 @@ from mdtools import children, read
 ROOT = Path(__file__).resolve().parent.parent
 FONTS = ROOT / ".venv" / "share" / "fonts"
 
-COLUMNS = 88
-PAGES = 2  # pages per card: one side of the sheet
-SHEET = (297.0, 210.0)  # A4 landscape, mm
-MARGIN = 10.0  # mm, around the sheet and between the two pages
+FONT_SIZE = 10.0  # points
+PAGES = 2  # pages per card: both sides of one sheet
+SHEET = (210.0, 297.0)  # A4 portrait, mm
+MARGIN = 10.0  # mm, around the page
 ADVANCE = 0.6  # JetBrains Mono's advance width, in em
 LEADING = 1.2  # line height, in font sizes
 PT = 25.4 / 72  # mm per point
 
-PAGE_WIDTH = (SHEET[0] - 3 * MARGIN) / 2
-FONT_SIZE = PAGE_WIDTH / COLUMNS / ADVANCE / PT  # points
+PAGE_WIDTH = SHEET[0] - 2 * MARGIN
+COLUMNS = int(PAGE_WIDTH / (FONT_SIZE * ADVANCE * PT))
 LINE_HEIGHT = FONT_SIZE * LEADING * PT  # mm
 LINES = int((SHEET[1] - 2 * MARGIN) / LINE_HEIGHT)  # per page
 
-TITLE_SCALE = 2  # the card's title, over its line and the blank one below
 SKIPPED = {"Context"}  # generated sections
 GAP = "  "  # between table columns
 
-Line = tuple[str, bool]  # text with marks, bold
+Line = tuple[str, int]  # text with marks, weight
+
+# Weights. The PDF prints a heading larger; text counts it as one line.
+PLAIN, BOLD, SUBSECTION, SECTION, TITLE = 0, 1, 2, 3, 4
+SCALE = {SUBSECTION: 1.2, SECTION: 1.4, TITLE: 2.0}  # font size, in FONT_SIZE
+# Baseline shift, in lines: the title also fills the blank line below it.
+SHIFT = {SUBSECTION: 0.1, SECTION: 0.25, TITLE: 0.6}
 
 # Link text and code spans sit between these marks; a link's arrow follows
 # it. Their spaces become no-break spaces, so wrapping keeps them whole.
@@ -166,7 +171,10 @@ def render_tokens(tokens: list[Token]) -> list[Line]:
             title = text(tokens[i + 1])
             skip = token.tag == "h2" and title in SKIPPED
             if not skip:
-                out += [("", False), (title, True), ("", False)]
+                weight = {"h1": TITLE, "h2": SECTION, "h3": SUBSECTION}.get(
+                    token.tag, BOLD
+                )
+                out += [("", PLAIN), (title, weight), ("", PLAIN)]
             i += 3
             continue
         if skip or kind == "front_matter":
@@ -253,7 +261,7 @@ def count(n: int, noun: str) -> str:
 
 
 def write_pdf(paths: list[Path], out: Path) -> int:
-    """Write the PDF; return its number of sides."""
+    """Write the PDF; return its number of pages."""
     from fpdf import FPDF
 
     styles = {"": "Regular", "B": "Bold", "I": "Italic", "BI": "BoldItalic"}
@@ -263,7 +271,7 @@ def write_pdf(paths: list[Path], out: Path) -> int:
     for file in files.values():
         if not file.is_file():
             sys.exit(f"{file} is missing; run: source ./activate")
-    pdf = FPDF(orientation="L", unit="mm", format="A4")
+    pdf = FPDF(orientation="P", unit="mm", format="A4")
     pdf.set_auto_page_break(False)
     pdf.set_margins(0, 0, 0)
     pdf.set_title("Player cards")
@@ -271,18 +279,17 @@ def write_pdf(paths: list[Path], out: Path) -> int:
         pdf.add_font("mono", style, str(file))
     for path in paths:
         lines = render(path)
-        for side in range(0, len(lines), LINES * 2):
-            pdf.add_page()
-            for n, (line, strong) in enumerate(lines[side : side + LINES * 2]):
-                page, row = divmod(n, LINES)
-                x = MARGIN + page * (PAGE_WIDTH + MARGIN)
-                y = MARGIN + (row + 1) * LINE_HEIGHT - (LEADING - 1) * FONT_SIZE * PT
-                if side == 0 and n == 0:
-                    # The title, at TITLE_SCALE, fills its line and the blank one below.
-                    y += (TITLE_SCALE - 1.4) * LINE_HEIGHT  # room below
-                    draw(pdf, x, y, line, strong, FONT_SIZE * TITLE_SCALE)
-                    continue
-                draw(pdf, x, y, line, strong)
+        for row, (line, weight) in enumerate(lines):
+            if row % LINES == 0:
+                pdf.add_page()
+            x = MARGIN
+            y = (
+                MARGIN
+                + (row % LINES + 1) * LINE_HEIGHT
+                - (LEADING - 1) * FONT_SIZE * PT
+            )
+            y += SHIFT.get(weight, 0) * LINE_HEIGHT
+            draw(pdf, x, y, line, weight > PLAIN, FONT_SIZE * SCALE.get(weight, 1))
     out.parent.mkdir(parents=True, exist_ok=True)
     pdf.output(str(out))
     return pdf.pages_count
@@ -318,8 +325,8 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
     paths, pdf = cards(args.paths), args.pdf
     if pdf:
-        sides = write_pdf(paths, pdf)
-        print(f"wrote {pdf}: {count(len(paths), 'card')} on {count(sides, 'side')}")
+        written = write_pdf(paths, pdf)
+        print(f"wrote {pdf}: {count(len(paths), 'card')} on {count(written, 'page')}")
         return 0
     if args.check:
         errors = [

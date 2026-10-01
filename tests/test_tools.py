@@ -836,7 +836,7 @@ One sentence that is long enough to wrap past the eighty columns of a page, twic
         self.assertEqual(self.printer.pages([("", False)] * lines * 2), 2)
         self.assertEqual(self.printer.pages([("", False)] * (lines * 2 + 1)), 3)
 
-    def test_pdf_starts_each_card_on_a_new_side(self):
+    def test_pdf_starts_each_card_on_a_new_page(self):
         if not (self.printer.FONTS / "JetBrainsMono-Regular.ttf").is_file():
             self.skipTest("the font is missing; run: source ./activate")
         out = self.card.with_suffix(".pdf")
@@ -851,8 +851,10 @@ One sentence that is long enough to wrap past the eighty columns of a page, twic
         pdf = FPDF(orientation="L", unit="mm", format="A4")
         pdf.add_font("mono", "", str(font))
         pdf.set_font("mono", size=self.printer.FONT_SIZE)
-        width = pdf.get_string_width("x" * self.printer.COLUMNS)
-        self.assertAlmostEqual(width, self.printer.PAGE_WIDTH, places=3)
+        advance = pdf.get_string_width("x")
+        width = advance * self.printer.COLUMNS
+        self.assertLessEqual(width, self.printer.PAGE_WIDTH)
+        self.assertGreater(width + advance, self.printer.PAGE_WIDTH)
 
 
 if __name__ == "__main__":
