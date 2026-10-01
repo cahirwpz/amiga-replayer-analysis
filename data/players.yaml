@@ -33,9 +33,19 @@ AbyssHighestExperience:
 
 ArtOfNoise-4V:
   source: uade/artofnoise
+  family: Art Of Noise
+  author: Bastian Spiegel
+  note: same replay as the 8-voice version, without the mixer
+  ports: [ext/nostalgicplayer/Source/Agents/Players/ArtOfNoise]
 
 ArtOfNoise-8V:
   source: uade/artofnoise
+  provenance: original
+  family: Art Of Noise
+  author: Bastian Spiegel
+  head: true
+  note: card queue. Synth instruments scan a wavetable, with ping-pong loops.
+  ports: [ext/nostalgicplayer/Source/Agents/Players/ArtOfNoise]
 
 MED:
   provenance: original
@@ -58,10 +68,12 @@ DavidWhittaker:
 
 DeltaMusic1.3:
   source: ext/c-flod/neoart/flod/deltamusic
-  note: C port of Flod 4.1 D1Player
+  note: C port of Flod 4.1 D1Player. Synth parts as in Future Composer.
   provenance: port
   ports: [ext/nostalgicplayer/Source/Agents/Players/DeltaMusic10]
   family: Delta Music
+  skip: covered
+  covered_by: [FutureComposer1.4]
 
 DeltaMusic2.0:
   source: ext/c-flod/neoart/flod/deltamusic
@@ -147,6 +159,10 @@ MugicianII:
   links: [https://proofofconcept.nl/portfolio/mugician/]
 
 SIDMon1.0:
+  replay: module
+  skip: covered
+  covered_by: [MugicianII]
+  note: its wave mixing returns in Mugician II as PhaseWithB
   ports:
     - ext/c-flod/neoart/flod/sidmon
     - ext/nostalgicplayer/Source/Agents/Players/SidMon10
@@ -409,12 +425,30 @@ QuadraComposer:
 
 # Guess: NostalgicPlayer's Activision Pro is Martin Walker's format.
 MartinWalker:
+  skip: covered
+  covered_by: [MugicianII, DavidWhittaker]
+  note: speed tables as swing, and a fractional tempo
   ports: [ext/nostalgicplayer/Source/Agents/Players/ActivisionPro]
 
 # Read to settle `check` in tools/inventory.py.
 BenDaglish:
   replay: module
+  skip: primitive
+  note: sample effects and volume fades only
   ports: [ext/nostalgicplayer/Source/Agents/Players/BenDaglish]
+
+MusicAssembler:
+  replay: module
+  skip: covered
+  covered_by: [JasonPage]
+  note: an instrument moves its start offset inside the wave
+  ports: [ext/nostalgicplayer/Source/Agents/Players/MusicAssembler]
+
+SoundControl:
+  skip: covered
+  covered_by: [JasonPage, TFMX-Pro]
+  note: instruments are lists of sample commands
+  ports: [ext/nostalgicplayer/Source/Agents/Players/SoundControl]
 
 BladePacker:
   replay: uade

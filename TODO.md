@@ -46,18 +46,22 @@ Synthesis gaps (guess):
 
 Check `family` first. A newer version of a carded lineage needs a distinct idea.
 
-Players, in order:
+- [ ] Card `ArtOfNoise-8V`: synth instruments scan a wavetable, with ping-pong
+      loops. Its 68k source is the author's.
+- [ ] Then mark `ArtOfNoise-4V` as covered by the 8V card.
+- [ ] Then the other 77 players with `replay` `uade` and no decision.
 
-- [ ] `Sawteeth`: its own lineage, not in UADE. Find 68k code first, or ask the
-      user.
-- [ ] `ArtOfNoise-4V` and `ArtOfNoise-8V`, `SoundControl`, `MusicAssembler`: no
-      `family` yet.
-- [ ] `RonKlaren`, `BenDaglish`, and `MartinWalker` with its `ActivisionPro`
-      port. More likely control ideas than synthesis.
-- [ ] `HivelyTracker`: a delta card on AHX, only for a distinct idea.
-- [ ] `SIDMon1.0` and `DeltaMusic1.3`: their lineages' later versions were
-      skipped as covered. Likely `skip: lineage`.
-- [ ] Then the other players with `replay` `uade` and no decision, 82 in all.
+Not in UADE, so not in `data/players.yaml`:
+
+- `Sawteeth`: a BeOS editor, not an Amiga format. Out of scope.
+- `HivelyTracker`: skipped by the user. Its replay is C, with no 68k code.
+- `RonKlaren`: a one-byte sweep, as on [Fred](players/Fred.md) (port).
+
+Reading notes:
+
+- `ext/uade/amigasrc/players/uade/artofnoise/ArtofNoise8.s:mix_channels`: a
+  linear interpolation pass, commented out. The only interpolation attempt seen
+  so far.
 
 ### Review notes
 
