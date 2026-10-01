@@ -24,7 +24,7 @@ mixer. Each Paula channel plays two voices. Its audio interrupt mixes
 the next 128 bytes for that pair, apart from the tick.
 
 Not modelled: the E commands, the commands that combine a slide with
-another command, the sample offset command, pattern loops and delays,
+another command, the sample offset command on samples, pattern loops and delays,
 the filter, the period table's other 15 fine tunes, and the switches
 that the 4-voice replay uses for long samples and for clicks.
 """
@@ -75,6 +75,7 @@ PORTAMENTO_UP = 0x01
 PORTAMENTO_DOWN = 0x02
 TONE_SLIDE = 0x03
 VIBRATO = 0x04
+SAMPLE_OFFSET = 0x09  # on a synth note: shifts the steps by half parts
 VOLUME_SLIDE = 0x0A
 SET_VOLUME = 0x0C
 SET_SPEED = 0x0F
@@ -429,7 +430,9 @@ def StartSynth(module: Module, voice: Voice, inst: Instrument, note: int) -> Non
     """The same wave as before plays on: no restart. With the scan held,
     the scan runs on too. Otherwise the scan starts again from the
     first part, and the loop is the first loop part. The step counter
-    starts full: the first step comes one tick later, at any speed."""
+    starts full: the first step comes one tick later, at any speed.
+    SAMPLE_OFFSET moves the steps and the loop into the wave, by half a
+    part per argument step. The first part still plays from the start."""
     voice.synth = True
     if not note:
         return
@@ -444,14 +447,20 @@ def StartSynth(module: Module, voice: Voice, inst: Instrument, note: int) -> Non
                 start_vibrato(voice, inst)
                 return
         voice.wave = wave
+        offset = 0
+        if voice.command == SAMPLE_OFFSET:
+            offset = voice.arg * inst.part_words
+            if voice.scan_frozen:
+                voice.scan_at = voice.loop = offset
         if not voice.scan_frozen:
             part = 2 * inst.part_words
             voice.start, voice.length = 0, inst.part_words
             voice.loop_length = inst.part_words
-            voice.scan_at, voice.scan_step = 0, part
-            voice.scan_end = inst.scan_parts * part
-            voice.scan_loop = voice.loop = inst.scan_loop * part
-            voice.scan_loop_end = (inst.scan_loop + inst.scan_loop_parts) * part
+            voice.scan_at, voice.scan_step = offset, part
+            voice.scan_end = offset + inst.scan_parts * part
+            voice.scan_loop = voice.loop = offset + inst.scan_loop * part
+            end = inst.scan_loop + inst.scan_loop_parts
+            voice.scan_loop_end = offset + end * part
             voice.scan_count = voice.scan_speed = inst.scan_speed
             voice.scan_mode = inst.scan_mode
     start_vibrato(voice, inst)

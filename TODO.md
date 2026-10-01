@@ -46,8 +46,6 @@ Synthesis gaps (guess):
 
 Check `family` first. A newer version of a carded lineage needs a distinct idea.
 
-- [ ] [Art Of Noise 8V](players/ArtOfNoise-8V.md): coverage and writing reviews.
-      Ask the user first.
 - [ ] The other 77 players with `replay` `uade` and no decision.
 
 Not in UADE, so not in `data/players.yaml`:

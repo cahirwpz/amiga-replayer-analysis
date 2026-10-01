@@ -1,0 +1,18 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/ArtOfNoise-8V.md: 408b40606a3698989bf13e663b42f3af97cb6122
+    specs/art_of_noise_8v.py: a3b602b1a32052d5b8aa871d6452c16840e20eda
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/ArtOfNoise-8V.yaml: b5de28042f03583a2650405dd87ac57f96c9d45d
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/ArtOfNoise-8V.md: 408b40606a3698989bf13e663b42f3af97cb6122
+    specs/art_of_noise_8v.py: a3b602b1a32052d5b8aa871d6452c16840e20eda
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []
