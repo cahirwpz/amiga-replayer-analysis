@@ -32,6 +32,7 @@ labels:
   # every tick, per voice
   PlayEffects: PlayEffects
   ArpeggioPlay: ArpeggioPlay
+  WaitArpg: ArpeggioWait
   VibratoPlay: VibratoPlay
   TremoloPlay: TremoloPlay
   ADSRPlay: AdsrPlay

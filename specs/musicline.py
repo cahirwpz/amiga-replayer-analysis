@@ -300,6 +300,7 @@ class Channel:
     arp_on: bool = False
     arp_list: int | None = None  # ArpeggioList's table
     arp_pitch_set: bool = False  # the table set this row's pitch
+    arp_wait: bool = False  # ArpWait: the note waits for a step with a note
     arp_pos: int = 0
     arp_count: int = 0
     arp_groove_phase: bool = False
@@ -519,6 +520,7 @@ def PlayArpg(module: Module, ch: Channel) -> None:
     inst = ch.inst
     if not ch.note or inst is None:
         return
+    ch.arp_wait = False
     if ch.arp_list is None and not ch.arp_on:
         if not inst.effects1 >> ARPEGGIO & 1:
             return
@@ -526,7 +528,7 @@ def PlayArpg(module: Module, ch: Channel) -> None:
     if not ch.inst_number:
         return
     ch.arp_pos, ch.arp_count, ch.arp_base = 0, inst.arp_speed, ch.note
-    arp_step(module, ch, inst)
+    arp_step(module, ch, inst, first=True)
 
 
 def ArpeggioPlay(module: Module, ch: Channel) -> None:
@@ -543,10 +545,14 @@ def ArpeggioPlay(module: Module, ch: Channel) -> None:
     arp_step(module, ch, inst)
 
 
-def arp_step(module: Module, ch: Channel, inst: Instrument) -> None:
+def arp_step(
+    module: Module, ch: Channel, inst: Instrument, first: bool = False
+) -> None:
     """A step: a note, a wave and two commands. A negative note adds to
     the row's note; a positive one is fixed. Each step may pick its own
-    wave, sample or not."""
+    wave, sample or not. A first step without a note holds back the
+    note-on: ArpeggioWait. Steps without a note then pass, until one with a
+    note starts the instrument."""
     number = ch.arp_list if ch.arp_list is not None else inst.arp_table
     table = module.arpeggios.get(number)
     if table is None:
@@ -555,6 +561,9 @@ def arp_step(module: Module, ch: Channel, inst: Instrument) -> None:
         at = 6 * ch.arp_pos
         ch.arp_pos = (ch.arp_pos + 1) & (ROWS - 1)
         note = table[at]
+        if not note and (first or ch.arp_wait):
+            ch.arp_wait = True
+            return
         if note == ARP_END:
             ch.arp_on, ch.arp_list = False, None
             return
@@ -579,14 +588,20 @@ def arp_step(module: Module, ch: Channel, inst: Instrument) -> None:
     if not ch.arp_fixed:
         note = (note + PART_END + ch.arp_base) & 0xFF
     ch.pitch, ch.arp_pitch_set = signed_byte(note) * STEP, True
+    if ch.arp_wait:
+        ch.arp_wait = False
+        PlayInst(module, ch)
 
 
 def PlayInst(module: Module, ch: Channel) -> None:
     """With an instrument number: the sample or wave and the volume.
     With a note: the pitch, then InstPlay starts the instrument's
-    effects. A note without an instrument number changes only the pitch."""
+    effects. A note without an instrument number changes only the pitch.
+    A waiting arpeggio holds all of this back. An instrument with a
+    slide speed glides: each note after its first slides from the
+    current pitch to the new note (not modelled)."""
     inst = ch.inst
-    if inst is None:
+    if inst is None or ch.arp_wait:
         return
     source = ch.wave_override or inst.sample
     if ch.inst_number and ch.note:
