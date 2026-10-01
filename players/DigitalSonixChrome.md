@@ -27,7 +27,7 @@ rows.
   `:SetFixedPeriod` `:ReadRow`
   - Enables: a row takes one byte per voice.
   - Costs: every pitch of a sound takes its own instrument.
-- An instrument plays its loop a set number of times, then silence. The audio
+- After a set number of loop passes, an instrument falls silent. The audio
   interrupt counts the passes. `:SetLoopCount` `:CountLoopPass`
   - Enables: note lengths with no work in the tick.
   - Costs: a note's length is set in sample passes, not in rows.
@@ -35,8 +35,8 @@ rows.
   `:ReadRow` `:LoopsDone`
   - Enables: music and sound effects share four channels.
   - Costs: the voice's music notes are lost while the sound effect plays.
-- A note start waits for the channel's own
-  [signal that it stopped](../docs/paula.md). `:StartNote` `:WaitAudioIrq`
+- A note start waits for the channel's [audio interrupt](../docs/paula.md).
+  `:StartNote` `:WaitAudioIrq`
   - Enables: DMA on restarts the channel, with no fixed wait.
   - Costs: the CPU busy-waits up to two periods of the old word per note.
 
@@ -45,18 +45,16 @@ rows.
 The composer writes positions, patterns and instruments. A pattern holds one
 instrument number per voice per row. Nothing changes a note once it plays.
 
-| Aspect   | Answer                                                  | Source            |
-| -------- | ------------------------------------------------------- | ----------------- |
-| Notation | A row: one instrument number per voice, or none.        | `:ReadRow`        |
-| Notation | A position: a pattern, its rows and its repeat count.   | `:Position`       |
-| Notation | The module's tempo sets the ticks per row.              | `:LoadModule`     |
-| Cost     | A melody takes one instrument per pitch.                | `:SetFixedPeriod` |
-| Cost     | A shorter note is an instrument with fewer loops.       | `:SetLoopCount`   |
-| Cost     | A repeated pattern is one position with a repeat count. | `:CountRepeats`   |
+| Aspect   | Answer                                                  | Source          |
+| -------- | ------------------------------------------------------- | --------------- |
+| Notation | A row: one instrument number per voice, or none.        | `:ReadRow`      |
+| Notation | A position: a pattern, its rows and its repeat count.   | `:Position`     |
+| Cost     | A shorter note is an instrument with fewer loops.       | `:SetLoopCount` |
+| Cost     | A repeated pattern is one position with a repeat count. | `:CountRepeats` |
 
 ## What is unique
 
-- The module's tempo gives the speed once: 1500 / tempo, rounded. No command
+- The module's tempo sets the speed once, as 1500 / tempo, rounded. No command
   changes it. `:LoadModule`
 - Subsongs follow each other in the positions. A position with 0 repeats ends
   each one. `:StartSubsong` `:NextPosition`

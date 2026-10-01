@@ -23,7 +23,7 @@ A synth sound runs a volume list and a wave list that jump into each other.
 
 - Two command lists per instrument, each at its own speed. `:SynthTick`
   - Enables: a slow volume shape beside fast wave changes.
-  - Costs: 256 bytes of lists per synth sound.
+  - Costs: 256 bytes of lists per synth sound (estimate).
 - Each list can set the other's position. `:VolJumpWaveList` `:WaveJumpVolList`
   - Enables: a volume phase can start a new wave phrase.
   - Costs: a jump has no condition.
@@ -45,21 +45,21 @@ A synth sound runs a volume list and a wave list that jump into each other.
 The composer writes notes into patterns, one track per voice. MED calls a
 pattern a `block` and a row a `line`. A section names a list of positions.
 
-| Aspect   | Answer                                                                      | Source            |
-| -------- | --------------------------------------------------------------------------- | ----------------- |
-| Notation | A tracker grid: one column per track, one line per row.                     | (manual)          |
-| Notation | Synth sounds: a volume list and a wave list.                                | `:SynthSound`     |
-| Notation | Gate time: an instrument setting, `hold`, in ticks.                         | `:Instrument`     |
-| Notation | `CMD_HOLD_DECAY` sets gate time and decay for later notes.                  | `:CmdHoldDecay`   |
-| Notation | `CMD_WAVE_LIST_POS` sets where the next synth note starts in its wave list. | `:CmdWaveListPos` |
-| Notation | `TRIPLET_FIRST` plays the row's note a third into the row.                  | `:MiscTick`       |
-| Notation | `TRIPLET_SECOND` plays the row's note two thirds into the row.              | `:MiscTick`       |
-| Cost     | A synth arpeggio is one wave-list opcode.                                   | `:ArpeggioStart`  |
-| Cost     | A pattern arpeggio needs its command on every row.                          | `:ArpeggioTick`   |
-| Cost     | A drawn envelope is one waveform and one opcode.                            | `:VolEnvOnce`     |
-| Cost     | The gate time starts the release. It needs no pattern data.                 | `:SynthRelease`   |
-| Cost     | A sample's release lowers the volume by a set step each tick.               | `:SynthRelease`   |
-| Cost     | Synth vibrato depth is in periods. Low notes get a smaller pitch change.    | `:SynthVibrato`   |
+| Aspect   | Answer                                                                      | Source                         |
+| -------- | --------------------------------------------------------------------------- | ------------------------------ |
+| Notation | A tracker grid: one column per track.                                       | (manual)                       |
+| Notation | Synth sounds: a volume list and a wave list.                                | `:SynthSound`                  |
+| Notation | Gate time: an instrument setting, `hold`, in ticks.                         | `:Instrument`                  |
+| Notation | `CMD_HOLD_DECAY` sets gate time and decay for later notes.                  | `:CmdHoldDecay`                |
+| Notation | `CMD_WAVE_LIST_POS` sets where the next synth note starts in its wave list. | `:CmdWaveListPos`              |
+| Notation | `TRIPLET_FIRST` plays the row's note a third into the row.                  | `:MiscTick`                    |
+| Notation | `TRIPLET_SECOND` plays the row's note two thirds into the row.              | `:MiscTick`                    |
+| Cost     | A synth arpeggio is one wave-list opcode.                                   | `:ArpeggioStart`               |
+| Cost     | A pattern arpeggio needs its command on every row.                          | `:ArpeggioTick`                |
+| Cost     | A drawn envelope is one waveform and one opcode.                            | `:VolEnvOnce`                  |
+| Cost     | The gate time starts the release. It needs no pattern data.                 | `:SynthRelease`                |
+| Cost     | A sample's release lowers the volume by a set step each tick.               | `:SynthRelease` `:HoldAndFade` |
+| Cost     | Synth vibrato depth is in periods. Low notes get a smaller pitch change.    | `:SynthVibrato`                |
 
 ## What is unique
 

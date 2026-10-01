@@ -1,7 +1,7 @@
 coverage:
   date: 2026-10-01
   inputs:
-    players/MugicianII.md: 5605c413c14ddc601999986d1f8b597a39dc16c2
+    players/MugicianII.md: 31f49c2e172d745e00979063a6363bdaa70cb21c
     specs/mugician_ii.py: d811764b4bbddcdd35fa5f221f98413c2a57168c
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
     docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
@@ -10,9 +10,9 @@ coverage:
 writing:
   date: 2026-10-01
   inputs:
-    players/MugicianII.md: 5605c413c14ddc601999986d1f8b597a39dc16c2
+    players/MugicianII.md: 31f49c2e172d745e00979063a6363bdaa70cb21c
     specs/mugician_ii.py: d811764b4bbddcdd35fa5f221f98413c2a57168c
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
-    data/glossary.yaml: 9130afc9b84032e90e2af39e0cf37ccdfb7f96bf
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
     docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
   open: []

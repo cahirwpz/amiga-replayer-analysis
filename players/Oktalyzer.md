@@ -28,14 +28,14 @@ mixed pair.
 - Samples for mixed tracks are stored at 7 bits. Two of them sum within 8 bits.
   `:SampleEntry`
   - Enables: mixing without clipping or volume tables.
-  - Enables: such samples may lie outside chip memory.
+  - Enables: such samples may lie in any memory.
 - Replay 2 plays a buffer at the higher note's period. It adds that track
   unchanged and resamples only the lower one. `:PickHigher` `:MixPair`
   - Enables: one track of each pair keeps full quality.
   - Costs: the lower track repeats bytes, with no interpolation.
-- Replay 2 fills one frame per note, from a table. A channel that runs ahead
-  gets one word more. `:DriftFix` `:QueueBuffers`
-  - Enables: buffers at any rate follow the frame tick.
+- Replay 2 sizes each buffer to one tick at the note's period, from a table. A
+  channel that runs ahead gets one word more. `:DriftFix` `:QueueBuffers`
+  - Enables: buffers at any rate follow the tick.
   - Costs: a busy-wait when a channel runs late.
 - Replay 1 writes one resampler per note, from 36 routines of straight code.
   Repeated source bytes become averages. `:BuildResamplers` `:RunResampler`
@@ -54,7 +54,6 @@ tracker shows commands as `0`–`9` and `A`–`Z`.
 | Notation | A row has 4 to 8 cells, one per track.                                 | `:NewRow`         |
 | Notation | A sample is for mixed tracks, single tracks, or both.                  | `:SampleEntry`    |
 | Cost     | A mixed track ignores the sample's loop and volume.                    | `:GetMixedNotes`  |
-| Cost     | Volume on a mixed track sets both tracks of its channel.               | `:SetVolume`      |
 | Cost     | A mixed track has no portamento.                                       | `:TrackEffects`   |
 | Cost     | A mixed track moves its pitch in semitones.                            | `:TrackEffects`   |
 | Cost     | Single channels slide in periods or in semitones.                      | `:ChannelEffects` |
@@ -71,8 +70,8 @@ tracker shows commands as `0`–`9` and `A`–`Z`.
   needs. The rest never plays. `:ResampleTrack` `:ResampleLower`
 - Adds of 4 bytes at once let a carry spill into the byte before. `:AddPacked`
   `:AddHigher`
-- Three arpeggio commands cycle in different orders. Command `A` starts below
-  the note. `:ChannelEffects`
+- Three arpeggio commands cycle in different orders. `ARPEGGIO` starts below the
+  note. `:ChannelEffects`
 
 ## Open questions
 

@@ -1,7 +1,7 @@
 coverage:
   date: 2026-10-01
   inputs:
-    players/JasonPage.md: e2aad33bd72a6bbd49e23de40b558c812738f7c2
+    players/JasonPage.md: 6131c9cd2e648ede12c2ac993e54eea67d9bf55c
     specs/jason_page.py: 42fd483e6102319041e3d94eab1baa94219f1234
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
     docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
@@ -10,9 +10,9 @@ coverage:
 writing:
   date: 2026-10-01
   inputs:
-    players/JasonPage.md: e2aad33bd72a6bbd49e23de40b558c812738f7c2
+    players/JasonPage.md: 6131c9cd2e648ede12c2ac993e54eea67d9bf55c
     specs/jason_page.py: 42fd483e6102319041e3d94eab1baa94219f1234
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
-    data/glossary.yaml: c8f415edd21f7e515030f9e07d1410cbd623ff2d
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
     docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
   open: []

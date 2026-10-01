@@ -17,19 +17,22 @@ All twelve pilot cards exist.
 
 ## After the pilot
 
-### Card reviews
+### Review notes
 
-- [ ] Next session: rerun the 17 writing reviews that glossary edits made stale.
-      `tools/reviews.py` lists them.
-  - Ask the user first. A rerun costs one agent per card.
-  - Check each finding against the code before recording it.
-  - Writing reviews ask to split field lists ("A row: note, instrument, …") and
-    "fact. Consequence." cells. Both stay, as on the Fred card.
-  - Coverage overclaimed "spec misses it" twice. Read the spec before agreeing.
-  - The glossary page is at the cogload limit of 3000 words. Reword cards in
-    plain words before adding a term.
-  - The session may not load `.claude/agents/`. Then run a general-purpose agent
-    with the agent file as its prompt.
+All card reviews are current. For the next rerun:
+
+- Ask the user first. A rerun costs one agent per card.
+- Check each finding against the code before recording it. Coverage overclaimed
+  "spec misses it" twice.
+- Writing reviews ask to split field lists ("A row: note, instrument, …") and
+  "fact. Consequence." cells. Both stay, as on the Fred card.
+- Writing reviews flag "wave" as missing from the glossary. It stays a plain
+  word, as in the glossary's own entries.
+- A count computed from code constants gets "(estimate)".
+- The glossary page is at the cogload limit of 3000 words. Reword cards in plain
+  words before adding a term.
+- The session may not load `.claude/agents/`. Then run a general-purpose agent
+  with the agent file as its prompt.
 
 ### Hardware model
 

@@ -30,28 +30,28 @@ sweep.
 
 ## Key ideas
 
-- Transform, phase, mix, resonance and filter run in a chain every tick. Each
-  writes its own buffer, and the channel plays the last one. `:TransformPlay`
-  `:PhasePlay` `:MixPlay` `:ResonancePlay` `:FilterPlay`
+- Transform, phase, mix, resonance and filter run in a chain every tick. The
+  channel plays the last one's buffer. `:TransformPlay` `:PhasePlay` `:MixPlay`
+  `:ResonancePlay` `:FilterPlay`
   - Enables: a moving timbre from a few stored waves.
   - Costs: CPU high. Up to five passes run over 256 bytes per voice per tick.
 - One sweep type drives every effect. It has a start, a speed, a bounce range,
   turns and a delay. `:Counter` `:InstPlay`
-  - Enables: an "init" flag lets a sweep run on across notes of one instrument.
-  - Enables: a "step" flag moves the sweep once per note instead.
+  - Enables: a flag lets a sweep run on across notes of one instrument.
+  - Enables: another flag moves the sweep once per note instead.
 - Each channel has its own position list, speed and `groove`, Musicline's term
   for swing. `:PlayVoice`
   - Enables: patterns of different lengths, and swing on one voice only.
 - A new note on the same wave does not restart DMA. The wave plays on and takes
   the new pitch. `:DmaPlay`
-  - Enables: wave notes without clicks (inference), and without a phase reset.
-- A second CIA timer waits for the stopped channels, instead of a busy loop.
+  - Enables: wave notes without clicks (inference).
+- A second CIA timer waits for the stopped channels, instead of a busy-wait.
   `:DmaPlay` `:DmaStart` `:DmaLoop`
   - Enables: the CPU works during the wait.
 - In 8-channel mode, the CPU mixes two voices into each channel's buffer. The
   volume tables halve each voice to keep the sum in a byte. `:Play8Channels`
   `:MixVoice` `:MixAdd`
-  - Enables: eight voices; see [voice mixing](../ideas/voice-mixing.md).
+  - Enables: eight voices. See [voice mixing](../ideas/voice-mixing.md).
   - Costs: CPU high. The mix rate is fixed at `MIX_PERIOD`.
 
 ## Composer's view

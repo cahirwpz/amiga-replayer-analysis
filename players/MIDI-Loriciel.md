@@ -38,8 +38,8 @@ An SMF player with four allocated voices, where each note plays its sample once.
 - The game adds an offset to every new note's volume. `:SetVolumeOffset`
   - Enables: one music volume for the game, with no work per tick.
   - Costs: playing notes keep their volume.
-- At the end of every tick, each busy voice queues silence. So a sample plays
-  once and never loops. `:SilentTail`
+- At the end of every tick, each busy voice queues silence. A sample plays once
+  and never loops. `:SilentTail`
   - Enables: notes that end by themselves, with no timer per voice.
   - Costs: a held note falls silent when its sample ends.
 - A tick is four pulses. Tempo sets the CIA timer's rate. `:TrackTick`
@@ -59,7 +59,7 @@ gives each MIDI program a list of samples, each for a range of notes.
 | Notation | A tempo meta event sets the tick rate.                                             | `:TempoEvent`    |
 | Notation | The header's division gives the PPQ.                                               | `:InitTracks`    |
 | Notation | A negative division becomes 192 PPQ.                                               | `:InitTracks`    |
-| Cost     | A long note needs a long sample. Nothing loops.                                    | `:SilentTail`    |
+| Cost     | A long note needs a long sample.                                                   | `:SilentTail`    |
 | Cost     | With two notes of different pitch on one MIDI channel, the first note-off fails.   | `:MatchNoteOff`  |
 | Cost     | A voice whose note-off did nothing stays busy until it is stolen.                  | `:MatchNoteOff`  |
 | Cost     | With two same-pitch notes on one MIDI channel, the first note-off ends the second. | `:MatchNoteOff`  |

@@ -30,15 +30,14 @@ decides which one gets the voice.
 
 ## Key ideas
 
-- A pattern note and a game sound effect make the same request for an instrument
-  program. A request below the voice's priority is dropped. `:NotePeriod`
+- A request below the voice's priority is dropped. `:NotePeriod`
   `:RequestProgram` `:OpEnd`
   - Enables: an important sound effect cuts the music. A minor one is dropped.
   - Costs: a note is lost while a program of higher priority plays.
-- Branch markers in a position list take a position that the game wrote. One
-  marker loops until then, the other plays on. `:BranchLoop` `:BranchPass`
+- Branch entries in a position list take a position that the game wrote. One
+  entry loops until then, the other plays on. `:BranchLoop` `:BranchPass`
   - Enables: music that changes part on a game event, at a musical boundary.
-  - Costs: every voice must reach its marker in the same row.
+  - Costs: every voice must reach its branch entry in the same row.
 - The game can save the song's place in one of four slots. It can restore it
   later. `:SaveSong` `:RestoreSong`
   - Enables: a short tune interrupts the music. Then the music plays on.
@@ -58,27 +57,27 @@ decides which one gets the voice.
 The composer writes a position list per voice, patterns, and instrument
 programs.
 
-| Aspect   | Answer                                                             | Source                       |
-| -------- | ------------------------------------------------------------------ | ---------------------------- |
-| Notation | A position word: a pattern and a transpose.                        | `:ReadPosition`              |
-| Notation | A position word may be a marker and its target instead.            | `:ReadPosition`              |
-| Notation | Pattern bytes: note, row length, program number, rest, slide, cap. | `:ReadPattern`               |
-| Notation | A program: word opcodes, most with one word argument.              | `:RunProgram`                |
-| Cost     | A note lasts its voice's row length.                               | `:ReadPattern`               |
-| Cost     | A new row length takes one byte.                                   | `:ReadPattern`               |
-| Cost     | `SLIDE_TO_NOTE` slides to each note instead of starting a program. | `:NotePeriod` `:NoteSlide`   |
-| Cost     | A program number from `FIRST_TIE` up plays the note legato.        | `:NotePeriod`                |
-| Cost     | The release starts after a set number of ticks. No note-off does.  | `:EnvelopeTick`              |
-| Cost     | A program must start the sound itself, with a DMA opcode.          | `:OpDmaOn`                   |
-| Cost     | The first voice that reaches its end marker ends the song.         | `:ReadPosition`              |
-| Cost     | An arpeggio is a program loop of note offsets and waits.           | `:OpNoteOffset` `:OpLoopEnd` |
+| Aspect   | Answer                                                              | Source                       |
+| -------- | ------------------------------------------------------------------- | ---------------------------- |
+| Notation | A position word: a pattern and a transpose.                         | `:ReadPosition`              |
+| Notation | A position word may be a branch entry and its target instead.       | `:ReadPosition`              |
+| Notation | Pattern bytes: note, note length, program number, rest, slide, cap. | `:ReadPattern`               |
+| Notation | A program: word opcodes, most with one word argument.               | `:RunProgram`                |
+| Cost     | A note lasts its voice's note length, in rows.                      | `:ReadPattern`               |
+| Cost     | A new note length takes one byte.                                   | `:ReadPattern`               |
+| Cost     | `SLIDE_TO_NOTE` slides to each note instead of starting a program.  | `:NotePeriod` `:NoteSlide`   |
+| Cost     | A program number from `FIRST_TIE` up plays the note legato.         | `:NotePeriod`                |
+| Cost     | The release starts after a set number of ticks. No note-off does.   | `:EnvelopeTick`              |
+| Cost     | A program must start the sound itself, with a DMA opcode.           | `:OpDmaOn`                   |
+| Cost     | The first voice that reaches its end entry ends the song.           | `:ReadPosition`              |
+| Cost     | An arpeggio is a program loop of note offsets and waits.            | `:OpNoteOffset` `:OpLoopEnd` |
 
 ## What is unique
 
 - The master volume caps each voice instead of scaling it. A fade reaches loud
   voices first. `:WriteChannel`
-- A pattern byte sets a volume cap. It acts only when the program asks, and only
-  during sustain. `:OpCeiling` `:EnvelopeTick`
+- A pattern byte sets a volume cap. It acts only during sustain, when the
+  program asks for it. `:OpCeiling` `:EnvelopeTick`
 - The morph compares bytes unsigned. A byte that crosses 0 passes through +127
   and -128. `:OpMorph`
 
@@ -86,6 +85,6 @@ programs.
 
 - Restoring a slot writes into later slots, and from slot 1 into sample
   pointers. Did a game use those slots? `:RestoreSong`
-- Which games used the branch markers, and for what? `:BranchLoop`
+- Which games used the branch entries, and for what? `:BranchLoop`
 - The Amiga uses four of the header's eight position lists. Are the others for
   the format's versions on other machines (guess)? `:InitModule`

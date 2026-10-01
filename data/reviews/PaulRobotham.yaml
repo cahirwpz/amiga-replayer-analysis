@@ -1,7 +1,7 @@
 coverage:
   date: 2026-10-01
   inputs:
-    players/PaulRobotham.md: 5089940e4660ee9564dde5e0ca797b477a03f4fb
+    players/PaulRobotham.md: 53abef5b1e08a6c7521240dd6bb3d7dbeb46f35d
     specs/paul_robotham.py: e49b9a5af327faafa4f48f86ac8c79803da8a31d
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
     docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
@@ -10,9 +10,9 @@ coverage:
 writing:
   date: 2026-10-01
   inputs:
-    players/PaulRobotham.md: 5089940e4660ee9564dde5e0ca797b477a03f4fb
+    players/PaulRobotham.md: 53abef5b1e08a6c7521240dd6bb3d7dbeb46f35d
     specs/paul_robotham.py: e49b9a5af327faafa4f48f86ac8c79803da8a31d
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
-    data/glossary.yaml: 9130afc9b84032e90e2af39e0cf37ccdfb7f96bf
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
     docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
   open: []

@@ -1,7 +1,7 @@
 coverage:
   date: 2026-10-01
   inputs:
-    players/FutureComposer1.4.md: 26dfd3e28ec84ca0a7d16e82c9ef9f29a474869a
+    players/FutureComposer1.4.md: 4f944254dd0349a415458e84be824922e5477854
     specs/future_composer_14.py: 9807e2bf9078f545e50c152e26bdd1cfb857fff7
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
     docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
@@ -10,9 +10,9 @@ coverage:
 writing:
   date: 2026-10-01
   inputs:
-    players/FutureComposer1.4.md: 26dfd3e28ec84ca0a7d16e82c9ef9f29a474869a
+    players/FutureComposer1.4.md: 4f944254dd0349a415458e84be824922e5477854
     specs/future_composer_14.py: 9807e2bf9078f545e50c152e26bdd1cfb857fff7
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
-    data/glossary.yaml: c8f415edd21f7e515030f9e07d1410cbd623ff2d
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
     docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
   open: []

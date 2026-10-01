@@ -54,7 +54,7 @@ note, an instrument, a command byte and an argument.
 | Notation | Voices 3 to 6 play the second subsong.                                    | `:Play`                      |
 | Notation | An instrument: waves to play, for volume and vibrato, and for its effect. | `:Instrument`                |
 | Cost     | A command byte below `FIRST_COMMAND` is a slide target note.              | `:ReadRow`                   |
-| Cost     | A command comes only with a note.                                         | `:RowCommands`               |
+| Cost     | A command comes only with a note.                                         | `:ReadRow`                   |
 | Cost     | A command lasts until the next note.                                      | `:RowCommands`               |
 | Cost     | A loud volume needs wave bytes near -128.                                 | `:VolumeFromWave`            |
 | Cost     | `LEGATO` changes the wave without a restart.                              | `:StartWave`                 |

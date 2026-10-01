@@ -1,7 +1,7 @@
 coverage:
   date: 2026-10-01
   inputs:
-    players/MusiclineEditor.md: 4232917382c137cc9a8c576f58d7dd8512529429
+    players/MusiclineEditor.md: 8f89b18faee8b16b531939a2cfdd71b82de2a945
     specs/musicline.py: ec25f06466278be9ff3144e3dd20829c53771d92
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
     docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
@@ -10,9 +10,9 @@ coverage:
 writing:
   date: 2026-10-01
   inputs:
-    players/MusiclineEditor.md: 4232917382c137cc9a8c576f58d7dd8512529429
+    players/MusiclineEditor.md: 8f89b18faee8b16b531939a2cfdd71b82de2a945
     specs/musicline.py: ec25f06466278be9ff3144e3dd20829c53771d92
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
-    data/glossary.yaml: 9130afc9b84032e90e2af39e0cf37ccdfb7f96bf
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
     docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
   open: []

@@ -6,7 +6,8 @@ ideas: [pitch-list, volume-list, sample-pack, instrument-transpose]
 
 # Future Composer 1.4
 
-Each instrument runs two command lists: volume, and pitch with waveform.
+Each instrument runs a volume list and a pitch list. The pitch list also picks
+the waveform.
 
 ## Context
 
@@ -34,10 +35,10 @@ Each instrument runs two command lists: volume, and pitch with waveform.
   - Enables: envelopes of any shape, at their own speed.
   - Costs: at most 59 bytes per instrument.
 - A pitch list byte with the `LOCKED` bit set is a fixed note. `:LockedNote`
-  - Enables: drums and effects that ignore the played note.
+  - Enables: sounds that ignore the played note, e.g. drums.
   - Costs: a fixed note ignores all transposes.
 - `PACK` picks one sample out of a sample pack of up to 20. `:SampleFromPack`
-  - Enables: many drum samples in one of the 10 sample slots.
+  - Enables: many samples in one of the 10 sample slots.
   - Costs: the pack needs its own header.
 - Positions transpose notes and instrument numbers per voice. `:NextPosition`
   `:AddInstrTranspose`
@@ -50,27 +51,27 @@ The composer writes positions, patterns, instruments and pitch lists. The source
 calls a pitch list `FREQseq`. An instrument names its pitch list and holds its
 volume list.
 
-| Aspect   | Answer                                                              | Source             |
-| -------- | ------------------------------------------------------------------- | ------------------ |
-| Notation | A row: a note, and a byte with the instrument and portamento bits.  | `:ReadNote`        |
-| Notation | A position: pattern, transpose, instrument transpose per voice.     | `:Position`        |
-| Notation | An instrument: volume speed, pitch list, vibrato, then volume list. | `:StartInstrument` |
-| Cost     | An arpeggio is a pitch list loop of transposes.                     | `:ReadTranspose`   |
-| Cost     | Portamento takes its speed from the next row's instrument byte.     | `:SlideSpeed`      |
-| Cost     | Portamento has no target note.                                      | `:DoSlide`         |
-| Cost     | Portamento slides until a row with a note or a stop bit.            | `:ReadNote`        |
-| Cost     | Portamento and pitch slides add up on top of the arpeggio.          | `:CalcPeriod`      |
-| Cost     | Only a new note clears the sum of both slides.                      | `:ReadNote`        |
-| Cost     | `CHANGE_WAVE` swaps the wave at the end of the playing loop.        | `:ChangeWave`      |
-| Cost     | `SET_WAVE` and `PACK` restart the volume list.                      | `:RestartVolList`  |
-| Cost     | A pattern shorter than 32 rows ends with the note `PATTERN_END`.    | `:NewRow`          |
+| Aspect   | Answer                                                              | Source                            |
+| -------- | ------------------------------------------------------------------- | --------------------------------- |
+| Notation | A row: a note, and a byte with the instrument and portamento bits.  | `:ReadNote`                       |
+| Notation | A position: pattern, transpose, instrument transpose per voice.     | `:Position`                       |
+| Notation | An instrument: volume speed, pitch list, vibrato, then volume list. | `:StartInstrument`                |
+| Cost     | An arpeggio is a pitch list loop of transposes.                     | `:ReadPitchList` `:ReadTranspose` |
+| Cost     | Portamento takes its speed from the next row's instrument byte.     | `:SlideSpeed`                     |
+| Cost     | Portamento has no target note.                                      | `:DoSlide`                        |
+| Cost     | Portamento slides until a row with a note or a stop bit.            | `:ReadNote`                       |
+| Cost     | Portamento and pitch slides add up on top of the arpeggio.          | `:CalcPeriod`                     |
+| Cost     | Only a new note clears the sum of both slides.                      | `:ReadNote`                       |
+| Cost     | `CHANGE_WAVE` swaps the wave at the end of the playing loop.        | `:ChangeWave`                     |
+| Cost     | `SET_WAVE` and `PACK` restart the volume list.                      | `:RestartVolList`                 |
+| Cost     | A pattern shorter than 32 rows ends with the note `PATTERN_END`.    | `:NewRow`                         |
 
 ## What is unique
 
 - The loop is written one tick after the wave starts, with no busy-wait.
   `:WriteLoops`
-- Vibrato depth doubles for each octave down, so its width in semitones stays
-  about the same. `:VibratoTick`
+- Vibrato depth doubles for each octave down. Its width in semitones stays about
+  the same. `:VibratoTick`
 - Portamento, pitch slides and volume slides step every second tick. `:DoSlide`
   `:PitchBend` `:VolumeBend`
 - Each voice steps to its next position at its own pattern end. `:NextPosition`
@@ -80,5 +81,5 @@ volume list.
 
 ## Open questions
 
-- Only the tick's own work separates DMA off and on. Does a low note then miss
-  its restart (guess)? `:Play`
+- Only the tick's own work separates DMA off and on. Does a low note miss its
+  restart (guess)? `:Play`

@@ -77,6 +77,7 @@ instrument names its pitch list and holds its volume list.
   `:NoisePeriod`
 - In noise mode, the noise pitch follows the note. `:PitchToPeriod`
 - `MMME` modules scale vibrato and slide by the period. `:ScaledVibrato`
+  `:ScaledSlide`
 - Older modules double the vibrato for each octave down. They slide in period
   units. `:OctaveVibrato` `:PeriodSlide`
 - A silent chip channel restarts an empty sample every tick. Each restart

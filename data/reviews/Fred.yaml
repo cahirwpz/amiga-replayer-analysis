@@ -1,7 +1,7 @@
 coverage:
-  date: 2026-09-30
+  date: 2026-10-01
   inputs:
-    players/Fred.md: 09ec3314148e6dac2016b00200e9d6b17269eb05
+    players/Fred.md: ff87c83f2338c7cf276533d6a0a7635aa82f98a9
     specs/fred.py: 4d3714812f7eef6a754097949e0e69100af99517
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
     docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
@@ -9,11 +9,11 @@ coverage:
     data/disasm/Fred.cnf: e85f4f29aad200d1fad6eacd3969f52e191df776
   open: []
 writing:
-  date: 2026-09-30
+  date: 2026-10-01
   inputs:
-    players/Fred.md: 09ec3314148e6dac2016b00200e9d6b17269eb05
+    players/Fred.md: ff87c83f2338c7cf276533d6a0a7635aa82f98a9
     specs/fred.py: 4d3714812f7eef6a754097949e0e69100af99517
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
-    data/glossary.yaml: 8a09a7b2f91ad7427a604e839126f3a0f80fc6c9
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
     docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
   open: []

@@ -46,24 +46,24 @@ Track programs react to events and steer any of eight mixed tracks.
 
 The composer writes one event list per track and a set of programs.
 
-| Aspect   | Answer                                                          | Source                            |
-| -------- | --------------------------------------------------------------- | --------------------------------- |
-| Notation | A note event: pitch, sample and volume in one word.             | `:PatternEvent`                   |
-| Notation | A wait word holds the rows until the next event.                | `:TrackRow`                       |
-| Notation | A track without wait words spaces its events evenly.            | `:TrackRow`                       |
-| Notation | `START_SCRIPT` starts a program on the track.                   | `:PatternEvent`                   |
-| Notation | `PORTAMENTO` slides to a pitch over N rows.                     | `:Portamento`                     |
-| Notation | `FADE` fades to silence over N rows.                            | `:Fade`                           |
-| Notation | A note without a sample plays a looping sample on, legato.      | `:PatternEvent`                   |
-| Notation | `REPEAT` with a count opens a repeat.                           | `:Repeat`                         |
-| Notation | `REPEAT` without a count closes a repeat.                       | `:Repeat`                         |
-| Notation | Ops set, add to or subtract from the loop length during a note. | `:SetLoopLength` `:AddLoopLength` |
-| Cost     | A release event does nothing without a release handler.         | `:PatternEvent`                   |
-| Cost     | A note event spans 34 semitones.                                | `:PatternEvent`                   |
-| Cost     | Pitch moves in steps of 1/8 semitone.                           | `:SetPitch`                       |
-| Cost     | Volume value 3 gives 0 (guess: a typo for 14).                  | `:PatternEvent`                   |
-| Cost     | Nothing clips a pair's sum. A loud pair wraps around.           | `:MixPair`                        |
-| Cost     | Program loops do not nest. A track has one loop counter.        | `:ScriptLoop`                     |
+| Aspect   | Answer                                                              | Source                            |
+| -------- | ------------------------------------------------------------------- | --------------------------------- |
+| Notation | A note event: pitch, sample and volume in one word.                 | `:PatternEvent`                   |
+| Notation | A wait word holds the rows until the next event.                    | `:TrackRow`                       |
+| Notation | A track without wait words spaces its events evenly.                | `:TrackRow`                       |
+| Notation | `START_SCRIPT` starts a program on the track.                       | `:PatternEvent`                   |
+| Notation | `PORTAMENTO` slides to a pitch over N rows.                         | `:Portamento`                     |
+| Notation | `FADE` fades to silence over N rows.                                | `:Fade`                           |
+| Notation | A note without a sample plays a looping sample on, legato.          | `:PatternEvent`                   |
+| Notation | `REPEAT` with a count opens a repeat.                               | `:Repeat`                         |
+| Notation | `REPEAT` without a count closes a repeat.                           | `:Repeat`                         |
+| Notation | Opcodes set, add to or subtract from the loop length during a note. | `:SetLoopLength` `:AddLoopLength` |
+| Cost     | A release event does nothing without a release handler.             | `:PatternEvent`                   |
+| Cost     | A note event spans 34 semitones.                                    | `:PatternEvent`                   |
+| Cost     | Pitch moves in steps of 1/8 semitone.                               | `:SetPitch`                       |
+| Cost     | Volume value 3 gives 0 (guess: a typo for 14).                      | `:PatternEvent`                   |
+| Cost     | Nothing clips a pair's sum. A loud pair wraps around.               | `:MixPair`                        |
+| Cost     | Program loops do not nest. A track has one loop counter.            | `:ScriptLoop`                     |
 
 ## What is unique
 
@@ -73,9 +73,9 @@ The composer writes one event list per track and a set of programs.
   beats volume, and volume beats sample. `:PatternEvent`
 - The lower track of a pair jumps to its loop start early, by its pitch ratio.
   `:MixPair`
-- A clone copies the detune pointer too. The clone's detune then changes the
-  source's pair. `:CloneTrack`
-- Two ops that move the sample start have bugs. They use the wrong register.
+- A clone copies the detune pointer too. The clone's detune changes the source's
+  pair. `:CloneTrack`
+- Two opcodes that move the sample start have bugs. They use the wrong register.
   `:AddSampleStart` `:SubSampleStart`
 
 ## Open questions

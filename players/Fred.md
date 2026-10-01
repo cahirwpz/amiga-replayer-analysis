@@ -7,7 +7,7 @@ ideas: [replay-in-module, byte-write-sweep, in-place-waveform-effects]
 # Fred
 
 Each voice builds its own wave. A pulse moves an edge one byte per step. A morph
-adds scaled deltas to a wave.
+adds scaled differences to a wave.
 
 ## Context
 
@@ -26,12 +26,12 @@ adds scaled deltas to a wave.
   - Enables: a pulse-width sweep, as on the C64, for one byte write per step.
   - Costs: the wave is at most 64 bytes long.
 - Each tick, a morph instrument rewrites 32 bytes. Each byte is the source plus
-  the step times a delta. `:MorphStep` `:MorphWrite`
+  the step times a difference. `:MorphStep` `:MorphWrite`
   - Enables: a wave morphs into a second shape and back.
   - Costs: medium CPU. It takes 32 multiplies per tick per voice, about 2% of a
     frame (estimate).
-- Each voice owns its buffer. So two voices on one instrument sweep
-  independently. `:Voice`
+- Two voices on one instrument sweep independently, each in its own buffer.
+  `:Voice`
 - Restart flags choose whether each note restarts the sweep. An `INSTRUMENT`
   command always restarts it. `:NoteOn`
   - Enables: one sweep can run through a whole phrase.
@@ -66,14 +66,13 @@ pattern is a stream of notes, waits and commands.
 
 ## What is unique
 
-- Effects run only while Paula reports the channel's DMA as on. So a `REST`
-  freezes the envelope, arpeggio and sweep. `:Arpeggio`
+- Effects run only while Paula reports the channel's DMA as on. A `REST` turns
+  DMA off and freezes the envelope, arpeggio and sweep. `:Arpeggio` `:Rest`
 - A glide adds its share on top of the arpeggio. At its end, the note becomes
   the target note. `:Portamento`
 - A glide runs on across later notes. Only its first note sets its start and
   distance. `:NoteOn`
-- A fade lowers the volume once per playing voice. Four voices fade four times
-  as fast as one. `:Volume`
+- A fade lowers the volume once per playing voice. `:Volume`
 - Notes below 32 keep DMA on before them. The gap test compares signed bytes.
   `:CountDown`
 - The loop offset moves the start in bytes. It shortens the length in words.

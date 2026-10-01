@@ -32,7 +32,7 @@ No samples. Every sound comes from built-in waves and their filtered copies.
 - Each wave gets 31 low-pass and 31 high-pass copies. A filter position picks
   one copy. `:MakeFilters`
   - Enables: filter sweeps with no filter work during play.
-  - Costs: 412 kB of memory for the waves and their copies.
+  - Costs: 412 kB of memory for the waves and their copies (estimate).
 - Each voice loops one 640-byte buffer. A new wave refills it with copies of
   itself. `:FillBuffer` `:WriteVoice`
   - Enables: wave changes with no DMA restart and no busy-wait.
@@ -67,7 +67,7 @@ settings and its program.
 | Cost     | Vibrato depth is in periods. Low notes get a smaller pitch change.            | `:Vibrato`            |
 | Cost     | A note with `TONE_SLIDE` or `TONE_SLIDE_VOLUME` slides from the last note.    | `:ReadRow`            |
 | Cost     | Pulse width limits are for the longest wave. Shorter waves have fewer widths. | `:SetInstrument`      |
-| Cost     | A note delay or note cut needs a value below the speed.                       | `:ReadRow`            |
+| Cost     | A delayed note or a note cut needs a value below the speed.                   | `:ReadRow`            |
 | Cost     | Revision 0 modules lack `FILTER_SET` and `FILTER_POSITION`.                   | `:PerformanceCommand` |
 
 ## What is unique

@@ -1,7 +1,7 @@
 coverage:
   date: 2026-10-01
   inputs:
-    players/MusicMaker-8V.md: 672eb9aed1e4dc79474ca2ef6afa7a248dd22306
+    players/MusicMaker-8V.md: d2fccc1bbb807a6f6c0644e44e83e2ddf18b545b
     specs/music_maker_8v.py: fed76bf29bb0f1ee630f3f5248491570eeae12d1
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
     docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
@@ -10,9 +10,9 @@ coverage:
 writing:
   date: 2026-10-01
   inputs:
-    players/MusicMaker-8V.md: 672eb9aed1e4dc79474ca2ef6afa7a248dd22306
+    players/MusicMaker-8V.md: d2fccc1bbb807a6f6c0644e44e83e2ddf18b545b
     specs/music_maker_8v.py: fed76bf29bb0f1ee630f3f5248491570eeae12d1
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
-    data/glossary.yaml: 9130afc9b84032e90e2af39e0cf37ccdfb7f96bf
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
     docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
   open: []

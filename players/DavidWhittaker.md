@@ -84,8 +84,8 @@ come before a note and stay until changed.
 
 ## What is unique
 
-- With `Ntsc` set, every sixth tick is dropped. A 60 Hz host then plays at the
-  50 Hz speed. `:Play`
+- With `Ntsc` set, every sixth tick is dropped. A 60 Hz host plays at the 50 Hz
+  speed. `:Play`
 - A score fade ends the song when the volume reaches 0. `:Fade`
 - A sample effect plays at its recorded rate. Its length and rate set its
   duration in ticks. `:InitEffectSamples`

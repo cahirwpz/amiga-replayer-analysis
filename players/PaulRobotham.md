@@ -64,7 +64,7 @@ tables. Voice settings hold until a command changes them.
 | Notation | `END_BYTE` ends the voice for good.                                       | `:VoiceEnd`                 |
 | Cost     | A length that rounds to 0 ticks stalls its voice for 65 536 ticks.        | `:ReadLength`               |
 | Cost     | An arpeggio is written out as notes. No command plays one.                | `:RunCommand`               |
-| Cost     | A new instrument turns legato mode off. The mode must be set again.       | `:SetInstrument`            |
+| Cost     | A new instrument turns legato mode off.                                   | `:SetInstrument`            |
 | Cost     | Every voice waits 10 ticks before its first byte.                         | `:InitSong`                 |
 | Cost     | One command in any stream fades the whole song.                           | `:FadeMaster` `:MasterFade` |
 
@@ -75,7 +75,6 @@ tables. Voice settings hold until a command changes them.
 - A stream command starts a fade. This release lasts until a note restarts the
   sample. `:FadeOut` `:FadeStep` `:EnvelopeTick`
 - An envelope with no jump repeats every 64 ticks. `:EnvelopeTick`
-- A tie restarts neither the envelope nor the vibrato. `:ReadLength`
 
 ## Open questions
 

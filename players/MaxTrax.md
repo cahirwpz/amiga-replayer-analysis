@@ -32,7 +32,7 @@ A MIDI-like score for 16 MIDI channels, played on 4 voices through audio.device.
   - Enables: game notes and sounds share the 4 voices with the music.
   - Costs: voice stealing cuts a busy voice off at once. `:StealVoice`
 - An instrument is a multisample with one sample per octave. A note moves down
-  an octave while its period would pass about 508 (estimate). `:OctaveShift`
+  an octave while its period would pass `PREF_PERIOD`. `:OctaveShift`
   - Enables: low notes keep their high frequencies.
   - Costs: each octave doubles the sample's size.
 - Pitch is the sum of note, pitch bend, portamento and tuning, on a log scale.
@@ -53,30 +53,30 @@ A MIDI-like score for 16 MIDI channels, played on 4 voices through audio.device.
 The composer writes a song in Music-X, a MIDI sequencer. MaxTrax calls an
 instrument a `patch`.
 
-| Aspect   | Answer                                                         | Source                      |
-| -------- | -------------------------------------------------------------- | --------------------------- |
-| Notation | An event holds a command.                                      | `:Event`                    |
-| Notation | An event holds a data byte.                                    | `:Event`                    |
-| Notation | An event holds a start delta.                                  | `:Event`                    |
-| Notation | An event holds a second data field.                            | `:Event`                    |
-| Notation | A note has a MIDI channel.                                     | `:RunEvent`                 |
-| Notation | A note has a velocity in 16 steps.                             | `:RunEvent`                 |
-| Notation | 192 pulses per quarter note.                                   | `:SetTempo`                 |
-| Notation | Tempo in beats per minute.                                     | `:SetTempo`                 |
-| Notation | A tempo event can slide the tempo in a straight line.          | `:TempoSlide`               |
-| Cost     | A chord takes one voice per note, out of 4.                    | `:PickVoice`                |
-| Cost     | A glide needs mono mode and CC 65.                             | `:NoteOn`                   |
-| Cost     | A glide takes the portamento time, whatever its interval.      | `:CalcNote`                 |
-| Cost     | A legato note keeps the voice's sample and envelope.           | `:MonoLegato`               |
-| Cost     | A release waits while CC 64 is down.                           | `:DamperPedal`              |
-| Cost     | CC 7 changes only notes that start after it.                   | `:StealVoice`               |
-| Cost     | Velocity counts only while the game sets `MUSIC_VELOCITY`.     | `:StealVoice`               |
-| Cost     | A bend or a glide keeps the note's octave sample.              | `:CalcNote`                 |
-| Cost     | A slide to a slower tempo overshoots high until it ends (bug). | `:ContinueTempo`            |
-| Cost     | With the wheel below center, a new bend range bends up (bug).  | `:ControlCh`                |
-| Cost     | CC 65 off writes a byte into the score (bug).                  | `:PortaOffBug`              |
-| Cost     | A repeat is a begin and an end event.                          | `:BeginRepeat` `:EndRepeat` |
-| Cost     | Repeats nest 4 levels deep.                                    | `:BeginRepeat`              |
+| Aspect   | Answer                                                             | Source                      |
+| -------- | ------------------------------------------------------------------ | --------------------------- |
+| Notation | An event holds a command.                                          | `:Event`                    |
+| Notation | An event holds a data byte.                                        | `:Event`                    |
+| Notation | An event holds a start delta.                                      | `:Event`                    |
+| Notation | An event holds a second data field.                                | `:Event`                    |
+| Notation | A note has a MIDI channel.                                         | `:RunEvent`                 |
+| Notation | A note has a velocity in 16 steps.                                 | `:RunEvent`                 |
+| Notation | 192 pulses per quarter note.                                       | `:SetTempo`                 |
+| Notation | Tempo in beats per minute.                                         | `:SetTempo`                 |
+| Notation | A tempo event can slide the tempo in a straight line.              | `:TempoSlide`               |
+| Cost     | A chord takes one voice per note, out of 4.                        | `:PickVoice`                |
+| Cost     | A glide needs mono mode and CC 65.                                 | `:NoteOn`                   |
+| Cost     | A glide takes the portamento time, whatever its interval.          | `:CalcNote`                 |
+| Cost     | A legato note keeps the voice's sample and envelope.               | `:MonoLegato`               |
+| Cost     | A release waits while CC 64 is down.                               | `:DamperPedal`              |
+| Cost     | CC 7 changes only notes that start after it.                       | `:StealVoice`               |
+| Cost     | Velocity counts only while the game sets `MUSIC_VELOCITY`.         | `:StealVoice`               |
+| Cost     | A bend or a glide keeps the note's octave sample.                  | `:CalcNote`                 |
+| Cost     | A slide to a slower tempo overshoots high until it ends (bug).     | `:ContinueTempo`            |
+| Cost     | With the pitch bend below center, a new bend range bends up (bug). | `:ControlCh`                |
+| Cost     | CC 65 off writes a byte into the score (bug).                      | `:PortaOffBug`              |
+| Cost     | A repeat is a begin and an end event.                              | `:BeginRepeat` `:EndRepeat` |
+| Cost     | Repeats nest 4 levels deep.                                        | `:BeginRepeat`              |
 
 ## What is unique
 
@@ -88,8 +88,8 @@ instrument a `patch`.
 - A game note's length counts in milliseconds, not pulses. `:StopCountdown`
 - While the score plays, the game can skip it ahead to a later marker.
   `:AdvanceSong`
-- A sync event passes a value to the game. `:SyncEvent`
-- Past display line 128, the frame's other events wait. `:BeamBudget`
+- A score event passes a value to the game. `:SyncEvent`
+- Past scanline 128, the frame's other events wait. `:BeamBudget`
 
 ## Open questions
 

@@ -1,7 +1,7 @@
 coverage:
-  date: 2026-09-30
+  date: 2026-10-01
   inputs:
-    players/MaxTrax.md: 7122bdb741dd12457c7e77b06ff5f88ce6367c67
+    players/MaxTrax.md: 8979fceb73e1910ba5668f4350837276c6b61b9c
     specs/maxtrax.py: 50df5c0be676670f78a731c3116e8d227dfa30e3
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
     docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
@@ -9,11 +9,11 @@ coverage:
     data/annot/MaxTrax-shared.yaml: 84a09c0dee8f9d906f1d8006bf1afa1aed259bce
   open: []
 writing:
-  date: 2026-09-30
+  date: 2026-10-01
   inputs:
-    players/MaxTrax.md: 7122bdb741dd12457c7e77b06ff5f88ce6367c67
+    players/MaxTrax.md: 8979fceb73e1910ba5668f4350837276c6b61b9c
     specs/maxtrax.py: 50df5c0be676670f78a731c3116e8d227dfa30e3
     AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
-    data/glossary.yaml: 8a09a7b2f91ad7427a604e839126f3a0f80fc6c9
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
     docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
   open: []

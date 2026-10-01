@@ -23,12 +23,12 @@ width of a short wave.
 
 ## Key ideas
 
-- Each module carries its own replay, about 830 bytes (estimate) behind five
-  jump entries. `:Play` `:InitSong`
+- Each module carries its own replay behind five jump entries. `:Play`
+  `:InitSong`
   - Enables: each game gets the replay its music was written for.
-  - Costs: every module has its own copy.
+  - Costs: every module repeats about 830 bytes of replay (estimate).
 - A sweep writes one byte per tick into a short wave, like [Fred](Fred.md)'s
-  pulse. `:Sweep` `:SweepDown`
+  pulse wave. `:Sweep` `:SweepDown`
   - Costs: every voice on the instrument shares the wave.
 - Each sample stores its recording rate. The period is scaled by it.
   `:InitSamples` `:NoteOn`
@@ -66,8 +66,8 @@ The composer writes a position list per voice and patterns of bytes.
   the song it is given. `:InitSong`
 - `rh.GMUSIC` sets up 11 samples and `rh.FLYMUS` 6. The rest of the code is the
   same. `:InitSamples`
-- In PGA Tour Golf, only the three built-in waves have vibrato or sweep
-  settings. `:InitWaves` `:Instrument`
+- In PGA Tour Golf, the three built-in waves carry vibrato and sweep settings.
+  `:InitWaves` `:Instrument`
 
 ## Open questions
 
