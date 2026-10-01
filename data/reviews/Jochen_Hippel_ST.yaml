@@ -1,0 +1,18 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/Jochen_Hippel_ST.md: 30d0e4d8a41b20723089f9b87366fd6ddc976b51
+    specs/jochen_hippel_st.py: d546f5b582e49c614bd60e9413b28b535a1dcdf0
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/Jochen_Hippel_ST.yaml: 0989f9dfb122d65deed64a6f978dabe8a24087e4
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/Jochen_Hippel_ST.md: 30d0e4d8a41b20723089f9b87366fd6ddc976b51
+    specs/jochen_hippel_st.py: d546f5b582e49c614bd60e9413b28b535a1dcdf0
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 9130afc9b84032e90e2af39e0cf37ccdfb7f96bf
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []

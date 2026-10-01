@@ -125,6 +125,7 @@ class Module:
     tracks: list[Track] = field(default_factory=list)
     active: int = 0  # tracks without an end event yet
     midi_channels: list[MidiChannel] = field(default_factory=list)
+    volume_offset: int = -4  # VolumeOffset: the game's level - 31
 
 
 # --- Start -------------------------------------------------------------
@@ -377,7 +378,7 @@ def StartNote(module: Module, channel: int, note: int, velocity: int) -> Steps:
     takes 16 × period CCK."""
     voice = AllocateVoice(module, channel, note)
     SelectSample(module, voice, note)
-    SetVelocity(voice, velocity)
+    SetVelocity(module, voice, velocity)
     voice.output.enable()
     yield NOTE_DELAY_CCK
 
@@ -437,10 +438,18 @@ def FindSampleZone(instrument: list[Zone], note: int) -> Zone:
     return next(zone for zone in instrument if note <= zone.top)
 
 
-def SetVelocity(voice: Voice, velocity: int) -> None:
+def SetVolumeOffset(module: Module, level: int) -> None:
+    """The game's volume call: level 31 adds nothing, the default is 27.
+    Only notes that start later hear the change."""
+    module.volume_offset = level - 31
+
+
+def SetVelocity(module: Module, voice: Voice, velocity: int) -> None:
     """Volume 0 to 62, once per note. The curve is steep up to velocity
-    32 and flat above: velocity 64 gives 48."""
-    voice.output.set_volume(2 * VELOCITY[velocity >> 1])
+    32 and flat above. The game's offset is added, within 0 to 31, then
+    doubled: with the default, velocity 64 gives 40."""
+    level = VELOCITY[velocity >> 1] + module.volume_offset
+    voice.output.set_volume(2 * min(max(level, 0), 31))
 
 
 def SilentTail(module: Module) -> None:

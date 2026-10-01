@@ -37,6 +37,8 @@ labels:
   lbC000854: FindSampleZone
   lbW0008C6: PeriodTable
   lbC000904: SetVelocity
+  1276: SetVolumeOffset # the original's, commented out
+  1281: VolumeOffset # the original's, commented out
   lbW000930: VelocityTable
   lbC000986: SilentTail
   lbC000A4A: ResetMidiChannels

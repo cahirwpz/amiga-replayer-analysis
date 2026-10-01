@@ -31,6 +31,7 @@ One line per term. Every acronym used in this repo must appear here.
 | **INTREQ**          | Paula register of pending interrupts, one bit per source. The CPU clears them.            |
 | **channel**         | One of Paula's four hardware sound outputs. Usually plays one voice; mixing can add more. |
 | **period**          | Paula's pitch value. Higher period, lower pitch.                                          |
+| **scanline**        | One line of the video picture.                                                            |
 
 ## Other computers
 
@@ -144,6 +145,8 @@ Standard MIDI terms. Note-on and note-off are under Sound and synthesis.
 | **SMF**              | Standard MIDI File: a header chunk `MThd`, then one `MTrk` chunk per track.                       |
 | **MIDI channel**     | One of 16 logical channels in a MIDI stream. Not a Paula channel.                                 |
 | **velocity**         | How hard a note is struck, 0 to 127. Players often map it to volume.                              |
+| **division**         | The SMF header field that gives the PPQ.                                                          |
+| **sample bank**      | A file of samples for a song's MIDI programs.                                                     |
 | **program change**   | A MIDI event that picks the instrument of a MIDI channel.                                         |
 | **pitch bend**       | A MIDI event that shifts the pitch of a whole MIDI channel.                                       |
 | **CC**               | Control change: a MIDI event that sets a MIDI channel parameter by number.                        |

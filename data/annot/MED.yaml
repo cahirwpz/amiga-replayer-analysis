@@ -21,6 +21,10 @@ labels:
   f_16: CmdLoop
   f_03: SetPortamento
   isfxff: CmdNoteOff
+  f_08: CmdHoldDecay
+  f_1f: CmdDelayNote
+  fx_0f: MiscTick
+  playfxnote: PlayFxNote
   plr_chkhold: ExtendHold
   inmem: AddTransposes
   plr_loop2: PlayRowNotes

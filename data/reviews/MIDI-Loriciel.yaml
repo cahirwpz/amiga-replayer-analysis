@@ -1,0 +1,18 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/MIDI-Loriciel.md: 3cfcb52886ba313f152c5eaa073660cc164a867c
+    specs/midi_loriciel.py: c6bb0c8f28ad3977f8e53c7b7bc03f8f0a937d7a
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/MIDI-Loriciel.yaml: 76740b0d142f731efe10f62586cf15921129998d
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/MIDI-Loriciel.md: 3cfcb52886ba313f152c5eaa073660cc164a867c
+    specs/midi_loriciel.py: c6bb0c8f28ad3977f8e53c7b7bc03f8f0a937d7a
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 9130afc9b84032e90e2af39e0cf37ccdfb7f96bf
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []

@@ -25,11 +25,16 @@ FINETUNE = range(-8, 8)
 CMD_ARPEGGIO = 0x00
 CMD_PORTAMENTO = 0x03  # pattern command that keeps a hold
 CMD_VIBRATO = 0x04
+CMD_HOLD_DECAY = 0x08  # high nibble decay, low nibble hold
 CMD_WAVE_LIST_POS = 0x0E
 CMD_MISC = 0x0F  # argument 0xFF: note-off
 CMD_LOOP = 0x16
 CMD_DETUNE_START = 0x13  # a higher pitch for 3 ticks; not modelled
 NOTE_OFF = 0xFF
+# CMD_MISC arguments that play the row's note later, on a set tick
+PLAY_TWICE, DELAY_NOTE, PLAY_EVEN_TICKS = 0xF1, 0xF2, 0xF3
+TRIPLET_FIRST, TRIPLET_SECOND = 0xF4, 0xF5
+HELD_NOTES = (DELAY_NOTE, TRIPLET_FIRST, TRIPLET_SECOND)  # no note on tick 0
 TRACK_VOLUME_BITS = 8  # track_volume is a fixed-point factor
 TIMER_DIV = 470000  # TimerDivisor, PAL: latch = TIMER_DIV / tempo
 BPM_DIV = 3546895 // 2  # BpmDivisor, PAL
@@ -147,7 +152,8 @@ class Voice:  # track data; track n plays on channel n
     track_volume: int = 0  # trk_trackvol: master and track volume
     hold: int = 0  # trk_inithold: the instrument's hold
     hold_left: int = NEVER  # trk_noteoffcnt
-    decay: int = 0  # trk_decay
+    init_decay: int = 0  # trk_initdecay: the instrument's decay
+    decay: int = 0  # trk_decay: set by each note
     fade_speed: int = 0  # trk_fadespd
     command_e: bool = False  # trk_miscflags bit 0
     volume_list: CommandList = field(default_factory=CommandList)  # trk_volcmd
@@ -166,6 +172,7 @@ class Voice:  # track data; track n plays on channel n
     pattern_vibrato: int = 0  # trk_vibradjust; CMD_DETUNE_START too
     pattern_arpeggio: int = 0  # trk_arpadjust
     row_note: int = 0  # trk_prevnote: the track's last note, 1-based
+    current_note: int = 0  # trk_currnote: this row's note, 0 none
     periods: tuple[int, ...] = ()  # trk_periodtbl: set by the last note
     no_play: bool = False  # trk_fxtype: a command holds this row's note
     start: bool = False  # this channel's bit in DmaOnMask
@@ -214,6 +221,7 @@ def read_row(voice: Voice, row: Row, score: Score) -> None:
     """ReadRowLoop: an instrument number loads its settings, with or
     without a note. A note without one plays the last instrument."""
     voice.no_play = False
+    voice.current_note = row.note or 0
     if row.note:
         voice.row_note = row.note
     if row.instrument is None:
@@ -222,7 +230,7 @@ def read_row(voice: Voice, row: Row, score: Score) -> None:
     voice.instrument = instrument
     voice.note_volume = instrument.volume
     voice.hold = instrument.hold
-    voice.decay = instrument.decay
+    voice.init_decay = instrument.decay
     voice.command_e = False
 
 
@@ -239,6 +247,7 @@ def PlayNote(voice: Voice, note: int, instrument: Instrument, score: Score) -> N
     if not KeepSynthChannel(voice, instrument):
         voice.channel.disable()
     voice.fade_speed = 0
+    voice.decay = voice.init_decay
     voice.row_vibrato.phase = 0
     sound = instrument.sound
     if isinstance(sound, SynthSound):
@@ -339,6 +348,10 @@ def DoPreFX(module: Module, rows: list[Row]) -> None:
                 CmdWaveListPos(voice, command.argument)
             elif command.number == CMD_MISC and command.argument == NOTE_OFF:
                 CmdNoteOff(voice)
+            elif command.number == CMD_MISC and command.argument in HELD_NOTES:
+                CmdDelayNote(voice)
+            elif command.number == CMD_HOLD_DECAY:
+                CmdHoldDecay(voice, command.argument)
             elif command.number == CMD_LOOP:
                 CmdLoop(module, command.argument)
             elif command.number == CMD_PORTAMENTO:
@@ -364,6 +377,19 @@ def CmdWaveListPos(voice: Voice, pos: int) -> None:
     """A note on this row keeps this start; the wait stays."""
     voice.wave_list.pos = pos
     voice.command_e = True
+
+
+def CmdHoldDecay(voice: Voice, arg: int) -> None:
+    """Hold and decay for this track's later notes, until the next
+    instrument number loads the instrument's own."""
+    voice.hold, voice.init_decay = arg & 0x0F, arg >> 4
+
+
+def CmdDelayNote(voice: Voice) -> None:
+    """DELAY_NOTE, TRIPLET_FIRST, TRIPLET_SECOND: the row's note waits
+    for MiscTick. The hold starts now."""
+    voice.no_play = True
+    voice.hold_left = voice.hold or NEVER
 
 
 def CmdNoteOff(voice: Voice) -> None:
@@ -510,10 +536,39 @@ def VibratoTick(module: Module, voice: Voice, arg: int, tick: int) -> None:
     vibrato.phase = (vibrato.phase + vibrato.speed) & 0xFF
 
 
+def MiscTick(module: Module, voice: Voice, arg: int, tick: int) -> None:
+    """Plays the row's note again, or late. PLAY_TWICE and DELAY_NOTE
+    on tick 3, PLAY_EVEN_TICKS on every even tick. The triplets split
+    the row in three: TRIPLET_FIRST plays at a third of its ticks,
+    TRIPLET_SECOND at two thirds."""
+    third = module.score.ticks_per_row // 3
+    when = {
+        PLAY_TWICE: tick == 3,
+        DELAY_NOTE: tick == 3,
+        PLAY_EVEN_TICKS: tick != 0 and tick % 2 == 0,
+        TRIPLET_FIRST: tick == third,
+        TRIPLET_SECOND: tick == 2 * third,
+    }
+    if when.get(arg, False):
+        PlayFxNote(module, voice, tick)
+
+
+def PlayFxNote(module: Module, voice: Voice, tick: int) -> None:
+    """A running hold grows by the tick; else the hold starts."""
+    if not voice.current_note or voice.instrument is None:
+        return
+    if voice.hold_left >= 0:
+        voice.hold_left += tick
+    else:
+        voice.hold_left = voice.hold or NEVER
+    PlayNote(voice, voice.current_note, voice.instrument, module.score)
+
+
 TICK_COMMANDS: dict[int, Callable[[Module, Voice, int, int], None]] = {
     CMD_ARPEGGIO: ArpeggioTick,
     CMD_PORTAMENTO: PortamentoTick,
     CMD_VIBRATO: VibratoTick,
+    CMD_MISC: MiscTick,
 }
 
 

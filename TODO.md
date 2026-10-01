@@ -25,7 +25,7 @@ All twelve pilot cards exist.
   - Runs vary. Writing found 1 issue, then 14. MaxTrax coverage found 0, then 7
     real gaps.
   - Coverage overclaimed once.
-  - Next card: `Jochen_Hippel_ST`. Go on alphabetically, three cards per batch.
+  - Next card: `MugicianII`. Go on alphabetically, three cards per batch.
     `tools/reviews.py` lists the state.
   - A glossary edit makes every writing review stale. Rerun the stale ones at
     the end, not after each edit.
