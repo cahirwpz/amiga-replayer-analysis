@@ -8,7 +8,7 @@ ideas: [voice-mixing]
 # TFMX 7V
 
 [TFMX Pro](TFMX-Pro.md) with seven voices: voices 4–7 are mixed into channel 3.
-It is probably TFMX Pro's source built with its `on7voice` switch (guess).
+It is TFMX Pro's source built with its `on7voice` switch (guess).
 
 ## Context
 
@@ -29,7 +29,8 @@ It is probably TFMX Pro's source built with its `on7voice` switch (guess).
 - The mixer sums voices 4–7 into one tick's buffer for channel 3. `:MixTick`
   `:MixLoop`
   - Enables: four extra voices on one channel.
-  - Costs: CPU high. At 16 kHz, mixing takes about 60% of a 7.09 MHz 68000.
+  - Costs: CPU high. At 16 kHz, mixing takes about 60% of a 7.09 MHz 68000
+    (estimate).
 - Channel 3's audio interrupt runs the whole replay. `:HookChannel3`
   `:TickFromMixer`
   - Enables: the tick and the buffer never drift apart.
@@ -42,16 +43,18 @@ It is probably TFMX Pro's source built with its `on7voice` switch (guess).
 
 ## What is unique
 
-- A note to voice 3 turns mixing off; a note to voices 4–7 turns it on.
+- A note to voice 3 turns mixing off. A note to voices 4–7 turns it on.
   `:SwitchMixing`
 - DMA on after DMA off restarts a mixed voice's sample. A new loop starts at the
   wrap. `:FakeDma`
-- Loops under 32 words play silence, so short synth waves are mute on voices
-  4–7. `:ShortLoopSilent`
+- Loops under 32 words play silence. Short waveforms are mute on voices 4–7.
+  `:ShortLoopSilent`
 - While mixing, the fade sets channel 3's volume. Mixed voices stay unfaded.
   `:FadeToChannel3`
-- A program cannot wait for sample passes, on any voice. That opcode reads on.
-  `:WaitLoopsOff`
+- While mixing, a tick visits seven voices. A fade then moves 7/4 as fast.
+  `:MixOn` `:MixOff`
+- A program cannot wait for sample passes, on any voice. The program goes on to
+  the next opcode. `:WaitLoopsOff`
 
 ## Open questions
 

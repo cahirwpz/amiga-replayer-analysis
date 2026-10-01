@@ -1,0 +1,18 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/TFMX-Pro.md: 977f84c57e64644b00cd679f99b8e3ed47513d1e
+    specs/tfmx_pro.py: ff536137ae6f9d54bb342dbbf21ccf7705a339ef
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/TFMX-Pro.yaml: 96aa118bc8db4f59bbd9b91ad85f9090a9cae39e
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/TFMX-Pro.md: 977f84c57e64644b00cd679f99b8e3ed47513d1e
+    specs/tfmx_pro.py: ff536137ae6f9d54bb342dbbf21ccf7705a339ef
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []

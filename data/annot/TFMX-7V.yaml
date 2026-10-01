@@ -5,6 +5,7 @@ sha1: 843ba9b9209e0c27ed750f33e01ecf2728bc7458
 
 labels:
   # every tick; names as in TFMX-Pro.yaml
+  synthesizer: VoicesTick
   irqin: PlayTick
   noteport: NoteToVoice
   fader: FadeTick

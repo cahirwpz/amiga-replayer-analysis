@@ -32,7 +32,7 @@ An instrument is a program that runs once per tick and shapes one note.
   `:WaitNoteOff`
   - Enables: attack, sustain and release parts, each its own code.
   - Costs: each sound is written as code.
-- Eight tracks share the voices; each note names its voice. `:TrackNote`
+- Eight tracks share the voices. Each note names its voice. `:TrackNote`
   `:NoteToVoice`
   - Enables: one track plays chords or moves a line across voices.
   - Costs: two tracks can take the same voice.
@@ -48,7 +48,7 @@ An instrument is a program that runs once per tick and shapes one note.
 - IMS rebuilds a voice's wave every tick, as a hard sync with a slew limiter.
   `:ImsTick`
   - Enables: sync and filter sweeps from one short sample.
-  - Costs: CPU high: up to 256 bytes per voice per tick.
+  - Costs: CPU high. It rebuilds up to 256 bytes per voice per tick.
 - Programs rewrite programs. `:CopyToMacro` `:AddToMacro`
   - Enables: a sound that changes each time it plays.
   - Costs: every voice that plays the program sees the change.
@@ -58,14 +58,23 @@ An instrument is a program that runs once per tick and shapes one note.
 The composer writes patterns and instrument programs. TFMX calls an instrument
 program a `macro`. Positions start one pattern per track.
 
-| Aspect   | Answer                                                          | Source                          |
-| -------- | --------------------------------------------------------------- | ------------------------------- |
-| Notation | Pattern entry: note, instrument program, volume, voice, detune. | `:TrackNote`                    |
-| Notation | Program step: an opcode and three argument bytes.               | `:MacroStep`                    |
-| Notation | A note's wait or a wait opcode sets the rows to the next entry. | `:ReadPattern`                  |
-| Cost     | A chord is several entries on one track, one per voice.         | `:ReadPattern`                  |
-| Cost     | An arpeggio is a program loop of notes and waits.               | `:AddNote` `:MacroLoop`         |
-| Cost     | ADSR: attack, wait, decay, note-off wait, release steps.        | `:MacroEnvelope` `:WaitNoteOff` |
+| Aspect   | Answer                                                                    | Source                            |
+| -------- | ------------------------------------------------------------------------- | --------------------------------- |
+| Notation | Pattern entry: note, instrument program, volume, voice, detune.           | `:TrackNote`                      |
+| Notation | Program step: an opcode and three argument bytes.                         | `:MacroStep`                      |
+| Notation | A note's wait or a wait opcode sets the rows to the next entry.           | `:ReadPattern`                    |
+| Notation | A position command can set a new timer rate.                              | `:SetSpeed`                       |
+| Notation | A pattern opcode starts a volume envelope or vibrato on a voice.          | `:NoteToVoice`                    |
+| Notation | A program opcode sets volume to 3 × note volume + an offset.              | `:NoteVolume`                     |
+| Notation | A start-add opcode swings the sample start back and forth.                | `:SweepTick`                      |
+| Cost     | A chord is several entries on one track, one per voice.                   | `:ReadPattern`                    |
+| Cost     | An arpeggio is a program loop of notes and waits.                         | `:AddNote` `:MacroLoop`           |
+| Cost     | ADSR: attack, wait, decay, note-off wait, release steps.                  | `:MacroEnvelope` `:WaitNoteOff`   |
+| Cost     | The note-off wait can end after a tick limit.                             | `:WaitNoteOff`                    |
+| Cost     | Any track's pattern end moves all tracks to the next position.            | `:PatternEnd`                     |
+| Cost     | A sound effect holds its voice for set ticks. Track notes there are lost. | `:PlaySoundEffect` `:NoteToVoice` |
+| Cost     | During portamento, vibrato writes nothing, but its phase moves on.        | `:VibratoTick`                    |
+| Cost     | IMS can write a negated copy into the next voice's buffer.                | `:ImsTick`                        |
 
 ## What is unique
 
@@ -73,14 +82,15 @@ program a `macro`. Positions start one pattern per track.
   `:EndMacroTick`
 - A delayed DMA off acts at the next tick's start. The program then restarts the
   sample in that tick. `:DmaOff` `:PlayTick`
-- A program can wait for N passes of its sample. `:WaitLoops`
+- A program can wait for N + 1 passes of its sample. `:WaitLoops`
 - A program can wait for an offset byte with bit 7 set. Its first pass there
   only arms the wait. `:MacroWait` `:RiffTick`
-- Each envelope opcode ramps to a target and stops, so phases are opcodes.
-  `:MacroEnvelope`
+- Each envelope opcode ramps to a target and stops. Each envelope phase is its
+  own opcode. `:MacroEnvelope`
 - During portamento, an offset loop sets only the target and stays on its
   offset. `:RiffTick`
-- The fade counter moves once per voice, so four times per tick. `:FadeTick`
+- The fade counter moves once per voice visit. That is four times per tick.
+  `:FadeTick`
 
 ## Open questions
 

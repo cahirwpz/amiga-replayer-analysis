@@ -14,6 +14,9 @@ from specs import tfmx_pro
 
 MIXED = range(4, 8)  # voices 4-7 write FakeChannel registers
 MIX_CHANNEL = 3  # Paula channel 3 plays the mixed buffer
+# VoicesTick: while mixing, a tick visits seven voices and skips voice 3.
+# FadeTick runs per visit, so a fade moves 7/4 as fast.
+MIXING_TICK = [0, 1, 2, 4, 5, 6, 7]
 SHORT_LOOP = 32  # words: shorter loops play the silent buffer
 MIN_SLOW = -32  # SlowDown: percent, at least -32
 MAX_VOLUME = 63  # a mixed voice's volume is clamped here
@@ -99,12 +102,14 @@ def MixOn(module: Module7V) -> None:
     for fake in fakes(module):
         FakeDma(mixer, fake)
     mixer.on = True
+    module.ticked = MIXING_TICK
 
 
 def MixOff(module: Module7V) -> None:
     """Channel 3 becomes a plain voice again. The mixed voices stop and
     point at the silent buffer."""
     module.mixer.on = False
+    module.ticked = [0, 1, 2, 3]
     tfmx_pro.StopVoice(module, MIX_CHANNEL)
     for fake in fakes(module):
         fake.dma, fake.step, fake.restart = False, 0, False

@@ -1,0 +1,18 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/TimFollin.md: 56a936d282dbb1b954028d215f82276727418246
+    specs/tim_follin.py: c8f2bcf06d2d27f729c8611545936d0130b3fd32
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/TimFollin.yaml: 7894dd2b68173a424839eb4195d72425cb7dbee7
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/TimFollin.md: 56a936d282dbb1b954028d215f82276727418246
+    specs/tim_follin.py: c8f2bcf06d2d27f729c8611545936d0130b3fd32
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []

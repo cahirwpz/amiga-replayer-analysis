@@ -244,6 +244,9 @@ class Module:  # SongState: song state; TrackState: tracks
     new_position: bool = False  # NewPositionFlag: rerun every track this row
     custom: bool = False  # track 7 plays a game pattern; positions skip it
     fade: Fade = field(default_factory=Fade)
+    ticked: list[int] = field(
+        default_factory=lambda: [0, 1, 2, 3]
+    )  # voices a tick visits
     random: int = 0
     flags: list[int] = field(default_factory=lambda: [0] * 4)  # InfoFlags
 
@@ -277,8 +280,9 @@ def PlayTick(module: Module) -> None:
 
 
 def VoicesTick(module: Module) -> None:
-    for voice in module.voices:
-        VoiceTick(module, voice)
+    """Each voice in `ticked`; TFMX 7V changes the list."""
+    for number in module.ticked:
+        VoiceTick(module, module.voices[number])
 
 
 def VoiceTick(module: Module, voice: Voice) -> None:

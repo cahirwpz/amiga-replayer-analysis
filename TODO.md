@@ -19,18 +19,15 @@ All twelve pilot cards exist.
 
 ### Card reviews
 
-- [ ] Run the card reviews on the other cards. The user chose this as the next
-      task.
+- [ ] Rerun the 17 writing reviews that glossary edits made stale.
+      `tools/reviews.py` lists them. Ask the user first: a rerun costs one agent
+      per card.
   - Check each finding against the code before recording it.
-  - Runs vary. Writing found 1 issue, then 14. MaxTrax coverage found 0, then 7
-    real gaps.
-  - Coverage overclaimed once.
-  - Next card: `TFMX-7V`. Go on alphabetically, three cards per batch.
-    `tools/reviews.py` lists the state.
-  - A glossary edit makes every writing review stale. Rerun the stale ones at
-    the end, not after each edit.
   - Writing reviews ask to split field lists ("A row: note, instrument, …") and
     "fact. Consequence." cells. Both stay, as on the Fred card.
+  - Coverage overclaimed "spec misses it" twice. Read the spec before agreeing.
+  - The glossary page is at the cogload limit of 3000 words. Reword cards in
+    plain words before adding a term.
   - The session may not load `.claude/agents/`. Then run a general-purpose agent
     with the agent file as its prompt.
 

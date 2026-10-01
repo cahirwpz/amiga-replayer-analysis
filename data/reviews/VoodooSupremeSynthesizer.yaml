@@ -1,0 +1,19 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/VoodooSupremeSynthesizer.md: b7d05e5bd049ad2a82e24beea44d4589bc51458c
+    specs/voodoo_supreme_synthesizer.py: 87b50400d480173563a9a69486c8256eb5ceceb8
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/VoodooSupremeSynthesizer.yaml: df9fe0edb2584610a1f6788135a6b1d14b1fbabd
+    data/disasm/VoodooSupremeSynthesizer.cnf: 65dac395304b80917e105b64e9399bcb5482162c
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/VoodooSupremeSynthesizer.md: b7d05e5bd049ad2a82e24beea44d4589bc51458c
+    specs/voodoo_supreme_synthesizer.py: 87b50400d480173563a9a69486c8256eb5ceceb8
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []
