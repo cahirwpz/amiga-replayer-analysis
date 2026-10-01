@@ -1,0 +1,18 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/DigitalSonixChrome.md: 25a8aa7366983006f090c9b392981d301bafc91e
+    specs/digital_sonix_chrome.py: 47fe14910d89851240cc9fe698adfbbd006f86a8
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/DigitalSonixChrome.yaml: 403d69a5e0baa785c53f360683d7a066a3650dec
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/DigitalSonixChrome.md: 25a8aa7366983006f090c9b392981d301bafc91e
+    specs/digital_sonix_chrome.py: 47fe14910d89851240cc9fe698adfbbd006f86a8
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 4626cd1e73192f857518dab75b591b7382527edf
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []

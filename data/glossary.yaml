@@ -66,6 +66,8 @@ sections:
       hard sync: A wave restarts at each cycle of another. Its rate changes timbre, not pitch.
       sample region: One part of a sample, played once or looped, e.g. an attack or a release.
       slew limiter: Limits each sample's move from the last. It rounds sharp edges.
+      sweep: A value that runs up and down between two limits, e.g. a pulse width.
+      filter position: Which filtered copy of a wave plays.
 
   - key: music
     title: Music theory
@@ -177,6 +179,7 @@ sections:
       jump table: A table of code addresses. A number picks which code runs.
       handler: The code that runs for one command or event.
       opcode: A byte that names an action, e.g. a jump, instead of a value.
+      shadow: A copy of a channel's registers in memory. Paula gets it later.
 
   - key: programs
     title: Programs and formats

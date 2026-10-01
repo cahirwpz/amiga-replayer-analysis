@@ -1,0 +1,19 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/AbyssHighestExperience.md: 4c9a02f757479d4ce417ca28563754b3ef3cd2f7
+    specs/abyss_highest_experience.py: 1f2b12f05be07c0d3ebdbedffde32a1d645f7a7e
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/AbyssHighestExperience.yaml: 7767438fa9b22b18b2747e7598b9d1fb3e173172
+    data/disasm/AbyssHighestExperience.cnf: e3f3c36de33fb816adeae7cb1e270e49123ed148
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/AbyssHighestExperience.md: 4c9a02f757479d4ce417ca28563754b3ef3cd2f7
+    specs/abyss_highest_experience.py: 1f2b12f05be07c0d3ebdbedffde32a1d645f7a7e
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 4626cd1e73192f857518dab75b591b7382527edf
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []

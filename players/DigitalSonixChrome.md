@@ -7,7 +7,7 @@ ideas:
 
 # Digital Sonix & Chrome
 
-Audio interrupts count how often each instrument loops, so the tick only reads
+Audio interrupts count how often each instrument loops. The tick only reads
 rows.
 
 ## Context
@@ -56,14 +56,16 @@ instrument number per voice per row. Nothing changes a note once it plays.
 
 ## What is unique
 
-- Speed = 1500 / tempo, rounded, once per module. No command changes it.
-  `:LoadModule`
-- Subsongs follow each other in one position list. A position with 0 repeats
-  ends each one. `:StartSubsong` `:NextPosition`
+- The module's tempo gives the speed once: 1500 / tempo, rounded. No command
+  changes it. `:LoadModule`
+- Subsongs follow each other in the positions. A position with 0 repeats ends
+  each one. `:StartSubsong` `:NextPosition`
 - A lower sound effect number wins. A request from `FIRST_IGNORED` up is
   ignored. `:SfxClaimVoice`
 - After the last pass, a 2-word silent loop plays. Its interrupt frees the
   voice. `:CountLoopPass` `:LoopsDone`
+- Each step of the original replay's song fade halves the volume of new notes.
+  Wanted Team's version comments the fade out. `:Play`
 
 ## Open questions
 

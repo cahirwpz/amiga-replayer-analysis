@@ -162,7 +162,11 @@ def request_effect(module: Module, voice: int, number: int) -> None:
 
 def Play(module: Module) -> None:
     """A row every `speed` ticks, then the game's effect requests. Each
-    note start busy-waits, so the steps run in order."""
+    note start busy-waits, so the steps run in order.
+
+    The original also had a song fade. Every 4 rows, a fade level moved
+    one step toward a target. StartNote shifted the instrument volume
+    right by that level. Wanted Team's version comments both out."""
     module.counter -= 1
     if module.counter:
         SfxClaimVoice(module, lambda: None)

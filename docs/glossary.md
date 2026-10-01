@@ -67,6 +67,8 @@ One line per term. Every acronym used in this repo must appear here.
 | **hard sync**        | A wave restarts at each cycle of another. Its rate changes timbre, not pitch.       |
 | **sample region**    | One part of a sample, played once or looped, e.g. an attack or a release.           |
 | **slew limiter**     | Limits each sample's move from the last. It rounds sharp edges.                     |
+| **sweep**            | A value that runs up and down between two limits, e.g. a pulse width.               |
+| **filter position**  | Which filtered copy of a wave plays.                                                |
 
 ## Music theory
 
@@ -176,12 +178,13 @@ Standard MIDI terms. Note-on and note-off are under Sound and synthesis.
 
 Code patterns we cite from replayer source.
 
-| Term           | Meaning                                                        |
-| -------------- | -------------------------------------------------------------- |
-| **busy-wait**  | Waiting in a loop that checks a condition, doing nothing else. |
-| **jump table** | A table of code addresses. A number picks which code runs.     |
-| **handler**    | The code that runs for one command or event.                   |
-| **opcode**     | A byte that names an action, e.g. a jump, instead of a value.  |
+| Term           | Meaning                                                         |
+| -------------- | --------------------------------------------------------------- |
+| **busy-wait**  | Waiting in a loop that checks a condition, doing nothing else.  |
+| **jump table** | A table of code addresses. A number picks which code runs.      |
+| **handler**    | The code that runs for one command or event.                    |
+| **opcode**     | A byte that names an action, e.g. a jump, instead of a value.   |
+| **shadow**     | A copy of a channel's registers in memory. Paula gets it later. |
 
 ## Programs and formats
 

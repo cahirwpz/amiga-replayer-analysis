@@ -1,0 +1,19 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/DavidWhittaker.md: d532e0a2adb656ac51252923f9efde5a994e115c
+    specs/david_whittaker.py: 4e0615ab6f88d1d1ef707450462b63aa5d0d6240
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/DavidWhittaker.yaml: 2841e16cfd8fa1d12753c307e1f01421517d48aa
+    data/disasm/DavidWhittaker.cnf: 589ad787b7d936d724460940b108bcbd5d97c71c
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/DavidWhittaker.md: d532e0a2adb656ac51252923f9efde5a994e115c
+    specs/david_whittaker.py: 4e0615ab6f88d1d1ef707450462b63aa5d0d6240
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 4626cd1e73192f857518dab75b591b7382527edf
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []
