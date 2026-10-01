@@ -19,9 +19,9 @@ All twelve pilot cards exist.
 
 ### Card reviews
 
-- [ ] Rerun the 17 writing reviews that glossary edits made stale.
-      `tools/reviews.py` lists them. Ask the user first: a rerun costs one agent
-      per card.
+- [ ] Next session: rerun the 17 writing reviews that glossary edits made stale.
+      `tools/reviews.py` lists them.
+  - Ask the user first. A rerun costs one agent per card.
   - Check each finding against the code before recording it.
   - Writing reviews ask to split field lists ("A row: note, instrument, …") and
     "fact. Consequence." cells. Both stay, as on the Fred card.
