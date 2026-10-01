@@ -1,0 +1,18 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/SonicArranger.md: a3a41db15042bdf3d28e959b8e381853cdf50ef3
+    specs/sonic_arranger.py: c2323fa109f6e895a673fc4408bbdedc497781e6
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/SonicArranger.yaml: 2d064a0e4986ae56a0a36de7fbce9e231731ca6c
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/SonicArranger.md: a3a41db15042bdf3d28e959b8e381853cdf50ef3
+    specs/sonic_arranger.py: c2323fa109f6e895a673fc4408bbdedc497781e6
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []

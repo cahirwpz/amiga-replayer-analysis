@@ -45,8 +45,8 @@ Seventeen wave effects rewrite each voice's own copy of its wave.
   `:NoiseGenerator2`
   - Enables: noise without a random number generator.
   - Costs: the noise depends on when the tick runs.
-- A synth note does not stop the channel. It copies its wave over the playing
-  copy. `:ReadVoiceRow`
+- A synth note after a synth note does not stop the channel. It copies its wave
+  over the playing copy. `:ReadVoiceRow`
   - Enables: synth notes with no restart and no busy-wait.
 - A position gives each voice a start row in one shared list of rows.
   `:ReadPosition`
@@ -64,12 +64,18 @@ or a synth wave with one effect. Each instrument has a pitch table (the format's
 | Notation | A row: note, instrument, flags and command, argument.                              | `:Row`          |
 | Notation | A position: per voice, a start row, an instrument transpose and a note transpose.  | `:Track`        |
 | Notation | An instrument: wave or sample, vibrato, portamento, two tables, effect, arpeggios. | `:Instrument`   |
-| Notation | A row's flags pick one of the three arpeggios. Each row can pick another one.      | `:Arpeggio`     |
+| Notation | A row's flags pick one of the three arpeggios.                                     | `:Arpeggio`     |
 | Notation | The subsong sets the tick rate in Hz.                                              | `:SetTimer`     |
+| Notation | `NOTE_OFF` cuts the voice at once, with no release.                                | `:VoiceOff`     |
+| Notation | An instrument without a note restarts its tables. The wave copy plays on.          | `:ReadVoiceRow` |
+| Notation | A row's flags can keep its note or instrument out of the transposes.               | `:ReadVoiceRow` |
 | Cost     | A held note needs `HOLD` on every row. A row without it starts the release.        | `:AdsrSustain`  |
 | Cost     | A slide lasts one row.                                                             | `:RowCommand`   |
 | Cost     | A larger vibrato depth gives a smaller vibrato.                                    | `:Vibrato`      |
-| Cost     | `CmdVibrato` starts the vibrato. Its argument has no effect.                       | `:CmdVibrato`   |
+| Cost     | Vibrato adds in periods. Low notes get a smaller pitch change.                     | `:Vibrato`      |
+| Cost     | A running portamento replaces the arpeggio. The arpeggio moves only its target.    | `:Portamento`   |
+| Cost     | `CmdVibrato` starts the vibrato.                                                   | `:CmdVibrato`   |
+| Cost     | The argument of `CmdVibrato` has no effect.                                        | `:CmdVibrato`   |
 | Cost     | `Laser` takes its pitch step from the range's `start` field.                       | `:Laser`        |
 | Cost     | After a synth note, a sample starts only at the copy's next loop.                  | `:ReadVoiceRow` |
 
@@ -79,9 +85,7 @@ or a synth wave with one effect. Each instrument has a pitch table (the format's
   sustain delay only slows it down. `:AdsrSustain`
 - A volume table without a loop that ends on 0 silences the voice. It stays
   silent until the next note. `:AdsrStep`
-- Portamento glides from the previous note and turns itself off at the target.
-  `:Portamento`
-- `Oszilator` morphs to the second wave, then back to the first, forever.
+- `Oszilator` morphs between the first and the second wave, forever.
   `:Oszilator`
 - `FreeNegator` builds a pulse from the wave. The second wave's bytes set the
   width, one per run. `:FreeNegator`

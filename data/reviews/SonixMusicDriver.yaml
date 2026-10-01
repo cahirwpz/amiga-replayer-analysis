@@ -1,0 +1,18 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/SonixMusicDriver.md: cfaccae63afc654a6fce56983421a6a74fd2213a
+    specs/sonix_music_driver.py: 01e46f8c1d9d51f2a13b0f8926664e299aa6759e
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/SonixMusicDriver.yaml: a541d6e6c791aee17adac2efa5fa36cbf3aef6b5
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/SonixMusicDriver.md: cfaccae63afc654a6fce56983421a6a74fd2213a
+    specs/sonix_music_driver.py: 01e46f8c1d9d51f2a13b0f8926664e299aa6759e
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []

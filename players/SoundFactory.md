@@ -47,8 +47,7 @@ one shared counter.
   Each sweeps its setting between two limits. `:WaveEffects` `:BuildPhasing`
   `:BuildFilter`
   - Enables: a moving timbre from one short wave.
-  - Costs: CPU medium: each step rebuilds the whole wave. A wave holds at most
-    256 bytes.
+  - Costs: CPU medium. Each step rebuilds the whole wave.
 - A wave's period divides by its length and multiplies by its cycle count.
   `:NotePeriod`
   - Enables: waves of any length play in tune.
@@ -58,17 +57,21 @@ one shared counter.
 The composer writes one stream per voice, for up to 16 songs. A note carries its
 length in ticks. Instruments and their effects are opcodes in the streams.
 
-| Aspect   | Answer                                                           | Source          |
-| -------- | ---------------------------------------------------------------- | --------------- |
-| Notation | A note: one byte, then a length word.                            | `:NoteOn`       |
-| Notation | Bit 15 of the length keeps the envelope running.                 | `:NoteOn`       |
-| Notation | An opcode byte from `FIRST_OPCODE`, then its arguments.          | `:ReadStream`   |
-| Notation | A song: a voice mask and four stream offsets.                    | `:InitSong`     |
-| Cost     | A loop of N plays N times. A count of 0 plays 256 times.         | `:OpLoopEnd`    |
-| Cost     | A sync takes one opcode on each side.                            | `:OpSignal`     |
-| Cost     | The release starts at half the note's length, unless held.       | `:AutoRelease`  |
-| Cost     | Phasing and the filter need a wave of 256 bytes or less.         | `:BuildPhasing` |
-| Cost     | A fade is an opcode in a stream. A fade-out to 0 stops the song. | `:OpFadeOut`    |
+| Aspect   | Answer                                                              | Source          |
+| -------- | ------------------------------------------------------------------- | --------------- |
+| Notation | A note: one byte, then a length word.                               | `:NoteOn`       |
+| Notation | A `LEGATO` length keeps the envelope running.                       | `:NoteOn`       |
+| Notation | An opcode byte from `FIRST_OPCODE`, then its arguments.             | `:ReadStream`   |
+| Notation | A song: a voice mask and four stream offsets.                       | `:InitSong`     |
+| Cost     | A `LEGATO` note still restarts the wave, vibrato and tremolo.       | `:NoteOn`       |
+| Cost     | A loop of N plays N times.                                          | `:OpLoopEnd`    |
+| Cost     | A loop count of 0 plays 256 times.                                  | `:OpLoopEnd`    |
+| Cost     | A sync takes one opcode on each side.                               | `:OpSignal`     |
+| Cost     | The release starts at half the note's length, unless held.          | `:AutoRelease`  |
+| Cost     | Phasing and the filter need a wave of 256 bytes or less.            | `:BuildPhasing` |
+| Cost     | Vibrato, portamento and detune add in periods. Low notes move less. | `:WriteVoice`   |
+| Cost     | A fade is an opcode in a stream.                                    | `:OpFadeOut`    |
+| Cost     | A fade-out that reaches level 0 stops the song.                     | `:Fade`         |
 
 ## What is unique
 
@@ -86,6 +89,6 @@ length in ticks. Instruments and their effects are opcodes in the streams.
 ## Open questions
 
 - Which modules use the shared counter, and for what? `:OpWaitSignal`
-- Why does the early DMA stop skip periods below 429? A guess: short periods
-  restart in time anyway. `:EarlyStop`
+- Why does the early DMA stop skip periods below 429? Short periods may restart
+  in time anyway (guess). `:EarlyStop`
 - Who wrote the Soundfactory editor, and when? The replay names only Profiteam.

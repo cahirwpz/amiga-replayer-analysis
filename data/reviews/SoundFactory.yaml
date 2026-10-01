@@ -1,0 +1,18 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/SoundFactory.md: e59104c9dacb94e1f40eddfd2a303a9e44db5e36
+    specs/sound_factory.py: bb6bbb7ba20d4b75672a96e54716d9ea5b173323
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/SoundFactory.yaml: 38a2a233344f641bda4e78e6cf36d6148c27c352
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/SoundFactory.md: e59104c9dacb94e1f40eddfd2a303a9e44db5e36
+    specs/sound_factory.py: bb6bbb7ba20d4b75672a96e54716d9ea5b173323
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []
