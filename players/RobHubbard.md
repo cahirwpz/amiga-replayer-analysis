@@ -23,14 +23,13 @@ width of a short wave.
 
 ## Key ideas
 
-- The replay ships inside each module. Five `bra.w` entries start it; 830 bytes
-  of code follow. `:Play` `:InitSong`
+- Each module carries its own replay, about 830 bytes (estimate) behind five
+  jump entries. `:Play` `:InitSong`
   - Enables: each game gets the replay its music was written for.
-  - Costs: every module has its own copy. The two PGA Tour Golf modules differ.
-    See [What is unique](#what-is-unique).
-- A sweep writes one byte per tick into a 16-byte wave, like [Fred](Fred.md)'s
+  - Costs: every module has its own copy.
+- A sweep writes one byte per tick into a short wave, like [Fred](Fred.md)'s
   pulse. `:Sweep` `:SweepDown`
-  - Costs: the wave is shared, so every voice on the instrument hears it.
+  - Costs: every voice on the instrument shares the wave.
 - Each sample stores its recording rate. The period is scaled by it.
   `:InitSamples` `:NoteOn`
   - Enables: samples at any rate play in tune.
@@ -41,28 +40,34 @@ width of a short wave.
 
 The composer writes a position list per voice and patterns of bytes.
 
-| Aspect   | Answer                                                              | Source          |
-| -------- | ------------------------------------------------------------------- | --------------- |
-| Notation | A note: a length byte up to 127, then a note byte.                  | `:NoteOn`       |
-| Notation | `INSTRUMENT`, `PORTAMENTO` (one step), `REST` (with a length).      | `:ReadStream`   |
-| Notation | `PATTERN_END` ends the pattern. `STOP` ends the voice.              | `:ReadStream`   |
-| Notation | A position list of pattern offsets. Offset 0 wraps to the start.    | `:NextPosition` |
-| Cost     | A length counts in units of the song's speed.                       | `:NoteOn`       |
-| Cost     | Portamento lasts one note. The next event clears it.                | `:CountDown`    |
-| Cost     | Volume is fixed per instrument. There is no envelope.               | `:NoteOn`       |
-| Cost     | DMA goes off one tick before each event. Every note ends in a gap.  | `:CountDown`    |
-| Cost     | Loop offset 0 plays once. A negative offset loops the whole sample. | `:QueueLoop`    |
+| Aspect   | Answer                                                                   | Source                     |
+| -------- | ------------------------------------------------------------------------ | -------------------------- |
+| Notation | A note: a length byte up to `NOTE_MAX`, then a note byte.                | `:NoteOn`                  |
+| Notation | `INSTRUMENT` picks the instrument.                                       | `:ReadStream`              |
+| Notation | `PORTAMENTO` sets one pitch step per tick.                               | `:ReadStream`              |
+| Notation | `REST` takes a length.                                                   | `:ReadStream`              |
+| Notation | `PATTERN_END` ends the pattern.                                          | `:ReadStream`              |
+| Notation | `STOP` on any voice stops the whole song.                                | `:ReadStream` `:StopSound` |
+| Notation | A negative `INSTRUMENT` number plays the game's instrument for the song. | `:SetInstrument`           |
+| Notation | A position list holds pattern offsets.                                   | `:NextPosition`            |
+| Notation | Offset 0 wraps to the first position.                                    | `:NextPosition`            |
+| Cost     | A length counts in units of the song's speed.                            | `:NoteOn`                  |
+| Cost     | Portamento lasts one note. The next event clears it.                     | `:CountDown`               |
+| Cost     | Volume is fixed per instrument, with no envelope.                        | `:NoteOn`                  |
+| Cost     | DMA goes off one tick before each event. Every note ends in a gap.       | `:CountDown`               |
+| Cost     | Loop offset 0 plays the sample once.                                     | `:QueueLoop`               |
+| Cost     | A negative loop offset loops the whole sample.                           | `:QueueLoop`               |
 
 ## What is unique
 
 - The sweep turns one byte past its upper bound. In `rh.GMUSIC` it writes into
   the first song's unused first byte. `:Sweep`
-- `rh.GMUSIC` clears the song number, so it always plays song 0. `rh.FLYMUS`
-  plays the song it is given. `:InitSong`
-- `rh.GMUSIC` sets up 11 samples; `rh.FLYMUS` sets up 6. The rest of the code is
-  the same. `:InitSamples`
-- In PGA Tour Golf, only the three built-in waves use vibrato or the sweep. The
-  samples use neither. `:InitWaves`
+- `rh.GMUSIC` clears the song number and always plays song 0. `rh.FLYMUS` plays
+  the song it is given. `:InitSong`
+- `rh.GMUSIC` sets up 11 samples and `rh.FLYMUS` 6. The rest of the code is the
+  same. `:InitSamples`
+- In PGA Tour Golf, only the three built-in waves have vibrato or sweep
+  settings. `:InitWaves` `:Instrument`
 
 ## Open questions
 

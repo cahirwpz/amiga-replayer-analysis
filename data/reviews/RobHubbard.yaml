@@ -1,0 +1,19 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/RobHubbard.md: 3e1bdbdd70b226aa642fd1be4a0ef27508ef01fc
+    specs/rob_hubbard.py: cbd855559df7437ec4952ea0fac3b8f825da6116
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/RobHubbard.yaml: 20d20dfc12b059af5efc477cef5c953b7296e8db
+    data/disasm/RobHubbard.cnf: c0b94dfb567e4319c7f42854ff5fc6cd3abec340
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/RobHubbard.md: 3e1bdbdd70b226aa642fd1be4a0ef27508ef01fc
+    specs/rob_hubbard.py: cbd855559df7437ec4952ea0fac3b8f825da6116
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 9130afc9b84032e90e2af39e0cf37ccdfb7f96bf
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []

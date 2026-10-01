@@ -46,7 +46,7 @@ Each voice reads its own note stream. Lengths are packed into one byte.
 - The song limits effects to voices 0 to N. An effect takes the voice with the
   fewest effect ticks left. `:EffectVoices` `:StartEffect`
   - Enables: the composer keeps effects off key voices (inference).
-  - Costs: the effect call is commented out, so UADE never runs it.
+  - Costs: the effect call is commented out. UADE never runs it.
 
 ## Composer's view
 
@@ -72,11 +72,10 @@ tables. Voice settings hold until a command changes them.
 
 - In legato mode, a note after an instrument change starts the new instrument at
   its loop. The attack part is skipped. `:SwapInstrument`
-- The stream starts a fade: a release that lasts until a note restarts the
+- A stream command starts a fade. This release lasts until a note restarts the
   sample. `:FadeOut` `:FadeStep` `:EnvelopeTick`
 - An envelope with no jump repeats every 64 ticks. `:EnvelopeTick`
 - A tie restarts neither the envelope nor the vibrato. `:ReadLength`
-- The pulse length is global. A larger value plays slower. `:SetPulseLength`
 
 ## Open questions
 
@@ -84,4 +83,4 @@ tables. Voice settings hold until a command changes them.
 - A new effect replaces a looping effect before a free voice. Did the game stop
   looping effects first? `:StartEffect`
 - Which tool wrote the streams? Pulses suggest a MIDI sequencer (guess).
-- Who writes the voice mask? This source never does. `:StartDma`
+- Who writes the mask of active voices? This source never does. `:StartDma`
