@@ -412,9 +412,9 @@ def AddInstrTranspose(number: int, transpose: int) -> int:
 
 
 def Options(module: Module, voice: Voice, option: int, arg: int) -> None:
-    """ARPEGGIO sets the arpeggio, so any row with another command ends
-    it. SLIDE_UP and SLIDE_DOWN move the period once per row and end the
-    arpeggio. Volume on a synth voice waits for the next note or `ADSR`
+    """ARPEGGIO sets the arpeggio. A row without a command is ARPEGGIO
+    0, so it ends the arpeggio. SLIDE_UP and SLIDE_DOWN move the period
+    once per row and end it too; other commands keep it. Volume on a synth voice waits for the next note or `ADSR`
     step. EFFECT on a row with a new note is lost: StartSynthNote sets
     the instrument's effect. The one unnamed command does nothing."""
     if option == ARPEGGIO:

@@ -1,0 +1,18 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/SoundMon2.2.md: ad8879a7f8c903b665b16f5820c4686eb387bbd0
+    specs/soundmon_22.py: 4b3e6de7032c8dc0517371810ec300455cc1efea
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/SoundMon2.2.yaml: 066024e7c93563c6825bfb4067269c4f9042bb7d
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/SoundMon2.2.md: ad8879a7f8c903b665b16f5820c4686eb387bbd0
+    specs/soundmon_22.py: 4b3e6de7032c8dc0517371810ec300455cc1efea
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []

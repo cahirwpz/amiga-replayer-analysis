@@ -1,0 +1,18 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/SynthDream.md: cfd5f77adb05e33c9ca9e1a3de1679666405a67a
+    specs/synth_dream.py: 6ef9f1b0fbba4f2d3b4445e9ddd78d309b3fa0a7
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/SynthDream.yaml: 26db2a352143cd219f707ce0e31756f0518fedd7
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/SynthDream.md: cfd5f77adb05e33c9ca9e1a3de1679666405a67a
+    specs/synth_dream.py: 6ef9f1b0fbba4f2d3b4445e9ddd78d309b3fa0a7
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []

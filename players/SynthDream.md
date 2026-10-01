@@ -29,12 +29,12 @@ A 16-byte pulse wave gets finer width steps from a soft edge byte.
   - Costs: every note restarts all four tables.
 - Events carry their own length in ticks. Each voice reads its own positions.
   `:ReadEvent` `:NoteEvent`
-  - Enables: no rows and no speed; voices loop at their own lengths.
+  - Enables: voices that loop at their own lengths, with no rows and no speed.
 - A glide can fit its rate to the note. The rate is the interval divided by the
   ticks after its delay. `:GlideToFit`
   - Enables: a glide that ends as the note ends.
-- The fine table, the glide and the instrument's shift scale the period. Their
-  ratios step by about 1/4 cent. `:FineWalker` `:Glide` `:ShiftPitch`
+- The fine table, the glide and the instrument's shift scale the period. Each
+  steps by about 1/4 cent. `:FineWalker` `:Glide` `:ShiftPitch`
   - Enables: detune and slides that sound the same in every octave.
 - A position can swap one instrument for another. `:LoadInstrument`
   - Enables: one pattern with other sounds.
@@ -62,8 +62,8 @@ instrument names four tables, or a sample.
   event ends. `:Glide`
 - A note's first tick writes the sample, the second its loop. There is no
   busy-wait. `:WriteChannel`
-- Each voice ends on its own: `LOOP_POSITIONS` loops its positions, `STOP_VOICE`
-  stops it. `:NextPosition`
+- Each voice ends on its own. `LOOP_POSITIONS` loops its positions and
+  `STOP_VOICE` stops it. `:NextPosition`
 
 ## Open questions
 

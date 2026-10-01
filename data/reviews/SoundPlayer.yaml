@@ -1,0 +1,18 @@
+coverage:
+  date: 2026-10-01
+  inputs:
+    players/SoundPlayer.md: 716f946c16c0d3625b516e2d659cdb33f6d21589
+    specs/soundplayer.py: 7c7421d1f479c83dc129989b59b867e4dada88f6
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    docs/control-dimensions.md: a9224f8b65938c01255c770c0e54cb35ddd40361
+    data/annot/SoundPlayer.yaml: f47f843b8abb07977c10a3d9213b5d8b58aaaaed
+  open: []
+writing:
+  date: 2026-10-01
+  inputs:
+    players/SoundPlayer.md: 716f946c16c0d3625b516e2d659cdb33f6d21589
+    specs/soundplayer.py: 7c7421d1f479c83dc129989b59b867e4dada88f6
+    AGENTS.md: 33f0416dfc3ec002df293aa4b7e15abcf6301a49
+    data/glossary.yaml: 1f827233dc938e8491d6ed08e2e9648851fb0a61
+    docs/card-template.md: 124f31b68954fd58d47cbd90916fe3f78f3aa599
+  open: []
