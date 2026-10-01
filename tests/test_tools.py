@@ -779,12 +779,12 @@ One sentence that is long enough to wrap past the eighty columns of a page, twic
 
 ## Key ideas
 
-- A bullet with a code span, `NoteOn`, and words enough to wrap onto a second line.
+- A bullet with a code span, `NoteOn`, a [link to a page](x.md), and words enough to wrap onto a second line.
   - A nested bullet.
 
 | Aspect   | Answer                                                                   | Source      |
 | -------- | ------------------------------------------------------------------------ | ----------- |
-| Notation | A cell long enough that the table must shrink it to fit eighty columns. | `:ReadStream` |
+| Notation | A cell long enough that the table must shrink it to fit the page's eighty-eight columns. | `:ReadStream` |
 """
 
     def setUp(self):
@@ -799,7 +799,10 @@ One sentence that is long enough to wrap past the eighty columns of a page, twic
         self.lines = [line for line, _ in printer.render(self.card)]
 
     def test_lines_fit_the_columns(self):
-        self.assertTrue(all(len(line) <= 80 for line in self.lines), self.lines)
+        width = self.printer.visible
+        self.assertTrue(
+            all(width(line) <= self.printer.COLUMNS for line in self.lines), self.lines
+        )
 
     def test_leaves_out_front_matter_and_context(self):
         text = "\n".join(self.lines)
@@ -812,6 +815,11 @@ One sentence that is long enough to wrap past the eighty columns of a page, twic
         self.assertRegex(self.lines[start + 1], r"^  [a-z]")
         self.assertIn("  - A nested bullet.", self.lines)
 
+    def test_a_link_gets_an_arrow_and_stays_on_one_line(self):
+        marked = [line for line in self.lines if self.printer.OPEN in line]
+        self.assertEqual(len(marked), 1, self.lines)
+        self.assertIn("link to a page\u2197", self.printer.plain(marked[0]))
+
     def test_code_spans_lose_their_backticks(self):
         self.assertIn("NoteOn", "\n".join(self.lines))
         self.assertNotIn("`", "\n".join(self.lines))
@@ -819,7 +827,9 @@ One sentence that is long enough to wrap past the eighty columns of a page, twic
     def test_a_wide_table_wraps_its_cells(self):
         rows = [line for line in self.lines if line.startswith(("Aspect", "Notation"))]
         self.assertEqual(len(rows), 2)
-        self.assertIn("  :ReadStream", self.lines[self.lines.index(rows[1])])
+        row = self.printer.plain(self.lines[self.lines.index(rows[1])])
+        self.assertIn("  ReadStream", row)
+        self.assertNotIn(":ReadStream", row)
 
     def test_pages_count_whole_pages(self):
         lines = self.printer.LINES

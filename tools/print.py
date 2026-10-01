@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Print player cards as 80-column text, and check that each fits its pages.
+"""Print player cards as 88-column text, and check that each fits its pages.
 
 Usage: print.py [--check | --pdf OUT.pdf] FILE.md|DIR...
 
@@ -8,16 +8,19 @@ Usage: print.py [--check | --pdf OUT.pdf] FILE.md|DIR...
   --pdf        write the cards as one PDF: A4 landscape, two pages per
                side, each card from a new side
 
-The paper: an A4 sheet in landscape holds two pages side by side, each 80
-columns wide in JetBrains Mono. The font size and the lines per page follow
+The paper: an A4 sheet in landscape holds two pages side by side, each 88
+columns wide in JetBrains Mono, 7.2 pt. The font size and the lines per page follow
 from the sheet, the margins and the font's advance width. A card may fill
 one side: PAGES pages.
 
 Text leaves out the front matter and the Context section, which
 tools/cards.py generates. Headings print in bold, code spans without their
-backticks, links as their text. Tables get columns wide enough for their
-cells, then the widest columns shrink until the table fits 80 columns;
-cells wrap inside their column.
+backticks, labels without their leading colon, links as their text and
+an arrow (↗). The PDF sets code spans in italics and underlines link text;
+neither breaks across lines. The title prints at twice the
+size, over its own line and the blank line below it. Tables get columns wide enough for
+their cells, then the widest columns shrink until the table fits; cells
+wrap inside their column.
 
 The PDF embeds the font from .venv/share/fonts/; `source ./activate`
 fetches it (setup/Makefile). The check needs no font.
@@ -26,18 +29,22 @@ fetches it (setup/Makefile). The check needs no font.
 # mypy: disallow-untyped-defs
 
 import math
+import re
 import sys
-import textwrap
+from typing import TYPE_CHECKING
 from pathlib import Path
 
 import cli
 from markdown_it.token import Token
+
+if TYPE_CHECKING:
+    from fpdf import FPDF
 from mdtools import children, read
 
 ROOT = Path(__file__).resolve().parent.parent
 FONTS = ROOT / ".venv" / "share" / "fonts"
 
-COLUMNS = 80
+COLUMNS = 88
 PAGES = 2  # pages per card: one side of the sheet
 SHEET = (297.0, 210.0)  # A4 landscape, mm
 MARGIN = 10.0  # mm, around the sheet and between the two pages
@@ -50,33 +57,77 @@ FONT_SIZE = PAGE_WIDTH / COLUMNS / ADVANCE / PT  # points
 LINE_HEIGHT = FONT_SIZE * LEADING * PT  # mm
 LINES = int((SHEET[1] - 2 * MARGIN) / LINE_HEIGHT)  # per page
 
+TITLE_SCALE = 2  # the card's title, over its line and the blank one below
 SKIPPED = {"Context"}  # generated sections
 GAP = "  "  # between table columns
 
-Line = tuple[str, bool]  # text, bold
+Line = tuple[str, bool]  # text with marks, bold
+
+# Link text and code spans sit between these marks; a link's arrow follows
+# it. Their spaces become no-break spaces, so wrapping keeps them whole.
+OPEN, CLOSE, CODE, END_CODE = "\x01", "\x02", "\x03", "\x04"
+MARKS = (OPEN, CLOSE, CODE, END_CODE)
+ARROW, NBSP = "\u2197", "\u00a0"
+
+
+def visible(line: str) -> int:
+    """Printed width: marks take no column."""
+    return len(line) - sum(line.count(mark) for mark in MARKS)
+
+
+def plain(line: str) -> str:
+    """A line as printed text, without marks."""
+    for mark in MARKS:
+        line = line.replace(mark, "")
+    return line.replace(NBSP, " ")
 
 
 def text(inline: Token) -> str:
-    """Prose of an inline token: code spans without backticks."""
+    """Prose of an inline token, with marks: code spans without backticks,
+    a label without its leading colon."""
     out = []
+    link = False
     for _, child in children(inline):
-        if child.type in ("text", "code_inline", "image"):
-            out.append(child.content)
+        if child.type == "code_inline":
+            code = child.content.removeprefix(":").replace(" ", NBSP)
+            out.append(CODE + code + END_CODE)
+        elif child.type in ("text", "image"):
+            content = child.content
+            out.append(content.replace(" ", NBSP) if link else content)
         elif child.type in ("softbreak", "hardbreak"):
-            out.append(" ")
+            out.append(NBSP if link else " ")
+        elif child.type == "link_open":
+            out.append(OPEN)
+            link = True
+        elif child.type == "link_close":
+            out.append(CLOSE + ARROW)
+            link = False
     return "".join(out).strip()
+
+
+def fill(words: str, width: int, first: str = "", rest: str = "") -> list[str]:
+    """Greedy wrap by printed width; a word longer than a line stays whole.
+    Splits at plain spaces only, so links stay whole."""
+    lines: list[str] = []
+    line, empty = first, True
+    for word in filter(None, words.split(" ")):
+        if not empty and visible(line) + 1 + visible(word) > width:
+            lines.append(line)
+            line, empty = rest, True
+        line += word if empty else " " + word
+        empty = False
+    lines.append(line.rstrip())
+    return lines
 
 
 def wrap(words: str, first: str = "", rest: str = "") -> list[str]:
     """Words wrapped at COLUMNS, with prefixes for the first and later lines."""
-    return textwrap.wrap(
-        words, COLUMNS, initial_indent=first, subsequent_indent=rest
-    ) or [first.rstrip()]
+    return fill(words, COLUMNS, first, rest)
 
 
 def column_widths(rows: list[list[str]]) -> list[int]:
     """Content widths, the widest shrunk one at a time to fit COLUMNS."""
-    widths = [max(len(row[c]) for row in rows) for c in range(len(rows[0]))]
+    widths = [max(visible(row[c]) for row in rows) for c in range(len(rows[0]))]
     room = COLUMNS - len(GAP) * (len(widths) - 1)
     while sum(widths) > room:
         widest = widths.index(max(widths))
@@ -88,20 +139,23 @@ def render_table(rows: list[list[str]]) -> list[Line]:
     widths = column_widths(rows)
     out: list[Line] = []
     for n, row in enumerate(rows):
-        cells = [textwrap.wrap(cell, w) or [""] for cell, w in zip(row, widths)]
+        cells = [fill(cell, w) for cell, w in zip(row, widths)]
         for i in range(max(map(len, cells))):
-            parts = [
-                (c[i] if i < len(c) else "").ljust(w) for c, w in zip(cells, widths)
-            ]
+            parts = [pad(c[i] if i < len(c) else "", w) for c, w in zip(cells, widths)]
             out.append((GAP.join(parts).rstrip(), n == 0))
         if n == 0:
             out.append((GAP.join("-" * w for w in widths), False))
     return out
 
 
+def pad(cell: str, width: int) -> str:
+    return cell + " " * (width - visible(cell))
+
+
 def render_tokens(tokens: list[Token]) -> list[Line]:
     out: list[Line] = []
-    depth = 0  # list nesting
+    lists: list[int | None] = []  # per open list: its item number, None if bulleted
+    markers: list[str] = []  # per open list: its current item's marker
     fresh = False  # the next paragraph starts a list item
     skip = False
     i = 0
@@ -119,19 +173,26 @@ def render_tokens(tokens: list[Token]) -> list[Line]:
             i += 1
             continue
         if kind in ("bullet_list_open", "ordered_list_open"):
-            depth += 1
+            lists.append(0 if kind == "ordered_list_open" else None)
+            markers.append("- ")
         elif kind in ("bullet_list_close", "ordered_list_close"):
-            depth -= 1
-            if depth == 0:
+            lists.pop()
+            markers.pop()
+            if not lists:
                 out.append(("", False))
         elif kind == "list_item_open":
+            number = lists[-1]
+            if number is not None:
+                lists[-1] = number = number + 1
+                markers[-1] = f"{number}. "
             fresh = True
         elif kind == "inline" and tokens[i - 1].type == "paragraph_open":
-            indent = "  " * max(depth - 1, 0)
-            if depth and fresh:
-                lines = wrap(text(token), indent + "- ", indent + "  ")
-            elif depth:
-                lines = wrap(text(token), indent + "  ", indent + "  ")
+            indent = "".join(" " * len(m) for m in markers[:-1])
+            hang = indent + " " * len(markers[-1]) if markers else ""
+            if markers and fresh:
+                lines = wrap(text(token), indent + markers[-1], hang)
+            elif markers:
+                lines = wrap(text(token), hang, hang)
             else:
                 lines = wrap(text(token)) + [""]
             out += [(line, False) for line in lines]
@@ -195,31 +256,57 @@ def write_pdf(paths: list[Path], out: Path) -> int:
     """Write the PDF; return its number of sides."""
     from fpdf import FPDF
 
-    regular, bold = (
-        FONTS / "JetBrainsMono-Regular.ttf",
-        FONTS / "JetBrainsMono-Bold.ttf",
-    )
-    if not regular.is_file():
-        sys.exit(f"{regular} is missing; run: source ./activate")
+    styles = {"": "Regular", "B": "Bold", "I": "Italic", "BI": "BoldItalic"}
+    files = {
+        style: FONTS / f"JetBrainsMono-{name}.ttf" for style, name in styles.items()
+    }
+    for file in files.values():
+        if not file.is_file():
+            sys.exit(f"{file} is missing; run: source ./activate")
     pdf = FPDF(orientation="L", unit="mm", format="A4")
     pdf.set_auto_page_break(False)
     pdf.set_margins(0, 0, 0)
     pdf.set_title("Player cards")
-    pdf.add_font("mono", "", str(regular))
-    pdf.add_font("mono", "B", str(bold))
+    for style, file in files.items():
+        pdf.add_font("mono", style, str(file))
     for path in paths:
         lines = render(path)
         for side in range(0, len(lines), LINES * 2):
             pdf.add_page()
             for n, (line, strong) in enumerate(lines[side : side + LINES * 2]):
                 page, row = divmod(n, LINES)
-                pdf.set_font("mono", "B" if strong else "", FONT_SIZE)
                 x = MARGIN + page * (PAGE_WIDTH + MARGIN)
                 y = MARGIN + (row + 1) * LINE_HEIGHT - (LEADING - 1) * FONT_SIZE * PT
-                pdf.text(x, y, line)
+                if side == 0 and n == 0:
+                    # The title, at TITLE_SCALE, fills its line and the blank one below.
+                    y += (TITLE_SCALE - 1.4) * LINE_HEIGHT  # room below
+                    draw(pdf, x, y, line, strong, FONT_SIZE * TITLE_SCALE)
+                    continue
+                draw(pdf, x, y, line, strong)
     out.parent.mkdir(parents=True, exist_ok=True)
     pdf.output(str(out))
     return pdf.pages_count
+
+
+def draw(
+    pdf: "FPDF", x: float, y: float, line: str, strong: bool, size: float = FONT_SIZE
+) -> None:
+    """One line: code in italics, link text underlined. Monospace: each
+    column is one advance."""
+    link = code = False
+    column = 0
+    for part in re.split(f"([{''.join(MARKS)}])", line):
+        if part in MARKS:
+            link = {OPEN: True, CLOSE: False}.get(part, link)
+            code = {CODE: True, END_CODE: False}.get(part, code)
+            continue
+        if part:
+            style = (
+                ("B" if strong else "") + ("I" if code else "") + ("U" if link else "")
+            )
+            pdf.set_font("mono", style, size)
+            pdf.text(x + column * ADVANCE * size * PT, y, part.replace(NBSP, " "))
+            column += len(part)
 
 
 def main(argv: list[str]) -> int:
@@ -243,7 +330,7 @@ def main(argv: list[str]) -> int:
         print("\n".join(errors), end="\n" if errors else "")
         return 1 if errors else 0
     for path in paths:
-        print("\n".join(line for line, _ in render(path)))
+        print("\n".join(plain(line) for line, _ in render(path)))
         print("\f", end="")
     return 0
 

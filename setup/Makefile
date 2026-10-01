@@ -21,9 +21,10 @@ VASM := http://phoenix.owl.de/tags/vasm2_0f.tar.gz CPU=m68k SYNTAX=mot
 # JetBrains Mono (OFL): a pinned release; tools/print.py embeds it in PDFs.
 FONTS := https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip
 FONT_DIR := .venv/share/fonts
+FONT_FILES := $(foreach s,Regular Bold Italic BoldItalic,fonts/ttf/JetBrainsMono-$(s).ttf)
 
 $(shell setup/keys.sh "ira=$(IRA)" "vlink=$(VLINK)" "vasmm68k_mot=$(VASM)" \
-  "fonts=$(FONTS)")
+  "fonts=$(FONTS) $(FONT_FILES)")
 
 ARCHIVE_TOOLS := $(BIN)/ira $(BIN)/vlink $(BIN)/vasmm68k_mot
 
@@ -76,9 +77,8 @@ $(FONT_DIR)/.installed: $(KEYS)/fonts | .venv/.installed build/packages.ok
 	@echo "setup: fetching fonts"
 	@rm -rf $(FONT_DIR)
 	@mkdir -p $(FONT_DIR)
-	@curl -fsSL "$$(cat $<)" | bsdtar -xf - -C $(FONT_DIR) -s '|.*/||' \
-	  fonts/ttf/JetBrainsMono-Regular.ttf fonts/ttf/JetBrainsMono-Bold.ttf \
-	  OFL.txt
+	@curl -fsSL "$(FONTS)" | bsdtar -xf - -C $(FONT_DIR) -s '|.*/||' \
+	  $(FONT_FILES) OFL.txt
 	@touch $@
 
 # The build directory is valid for one pin only; a new pin starts it empty.
