@@ -1,0 +1,128 @@
+# Technique families: one page each, ideas/<family>.md. Each idea slug of
+# a card's front matter belongs to exactly one family. tools/cards.py
+# checks it.
+
+wave-edits:
+  title: Live wave edits
+  ideas:
+    - in-place-waveform-effects
+    - partial-wave-inversion
+    - byte-write-sweep
+    - per-voice-wave-copy
+    - wave-effect-chain
+    - wave-morph
+    - wave-sweeps
+    - shared-sweeps
+    - sweep-between-limits
+    - bit-pattern-effects
+    - double-buffered-waves
+    - seamless-wave-notes
+
+wave-banks:
+  title: Waves built ahead
+  ideas:
+    - generated-waves
+    - filter-bank
+    - subtractive-synth
+    - free-running-buffer
+    - wavetable-scan
+    - length-tuned-waves
+    - pulse-width-table
+    - soft-edge-pulse
+    - pulse-width-sweep
+    - beam-noise
+    - resampling-synthesis
+    - chip-emulation
+
+instrument-lists:
+  title: Instrument lists
+  ideas:
+    - volume-list
+    - pitch-list
+    - wave-list
+    - cross-list-jumps
+    - release-jump
+    - table-walkers
+    - waveform-as-table
+    - run-length-tables
+    - performance-list
+    - arpeggio-tables
+    - sample-envelope
+    - sustain-rows
+    - hard-cut
+
+instrument-programs:
+  title: Instrument programs
+  ideas:
+    - instrument-programs
+    - self-modifying-programs
+    - instrument-drivers
+    - inline-instruments
+    - bare-instruments
+
+pitch-and-volume:
+  title: Pitch and volume units
+  ideas:
+    - log-pitch
+    - log-volume-table
+    - period-scaled-vibrato
+    - semitone-portamento
+    - glide-to-fit
+    - instrument-transpose
+    - fixed-pitch-instruments
+    - register-shadow
+    - sample-rate-tune
+
+score-streams:
+  title: Score streams
+  ideas:
+    - per-voice-positions
+    - per-voice-streams
+    - voice-streams
+    - track-programs
+    - tracks-not-voices
+    - event-scores
+    - midi-score
+    - packed-lengths
+    - length-remainder
+    - stream-sync-counter
+    - counted-loops
+    - random-offset-loops
+
+timing:
+  title: Timing
+  ideas:
+    - fractional-tempo
+    - swing
+    - tempo-independent-rates
+    - interrupt-clock
+    - timer-dma-wait
+    - stop-signal
+
+voice-allocation:
+  title: Voices for music and effects
+  ideas:
+    - voice-allocation
+    - voice-masks
+    - effects-steal-voices
+    - effect-voice-limit
+    - effect-priority
+    - game-sync-flags
+    - game-branch-markers
+    - song-save-slots
+
+samples:
+  title: Sample use
+  ideas:
+    - multisamples
+    - sample-chaining
+    - sample-pack
+    - replay-in-module
+    - attach-modes
+
+voice-mixing:
+  title: Voice mixing
+  ideas:
+    - voice-mixing
+    - self-modifying-mixer
+    - chunk-pitch-shift

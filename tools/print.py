@@ -6,9 +6,10 @@ Usage: print.py [--check | --pdf OUT.pdf] FILE.md|DIR...
   (no option)  print each page as the text that goes on paper
   --check      exit 1 if a card needs more than PAGES pages
   --pdf        write the pages as one PDF: A4 portrait, for duplex
-               printing. Each starts on an odd page, the front of a
-               sheet; a blank page fills the gap. Pages carry their
-               number in the outer corner.
+               printing. Each starts on a new page. One longer than a
+               page starts on an odd page, the front of a sheet; a
+               blank page fills the gap. Pages carry their number in
+               the outer corner.
 
 Pages print in argument order. A directory gives its cards; a file is
 printed even if it is no card, e.g. docs/paula.md. Only cards have a
@@ -45,7 +46,7 @@ from markdown_it.token import Token
 
 if TYPE_CHECKING:
     from fpdf import FPDF
-from mdtools import children, read
+from mdtools import children, read, slug
 
 ROOT = Path(__file__).resolve().parent.parent
 FONTS = ROOT / ".venv" / "share" / "fonts"
@@ -92,12 +93,6 @@ def plain(line: str) -> str:
     return MARK.sub("", line).replace(NBSP, " ")
 
 
-def slug(heading: str) -> str:
-    """A heading's anchor, as GitHub makes it."""
-    words = re.sub(r"[^\w\- ]", "", heading.lower())
-    return words.replace(" ", "-")
-
-
 def text(inline: Token) -> str:
     """Prose of an inline token, with marks: code spans without backticks,
     a label without its leading colon."""
@@ -122,12 +117,56 @@ def text(inline: Token) -> str:
     return "".join(out).strip()
 
 
+BREAKS = "/:_." + NBSP  # a word too long for its line breaks after one
+
+
+def split_word(word: str, width: int) -> list[str]:
+    """A word wider than width, cut into pieces that fit: after a BREAKS
+    character if possible. Each piece reopens the marks it is inside."""
+    chars: list[tuple[str, bool, str | None]] = []  # char, in code, link href
+    code, href = False, None
+    for part in MARK.split(word):
+        if part.startswith(OPEN):
+            href = part[1:-1]
+        elif part in (CLOSE, CODE, END_CODE):
+            href = None if part == CLOSE else href
+            code = {CODE: True, END_CODE: False}.get(part, code)
+        else:
+            chars += [(c, code, href) for c in part]
+    pieces, start = [], 0
+    while start < len(chars):
+        end = min(start + width, len(chars))
+        if end < len(chars):
+            cuts = [i + 1 for i in range(start, end - 1) if chars[i][0] in BREAKS]
+            end = cuts[-1] if cuts else end
+        pieces.append(marked(chars[start:end]))
+        start = end
+    return pieces
+
+
+def marked(chars: list[tuple[str, bool, str | None]]) -> str:
+    """Characters with their code and link state back as marks."""
+    out, code, href = [], False, None
+    for c, in_code, in_href in chars + [("", False, None)]:
+        if (in_code, in_href) != (code, href):
+            out.append((END_CODE if code else "") + (CLOSE if href is not None else ""))
+            out.append((OPEN + in_href + HREF if in_href is not None else ""))
+            out.append(CODE if in_code else "")
+            code, href = in_code, in_href
+        out.append(c)
+    return "".join(out)
+
+
 def fill(words: str, width: int, first: str = "", rest: str = "") -> list[str]:
-    """Greedy wrap by printed width; a word longer than a line stays whole.
-    Splits at plain spaces only, so links stay whole."""
+    """Greedy wrap by printed width. Splits at plain spaces, so links stay
+    whole; only a word wider than a line is cut, by split_word."""
     lines: list[str] = []
     line, empty = first, True
+    atoms = []
     for word in filter(None, words.split(" ")):
+        room = width - max(visible(first), visible(rest))
+        atoms += split_word(word, room) if visible(word) > room else [word]
+    for word in atoms:
         if not empty and visible(line) + 1 + visible(word) > width:
             lines.append(line)
             line, empty = rest, True
@@ -273,11 +312,12 @@ Rendered = list[tuple[Path, list[Line]]]
 
 
 def first_pages(rendered: Rendered) -> list[int]:
-    """Each document's first page in the PDF: always odd, the front of a
-    sheet."""
+    """Each document's first page in the PDF. One longer than a page
+    starts on an odd page, the front of a sheet."""
     firsts, page = [], 1
     for _, lines in rendered:
-        page += 1 - page % 2
+        if pages(lines) > 1:
+            page += 1 - page % 2
         firsts.append(page)
         page += pages(lines)
     return firsts

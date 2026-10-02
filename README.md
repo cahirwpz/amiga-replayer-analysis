@@ -13,7 +13,7 @@ and its many relatives are left out.
 3. [Player cards](players/): one page per replayer.
 4. [Player facts](data/players.yaml): provenance, lineage, authors.
 5. [Specs](specs/): each player's model; deep dives are in its docstrings.
-6. [Ideas](ideas/): one technique, compared across players.
+6. [Ideas](ideas/): technique families, compared across players.
 
 Unknown terms are in [the glossary](docs/glossary.md).
 

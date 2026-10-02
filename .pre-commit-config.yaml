@@ -92,6 +92,13 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: techniques               # Seen-in lists of docs/paula-techniques.md match the cards
+        name: techniques
+        entry: .venv/bin/python3 tools/techniques.py --check
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: annot                    # data/annot/*.yaml match their sources
         name: annot
         entry: .venv/bin/python3 tools/annot.py --check

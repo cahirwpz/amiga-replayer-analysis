@@ -1,7 +1,7 @@
 ---
 player: MED
 template: 3
-ideas: [volume-list]
+ideas: [volume-list, no-such-idea]
 control: { sequencer: commands, instrument: commands }
 ---
 

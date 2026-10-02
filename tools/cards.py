@@ -11,6 +11,7 @@ docs/card-template.md; its model is the player's spec (tools/specs.py):
   - no code blocks
   - no `;` in table cells; cited labels are readable CamelCase names
   - `base`: names another card
+  - each `ideas` slug belongs to a family in data/ideas.yaml
 
 Prints `file:line: rule: detail` for each problem; exits 1 if any.
 """
@@ -21,6 +22,7 @@ from pathlib import Path
 
 import cli
 import players
+import yaml
 from links import citation
 from mdtools import children, heading_lines, read, tables
 
@@ -38,6 +40,13 @@ SECTIONS = [
 # A cited label on a card: CamelCase, no underscores. Raw source
 # labels get a readable name in data/annot/ or data/disasm/ first.
 LABEL_RE = re.compile(r"[A-Z][A-Za-z0-9]*[a-z][A-Za-z0-9]*")
+IDEAS = ROOT / "data" / "ideas.yaml"
+
+
+def idea_slugs():
+    """Every idea slug of a family in data/ideas.yaml."""
+    families = yaml.safe_load(IDEAS.read_text(encoding="utf-8"))
+    return {slug for family in families.values() for slug in family["ideas"]}
 
 
 def is_text_list(value):
@@ -85,6 +94,9 @@ def check_card(path, doc, known, facts, err):
             err(1, "front-matter", f"unknown `{key}`")
     if not is_text_list(meta.get("ideas", [])):
         err(1, "front-matter", "`ideas` must be a list")
+    else:
+        for slug in sorted(set(meta.get("ideas", [])) - idea_slugs()):
+            err(1, "ideas", f"`{slug}` is in no family of data/ideas.yaml")
     if "base" in meta:
         base = path.parent / f"{meta['base']}.md"
         if meta["base"] == meta.get("player") or not base.is_file():

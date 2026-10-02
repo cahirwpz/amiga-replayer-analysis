@@ -5,8 +5,8 @@
 
 .DELETE_ON_ERROR:
 
-# The book: Paula pages, every card, then the glossary.
-FRONT := docs/paula.md docs/paula-techniques.md
+# The book: Paula pages, technique families, every card, then the glossary.
+FRONT := docs/paula.md docs/paula-techniques.md $(sort $(wildcard ideas/*.md))
 BACK := docs/glossary.md
 CARDS := $(sort $(wildcard players/*.md))
 

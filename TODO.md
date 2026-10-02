@@ -9,23 +9,18 @@ The hand-off between sessions. What belongs here: see
 
 In this order:
 
-1. [ ] Review the cards with the user. The user opens each card; record verdicts
-       here. Order, synthesis first:
-   - Synthesis: SoundMon2.2, Fred, MugicianII, SynthDream, ArtOfNoise-8V,
-     FutureComposer1.4, Jochen_Hippel_ST, SonicArranger, AbyssHighestExperience,
-     VoodooSupremeSynthesizer, DigitalSonixChrome, MusiclineEditor,
-     DavidWhittaker, RobHubbard, TimFollin.
-   - Sequencing: TFMX-Pro, SoundFactory, JasonPage, PaulRobotham, MaxTrax,
-     MIDI-Loriciel, SonixMusicDriver, SoundPlayer, MED, FaceTheMusic.
-   - Mixing: MusicMaker-8V, Oktalyzer, TFMX-7V.
-   - All cards are in template 3. The user calls SoundMon2.2 solid.
-2. Ideas:
-   - [ ] Decide how to group `ideas/`: pages per technique slug, or per control
-         dimension (see `docs/control-dimensions.md`).
-   - [ ] Write more technique pages in `ideas/`; `voice-mixing` is the first.
-   - [ ] Add a check that `ideas:` slugs in cards exist.
-   - [ ] Generate a technique index from the slugs, for the front page.
-3. [ ] Triage players, synthesis first. See [Triage](#triage).
+1. [ ] The user reviews the print, `make build/cards.pdf`, on paper in the week
+       of 2026-10-05. A verdict per card is "solid", or the spot that fails.
+       Checks: borrowable ideas, a flow to follow, useful traps.
+   - Close reads: Fred, TFMX-Pro, Oktalyzer, SonixMusicDriver,
+     VoodooSupremeSynthesizer. Skim the rest. Fix shared problems everywhere.
+   - The user calls SoundMon2.2 solid.
+2. [ ] Record the verdicts here and fix the cards.
+3. Ideas: ten technique families in `data/ideas.yaml`, one page each in
+   `ideas/`, per `docs/idea-template.md`. The user chose families and lists.
+   - [ ] Generate a technique index from the families, for the front page.
+   - [ ] The user reviews the family pages on paper, with the cards.
+4. [ ] Triage players, synthesis first. See [Triage](#triage).
 
 ### Triage
 

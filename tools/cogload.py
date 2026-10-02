@@ -6,6 +6,8 @@ Usage: cogload.py FILE.md|DIR...
 Prints `file:line: rule: detail` for each violation; exits 1 if any.
 Limits depend on the file's directory (see PROFILES). Code is exempt.
 Also flags acronyms missing from data/glossary.yaml, and its avoided terms.
+A "Seen in:" paragraph is a list of links, a lookup like a table: it has
+no sentence limits and does not count toward the file's words.
 A card, players/<player>.md, names no command by number and no hex number
 equal to a constant of the player's spec; see tools/numbered.py.
 Markdown is parsed by tools/mdtools.py; regexes only see the extracted prose.
@@ -45,13 +47,15 @@ PROFILES = [
     ("TODO.md", {"file_words": 1000}),
     # Cards: tools/print.py limits them by printed pages instead.
     ("players/", {"file_words": 0}),
-    ("ideas/", {"file_words": 300}),
+    ("ideas/", {"file_words": 600}),
 ]
 
 # Files exempt from the acronym check.
 ACRONYM_EXEMPT = {"AGENTS.md", "docs/glossary.md"}
 # Files exempt from the avoided-terms check.
 AVOID_EXEMPT = {"docs/glossary.md"}
+
+SEEN_IN = "Seen in:"  # starts a list of links, e.g. in docs/paula-techniques.md
 
 # FK grade is noisy on tiny samples.
 FK_MIN_WORDS = 50
@@ -111,7 +115,8 @@ def load_avoided():
 def blocks(doc):
     """Yield (kind, line, text, code) for each block of prose.
 
-    kind: 'heading', 'para' or 'cell'; code is the text with code spans.
+    kind: 'heading', 'para', 'links' (a "Seen in:" list) or 'cell'; code is
+    the text with code spans.
     Lists come as separate events: ('list-open', line), ('item', line) and
     ('list-close', line).
     """
@@ -132,8 +137,11 @@ def blocks(doc):
                 "th_open": "cell",
                 "td_open": "cell",
             }.get(parent)
+            text = plain(token)
+            if block == "para" and text.startswith(SEEN_IN):
+                block = "links"
             if block:
-                yield block, line_of(token), plain(token), literal(token)
+                yield block, line_of(token), text, literal(token)
 
 
 def card_constants(rel):
@@ -176,7 +184,7 @@ def check(path, known_terms, avoided=()):
             for _, detail in numbered.find(code, consts):
                 err(n, "number", detail)
         w = words(text)
-        if kind != "cell" or lim["count_tables"]:
+        if kind in ("para", "heading") or (kind == "cell" and lim["count_tables"]):
             total_words += len(w)
         if rel not in AVOID_EXEMPT:
             for pattern, term, use in avoided:
@@ -192,7 +200,7 @@ def check(path, known_terms, avoided=()):
             if len(w) > lim["cell_words"]:
                 err(n, "cell-words", f"{len(w)} > {lim['cell_words']}")
             continue
-        if kind == "heading":
+        if kind in ("heading", "links"):
             continue
 
         sents = sentences(text)

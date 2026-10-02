@@ -111,6 +111,14 @@ class Cogload(unittest.TestCase):
         finally:
             cogload.PROFILES = saved
 
+    def test_a_seen_in_list_has_no_limits(self):
+        names = ", ".join(f"[Player {n}](x.md)" for n in range(40))
+        with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
+            path = Path(tmp) / "seen.md"
+            path.write_text(f"# Seen\n\nShort text.\n\nSeen in: {names}.\n")
+            code, _, out = run("cogload.py", path)
+        self.assertEqual(code, 0, out)
+
 
 class Numbered(unittest.TestCase):
     """Numbers that stand in for names; see tools/numbered.py."""
@@ -252,6 +260,44 @@ class Links(unittest.TestCase):
         self.assertEqual(code, 0, out)
 
 
+class Techniques(unittest.TestCase):
+    PAGE = """# Techniques
+
+## Silent loop
+
+A short run of zeros.
+
+Seen in: [Old](../players/Old.md).
+
+## Loop counting
+
+One interrupt per reload.
+"""
+
+    def test_lists_the_cards_that_link_each_section(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import techniques
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "docs").mkdir()
+            (root / "players").mkdir()
+            page = root / "docs" / "techniques.md"
+            page.write_text(self.PAGE)
+            for name, anchor in (("Fred", "silent-loop"), ("Abc", "nope")):
+                (root / "players" / f"{name}.md").write_text(
+                    f"# {name}\n\nA [loop](../docs/techniques.md#{anchor}).\n"
+                )
+            text, missing = techniques.rebuild(page, root / "players")
+        self.assertIn("Seen in: [Fred](../players/Fred.md).\n\n## Loop", text)
+        self.assertNotIn("Old", text)
+        self.assertTrue(text.endswith("One interrupt per reload.\n"))
+        self.assertEqual(missing, ["nope"])
+
+    def test_the_page_is_up_to_date(self):
+        self.assertEqual(run("techniques.py", "--check")[0], 0)
+
+
 class Annot(unittest.TestCase):
     def setUp(self):
         sys.path.insert(0, str(ROOT / "tools"))
@@ -354,11 +400,13 @@ class Cards(unittest.TestCase):
         code, rules, out = run("cards.py", FIXTURES / "cards_bad.md")
         self.assertEqual(code, 1)
         expected = {"front-matter", "player", "section", "cell", "label", "code"}
+        expected |= {"ideas"}
         self.assertEqual(expected, rules, out)
         for text in (
             "unknown `control`",
             "unknown `## Extra`",
             "order should be ['Unique ideas'",
+            "`no-such-idea` is in no family",
             "no code on a card",
             "one fact per cell",
             "`plr_loop2` is no readable name",
@@ -762,6 +810,7 @@ One sentence that is long enough to wrap past the eighty columns of a page, twic
 | Aspect   | Answer                                                                   | Source      |
 | -------- | ------------------------------------------------------------------------ | ----------- |
 | Notation | A cell long enough that the table must shrink it to fit the page's eighty-eight columns. | `:ReadStream` |
+| Cost     | A cell with a citation wider than its column. | `specs/abyss_highest_experience.py:PerformanceStepWithAVeryLongName` |
 """
 
     def setUp(self):
@@ -796,6 +845,11 @@ One sentence that is long enough to wrap past the eighty columns of a page, twic
         self.assertEqual(len(marked), 1, self.lines)
         self.assertIn("link to a page\u2197", self.printer.plain(marked[0]))
 
+    def test_a_word_wider_than_its_column_breaks(self):
+        text = "\n".join(self.printer.plain(line) for line in self.lines)
+        self.assertIn("specs/abyss_highest_experience.py:\n", text)
+        self.assertIn("PerformanceStepWithAVeryLongName", text)
+
     def test_code_spans_lose_their_backticks(self):
         self.assertIn("NoteOn", "\n".join(self.lines))
         self.assertNotIn("`", "\n".join(self.lines))
@@ -812,12 +866,16 @@ One sentence that is long enough to wrap past the eighty columns of a page, twic
         self.assertEqual(self.printer.pages([("", False)] * lines * 2), 2)
         self.assertEqual(self.printer.pages([("", False)] * (lines * 2 + 1)), 3)
 
-    def test_pdf_starts_each_card_on_the_front_of_a_sheet(self):
+    def test_pdf_starts_a_long_page_on_the_front_of_a_sheet(self):
         if not (self.printer.FONTS / "JetBrainsMono-Regular.ttf").is_file():
             self.skipTest("the font is missing; run: source ./activate")
         out = self.card.with_suffix(".pdf")
-        # One page each: a blank page fills the back of the first sheet.
-        self.assertEqual(self.printer.write_pdf([self.card, self.card], out), 3)
+        # One page each: no blank page between them.
+        self.assertEqual(self.printer.write_pdf([self.card, self.card], out), 2)
+        long = self.card.parent / "long.md"
+        long.write_text("# Long\n\n" + "Line.\n\n" * (self.printer.LINES // 2 + 1))
+        # A blank page fills the back of the first sheet.
+        self.assertEqual(self.printer.write_pdf([self.card, long], out), 4)
 
     def test_pdf_links_to_a_heading_of_another_page(self):
         if not (self.printer.FONTS / "JetBrainsMono-Regular.ttf").is_file():

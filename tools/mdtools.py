@@ -9,6 +9,7 @@ Reading goes through markdown-it-py, never through regular expressions:
   split(tokens, level)  a token list grouped under headings of one level
   table(tokens)    the first table in a token list, as (line, cells) rows
   tables(tokens)   every table in a token list, each as table() gives it
+  slug(heading)    a heading's `#` anchor, as GitHub makes it
 
 Writing produces text that prettier leaves unchanged, so generated files can
 be compared byte for byte:
@@ -16,6 +17,7 @@ be compared byte for byte:
   wrap(text)                   a paragraph wrapped at 80 columns
 """
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -146,6 +148,11 @@ def tables(tokens):
     return out
 
 
+def slug(heading):
+    """A heading's `#` anchor, as GitHub makes it."""
+    return re.sub(r"[^\w\- ]", "", heading.lower()).replace(" ", "-")
+
+
 def format_table(header, rows):
     """Lines of a Markdown table, padded the way prettier pads it."""
     widths = [
@@ -160,11 +167,12 @@ def format_table(header, rows):
 
 def wrap(text):
     """A paragraph wrapped at WIDTH. Like prettier, it breaks only at spaces
-    and never inside a code span."""
+    and never inside a code span or a link's text."""
     atoms: list[str] = []
     for word in text.split():
-        if atoms and atoms[-1].count("`") % 2:
-            atoms[-1] += " " + word  # still inside a code span
+        last = atoms[-1] if atoms else ""
+        if last.count("`") % 2 or last.count("[") > last.count("]"):
+            atoms[-1] += " " + word  # still inside a code span or link text
         else:
             atoms.append(word)
     lines: list[str] = []
