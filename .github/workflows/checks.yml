@@ -60,7 +60,7 @@ jobs:
         shell: bash
         run: |
           . ./activate
-          python3 tools/print.py --pdf build/cards.pdf players/
+          make build/cards.pdf
       - name: Upload the cards
         uses: actions/upload-artifact@v7
         with:

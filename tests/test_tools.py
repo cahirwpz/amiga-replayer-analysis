@@ -812,11 +812,34 @@ One sentence that is long enough to wrap past the eighty columns of a page, twic
         self.assertEqual(self.printer.pages([("", False)] * lines * 2), 2)
         self.assertEqual(self.printer.pages([("", False)] * (lines * 2 + 1)), 3)
 
-    def test_pdf_starts_each_card_on_a_new_page(self):
+    def test_pdf_starts_each_card_on_the_front_of_a_sheet(self):
         if not (self.printer.FONTS / "JetBrainsMono-Regular.ttf").is_file():
             self.skipTest("the font is missing; run: source ./activate")
         out = self.card.with_suffix(".pdf")
-        self.assertEqual(self.printer.write_pdf([self.card, self.card], out), 2)
+        # One page each: a blank page fills the back of the first sheet.
+        self.assertEqual(self.printer.write_pdf([self.card, self.card], out), 3)
+
+    def test_pdf_links_to_a_heading_of_another_page(self):
+        if not (self.printer.FONTS / "JetBrainsMono-Regular.ttf").is_file():
+            self.skipTest("the font is missing; run: source ./activate")
+        doc = self.card.parent / "doc.md"
+        doc.write_text("# Doc\n\nText.\n\n## Silent loop\n\nMore text.\n")
+        self.card.write_text(
+            "---\nplayer: Fred\n---\n\n# Fred\n\nA [loop](doc.md#silent-loop).\n"
+        )
+        out = self.card.with_suffix(".pdf")
+        self.assertEqual(
+            self.printer.documents([str(doc), str(self.card)]), [doc, self.card]
+        )
+        self.printer.write_pdf([doc, self.card], out)
+        pdf = out.read_bytes()
+        self.assertEqual(pdf.count(b"/Subtype /Link"), 1)
+        self.assertNotIn(b"/XYZ 0.0 841.89", pdf)  # the heading, not the page top
+
+    def test_check_skips_pages_that_are_no_cards(self):
+        doc = self.card.parent / "doc.md"
+        doc.write_text("# Doc\n\n" + "Line.\n\n" * self.printer.LINES * 3)
+        self.assertEqual(self.printer.main(["--check", str(doc)]), 0)
 
     def test_font_matches_the_page_model(self):
         font = self.printer.FONTS / "JetBrainsMono-Regular.ttf"

@@ -3,10 +3,16 @@
 
 Usage: print.py [--check | --pdf OUT.pdf] FILE.md|DIR...
 
-  (no option)  print each card as the text that goes on paper
+  (no option)  print each page as the text that goes on paper
   --check      exit 1 if a card needs more than PAGES pages
-  --pdf        write the cards as one PDF: A4 portrait, each card from a
-               new page
+  --pdf        write the pages as one PDF: A4 portrait, for duplex
+               printing. Each starts on an odd page, the front of a
+               sheet; a blank page fills the gap. Pages carry their
+               number in the outer corner.
+
+Pages print in argument order. A directory gives its cards; a file is
+printed even if it is no card, e.g. docs/paula.md. Only cards have a
+page limit.
 
 The paper: A4 portrait, JetBrains Mono at FONT_SIZE. The columns and the
 lines per page follow from the page, the margins and the font's advance
@@ -15,7 +21,8 @@ width. A card may fill PAGES pages: one sheet, printed on both sides.
 Text leaves out the front matter. Headings print in bold, code spans without their
 backticks, labels without their leading colon, links as their text and
 an arrow (↗). The PDF sets code spans in italics and underlines link text;
-neither breaks across lines. The PDF prints the title at twice the size
+neither breaks across lines. A link to a page in the PDF, or to one of
+its headings, jumps there; a URL opens. The PDF prints the title at twice the size
 and headings at 1.4 (`##`) and 1.2 times (`###`); each still counts as
 one line. Tables get columns wide enough for
 their cells, then the widest columns shrink until the table fits; cells
@@ -30,7 +37,7 @@ fetches it (setup/Makefile). The check needs no font.
 import math
 import re
 import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 from pathlib import Path
 
 import cli
@@ -47,6 +54,7 @@ FONT_SIZE = 10.0  # points
 PAGES = 2  # pages per card: both sides of one sheet
 SHEET = (210.0, 297.0)  # A4 portrait, mm
 MARGIN = 10.0  # mm, around the page
+CORNER = 6.0  # mm, from the page number to the sheet's edges; printers need ~5
 ADVANCE = 0.6  # JetBrains Mono's advance width, in em
 LEADING = 1.2  # line height, in font sizes
 PT = 25.4 / 72  # mm per point
@@ -68,21 +76,26 @@ SHIFT = {SUBSECTION: 0.1, SECTION: 0.25, TITLE: 0.6}
 
 # Link text and code spans sit between these marks; a link's arrow follows
 # it. Their spaces become no-break spaces, so wrapping keeps them whole.
-OPEN, CLOSE, CODE, END_CODE = "\x01", "\x02", "\x03", "\x04"
-MARKS = (OPEN, CLOSE, CODE, END_CODE)
+# OPEN carries the link's target up to HREF.
+OPEN, CLOSE, CODE, END_CODE, HREF = "\x01", "\x02", "\x03", "\x04", "\x05"
+MARK = re.compile(f"({OPEN}[^{HREF}]*{HREF}|[{CLOSE}{CODE}{END_CODE}])")
 ARROW, NBSP = "\u2197", "\u00a0"
 
 
 def visible(line: str) -> int:
     """Printed width: marks take no column."""
-    return len(line) - sum(line.count(mark) for mark in MARKS)
+    return len(MARK.sub("", line))
 
 
 def plain(line: str) -> str:
     """A line as printed text, without marks."""
-    for mark in MARKS:
-        line = line.replace(mark, "")
-    return line.replace(NBSP, " ")
+    return MARK.sub("", line).replace(NBSP, " ")
+
+
+def slug(heading: str) -> str:
+    """A heading's anchor, as GitHub makes it."""
+    words = re.sub(r"[^\w\- ]", "", heading.lower())
+    return words.replace(" ", "-")
 
 
 def text(inline: Token) -> str:
@@ -100,7 +113,8 @@ def text(inline: Token) -> str:
         elif child.type in ("softbreak", "hardbreak"):
             out.append(NBSP if link else " ")
         elif child.type == "link_open":
-            out.append(OPEN)
+            href = str(child.attrs.get("href", "")).replace(" ", "%20")
+            out.append(OPEN + href + HREF)
             link = True
         elif child.type == "link_close":
             out.append(CLOSE + ARROW)
@@ -239,14 +253,57 @@ def pages(lines: list[Line]) -> int:
     return math.ceil(len(lines) / LINES)
 
 
-def cards(args: list[str]) -> list[Path]:
-    """Card paths: files as given, directories searched for cards."""
+def is_card(path: Path) -> bool:
+    return bool(read(path).meta.get("player"))
+
+
+def documents(args: list[str]) -> list[Path]:
+    """Files as given, directories searched for cards."""
     paths = []
     for arg in map(Path, args):
-        for path in sorted(arg.rglob("*.md")) if arg.is_dir() else [arg]:
-            if read(path).meta.get("player"):
-                paths.append(path)
+        if arg.is_dir():
+            paths += [path for path in sorted(arg.rglob("*.md")) if is_card(path)]
+        else:
+            paths.append(arg)
     return paths
+
+
+Target = tuple[int, float]  # page, y in mm
+Rendered = list[tuple[Path, list[Line]]]
+
+
+def first_pages(rendered: Rendered) -> list[int]:
+    """Each document's first page in the PDF: always odd, the front of a
+    sheet."""
+    firsts, page = [], 1
+    for _, lines in rendered:
+        page += 1 - page % 2
+        firsts.append(page)
+        page += pages(lines)
+    return firsts
+
+
+def targets(rendered: Rendered) -> dict[str, Target]:
+    """Where each document and each of its headings starts in the PDF, by
+    resolved path and `#` anchor."""
+    found: dict[str, Target] = {}
+    for page, (path, lines) in zip(first_pages(rendered), rendered):
+        key = str(path.resolve())
+        found[key] = (page, 0.0)
+        for row, (line, weight) in enumerate(lines):
+            if weight >= SUBSECTION:
+                spot = (page + row // LINES, MARGIN + row % LINES * LINE_HEIGHT)
+                found.setdefault(f"{key}#{slug(plain(line))}", spot)
+    return found
+
+
+def number_page(pdf: "FPDF") -> None:
+    """The page's number in the bottom margin, at the outer corner."""
+    number = f"Page {pdf.page_no()}"
+    pdf.set_font("mono", "", FONT_SIZE)
+    width = len(number) * ADVANCE * FONT_SIZE * PT
+    x = SHEET[0] - CORNER - width if pdf.page_no() % 2 else CORNER
+    pdf.text(x, SHEET[1] - CORNER, number)
 
 
 def count(n: int, noun: str) -> str:
@@ -270,11 +327,31 @@ def write_pdf(paths: list[Path], out: Path) -> int:
     pdf.set_title("Player cards")
     for style, file in files.items():
         pdf.add_font("mono", style, str(file))
-    for path in paths:
-        lines = render(path)
+    rendered = [(path, render(path)) for path in paths]
+    spots = targets(rendered)
+    links: dict[str, int] = {}
+
+    def link(base: Path, href: str) -> int | str | None:
+        """A link to a page in the PDF, a URL, or None."""
+        if href.startswith(("http://", "https://")):
+            return href
+        file, _, anchor = href.partition("#")
+        key = str((base / file).resolve()) if file else str(base.resolve())
+        key += f"#{anchor}" if anchor else ""
+        if key not in spots:
+            return None
+        if key not in links:
+            page, y = spots[key]
+            links[key] = pdf.add_link(page=page, y=y)
+        return links[key]
+
+    for first, (path, lines) in zip(first_pages(rendered), rendered):
+        while pdf.pages_count < first - 1:
+            pdf.add_page()  # blank: the back of the last sheet
         for row, (line, weight) in enumerate(lines):
             if row % LINES == 0:
                 pdf.add_page()
+                number_page(pdf)
             x = MARGIN
             y = (
                 MARGIN
@@ -282,30 +359,53 @@ def write_pdf(paths: list[Path], out: Path) -> int:
                 - (LEADING - 1) * FONT_SIZE * PT
             )
             y += SHIFT.get(weight, 0) * LINE_HEIGHT
-            draw(pdf, x, y, line, weight > PLAIN, FONT_SIZE * SCALE.get(weight, 1))
+            size = FONT_SIZE * SCALE.get(weight, 1)
+            draw(pdf, x, y, line, weight > PLAIN, size, lambda h: link(path.parent, h))
     out.parent.mkdir(parents=True, exist_ok=True)
     pdf.output(str(out))
     return pdf.pages_count
 
 
 def draw(
-    pdf: "FPDF", x: float, y: float, line: str, strong: bool, size: float = FONT_SIZE
+    pdf: "FPDF",
+    x: float,
+    y: float,
+    line: str,
+    strong: bool,
+    size: float = FONT_SIZE,
+    link: Callable[[str], int | str | None] = lambda href: None,
 ) -> None:
-    """One line: code in italics, link text underlined. Monospace: each
-    column is one advance."""
-    link = code = False
+    """One line: code in italics, link text underlined and clickable.
+    Monospace: each column is one advance."""
+    target: int | str | None = None
+    inside = code = False
     column = 0
-    for part in re.split(f"([{''.join(MARKS)}])", line):
-        if part in MARKS:
-            link = {OPEN: True, CLOSE: False}.get(part, link)
+    advance = ADVANCE * size * PT
+    for part in MARK.split(line):
+        if part.startswith(OPEN):
+            inside, target = True, link(part[1:-1])
+            continue
+        if part in (CLOSE, CODE, END_CODE):
+            inside = inside and part != CLOSE
             code = {CODE: True, END_CODE: False}.get(part, code)
             continue
         if part:
             style = (
-                ("B" if strong else "") + ("I" if code else "") + ("U" if link else "")
+                ("B" if strong else "")
+                + ("I" if code else "")
+                + ("U" if inside else "")
             )
             pdf.set_font("mono", style, size)
-            pdf.text(x + column * ADVANCE * size * PT, y, part.replace(NBSP, " "))
+            left = x + column * advance
+            pdf.text(left, y, part.replace(NBSP, " "))
+            if inside and target is not None:
+                pdf.link(
+                    left,
+                    y - size * PT,
+                    len(part) * advance,
+                    size * PT * LEADING,
+                    target,
+                )
             column += len(part)
 
 
@@ -316,16 +416,18 @@ def main(argv: list[str]) -> int:
     mode.add_argument("--pdf", type=Path)
     parser.add_argument("paths", nargs="+")
     args = parser.parse_args(argv)
-    paths, pdf = cards(args.paths), args.pdf
+    paths, pdf = documents(args.paths), args.pdf
     if pdf:
         written = write_pdf(paths, pdf)
-        print(f"wrote {pdf}: {count(len(paths), 'card')} on {count(written, 'page')}")
+        print(
+            f"wrote {pdf}: {count(len(paths), 'document')} on {count(written, 'page')}"
+        )
         return 0
     if args.check:
         errors = [
             f"{path}:1: pages: {pages(lines)} > {PAGES} ({len(lines)} lines, {LINES} per page)"
             for path in paths
-            if pages(lines := render(path)) > PAGES
+            if is_card(path) and pages(lines := render(path)) > PAGES
         ]
         print("\n".join(errors), end="\n" if errors else "")
         return 1 if errors else 0
