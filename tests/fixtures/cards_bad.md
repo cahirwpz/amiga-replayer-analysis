@@ -1,36 +1,25 @@
 ---
 player: MED
-template: 2
+template: 3
 ideas: [volume-list]
 control: { sequencer: commands, instrument: commands }
 ---
 
-# Cards fixture, template 2
+# Cards fixture
 
-## Context
-
-| Fact   | Value |
-| ------ | ----- |
-| Player | stale |
-
-## Composer's view
+## How it plays
 
 ```python
 class Score:
     pass
 ```
 
-| Aspect   | Answer     | Source       |
-| -------- | ---------- | ------------ |
-| Notation | grid; rows | `:plr_loop2` |
-| Price    | cheap      | format notes |
+| Step | Source       |
+| ---- | ------------ |
+| a; b | `:plr_loop2` |
 
-## Key ideas
+## Unique ideas
 
 - Sections are out of order.
-
-## What is unique
-
-### Timing
 
 ## Extra

@@ -91,5 +91,4 @@ differs.
 - Game sound effects appear only as a distinct unique idea.
 - A card fits two printed pages. `tools/print.py --check` counts them.
 - One fact per table cell, never `;`. Repeat the first column for more.
-- Template 2 cards keep their older shape until their review rewrites them.
-  [`tools/cards.py`](../tools/cards.py) checks both.
+- [`tools/cards.py`](../tools/cards.py) checks the shape.

@@ -19,8 +19,7 @@ that reader, line by line.
 ## Read first
 
 1. `AGENTS.md`: the sections Depth, Writing and Evidence.
-2. `docs/card-template.md`. The card's `template` in its front matter picks the
-   shape: 3 is current, 2 is older.
+2. `docs/card-template.md`: the card's shape.
 3. `data/glossary.yaml`. The `avoid` section maps avoided terms to the preferred
    terms.
 4. `docs/paula-techniques.md`: what a card links instead of explaining.
@@ -49,7 +48,7 @@ as findings with rule `structure`.
 | `name`        | A number stands where a name belongs: a jump target, a command constant.          |
 | `repeat`      | A fact appears twice on the card, or repeats what the spec already holds.         |
 | `plain-words` | A rare word has a plain synonym.                                                  |
-| `unique`      | A unique idea, or a "What is unique" bullet, states what every tracker does.      |
+| `unique`      | A unique idea states what every tracker does.                                     |
 | `term`        | One meaning has two names on the card, or one name has two meanings.              |
 | `define`      | A card-local term is used before it is defined, or never defined.                 |
 | `trap`        | A **Trap:** is no interaction between replay parts, or sits under the wrong step. |

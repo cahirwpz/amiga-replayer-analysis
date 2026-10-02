@@ -18,8 +18,7 @@ In this order:
    - Sequencing: TFMX-Pro, SoundFactory, JasonPage, PaulRobotham, MaxTrax,
      MIDI-Loriciel, SonixMusicDriver, SoundPlayer, MED, FaceTheMusic.
    - Mixing: MusicMaker-8V, Oktalyzer, TFMX-7V.
-   - All cards are in template 3 (uncommitted). The user calls SoundMon2.2
-     solid. Next: the user's approval to commit, then verdicts.
+   - All cards are in template 3. The user calls SoundMon2.2 solid.
 2. Ideas:
    - [ ] Decide how to group `ideas/`: pages per technique slug, or per control
          dimension (see `docs/control-dimensions.md`).

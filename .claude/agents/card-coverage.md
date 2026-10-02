@@ -42,11 +42,10 @@ For each question in `docs/control-dimensions.md`:
 1. Find the replay code that answers it: the spec first, then the listing.
 2. Decide if the answer is distinct, by the doc's "Distinct when" column. A
    plain answer gets no finding.
-3. If it is distinct, check the card. Template 2: does a key idea, a Composer's
-   view row or a "What is unique" bullet state it? Template 3: does a unique
-   idea, a step of "How it plays" or a trap state it? If not, it is a gap.
+3. If it is distinct, check the card. Does a unique idea, a step of "How it
+   plays" or a trap state it? If not, it is a gap.
 
-A template 3 card also explains how the replay works. Check these too:
+A card also explains how the replay works. Check these too:
 
 - `flow`: the card names the interrupts and what each one does. It says how a
   voice falls silent.
@@ -64,9 +63,9 @@ Evidence rules:
   read.
 - A port is never evidence.
 - Mark a guess "(guess)" in the finding.
-- Stay in scope: control of streams, their state, and what instruments carry. On
-  a template 3 card, also the register writes. A common Paula technique is
-  linked from `docs/paula-techniques.md`, not explained.
+- Stay in scope: control of streams, their state, what instruments carry, and
+  the register writes. A common Paula technique is linked from
+  `docs/paula-techniques.md`, not explained.
 
 The card should stay short. Report a gap only when a reader who wants to borrow
 the idea would miss it.

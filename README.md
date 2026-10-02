@@ -21,7 +21,7 @@ Unknown terms are in [the glossary](docs/glossary.md).
 
 - What steps through data per song, per voice and per instrument.
 - What state the player keeps, and what an instrument can carry.
-- Key ideas, each with the source line that shows it.
+- Unique ideas, each with the source line that shows it.
 
 The shape is fixed by [the card template](docs/card-template.md).
 

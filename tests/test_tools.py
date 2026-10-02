@@ -353,44 +353,26 @@ class Cards(unittest.TestCase):
     def test_reports_each_rule(self):
         code, rules, out = run("cards.py", FIXTURES / "cards_bad.md")
         self.assertEqual(code, 1)
-        expected = {"front-matter", "player", "section", "context", "composer"}
-        expected |= {"cell", "label", "code", "unique"}
+        expected = {"front-matter", "player", "section", "cell", "label", "code"}
         self.assertEqual(expected, rules, out)
         for text in (
             "unknown `control`",
             "unknown `## Extra`",
-            "order should be ['Context'",
-            "out of date",
-            "aspects must be ['Notation'",
+            "order should be ['Unique ideas'",
             "no code on a card",
             "one fact per cell",
             "`plr_loop2` is no readable name",
-            "must be (manual) or labels",
-            "no subheadings",
         ):
             self.assertIn(text, out)
-
-    def test_writes_context(self):
-        good = (FIXTURES / "good" / "MED.md").read_text(encoding="utf-8")
-        with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
-            card = Path(tmp) / "MED.md"
-            stale = good.replace("Teijo Kinnunen", "Nobody")
-            self.assertNotEqual(stale, good)
-            card.write_text(stale, encoding="utf-8")
-            self.assertEqual(run("cards.py", card)[0], 1)
-            run("cards.py", "--write", card)
-            self.assertEqual(card.read_text(encoding="utf-8"), good)
-            run("cards.py", "--write", card)
-            self.assertEqual(card.read_text(encoding="utf-8"), good)
 
     def test_rejects_a_card_without_a_template(self):
         good = (FIXTURES / "good" / "MED.md").read_text(encoding="utf-8")
         with tempfile.TemporaryDirectory(dir=FIXTURES) as tmp:
             card = Path(tmp) / "MED.md"
-            card.write_text(good.replace("template: 2\n", ""), encoding="utf-8")
+            card.write_text(good.replace("template: 3\n", ""), encoding="utf-8")
             code, _, out = run("cards.py", card)
             self.assertEqual(code, 1)
-            self.assertIn("`template` must be one of", out)
+            self.assertIn("`template` must be 3", out)
 
     def test_accepts_a_delta_card(self):
         delta = FIXTURES / "good" / "Jochen_Hippel_ST.md"
@@ -755,7 +737,7 @@ class Reviews(unittest.TestCase):
 
     def test_rejects_findings_without_their_fields(self):
         data = self.reviews.load("Fred")
-        data["writing"]["open"] = [{"section": "Key ideas", "quote": "x"}]
+        data["writing"]["open"] = [{"section": "Unique ideas", "quote": "x"}]
         data["coverage"]["open"] = [
             {"dimension": "gate", "finding": "", "evidence": ":NoteOn"}
         ]
@@ -772,13 +754,7 @@ player: Fred
 
 One sentence that is long enough to wrap past the eighty columns of a page, twice over.
 
-## Context
-
-| Fact   | Value  |
-| ------ | ------ |
-| Player | `Fred` |
-
-## Key ideas
+## Unique ideas
 
 - A bullet with a code span, `NoteOn`, a [link to a page](x.md), and words enough to wrap onto a second line.
   - A nested bullet.
@@ -805,10 +781,9 @@ One sentence that is long enough to wrap past the eighty columns of a page, twic
             all(width(line) <= self.printer.COLUMNS for line in self.lines), self.lines
         )
 
-    def test_leaves_out_front_matter_and_context(self):
+    def test_leaves_out_front_matter(self):
         text = "\n".join(self.lines)
         self.assertNotIn("player:", text)
-        self.assertNotIn("Context", text)
         self.assertEqual(self.lines[0], "Fred")
 
     def test_bullets_hang_and_nest(self):

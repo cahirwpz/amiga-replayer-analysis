@@ -12,8 +12,7 @@ The paper: A4 portrait, JetBrains Mono at FONT_SIZE. The columns and the
 lines per page follow from the page, the margins and the font's advance
 width. A card may fill PAGES pages: one sheet, printed on both sides.
 
-Text leaves out the front matter and the Context section, which
-tools/cards.py generates. Headings print in bold, code spans without their
+Text leaves out the front matter. Headings print in bold, code spans without their
 backticks, labels without their leading colon, links as their text and
 an arrow (↗). The PDF sets code spans in italics and underlines link text;
 neither breaks across lines. The PDF prints the title at twice the size
@@ -57,7 +56,6 @@ COLUMNS = int(PAGE_WIDTH / (FONT_SIZE * ADVANCE * PT))
 LINE_HEIGHT = FONT_SIZE * LEADING * PT  # mm
 LINES = int((SHEET[1] - 2 * MARGIN) / LINE_HEIGHT)  # per page
 
-SKIPPED = {"Context"}  # generated sections
 GAP = "  "  # between table columns
 
 Line = tuple[str, int]  # text with marks, weight
@@ -162,22 +160,17 @@ def render_tokens(tokens: list[Token]) -> list[Line]:
     lists: list[int | None] = []  # per open list: its item number, None if bulleted
     markers: list[str] = []  # per open list: its current item's marker
     fresh = False  # the next paragraph starts a list item
-    skip = False
     i = 0
     while i < len(tokens):
         token = tokens[i]
         kind = token.type
         if kind == "heading_open":
             title = text(tokens[i + 1])
-            skip = token.tag == "h2" and title in SKIPPED
-            if not skip:
-                weight = {"h1": TITLE, "h2": SECTION, "h3": SUBSECTION}.get(
-                    token.tag, BOLD
-                )
-                out += [("", PLAIN), (title, weight), ("", PLAIN)]
+            weight = {"h1": TITLE, "h2": SECTION, "h3": SUBSECTION}.get(token.tag, BOLD)
+            out += [("", PLAIN), (title, weight), ("", PLAIN)]
             i += 3
             continue
-        if skip or kind == "front_matter":
+        if kind == "front_matter":
             i += 1
             continue
         if kind in ("bullet_list_open", "ordered_list_open"):
