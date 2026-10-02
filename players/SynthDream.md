@@ -113,8 +113,8 @@ Then it writes the wave and the registers:
    - **Trap:** an event of 1 or 2 ticks has no last-tick gap. It acts as legato.
    - **Trap:** with legato, the next sample waits for the old loop's end.
 
-A voice falls silent at each event's last tick, `REST`, volume 0 or
-`STOP_VOICE`.
+A voice falls silent at each event's last tick, `REST`,
+[volume 0](../docs/paula-techniques.md#silence-by-volume) or `STOP_VOICE`.
 
 - **Trap:** `STOP_VOICE` stops the ticks, not DMA. After a legato event, the
   wave loops on. `:NextPosition`

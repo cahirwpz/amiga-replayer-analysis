@@ -105,7 +105,8 @@ A note start writes `AUDxPER`, `AUDxLC`, `AUDxLEN` and `AUDxVOL` at once:
   - **Trap:** a sample with its loop at 0 plays only its loop.
 - A sample note's `AUDxVOL` is the instrument's volume, or the row's.
   `:StartNote`
-- A synth note plays its wave, which is also its loop. It restarts all walkers,
+- A synth note plays its wave, which is also its
+  [loop](../docs/paula-techniques.md#short-wave-loops). It restarts all walkers,
   also when DMA stayed on. `:StartSynthNote`
 - With `ADSR` on, the synth note's `AUDxVOL` is the first `ADSR` value × the
   voice volume / 64. `:StartSynthNote`

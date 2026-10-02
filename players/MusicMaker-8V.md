@@ -64,8 +64,9 @@ holds a sample envelope per instrument and the audio filter state. `:Module`
   - A song can only get faster.
 - **Trap:** the last fade command sets the fade speed of all voices.
   `:VoiceFade`
-- **Trap:** a note's filter flag switches the audio filter for all voices.
-  `:NoteEvent`
+- **Trap:** a note's filter flag switches the
+  [audio filter](../docs/paula-techniques.md#audio-filter-switch) for all
+  voices. `:NoteEvent`
 - **Trap:** `HULL` sets an instrument's sample envelope for all voices. It
   starts at that instrument's next sample start. `:SetHull`
 

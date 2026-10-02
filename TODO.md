@@ -13,11 +13,12 @@ In this order:
        [For the reviewer](#for-the-reviewer).
 2. [ ] Record the verdicts and answers here. Fix the cards and family pages. Fix
        shared problems in all of them.
-3. [ ] Triage players, synthesis first. See [Triage](#triage).
+3. [ ] Paula techniques: add writes held to the tick's end.
+4. [ ] Triage players, synthesis first. See [Triage](#triage).
 
 ### For the reviewer
 
-Print `make build/cards.pdf`, both sides. Mark the margins.
+Print `make build/cards.pdf` on both sides.
 
 Per card, a verdict: "solid", or the spot that fails. SoundMon2.2 is solid.
 
@@ -146,10 +147,9 @@ Fix in `tools/print.py:write_pdf`:
   - [Jason Page](players/JasonPage.md): branch markers and save slots.
   - [Paul Robotham](players/PaulRobotham.md): pulses per quarter note.
   - [MusicMaker 8V](players/MusicMaker-8V.md): quarter tones.
-- Releases: did a game or demo ship Oktalyzer's replay 1? Which games used
-  MaxTrax?
-- Docs or credits: Sonic Arranger's `AMF` name. Other games with Digital Sonix &
-  Chrome. Other Synth Dream composers.
+- Did a release ship Oktalyzer's replay 1? Which games used MaxTrax?
+- Credits: Sonic Arranger's `AMF` name. Games with Digital Sonix & Chrome. Synth
+  Dream composers.
 - [MIDI-Loriciel](players/MIDI-Loriciel.md): which scores avoid overlapping
   notes on one MIDI channel?
 - The sound chip's datasheet: compare the Hippel ST volume table with the chip.

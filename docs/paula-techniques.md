@@ -3,6 +3,21 @@
 Common ways replayers drive Paula. Cards link here instead of explaining them.
 The chip's facts are in [Paula in one page](paula.md).
 
+## Short wave loops
+
+A synth voice loops one short waveform, one cycle of the tone per pass. Each
+byte plays for one period. The pitch is the clock divided by the period times
+the wave's length.
+
+A wave half as long plays an octave higher at the same period. Replayers use
+this to stay inside Paula's period range. Edits to the wave change the timbre at
+once: see [live wave edits](#live-wave-edits).
+
+Seen in: [Fred](../players/Fred.md),
+[Jochen Hippel ST](../players/Jochen_Hippel_ST.md),
+[Sonix Music Driver](../players/SonixMusicDriver.md),
+[SoundMon 2.2](../players/SoundMon2.2.md).
+
 ## Silent loop
 
 A channel always loops. To end a one-shot sample, the replay sets its loop to a
@@ -24,6 +39,17 @@ Seen in: [Art Of Noise 8V](../players/ArtOfNoise-8V.md),
 [SoundFactory](../players/SoundFactory.md),
 [SoundMon 2.2](../players/SoundMon2.2.md),
 [SoundPlayer](../players/SoundPlayer.md).
+
+## Silence by volume
+
+A voice falls silent at volume 0, with DMA still on. The channel keeps fetching
+its sample. A later volume write makes it heard again at once, with no restart.
+
+Seen in: [Art Of Noise 8V](../players/ArtOfNoise-8V.md),
+[Paul Robotham](../players/PaulRobotham.md),
+[Sonix Music Driver](../players/SonixMusicDriver.md),
+[Synth Dream](../players/SynthDream.md),
+[Voodoo Supreme Synthesizer](../players/VoodooSupremeSynthesizer.md).
 
 ## Loop by reload
 
@@ -113,6 +139,17 @@ One channel modulates the next one's period or volume. It costs a whole voice.
 See [attach modes](paula.md#attach-modes).
 
 Seen in: [SoundPlayer](../players/SoundPlayer.md).
+
+## Audio filter switch
+
+The [audio filter](glossary.md) has one switch for all four channels. A replay
+command sets or flips it. A command on one voice changes the sound of every
+voice.
+
+Seen in: [Mugician II](../players/MugicianII.md),
+[MusicMaker 8V](../players/MusicMaker-8V.md),
+[Paul Robotham](../players/PaulRobotham.md),
+[SoundPlayer](../players/SoundPlayer.md).
 
 ## CIA timer
 

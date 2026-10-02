@@ -48,6 +48,8 @@ PROFILES = [
     # Cards: tools/print.py limits them by printed pages instead.
     ("players/", {"file_words": 0}),
     ("ideas/", {"file_words": 600}),
+    # A lookup of techniques that cards link, like the family pages.
+    ("docs/paula-techniques.md", {"file_words": 600}),
 ]
 
 # Files exempt from the acronym check.

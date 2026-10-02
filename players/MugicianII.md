@@ -64,8 +64,9 @@ Each tick, a voice first reads its row: `:ReadRow`
    `:RowCommands`
    - **Trap:** `SPEED` runs every tick until the voice's next note. It undoes a
      `SWING` from any voice. `:CmdSpeed`
-   - `FILTER_FLIP` flips the audio filter every tick until the next note.
-     `:VoiceTick`
+   - `FILTER_FLIP` flips the
+     [audio filter](../docs/paula-techniques.md#audio-filter-switch) every tick
+     until the next note. `:VoiceTick`
 3. A note sets the note, instrument, command and argument. `PORTAMENTO` keeps
    the note and instrument. The row's note becomes its target.
    - **Trap:** an effect byte below `FIRST_COMMAND` is no command. It is the

@@ -46,7 +46,8 @@ The player holds the subsong's base address and a goto count. `:Module`
 
 - At the start, each voice plays an empty sample of 16 words at volume 0.
   `:InitVoices`
-- DMA never goes off. Silence is volume 0 or the empty sample.
+- DMA never goes off. Silence is
+  [volume 0](../docs/paula-techniques.md#silence-by-volume) or the empty sample.
 - `:CmdGoto` shifts a bit into the goto count. At `ALL_LOOPED` after a tick, the
   host gets the song end, and play goes on. `:Tick`
   - **Trap:** the count needs exactly four gotos in one tick. Voices whose gotos

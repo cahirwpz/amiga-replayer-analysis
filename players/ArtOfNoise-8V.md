@@ -108,7 +108,8 @@ Each tick, in this order: `:EffectsTick`
 
 A sample without a loop ends on a
 [silent loop](../docs/paula-techniques.md#silent-loop) of one word. The mixer
-then stops the voice. A synth note sounds until the next note or volume 0.
+then stops the voice. A synth note sounds until the next note or
+[volume 0](../docs/paula-techniques.md#silence-by-volume).
 
 ### Scan
 

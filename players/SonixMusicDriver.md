@@ -28,7 +28,8 @@ like an analog synth (inference).
   - Limits: the bank costs 8 kB per synth instrument.
 - High notes skip wave bytes, instead of a shorter period. The period stays
   between 214 and 428. `:OctaveShift`
-  - Limits: the top octave plays a 4-byte wave.
+  - Limits: the top octave plays a
+    [4-byte wave](../docs/paula-techniques.md#short-wave-loops).
 - A wave mode rebuilds the wave each tick. `:BlendCopy` `:StretchHalves`
   - A blend averages the wave with a copy read from a moving offset. It sounds
     like phasing (inference).
@@ -98,7 +99,8 @@ Each tick, in this order: `:TickInstruments`
 - A note outside the driver's range is dropped. A held note then sounds on.
   `:SynthTick` `:SampledTick`
 
-A released voice keeps DMA on. It falls silent at volume 0. Only another type's
+A released voice keeps DMA on. It falls silent at
+[volume 0](../docs/paula-techniques.md#silence-by-volume). Only another type's
 note turns DMA off.
 
 ### Synth driver

@@ -59,7 +59,9 @@ the voice mask and the effect voice count. `:Module`
   - **Trap:** one command in any stream fades the whole song. `:MasterFade`
 - A clear bit in the voice mask mutes its voice. `:StartDma`
 - `EffectVoices` limits effects to voices 0 to N. `:EffectVoices`
-- Two commands switch the audio filter. `:FilterOn` `:FilterOff`
+- Two commands switch the
+  [audio filter](../docs/paula-techniques.md#audio-filter-switch). `:FilterOn`
+  `:FilterOff`
 
 ### Voice
 
@@ -120,8 +122,9 @@ With the legato flag set:
   `AUDxLEN` get the loop. `:SwapInstrument`
   - Without a loop, it plays the silent loop at `EMPTY_PERIOD`.
 
-There is no rest byte. A voice falls silent through its envelope, volume 0, its
-fade or the silent loop.
+There is no rest byte. A voice falls silent through its envelope,
+[volume 0](../docs/paula-techniques.md#silence-by-volume), its fade or the
+silent loop.
 
 The envelope index starts at byte 3 and wraps at 256. A table has 64 steps.
 `:EnvelopeTick`

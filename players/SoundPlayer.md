@@ -58,8 +58,9 @@ the audio filter. `:Module`
 - A game fade slides the voices in a mask down. `:GameFade`
   - **Trap:** during a fade, volume commands do nothing. A slide command still
     turns the fade around. The next song on the voice ends the fade.
-- Attach modes and the audio filter are global. Any voice's command changes
-  them, also in a sound effect song. `:CmdVolModOn`
+- Attach modes and the
+  [audio filter](../docs/paula-techniques.md#audio-filter-switch) are global.
+  Any voice's command changes them, also in a sound effect song. `:CmdVolModOn`
 
 ### Track
 

@@ -15,8 +15,8 @@ into Paula writes.
 - The ST replay writes its sound chip's registers into a shadow in RAM. The
   emulator turns the shadow into Paula writes. `:Play` `:EmuTick`
   - Limits: a chip channel with tone and noise on loses the noise.
-- A tone is a looped 4-byte square wave. A new pitch keeps the wave's phase.
-  `:EmuTone`
+- A tone is a [looped](../docs/paula-techniques.md#short-wave-loops) 4-byte
+  square wave. A new pitch keeps the wave's phase. `:EmuTone`
   - Limits: most tones play up to 23 cents sharp.
 - Noise is a looped 1024-byte random sample. The noise register picks one of 32
   periods. `:EmuNoise`

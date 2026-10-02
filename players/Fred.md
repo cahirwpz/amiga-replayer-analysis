@@ -64,7 +64,8 @@ Each tick, in this order: `:VoiceTick`
    [loop by reload](../docs/paula-techniques.md#loop-by-reload). `:QueueLoop`
    - A loop of 0 gets a [silent loop](../docs/paula-techniques.md#silent-loop).
      A negative loop keeps the whole sample looping.
-   - A pulse or morph wave loops from its buffer's start.
+   - A pulse or morph wave [loops](../docs/paula-techniques.md#short-wave-loops)
+     from its buffer's start.
    - **Trap:** the loop start adds the loop in bytes. The length subtracts it in
      words.
 2. The count drops by 1. At 0, the stream reads on. `:CountDown`
