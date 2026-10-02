@@ -11,9 +11,11 @@ of notes. No sample then plays far from its recorded pitch.
 - [MIDI-Loriciel](../players/MIDI-Loriciel.md): a zone is one sample with a top
   note and a note offset. A note plays the first zone whose top note is at or
   above it. `specs/midi_loriciel.py:FindSampleZone`
+  - The period comes from the note minus the zone's offset.
 - [MaxTrax](../players/MaxTrax.md): an instrument holds one sample per octave.
   The player takes the first sample whose period is at most about 508.
   `specs/maxtrax.py:CalcNote`
+  - The note then plays near the sample's recorded pitch.
 
 ## Sample chaining
 
@@ -30,21 +32,23 @@ A sample pack is one sample that holds several samples. A command picks one of
 them by number.
 
 - [Future Composer 1.4](../players/FutureComposer1.4.md): the pitch list's
-  `PACK` command picks one of up to 20 samples. The pack needs its own header.
+  `PACK` command picks one of up to 20 samples.
   `specs/future_composer_14.py:SampleFromPack`
+  - The pack needs its own header. Without it, the note restarts the old sample.
 
 ## Replay in the module
 
-The music file carries its own replay code. The host calls the replay through
-entry points at the start of the file.
+The music file carries its own replay code. The host program calls the replay at
+entry points. They are fixed addresses at the start of the file.
 
 - [David Whittaker](../players/DavidWhittaker.md): the module is the replay,
   with its entry points first. `specs/david_whittaker.py:InitSong`
-- [Fred](../players/Fred.md): the module starts with jumps to its entries.
-  `specs/fred.py:InitSong`
+- [Fred](../players/Fred.md): the module starts with jump instructions, one per
+  entry point. `specs/fred.py:InitSong`
 - [Rob Hubbard](../players/RobHubbard.md): the module starts with five jump
-  entries. Every module repeats the 830 bytes of replay code.
-  `specs/rob_hubbard.py:InitSong`
+  entries. `specs/rob_hubbard.py:InitSong`
+  - Every module repeats the 830 bytes of replay code. Each file pays for its
+    own copy.
 
 ## Attach modes
 
@@ -52,11 +56,12 @@ An attach mode lets one channel's sample set the next channel's volume or
 period. See [attach modes](../docs/paula-techniques.md#attach-modes).
 
 - [SoundPlayer](../players/SoundPlayer.md): a row command turns an attach mode
-  on or off. In the HRM, the modulating channel is silent and costs the song a
-  voice. `specs/soundplayer.py:CmdPerModOn`
+  on or off. `specs/soundplayer.py:CmdPerModOn`
+  - In the HRM, the modulating channel makes no sound. The song loses a voice.
 
 ## Compared
 
 - MIDI-Loriciel picks a sample by note range. MaxTrax picks a sample by octave.
-  Each lower octave doubles the sample's size.
-- A replay in the module gives each game the replay its music was written for.
+- MaxTrax pays in memory. Each lower octave doubles the sample's size.
+- A replay in the module never mismatches its music. Each game gets the replay
+  its music was written for.

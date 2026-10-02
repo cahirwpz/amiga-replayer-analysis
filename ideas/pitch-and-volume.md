@@ -8,23 +8,23 @@ Paula's period and volume only at the end.
 Pitch is a note number in fine steps, not a period. A log table turns it into
 the period.
 
-- [MaxTrax](../players/MaxTrax.md): note, pitch bend, portamento and tuning add
-  up in 1/256 semitones. A table of 257 words gives the period.
+- [MaxTrax](../players/MaxTrax.md): note, pitch bend, portamento and tuning are
+  summed in 1/256 semitones. A table of 257 words maps the sum to the period.
   `specs/maxtrax.py:CalcNote`
 
 ## Log volume table
 
-A volume in log steps sounds even across its range. A table maps each step to
-Paula's linear volume.
+Equal log steps sound like equal changes in loudness. Paula's volume is linear.
+A table maps each log step to a Paula volume.
 
-- [Jochen Hippel ST](../players/Jochen_Hippel_ST.md): a table maps the sound
-  chip's 16 log volume steps to Paula volume.
+- [Jochen Hippel ST](../players/Jochen_Hippel_ST.md): the emulated sound chip
+  has 16 log volume steps. A table maps them to Paula volume.
   `specs/jochen_hippel_st.py:EmuChannel`
 
 ## Period scaled vibrato
 
-A vibrato that adds a fixed amount to the period is wider on low notes. Adding a
-share of the period gives the same interval on every note.
+A vibrato that adds a fixed amount to the period is wider on high notes. Adding
+a share of the period gives the same interval on every note.
 
 - [Paul Robotham](../players/PaulRobotham.md): vibrato adds a share of the
   period. `specs/paul_robotham.py:Vibrato`
@@ -33,18 +33,19 @@ share of the period gives the same interval on every note.
 
 ## Semitone portamento
 
-Portamento moves the note index, not the period. Each step is a whole semitone.
+Portamento moves the note index, not the period. The pitch steps in whole
+semitones and never slides smoothly.
 
-- [Tim Follin](../players/TimFollin.md): portamento is a voice setting from the
-  track, like vibrato and trill. `specs/tim_follin.py:Portamento`
+- [Tim Follin](../players/TimFollin.md): a track command sets the voice's
+  portamento, as it sets vibrato and trill. `specs/tim_follin.py:Portamento`
 
 ## Glide to fit
 
 A portamento computes its rate from the note's length. It then ends exactly as
 the note ends.
 
-- [Synth Dream](../players/SynthDream.md): each glide step is a ratio of 1/400
-  semitone. `specs/synth_dream.py:GlideToFit`
+- [Synth Dream](../players/SynthDream.md): the portamento has no target. It runs
+  to the event's end. `specs/synth_dream.py:GlideToFit`
 
 ## Instrument transpose
 
@@ -67,9 +68,9 @@ The instrument sets the period. A row names only an instrument.
 The replay writes a channel's registers to a [shadow](../docs/glossary.md).
 Paula gets the shadow later.
 
-- [David Whittaker](../players/DavidWhittaker.md): music writes the shadow while
-  a sound effect holds the channel. When the effect ends, the music's note
-  sounds on. `specs/david_whittaker.py:Shadow`
+- [David Whittaker](../players/DavidWhittaker.md): music keeps writing the
+  shadow while a sound effect holds the channel. Paula gets the shadow when the
+  effect ends. `specs/david_whittaker.py:Shadow`
 - [Jochen Hippel ST](../players/Jochen_Hippel_ST.md): the replay writes a sound
   chip's registers to the shadow. An emulator turns them into Paula writes.
   `specs/jochen_hippel_st.py:Play`
@@ -90,5 +91,5 @@ sample at any rate plays in tune.
   Composer 1.4 doubles it for each octave down.
   `specs/future_composer_14.py:VibratoTick`
 - Tim Follin's pitch moves by whole semitones. `specs/tim_follin.py:Portamento`
-- MaxTrax steps 1/256 semitone. Synth Dream steps 1/400 semitone.
-  `specs/synth_dream.py:Glide`
+- MaxTrax steps 1/256 semitone. Synth Dream scales the period in steps of 1/400
+  semitone. `specs/synth_dream.py:Glide`

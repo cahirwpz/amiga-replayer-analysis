@@ -44,8 +44,8 @@ like an analog synth (inference).
 One [CIA timer](../docs/paula-techniques.md#cia-timer) interrupt runs the tick.
 The tempo sets its rate. There is no audio interrupt.
 
-A tick steps the master volumes, then reads all tracks. Then each voice runs its
-driver's tick, and each voice its register routine. `:PlaySNX`
+A tick steps the master volumes and reads all tracks. Last, it runs the voices.
+`:PlaySNX`
 
 ### Player
 
@@ -56,7 +56,7 @@ The player holds the tempo, the tick length and a master volume per voice.
   50 Hz. `:TempoEvent`
 - When all four tracks have ended, every voice gets a release. All tracks
   restart in the same tick. `:ReadTracks` `:RestartScore`
-  - **Trap:** the restart keeps the last `SET_TEMPO`. `:RestartScore`
+  - **Trap:** the repeat plays at the last `SET_TEMPO`. `:RestartScore`
 
 ### Track
 
@@ -75,7 +75,7 @@ Each tick, a track reads events up to the next `WAIT`, once its wait runs out.
    - Pitch bend picks one of 64 period factors, × 1.52 to × 0.67. All drivers
      apply it.
 4. `TRACK_END` stops the track. `:ReadEvent`
-   - **Trap:** a track's end releases nothing. Its last note sounds until all
+   - **Trap:** a track's end releases nothing. Its last note holds until all
      four tracks end.
 
 ### Voice
@@ -94,8 +94,8 @@ Each tick, in this order: `:TickInstruments`
 3. After a [DMA restart wait](../docs/paula-techniques.md#dma-restart-wait), DMA
    goes on for the new notes.
 
-- A start on a held voice of another instrument type stops it first. DMA goes
-  off, and `AUDxPER` gets 2. `:StartNote` `:StopNote`
+- A start on a held voice of another instrument type first stops the old note.
+  DMA goes off, and `AUDxPER` gets 2. `:StartNote` `:StopNote`
 - A note outside the driver's range is dropped. A held note then sounds on.
   `:SynthTick` `:SampledTick`
 
@@ -108,17 +108,17 @@ note turns DMA off.
 A synth voice holds a period, portamento steps, an envelope and an LFO phase. It
 owns a wave phase and two 128-byte buffer halves. `:SynthState`
 
-A start request: `:SynthStart`
+A start request runs these steps in order. `:SynthStart`
 
-1. From an off voice, the level starts at 0. Unless held, the envelope restarts
-   at attack. `:Legato`
+1. If the voice is off, the envelope level starts at 0. If the voice is not
+   held, the envelope restarts at attack. `:Legato`
    - A note on a held voice is legato and keeps its envelope.
    - **Trap:** driver state belongs to the voice. A new synth instrument on a
      held voice keeps the level.
-2. The period starts at the last synth period and steps to the new note. The
-   steps last the portamento time. `:Portamento`
-   - **Trap:** the last synth period outlives sample notes in between. Every
-     synth note but a voice's first glides.
+2. The period glides from the last synth period to the new note's period. The
+   glide lasts the portamento time. `:Portamento`
+   - **Trap:** sample notes in between keep the last synth period. Every synth
+     note but a voice's first glides.
 3. The LFO restarts after its delay, unless its mode is 0. `:Lfo`
 4. The wave phase restarts only without a wave mode. `:SynthStart`
 
@@ -130,16 +130,16 @@ Each tick, in this order: `:SynthTick`
 4. `AUDxPER` gets the period × LFO × pitch bend. `:OctaveShift`
 5. `AUDxVOL` gets the volume minus the LFO, × level, × note volume and master
    volume. `:OctaveShift`
-   - The sum wraps at 256. A large LFO amount turns a loud note quiet.
+   - The product wraps at 256. A large LFO amount turns a loud note quiet.
    - Without envelope-to-volume, a release sets volume 0 at once.
 6. The filter position is the base minus envelope and plus LFO. Its copy goes
    into the other buffer half. `:SelectFilter`
    - **Trap:** the filter position wraps. Past the brightest copy, it jumps to
      the darkest.
-7. `AUDxLC` gets that half. Paula takes it at the loop's end, with no restart.
-   `:SynthWrite`
+7. `AUDxLC` gets that half. Paula reloads it at the loop's end, without a
+   restart. `:SynthWrite`
    - **Trap:** above tempo 162, a tick is shorter than a 128-byte loop at 428
-     (estimate). The driver then rewrites the half that Paula plays (guess).
+     (estimate). A rewrite of the playing half glitches the wave (guess).
 
 ### Sample drivers
 
@@ -147,8 +147,8 @@ A sample voice holds a period, an envelope stage and level, and a vibrato phase.
 `:SampleState`
 
 1. A note picks an octave of the sample. `:SampledTick`
-2. The tick turns DMA off and sets `AUDxPER` to 2. The register routine writes
-   the whole octave to `AUDxLC` and `AUDxLEN`. `:SampleWrite`
+2. The driver's tick turns DMA off and sets `AUDxPER` to 2. The register routine
+   writes that whole octave to `AUDxLC` and `AUDxLEN`. `:SampleWrite`
 3. The next tick writes the loop, as a
    [loop by reload](../docs/paula-techniques.md#loop-by-reload). Without a loop,
    it writes a [silent loop](../docs/paula-techniques.md#silent-loop).

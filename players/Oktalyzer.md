@@ -7,7 +7,7 @@ ideas: [voice-mixing]
 # Oktalyzer
 
 Up to eight sample tracks play on four channels. A channel plays one track or a
-mixed pair.
+mixed pair. The player has two replayers, replay 1 and replay 2.
 
 ## Unique ideas
 
@@ -20,17 +20,17 @@ mixed pair.
   unchanged and resamples only the lower one. `:PickHigher` `:MixPair`
   - Limits: the lower track repeats bytes, with no interpolation.
     `:ResampleLower`
-- Replay 2 sizes each buffer to one frame at the buffer's period, from a table.
-  A channel that runs ahead gets one word more. `:MixPair` `:DriftFix`
+- Replay 2 sizes each buffer to one frame at its period, from a table. A channel
+  that already took its buffer gets one word more. `:MixPair` `:DriftFix`
   - Limits: the tick busy-waits while a channel runs late. `:QueueBuffers`
-- Replay 1 writes one resampler per note, from 36 routines of straight code.
-  Repeated source bytes become means. `:BuildResamplers` `:RunResampler`
+- Replay 1 writes one resampler per note, from 36 routines of straight code. It
+  writes a mean where a byte would repeat. `:BuildResamplers` `:RunResampler`
   - Limits: the code needs a buffer of 43,036 bytes. `:Replay1Init`
   - Limits: all mixed channels play at period 227, 15.6 kHz.
 
 ## How it plays
 
-The copper, the display's coprocessor, runs the tick by an interrupt once per
+The copper, the display's coprocessor, raises the tick's interrupt once per
 frame. There is no audio interrupt. `:Play1` `:Play2`
 
 Replay 2's tick sets periods, runs the sequencer, mixes and queues the buffers.
@@ -67,7 +67,7 @@ A single channel's track holds its note, period and loop. `:Track`
 
 Each tick, in this order: `:SetHardware`
 
-1. Last tick's notes get DMA on. After two scanline changes, `AUDxLC` and
+1. Last tick's notes get DMA on. Up to two scanlines later, `AUDxLC` and
    `AUDxLEN` get the loop, as a
    [loop by reload](../docs/paula-techniques.md#loop-by-reload). `:TurnDmaOn`
 2. At the row's first tick, a note turns DMA off. `:StartNotes`
@@ -96,8 +96,8 @@ A sample without a loop ends on a
 A mixed track holds a sample pointer, the bytes left, a note and a base note.
 `:Track`
 
-- A note sets the sample, its whole length and both notes. It ignores the
-  sample's loop and volume. `:GetMixedNotes`
+- A note sets the sample, its whole length, the note and the base note. It
+  ignores the sample's loop and volume. `:GetMixedNotes`
   - A sample for single tracks only is ignored.
 - **Trap:** a sample for both kinds of track also holds 7 bits. On a single
   channel, it plays at half amplitude. `:SampleEntry`
@@ -122,16 +122,16 @@ word. Two buffers per channel alternate. `:ChannelBuffer`
    `:MixChannel` `:CopySingle`
    - With no track, the buffer is silent, as at the start. `:Replay2Init`
    - On equal notes, the first track plays unchanged. `:PickHigher`
-   - **Trap:** adds of 4 bytes at once let a carry spill into the byte before.
-     `:AddHigher`
+   - **Trap:** one add covers 4 bytes. A carry spills into the sample byte
+     before. `:AddHigher`
 4. The tick busy-waits until each mixed channel took last tick's buffer.
    `AUDxLC` and `AUDxLEN` then get the new one. `:QueueBuffers`
-   - The channel plays it after its next reload.
+   - The channel plays it after the buffer that plays now.
 
 ### Mixed channel in replay 1
 
-Every channel loops a 626-byte buffer at period 227. A single channel's note
-takes over its channel. `:Replay1Init`
+Every channel loops a 626-byte buffer at period 227. A note on a single channel
+replaces that loop on its channel. `:Replay1Init`
 
 - Each tick fills one half, 313 bytes. The halves alternate. `:Play1`
 - Each track runs its note's resampler. Both outputs are added 4 bytes at once.
@@ -140,7 +140,7 @@ takes over its channel. `:Replay1Init`
 
 ## Open questions
 
-- Replay 1 never syncs with the channel. Does the write position drift into the
-  half that plays (guess)? `:Play1`
+- Replay 1 never checks which half the channel plays. Does the write position
+  drift into the half that plays (guess)? `:Play1`
 - Replay 2 writes the queued buffer's `AUDxPER` while the last buffer plays. Do
   its last bytes play at the new period (guess)? `:SetPeriods`

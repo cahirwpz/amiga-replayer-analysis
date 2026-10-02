@@ -1,8 +1,7 @@
 # Score streams
 
 In these players, voices do not read shared rows. Each voice steps through its
-own stream, list of events or program. Voices can then differ in length and
-timing.
+own stream, list of events or program.
 
 ## Positions per voice
 
@@ -36,18 +35,17 @@ A track program runs beside the notes and sets the sound.
 - [Face The Music](../players/FaceTheMusic.md): a program is a list of 4-byte
   lines. It runs until a line waits. `specs/face_the_music.py:ScriptRun`
 - [Tim Follin](../players/TimFollin.md): the track sets the voice's envelope,
-  vibrato and sweeps. The instrument is only a sample.
-  `specs/tim_follin.py:ReadTrack`
+  vibrato and sweeps. `specs/tim_follin.py:ReadTrack`
 
 ## Tracks, not voices
 
-The score has more tracks than Paula has channels. A track is not tied to one
-voice.
+The score has more tracks than Paula has channels. A track does not always play
+on the same voice.
 
 - [Face The Music](../players/FaceTheMusic.md): two tracks share each channel by
   [mixing](voice-mixing.md). `specs/face_the_music.py:MixPairs`
 - [TFMX Pro](../players/TFMX-Pro.md): eight tracks share four voices. Each note
-  names its voice. `specs/tfmx_pro.py:NoteToVoice`
+  names the voice that plays it. `specs/tfmx_pro.py:NoteToVoice`
 
 ## Event score
 
@@ -70,25 +68,25 @@ The score follows a MIDI sequencer's model: timed note-on and note-off events.
 
 ## Packed lengths
 
-A note length fits one byte as a value and a shift.
+A note length fits one byte. The byte holds a value and a shift that scales it.
 
 - [Paul Robotham](../players/PaulRobotham.md): 5 bits of value and 3 bits of
-  shift give 1 to 3968 pulses. A length with more than five significant bits
+  shift give 1 to 3968 pulses. A length that five value bits cannot hold exactly
   needs a tie. `specs/paul_robotham.py:ReadLength`
 
 ## Length remainder
 
-Lengths count in pulses, but the replay runs in ticks. The division leaves a
-remainder.
+Lengths count in pulses, but the replay runs in ticks. A length rarely divides
+into whole ticks.
 
 - [Paul Robotham](../players/PaulRobotham.md): each voice keeps the remainder
-  for its next length. Voices never drift apart, at any tempo.
+  for its next length. Rounding errors never add up, at any tempo.
   `specs/paul_robotham.py:ReadLength`
 
 ## Shared counter
 
-Voices with their own streams lose step. A shared counter lets one voice wait
-for another.
+Voices with their own streams can drift out of time with each other. A shared
+counter lets one voice wait for another.
 
 - [SoundFactory](../players/SoundFactory.md): one voice counts the counter up.
   Another waits until it holds a value. `specs/sound_factory.py:OpWaitSignal`
@@ -98,20 +96,21 @@ for another.
 A note ends after a set number of loop passes. Its length is not set in time.
 
 - [Digital Sonix & Chrome](../players/DigitalSonixChrome.md): the audio
-  interrupt counts the passes. The tick does no work for it.
-  `specs/digital_sonix_chrome.py:CountLoopPass`
+  interrupt counts the passes, not the tick. A note's length then follows its
+  sample, not the rows. `specs/digital_sonix_chrome.py:CountLoopPass`
 
 ## Random offset loops
 
-A loop plays a list of note offsets over the playing note.
+A loop adds a list of note offsets to the playing note, step by step.
 
 - [TFMX Pro](../players/TFMX-Pro.md): an offset loop, TFMX's `riff`, reads
-  another program's bytes as offsets. It can jump at random and echo on the next
-  voice. `specs/tfmx_pro.py:RiffTick`
+  another program's bytes as note offsets. It can jump to a random step, or echo
+  later and quieter on the next voice. `specs/tfmx_pro.py:RiffTick`
 
 ## Compared
 
 - Streams per voice drift apart unless the composer counts ticks. Paul Robotham
-  keeps the length remainder, so its voices stay in step.
-- SoundFactory keeps voices in step with a shared counter instead.
-- SoundPlayer's columns drift apart. Rows no longer line up as written.
+  keeps the length remainder. Its voices stay in step.
+- SoundFactory uses a shared counter instead.
+- SoundPlayer's voices wait and repeat on their own. Its columns drift apart,
+  and rows no longer line up as written.

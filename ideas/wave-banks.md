@@ -25,7 +25,8 @@ picks the copy that plays. A filter sweep then costs no filter work during play.
 
 ## Subtractive synth
 
-A changing filter position makes a filter bank sound like a subtractive synth.
+A subtractive synth shapes a rich wave with a moving filter. A filter position
+that changes over time gives a filter bank this sound.
 
 - [Sonix Music Driver](../players/SonixMusicDriver.md): each tick, the envelope
   and the LFO set the filter position.
@@ -37,7 +38,7 @@ A voice plays one buffer that loops forever. The replay changes the sound by
 rewriting the buffer, never by a DMA restart.
 
 - [AHX](../players/AbyssHighestExperience.md): each voice loops a 640-byte
-  buffer. A new wave fills it with copies of itself.
+  buffer. Copies of a new wave fill the whole buffer.
   `specs/abyss_highest_experience.py:FillBuffer`
 
 ## Wavetable scan
@@ -50,18 +51,19 @@ The timbre then changes over time.
 
 ## Length-tuned waves
 
-Waves of different lengths play at the same pitch. The period takes the wave's
-length and its cycles into account.
+Waves of different lengths play at the same pitch. The period depends on the
+wave's length. It also depends on how many cycles the wave holds.
 
-- [SoundFactory](../players/SoundFactory.md): the period divides by the wave's
-  length and multiplies by its cycles. `specs/sound_factory.py:NotePeriod`
+- [SoundFactory](../players/SoundFactory.md): the note's period is divided by
+  the wave's length. It is multiplied by the wave's cycles.
+  `specs/sound_factory.py:NotePeriod`
 
 ## Pulse width table
 
 A table, not a sweep, sets the pulse width over time.
 
-- [Synth Dream](../players/SynthDream.md): a table value sets the pulse width in
-  sixteenths. The replay rebuilds the wave every tick.
+- [Synth Dream](../players/SynthDream.md): a table value sets the pulse width,
+  in sixteenths of the wave. The replay rebuilds the wave every tick.
   `specs/synth_dream.py:PulseWalker`
 
 ## Soft-edge pulse
@@ -69,30 +71,32 @@ A table, not a sweep, sets the pulse width over time.
 One byte at the edge of a pulse wave takes a middle value. The pulse width can
 then sit between two whole bytes.
 
-- [Synth Dream](../players/SynthDream.md): the table's second byte lowers the
-  first high byte. `specs/synth_dream.py:PulseWalker`
+- [Synth Dream](../players/SynthDream.md): the table value's second byte is
+  subtracted from the first high byte. `specs/synth_dream.py:PulseWalker`
 
 ## Pulse width sweep
 
 The replay edits a pulse wave in place to move its edge.
 
-- [Tim Follin](../players/TimFollin.md): every N ticks, one byte of the wave
-  flips. The edge moves between bytes 4 and 30. `specs/tim_follin.py:PulseSweep`
+- [Tim Follin](../players/TimFollin.md): every N ticks, the replay rewrites the
+  byte at the edge. The edge moves one byte, between bytes 4 and 30.
+  `specs/tim_follin.py:PulseSweep`
 
 ## Beam noise
 
 The replay reads the video beam position as a source of random values.
 
 - [Sonic Arranger](../players/SonicArranger.md): two wave effects write beam
-  noise into the wave. The result depends on when the tick runs.
+  noise into the wave. The noise differs at each tick, as the beam moves.
   `specs/sonic_arranger.py:NoiseGenerator1`
 
 ## Resampling synthesis
 
-The replay rebuilds a voice's wave every tick from a resampled source.
+The replay rebuilds a voice's wave every tick from a resampled source. A wave
+has up to 256 bytes.
 
-- [TFMX Pro](../players/TFMX-Pro.md): IMS acts as a hard sync with a slew
-  limiter. It rebuilds up to 256 bytes per voice per tick.
+- [TFMX Pro](../players/TFMX-Pro.md): IMS restarts the source at each buffer
+  pass, like a hard sync. It limits each byte's change, like a slew limiter.
   `specs/tfmx_pro.py:ImsTick`
 
 ## Chip emulation
@@ -105,7 +109,7 @@ Short looped waves imitate a sound chip's tone and noise channels.
 
 ## Compared
 
-- AHX filters every wave once, at start. Sonix Music Driver filters each synth
-  wave at load.
+- AHX filters all its waves once, at start. Sonix Music Driver filters only
+  synth waves, at load.
 - AHX stores 32 squares of fixed pulse width. Synth Dream rebuilds its pulse
   wave every tick. Tim Follin flips one byte every N ticks.

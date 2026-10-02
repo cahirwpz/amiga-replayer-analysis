@@ -22,15 +22,15 @@ Each voice builds its wave in its own buffer, by a pulse sweep or a morph.
   - None of the three Fuzzball modules uses a morph instrument.
 - Two voices on one instrument sweep independently, each in its own buffer.
   `:Voice`
-- Restart flags let a sweep span a phrase, or restart at each note. `:NoteOn`
-- A turn count can stop a sweep after N turns. `:Pulse` `:MorphStep`
+- Restart flags let a sweep run on across notes, or restart per note. `:NoteOn`
+- A sweep turns at each limit. A turn count can stop it. `:Pulse` `:MorphStep`
 - The ADSR is timed. The release starts after a set number of sustain ticks.
   `:Sustain`
   - Limits: the note's length cannot end the sustain.
 
 ## How it plays
 
-The module holds the replay and starts with jumps to its entries. `:InitSong`
+The module starts with jumps into the replay code it holds. `:InitSong`
 
 The host's timer calls the tick, with no audio interrupt. A tick runs voices 3
 down to 0. `:Play`
@@ -41,12 +41,12 @@ The player holds the song, `speed`, a stopped flag and a fade level. `:Module`
 
 - A song start points each voice at its track's first pattern. `:InitSong`
 - `SPEED` sets the speed for all voices. `:SetSpeed`
-  - **Trap:** a count takes the speed when the stream sets it. Counts set before
-    `SPEED` keep the old speed, on any voice.
+  - **Trap:** a count holds ticks, fixed when the stream reads it. A count read
+    before `SPEED` keeps the old speed. Voices can fall out of step.
 - The host starts a fade. Each voice that runs its effects lowers the fade level
   once. `:StartFade` `:Volume`
   - **Trap:** four playing voices fade four times as fast as one.
-  - At level 0, the replay stops. DMA stays on.
+  - At level 0, the replay stops. DMA stays on. The loops sound on.
 - `TRACK_END` on any voice ends the song. All `AUDxVOL` get 0, and DMA goes off.
   `:SongEnd`
 
@@ -66,13 +66,11 @@ Each tick, in this order: `:VoiceTick`
      A negative loop keeps the whole sample looping.
    - A pulse or morph wave [loops](../docs/paula-techniques.md#short-wave-loops)
      from its buffer's start.
-   - **Trap:** the loop start adds the loop in bytes. The length subtracts it in
-     words.
+   - **Trap:** `AUDxLC` adds the loop in bytes. `AUDxLEN` loses it in words.
 2. The count drops by 1. At 0, the stream reads on. `:CountDown`
-3. With 1 tick left, DMA goes off. This gap restarts the next note. `:CountDown`
-   - A wait of up to 96 rows keeps DMA on. A wait after a note ties the note.
-   - **Trap:** notes below 32 keep DMA on. Their sample waits for the old loop's
-     end.
+3. With 1 tick left, DMA goes off. This gap restarts the sample. `:CountDown`
+   - If a wait of up to 96 rows comes next, DMA stays on. No gap occurs.
+   - **Trap:** a note below 32 gets no gap. It starts after the old loop ends.
    - **Trap:** `PATTERN_END` turns DMA off. A tie never crosses a pattern end.
    - **Trap:** at speed 1, a one-row note never has 1 tick left. It gets no gap.
 4. Effects run only while Paula reports the channel's DMA on. `:Arpeggio`
@@ -102,10 +100,9 @@ A note start: `:NoteOn`
    gets 0.
 4. `AUDxPER` gets the note's period, times the instrument's tune / 1024.
 5. A new portamento starts from this note's period, towards the target.
-6. DMA goes on, unless `VoiceMask` masks the voice. Effects run in this tick.
-   `:StartDma`
-   - A masked voice still writes the registers above. Its gap still turns DMA
-     off.
+6. DMA goes on if the voice's bit in `VoiceMask` is set. Effects run in this
+   tick. `:StartDma`
+   - Without its bit, a voice still writes the registers and gets its gap.
 
 Effects, each tick with DMA on: `:Arpeggio`
 
@@ -120,7 +117,7 @@ Effects, each tick with DMA on: `:Arpeggio`
 3. After its delay, vibrato adds a triangle offset. `AUDxPER` gets the result.
    `:Vibrato`
    - The offset is in period units. Low notes get a smaller interval.
-   - The offset must hit the depth exactly. Otherwise it runs past and wraps.
+   - The offset turns only at the depth itself. Past it, it wraps at 256.
 4. The envelope runs attack, decay, sustain for N ticks, and release.
    `:Envelope`
 5. `AUDxVOL` gets volume × the instrument's level × the fade level, scaled.
@@ -139,7 +136,7 @@ The pulse: `:Pulse`
 
 1. A restart writes low bytes up to the edge's start, then high bytes.
    `:PulseInit`
-   - An edge start of 0, or a wave over 64 bytes, writes past the buffer.
+   - An edge start of 0 wraps to 256 low bytes, past the buffer.
 2. After its delay, it steps every N ticks.
 3. A step writes a low byte at the edge going up, a high byte going down.
    `:PulseUp`

@@ -13,8 +13,9 @@ In this order:
        2026-10-05. See [For the reviewer](#for-the-reviewer).
 2. [ ] Record the verdicts and answers here. Fix the cards and family pages, and
        shared problems everywhere.
-3. [ ] Paula techniques: add writes held to the tick's end.
-4. [ ] Triage players, synthesis first. See [Triage](#triage).
+3. [ ] Run `card-reader` on the other 23 cards. Verify its fixes.
+4. [ ] Paula techniques: add writes held to the tick's end.
+5. [ ] Triage players, synthesis first. See [Triage](#triage).
 
 ### For the reviewer
 
@@ -40,7 +41,7 @@ Decisions for the user:
   effects"?
 - Half the ideas have one player. Merge them into "Other ideas" per family?
 - Print the families in `data/ideas.yaml` order, not alphabetical?
-- Is a generated technique index on the front page worth it?
+- Is a generated technique index worth it?
 
 ### Triage
 
@@ -84,8 +85,7 @@ For the next rerun:
 - "Wave" stays a plain word, not a glossary term.
 - The glossary page is at the cogload limit of 3000 words. Reword cards in plain
   words before adding a term.
-- The session may not load `.claude/agents/`. Then run a general-purpose agent
-  with the agent file as its prompt.
+- If `.claude/agents/` is not loaded, give an agent the file as its prompt.
 
 ### Spec fixes
 

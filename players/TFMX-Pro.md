@@ -53,7 +53,7 @@ The player holds the position, `speed`, a tick counter and the fade. `:Module`
 - A pattern end on any track moves all tracks to the next position.
   `:PatternEnd`
   - **Trap:** one track's pattern end cuts the other tracks' patterns short.
-- A fade moves its level by 1 every N voice visits. `:FadeTick`
+- A fade steps by 1 every N voice visits, one per voice per tick. `:FadeTick`
   - **Trap:** the counter moves four times per tick. Voices in one tick can get
     different levels.
 
@@ -64,12 +64,12 @@ A track holds its pattern, place, wait, transpose and one return. `:Track`
 At each row, a track counts down its wait, or reads until a wait: `:ReadPattern`
 
 1. A note gets the transpose and goes to the voice in its byte 2. `:TrackNote`
-   - A note below `NOTE_WAIT` reads on. A chord is several notes on one track.
+   - A note below `NOTE_WAIT` sets no wait. Several such notes make a chord.
    - **Trap:** a note from `NOTE_WAIT` to `$bf` takes its wait from the detune
      byte. It plays without detune.
 2. Pattern opcodes loop, jump, wait, stop or start another track. Others send
    note-off, vibrato or an envelope to a voice. `:PatternOpcode`
-   - **Trap:** a return restores track 0's place. Calls work only on track 0.
+   - **Trap:** a return always moves track 0 back. Other tracks read on.
      `:PatternReturn`
 
 ### Voice
@@ -81,8 +81,8 @@ holds a base period, the period, the sample, and six effects. `:Voice`
   are lost. `:PlaySoundEffect` `:NoteToVoice`
 - A note sets the note, detune and note volume, and restarts the program.
   Effects skip one tick. `:NoteToVoice`
-  - **Trap:** a note that starts the same program keeps its first-pass mark.
-    `:SkipFirstPass`
+  - **Trap:** a note that starts the same program keeps its first-pass mark. It
+    skips its first-pass steps. `:SkipFirstPass`
 
 Each tick, in this order: `:VoiceTick`
 
@@ -98,7 +98,7 @@ Each tick, in this order: `:VoiceTick`
    `:FadeTick`
 
 A DMA off opcode, the silence opcode or `TRACK_OFF` silences a voice. `:DmaOff`
-`:SetSilence` `:StopVoice` A release to 0 leaves DMA on.
+`:SetSilence` `:StopVoice` A release to 0 leaves the sample playing.
 
 ### Instrument program
 
@@ -112,12 +112,12 @@ state is a place, a wait, a loop count, one return and a first-pass mark.
   note-off wait and release steps. `:MacroEnvelope` `:WaitNoteOff`
 - DMA on acts at the tick's end. A delayed DMA off acts at the next tick's
   start. `:DmaOn` `:DmaOff`
-  - The program then reads past one wait. It restarts the sample in that tick.
+  - Next tick, the program skips one wait. DMA on restarts the sample.
     `:EndMacroTick`
 - A program can wait for N + 1 passes of its sample, as
   [loop counting](../docs/paula-techniques.md#loop-counting). `:WaitLoops`
-- A wait with bit 0 set waits for an offset byte with bit 7. Its first pass only
-  arms it. `:MacroWait`
+- A wait with bit 0 set reads on at its first pass. Later passes wait for an
+  offset byte with bit 7. `:MacroWait`
 
 ### Offset loop
 
@@ -126,7 +126,7 @@ random, echo and no rests. `:Riff`
 
 Every N ticks, the next byte plus the note sets the period. `:RiffTick`
 
-- A 0 byte restarts the loop. A byte for note 0 jumps to a random step.
+- A byte of 0 restarts the loop. A byte giving note 0 jumps to a random step.
 - **Trap:** during portamento, a byte sets only the target. The loop stays on
   that step.
 - With random, every fourth step drops its note about 1 time in 16. A byte with
@@ -137,17 +137,17 @@ Every N ticks, the next byte plus the note sets the period. `:RiffTick`
 
 ### IMS
 
-IMS holds a source, a mask, a step, a step change and a delta. Swings change the
-last three each tick. `:Ims` `:Swing`
+IMS holds a source wave, a mask, a step, a step change and a delta. Swings
+change the step, the step change and the delta each tick. `:Ims` `:Swing`
 
-- The channel loops the voice's buffer in the sample memory. `:ImsLength`
+- Each voice loops its own buffer in the sample memory. `:ImsLength`
 - Each tick, the buffer gets the source from its start, cut at the buffer's end.
   Its loop sounds as a hard sync. `:ImsTick`
-- The step change bends the step across the buffer. The delta limits each byte's
-  move from the last.
+- The step change bends the step across the buffer. The delta caps each byte's
+  change.
 - A mirror writes a negated copy into the next voice's buffer. `:ImsOff`
-- **Trap:** with IMS on, the sweep moves the source. A length opcode sets the
-  mask. `:AddLength`
+- **Trap:** with IMS on, the sweep moves the source start. A length opcode sets
+  the mask instead. `:AddLength`
 - **Trap:** Paula reads the buffer while the replay rewrites it. One loop can
   mix two ticks' waves (inference).
 
