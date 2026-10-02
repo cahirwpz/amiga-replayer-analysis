@@ -1,6 +1,6 @@
 ---
 player: PaulRobotham
-template: 2
+template: 3
 ideas:
   [
     per-voice-streams,
@@ -13,73 +13,150 @@ ideas:
 
 # Paul Robotham
 
-Each voice reads its own note stream. Lengths are packed into one byte.
+Each voice reads its own note stream, with lengths in pulses. There are no
+patterns.
 
-## Context
+## Unique ideas
 
-| Fact      | Value                                                             |
-| --------- | ----------------------------------------------------------------- |
-| Player    | `PaulRobotham`                                                    |
-| Author    | Paul Robotham                                                     |
-| Year      | 1994                                                              |
-| Game      | Starlord                                                          |
-| Code read | disassembly: `ext/uade/amigasrc/players/wanted_team/PaulRobotham` |
-| Spec      | [specs/paul_robotham.py](../specs/paul_robotham.py)               |
-
-## Key ideas
-
-- Each voice reads one byte stream, with no patterns. Loops nest per voice.
-  `:ReadStream` `:LoopStart` `:LoopEnd`
-  - Enables: any rhythm, with no row grid.
-  - Costs: a part that two voices play is stored twice.
-- A length byte holds a 5-bit value and a 3-bit shift. `:ReadLength`
-  - Enables: one byte covers 1 to 3968 pulses.
-  - Costs: a length with more than five significant bits needs a tie.
+- Each voice reads one byte stream. Loops nest on a stack. `:LoopEnd`
+  - Limits: a part that two voices play is stored twice.
+  - Limits: no command jumps back for good. A loop count of 0 plays 65 536
+    passes.
+- A length byte holds a 5-bit value and a 3-bit shift, for 1 to 3968 pulses.
+  `:ReadLength`
+  - Limits: a length with more than five significant bits needs a tie.
 - The pulse length scales pulses to ticks. Each voice keeps the remainder of
-  that division for its next note. `:ReadLength` `:SetPulseLength`
-  - Enables: any tempo, and voices never drift apart.
-- Vibrato adds a share of the period, not a fixed amount. `:Vibrato`
-  - Enables: the vibrato has the same interval on low and high notes.
-- A sound effect takes a music voice, whose stream runs on muted. `:MutedVoice`
-  `:EffectTick`
-  - Enables: the music comes back in time, at the voice's next note.
-- The song limits effects to voices 0 to N. An effect takes the voice with the
-  fewest effect ticks left. `:EffectVoices` `:StartEffect`
-  - Enables: the composer keeps effects off key voices (inference).
-  - Costs: the effect call is commented out. UADE never runs it.
+  that division for its next length. `:ReadLength`
+  - Voices never drift apart, at any tempo.
+- Vibrato adds a share of the period. Its interval is the same on every note.
+  `:Vibrato`
+- A legato note after an instrument change starts the new instrument at its
+  loop. The attack part is skipped. `:SwapInstrument`
+- A sound effect takes a music voice. Its stream runs on, muted. `:MutedVoice`
+  - The music comes back in time, at the voice's next note start.
+  - Limits: the effect start is commented out. UADE plays no effects.
+    `:StartEffect`
 
-## Composer's view
+## How it plays
 
-The composer writes one stream per voice, instruments, envelope and vibrato
-tables. Voice settings hold until a command changes them.
+The host's tick calls the replay. There is no audio interrupt. `:Play`
 
-| Aspect   | Answer                                                                    | Source                      |
-| -------- | ------------------------------------------------------------------------- | --------------------------- |
-| Notation | A note byte, 1 to 126, then a length byte.                                | `:ReadStream`               |
-| Notation | `TIE`, then a length byte.                                                | `:ReadStream`               |
-| Notation | A length byte: bits 0-4 are a value, bits 5-7 shift it left.              | `:ReadLength`               |
-| Notation | A command: a byte from `COMMAND`, then 0 to 2 argument bytes.             | `:RunCommand`               |
-| Notation | A repeat: a loop start with a count, the part, then a loop end.           | `:LoopStart` `:LoopEnd`     |
-| Notation | A mode byte per voice: legato, keep the envelope, keep the vibrato phase. | `:SetMode`                  |
-| Notation | `END_BYTE` ends the voice for good.                                       | `:VoiceEnd`                 |
-| Cost     | A length that rounds to 0 ticks stalls its voice for 65 536 ticks.        | `:ReadLength`               |
-| Cost     | An arpeggio is written out as notes. No command plays one.                | `:RunCommand`               |
-| Cost     | A new instrument turns legato mode off.                                   | `:SetInstrument`            |
-| Cost     | Every voice waits 10 ticks before its first byte.                         | `:InitSong`                 |
-| Cost     | One command in any stream fades the whole song.                           | `:FadeMaster` `:MasterFade` |
+A tick runs each voice, then the master fade. A voice with an effect runs its
+stream muted, then the effect. `:Play`
 
-## What is unique
+### Player
 
-- In legato mode, a note after an instrument change starts the new instrument at
-  its loop. The attack part is skipped. `:SwapInstrument`
-- A stream command starts a fade. This release lasts until a note restarts the
-  sample. `:FadeOut` `:FadeStep` `:EnvelopeTick`
-- An envelope with no jump repeats every 64 ticks. `:EnvelopeTick`
+The player holds the pulse length, the master volume and its fade. It also holds
+the voice mask and the effect voice count. `:Module`
+
+- The pulse length is in 1/10800 tick. A command sets it to its argument × 16.
+  `:SetPulseLength`
+  - **Trap:** one voice's command sets the tempo of all voices. Voices before it
+    in this tick already read their lengths at the old tempo.
+  - A song restart keeps the last pulse length. `:InitSong`
+- A master fade moves the master volume by 1 every N ticks, to a target.
+  `:FadeMaster`
+  - **Trap:** one command in any stream fades the whole song. `:MasterFade`
+- A clear bit in the voice mask mutes its voice. `:StartDma`
+- `EffectVoices` limits effects to voices 0 to N. `:EffectVoices`
+- Two commands switch the audio filter. `:FilterOn` `:FilterOff`
+
+### Voice
+
+A voice holds its stream position, loop stack and timer, the ticks to its next
+byte. It holds the remainder, instrument, volume, tables, portamento, vibrato
+and fade. `:Voice`
+
+Its flags come from `SetMode`: legato, keep the envelope, keep the vibrato
+phase. Its volume-on bit allows `AUDxVOL` writes. `:SetMode`
+
+Each tick, in this order: `:StepVoice`
+
+1. The vibrato phase moves by the vibrato speed. The envelope index moves by 4
+   bytes.
+2. At timer 0, the stream reads on. Otherwise, the pending DMA step runs.
+   `:StartDma`
+3. Portamento moves the period towards the target by its step. `:Portamento`
+4. `AUDxPER` gets the period + period × vibrato value / (10000 / depth).
+   `:Vibrato`
+5. The timer counts down. A length of 0 ticks lasts 65 536 ticks.
+   - The first byte waits 10 ticks. `:InitSong`
+6. With the volume-on bit set, `AUDxVOL` gets envelope × volume / 63. The master
+   volume scales it. `:EnvelopeTick`
+
+The stream reads commands, which take no time, up to a note, `TIE` or
+`END_BYTE`.
+
+- A note byte, 1 to 126, takes a length byte. Notes above 59 read past the
+  periods.
+- `TIE` and its length hold the note on. It restarts nothing. `:ReadLength`
+- No command plays an arpeggio. It is written out as notes.
+- An unused command number flashes the screen. `:BadCommand`
+- `END_BYTE` turns DMA off for good. `:VoiceEnd`
+
+A note start, with the legato flag clear: `:NoteOn`
+
+1. DMA goes off, and the volume-on bit clears. The fade ends.
+2. `AUDxLC` and `AUDxLEN` get the whole sample. `AUDxPER` gets the note's
+   period.
+3. The length sets the timer. The vibrato phase and the envelope restart, unless
+   their flags keep them. `:ReadLength`
+4. The next tick, DMA goes on, and the volume-on bit sets. `:StartDma`
+   - **Trap:** the note's own tick skips this step. A one-tick note before
+     another note never turns DMA on.
+5. The tick after, `AUDxLC` and `AUDxLEN` get the loop, as a
+   [loop by reload](../docs/paula-techniques.md#loop-by-reload). A sample
+   without a loop gets a [silent loop](../docs/paula-techniques.md#silent-loop).
+
+- With portamento on, the pitch slides from the last period. `:Portamento`
+
+With the legato flag set:
+
+- A note changes only the target period. The sample plays on. `:LegatoNote`
+  - **Trap:** a legato note does not end a fade.
+- `SetInstrument` clears the legato flag and marks the change. `:SetInstrument`
+  - **Trap:** an instrument swap needs `SetMode` again, after `SetInstrument`.
+- After a change, a legato note gets `AUDxVOL` 0 and DMA off. `AUDxLC` and
+  `AUDxLEN` get the loop. `:SwapInstrument`
+  - Without a loop, it plays the silent loop at `EMPTY_PERIOD`.
+
+There is no rest byte. A voice falls silent through its envelope, volume 0, its
+fade or the silent loop.
+
+The envelope index starts at byte 3 and wraps at 256. A table has 64 steps.
+`:EnvelopeTick`
+
+- A negative byte jumps back by its size, rounded up to 4 bytes.
+- An envelope with no jump repeats every 64 ticks.
+- `FadeOut` starts a release. The fade level replaces the volume and falls by
+  the fade step each tick. `:FadeOut` `:FadeStep`
+
+### Sound effect
+
+Each voice has an effect slot: sample, loop, period, ticks left and volume.
+`:Effect`
+
+1. The start call takes, of voices 0 to N, the one with the fewest ticks left. A
+   later voice wins a tie. `:StartEffect`
+   - Its ticks are about the sample's play time at 50 Hz.
+   - **Trap:** a looping effect counts down from −1. A new effect replaces it
+     before taking a free voice.
+2. First tick: DMA goes off. `AUDxLC` and `AUDxLEN` get the sample.
+   `:EffectTick`
+3. Second tick: `AUDxVOL` gets 0, and DMA goes on.
+4. Third tick: `AUDxLC` and `AUDxLEN` get the loop. `AUDxVOL` gets the effect's
+   volume.
+5. At 0 ticks left, DMA goes off and `AUDxVOL` gets 0.
+   - **Trap:** DMA comes back only at a note start or an instrument swap. A
+     legato note stays silent.
+
+- **Trap:** a swap in the muted stream turns DMA off. It cuts the effect.
+  `:SwapInstrument`
+- The original also wrote `AUDxPER`. The adaptation does not. `:EffectTick`
+- The effect voice count keeps effects off key voices (guess).
 
 ## Open questions
 
 - How many pulses make a quarter note? `:ReadLength`
-- A new effect replaces a looping effect before a free voice. Did the game stop
-  looping effects first? `:StartEffect`
-- Which tool wrote the streams? Pulses suggest a MIDI sequencer (guess).
-- Who writes the mask of active voices? This source never does. `:StartDma`
+- Did the game stop looping effects before starting new ones? `:StartEffect`
+- Who writes the voice mask? This source never does. `:StartDma`

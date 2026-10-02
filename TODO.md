@@ -3,18 +3,6 @@
 The hand-off between sessions. What belongs here: see
 [`AGENTS.md`](AGENTS.md#sessions).
 
-## Pilot
-
-Twelve cards test the card template before the full survey.
-
-Selection rules:
-
-- Formats that did not prevail on the demoscene. No `ProTracker`-like players.
-- Themes: cheap but expressive synthesis, unusual tricks, soft voice mixing.
-- `replay` must be `uade` in the output of `tools/inventory.py`.
-
-All twelve pilot cards exist.
-
 ## After the pilot
 
 ### Priorities
@@ -30,10 +18,8 @@ In this order:
    - Sequencing: TFMX-Pro, SoundFactory, JasonPage, PaulRobotham, MaxTrax,
      MIDI-Loriciel, SonixMusicDriver, SoundPlayer, MED, FaceTheMusic.
    - Mixing: MusicMaker-8V, Oktalyzer, TFMX-7V.
-   - SoundMon2.2 is the `template: 3` pilot. It awaits the user's verdict.
-   - Template 3 rules: the reader knows ProTracker replays and synth basics.
-     Traps are interactions between parts. Name interrupts and silence.
-   - SoundMon2.2 reviews are done. Next: the user's verdict on the pilot.
+   - All cards are in template 3 (uncommitted). The user calls SoundMon2.2
+     solid. Next: the user's approval to commit, then verdicts.
 2. Ideas:
    - [ ] Decide how to group `ideas/`: pages per technique slug, or per control
          dimension (see `docs/control-dimensions.md`).
@@ -88,6 +74,26 @@ All card reviews are current. For the next rerun:
   words before adding a term.
 - The session may not load `.claude/agents/`. Then run a general-purpose agent
   with the agent file as its prompt.
+
+### Spec fixes
+
+Found during the template 3 rewrites. Not yet checked by the user.
+
+- [ ] `specs/synth_dream.py`: a modifier that starts a pattern is dropped. The
+      68k code skips the opcode twice, so it misreads it.
+- [ ] `specs/tfmx_pro.py`: a loop comment says the counter is 0 on the first
+      visit. The 68k code starts it at -1. The logic is right.
+- [ ] `specs/tfmx_pro.py`: register writes at the tick's end match only the "DMA
+      wait" path of the listing. Trace the default path.
+- [ ] `specs/voodoo_supreme_synthesizer.py`: docstrings say the fill uses the
+      idle half. The tick fills the half Paula may play, so it can tear. Test
+      the Paula reload rule in an emulator.
+- [ ] `specs/voodoo_supreme_synthesizer.py`: after a sample's end, the spec
+      keeps the voice silent. The 68k code moves the pointer on from
+      `EmptySample`. Open question on the card.
+- [ ] `specs/tfmx_7v.py`: `MixOff` must turn off the replay's interrupt
+      (`INTENA`). DMA on and off on voices 4–7 must call `FakeDma` at once. The
+      card already states both from the listing.
 
 ### Hardware model
 
@@ -159,23 +165,9 @@ need 68k code first.
 
 ## Disassembly notes
 
-Tooling works for player binaries, executables and object files. vlink links
-objects; `listing` checks that vasm rebuilds the input. Workflow:
-[`tools/disasm.py`](tools/disasm.py).
+Workflow and IRA pitfalls: [`tools/disasm.py`](tools/disasm.py).
 
-- Committed configs: `okplay1` and `okplay2`, Oktalyzer's replay objects. They
-  match `okta.asm`. No player config yet.
-- `seed` on an object makes every code symbol an entry. `ChannelModes`,
-  `SH_Speed` and `SH_Len` are data. Their bogus `CODE` range in `okplay1` and
-  `okplay2` was removed by hand.
-
-- Seeding was tried on `Laxity` and `TFMX-7V-TFHD`.
-- `-preproc` misses code reached by jump tables or pointers. Example:
-  `TFMX-7V-TFHD` keeps `4e75` (`rts`) inside data at `$060c`. Add `CODE` ranges
-  by hand.
-- IRA 2.11 refuses `-preproc` over an existing `.cnf`. So `seed` runs once per
-  tag entry and merges the areas.
-- IRA may read a slot of a `bra.w` jump table as data. Example: the `$2C0` slot
-  of `JumpTable` in `AbyssHighestExperience`. Its replay code was added by hand.
+- Committed configs: `okplay1` and `okplay2`, Oktalyzer's replay objects. No
+  player config yet. Seeding was tried on `Laxity` and `TFMX-7V-TFHD`.
 - Many binary-only players are 1–3 kB. Some may be wrappers (guess). Check each
   one when its config is made.
