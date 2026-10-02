@@ -9,18 +9,37 @@ The hand-off between sessions. What belongs here: see
 
 In this order:
 
-1. [ ] The user reviews the print, `make build/cards.pdf`, on paper in the week
-       of 2026-10-05. A verdict per card is "solid", or the spot that fails.
-       Checks: borrowable ideas, a flow to follow, useful traps.
-   - Close reads: Fred, TFMX-Pro, Oktalyzer, SonixMusicDriver,
-     VoodooSupremeSynthesizer. Skim the rest. Fix shared problems everywhere.
-   - The user calls SoundMon2.2 solid.
-2. [ ] Record the verdicts here and fix the cards.
-3. Ideas: ten technique families in `data/ideas.yaml`, one page each in
-   `ideas/`, per `docs/idea-template.md`. The user chose families and lists.
-   - [ ] Generate a technique index from the families, for the front page.
-   - [ ] The user reviews the family pages on paper, with the cards.
-4. [ ] Triage players, synthesis first. See [Triage](#triage).
+1. [ ] The user reviews the print on paper in the week of 2026-10-05. See
+       [For the reviewer](#for-the-reviewer).
+2. [ ] Record the verdicts and answers here. Fix the cards and family pages. Fix
+       shared problems in all of them.
+3. [ ] Triage players, synthesis first. See [Triage](#triage).
+
+### For the reviewer
+
+Print `make build/cards.pdf`, both sides. Mark the margins.
+
+Per card, a verdict: "solid", or the spot that fails. SoundMon2.2 is solid.
+
+- Close reads: Fred, TFMX-Pro, Oktalyzer, SonixMusicDriver,
+  VoodooSupremeSynthesizer. Skim the rest.
+- Can you borrow each unique idea from the card alone?
+- Can you follow data to register writes, tick by tick?
+- Would each trap save a port, or is it trivia?
+
+Per family page in `ideas/`, the same verdict:
+
+- Does each idea's definition work without the cards?
+- Do the player bullets show differences, or only repeat the cards?
+- Does each "Compared" bullet teach something to borrow?
+
+Decisions for the user:
+
+- Move register shadow from "Pitch and volume units" to "Voices for music and
+  effects"?
+- Half the ideas have one player. Merge them into "Other ideas" per family?
+- Print the families in `data/ideas.yaml` order, not alphabetical?
+- Is a generated technique index on the front page worth it?
 
 ### Triage
 
@@ -54,16 +73,14 @@ Reading notes:
 
 ### Review notes
 
-All card reviews are current. For the next rerun:
+For the next rerun:
 
 - Ask the user first. A rerun costs one agent per card.
 - Check each finding against the code before recording it. Coverage overclaimed
   "spec misses it" twice.
 - Writing reviews ask to split field lists ("A row: note, instrument, …") and
   "fact. Consequence." cells. Both stay, as on the Fred card.
-- Writing reviews flag "wave" as missing from the glossary. It stays a plain
-  word, as in the glossary's own entries.
-- A count computed from code constants gets "(estimate)".
+- "Wave" stays a plain word, not a glossary term.
 - The glossary page is at the cogload limit of 3000 words. Reword cards in plain
   words before adding a term.
 - The session may not load `.claude/agents/`. Then run a general-purpose agent
