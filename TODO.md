@@ -9,16 +9,14 @@ The hand-off between sessions. What belongs here: see
 
 In this order:
 
-1. [ ] The user reviews the print on paper in the week of 2026-10-05. See
-       [For the reviewer](#for-the-reviewer).
-2. [ ] Record the verdicts and answers here. Fix the cards and family pages. Fix
-       shared problems in all of them.
+1. [ ] The user reviews `make build/cards.pdf` on paper in the week of
+       2026-10-05. See [For the reviewer](#for-the-reviewer).
+2. [ ] Record the verdicts and answers here. Fix the cards and family pages, and
+       shared problems everywhere.
 3. [ ] Paula techniques: add writes held to the tick's end.
 4. [ ] Triage players, synthesis first. See [Triage](#triage).
 
 ### For the reviewer
-
-Print `make build/cards.pdf` on both sides.
 
 Per card, a verdict: "solid", or the spot that fails. SoundMon2.2 is solid.
 
@@ -33,6 +31,8 @@ Per family page in `ideas/`, the same verdict:
 - Does each idea's definition work without the cards?
 - Do the player bullets show differences, or only repeat the cards?
 - Does each "Compared" bullet teach something to borrow?
+
+Paula techniques: is a common technique missing?
 
 Decisions for the user:
 
